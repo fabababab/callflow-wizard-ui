@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import TranscriptPanel from '@/components/TranscriptPanel';
@@ -7,8 +7,12 @@ import CallDetails from '@/components/CallDetails';
 import IdentityValidation from '@/components/IdentityValidation';
 import ActionPanel from '@/components/ActionPanel';
 import CallEvaluation from '@/components/CallEvaluation';
+import ScenarioSelector, { ScenarioType } from '@/components/ScenarioSelector';
+import BankDetailsForm from '@/components/BankDetailsForm';
 
 const Index = () => {
+  const [activeScenario, setActiveScenario] = useState<ScenarioType>(null);
+
   return (
     <div className="flex flex-col h-screen">
       <Header />
@@ -18,7 +22,13 @@ const Index = () => {
           <div className="grid grid-cols-12 gap-6 h-full">
             {/* Main content area - Call transcript */}
             <div className="col-span-12 lg:col-span-7 h-full">
-              <TranscriptPanel />
+              {/* Scenario selector */}
+              <ScenarioSelector 
+                onSelectScenario={setActiveScenario} 
+                activeScenario={activeScenario} 
+              />
+              
+              <TranscriptPanel activeScenario={activeScenario} />
             </div>
             
             {/* Right sidebar with tools and info */}
@@ -33,6 +43,8 @@ const Index = () => {
               />
               
               <IdentityValidation />
+              
+              {activeScenario === 'bankDetails' && <BankDetailsForm />}
               
               <ActionPanel />
               

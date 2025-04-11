@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { ScenarioType } from './ScenarioSelector';
 
 type Message = {
   id: number;
@@ -14,10 +15,14 @@ type Message = {
   timestamp: string;
 };
 
-const TranscriptPanel = () => {
-  const [messages, setMessages] = React.useState<Message[]>([]);
-  const [inputValue, setInputValue] = React.useState('');
-  const [isRecording, setIsRecording] = React.useState(false);
+interface TranscriptPanelProps {
+  activeScenario: ScenarioType;
+}
+
+const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
   const [callActive, setCallActive] = useState(false);
   const [callStartTime, setCallStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00');
@@ -49,6 +54,53 @@ const TranscriptPanel = () => {
     return () => clearInterval(interval);
   }, [callActive, callStartTime]);
 
+  // Reset messages when scenario changes
+  useEffect(() => {
+    if (callActive && activeScenario) {
+      // Reset message history
+      setMessages([]);
+      
+      // Add initial agent greeting
+      setTimeout(() => {
+        const initialMessage: Message = {
+          id: 1,
+          text: "Hello, thank you for calling customer service. How can I help you today?",
+          sender: 'agent',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages([initialMessage]);
+        
+        // Add scenario-specific customer response
+        setTimeout(() => {
+          let customerResponse = "";
+          
+          switch (activeScenario) {
+            case 'verification':
+              customerResponse = "Hi, this is Michael Schmidt. I need to verify my account details.";
+              break;
+            case 'bankDetails':
+              customerResponse = "Hello, I need to update my bank details for my account.";
+              break;
+            case 'accountHistory':
+              customerResponse = "Hello, I'd like to check my recent account activity.";
+              break;
+            default:
+              customerResponse = "Hello, I have some questions about my account.";
+          }
+          
+          const customerMessage: Message = {
+            id: 2,
+            text: customerResponse,
+            sender: 'customer',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          
+          setMessages(prev => [...prev, customerMessage]);
+        }, 1500);
+      }, 1000);
+    }
+  }, [activeScenario, callActive]);
+
   // Trigger contact suggestion based on keywords in the transcript
   useEffect(() => {
     if (callActive && messages.length > 0) {
@@ -76,10 +128,10 @@ const TranscriptPanel = () => {
   
   const handleSendMessage = () => {
     if (inputValue.trim()) {
-      const newMessage = {
+      const newMessage: Message = {
         id: messages.length + 1,
         text: inputValue,
-        sender: 'agent' as const,
+        sender: 'agent',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages([...messages, newMessage]);
@@ -90,25 +142,39 @@ const TranscriptPanel = () => {
         setTimeout(() => {
           let customerResponse = "";
           
-          // First response when call starts
-          if (messages.length === 0) {
-            customerResponse = "Hello, I need to update my bank details for my account.";
-          } else {
-            const customerResponses = [
+          // Scenario-specific responses
+          if (activeScenario === 'bankDetails') {
+            const bankResponses = [
+              "Yes, I'd like to change my bank from Deutsche Bank to Commerzbank.",
+              "My new IBAN is DE89370400440532013001.",
+              "Yes, that's correct. I recently switched banks.",
+              "Thank you for updating my information."
+            ];
+            customerResponse = bankResponses[Math.min(Math.floor(messages.length / 2), bankResponses.length - 1)];
+          } else if (activeScenario === 'verification') {
+            const verificationResponses = [
               "Yes, that's right. My name is Michael Schmidt.",
               "I was born on March 15, 1985.",
-              "I'd like to update my bank account information.",
-              "My current bank is Deutsche Bank, but I've switched to Commerzbank.",
-              "Thank you for your help today."
+              "My address is Hauptstrasse 123, Berlin.",
+              "The last four digits of my account are 4321."
             ];
-            
-            customerResponse = customerResponses[Math.min(messages.length / 2, customerResponses.length - 1)];
+            customerResponse = verificationResponses[Math.min(Math.floor(messages.length / 2), verificationResponses.length - 1)];
+          } else {
+            // Default or account history responses
+            const defaultResponses = [
+              "I'd like to know about my recent transactions.",
+              "Yes, specifically the last three months.",
+              "I don't recognize a transaction from last week.",
+              "It was a payment to Online Shop GmbH for €79.99.",
+              "Thank you for your help."
+            ];
+            customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
           }
           
-          const customerMessage = {
+          const customerMessage: Message = {
             id: messages.length + 2,
             text: customerResponse,
-            sender: 'customer' as const,
+            sender: 'customer',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           
@@ -134,7 +200,7 @@ const TranscriptPanel = () => {
       
       // Add initial agent greeting after a brief delay
       setTimeout(() => {
-        const initialMessage = {
+        const initialMessage: Message = {
           id: 1,
           text: "Hello, thank you for calling customer service. How can I help you today?",
           sender: 'agent',
