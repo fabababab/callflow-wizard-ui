@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import TranscriptPanel from '@/components/TranscriptPanel';
@@ -7,12 +7,21 @@ import CallDetails from '@/components/CallDetails';
 import IdentityValidation from '@/components/IdentityValidation';
 import ActionPanel from '@/components/ActionPanel';
 import CallEvaluation from '@/components/CallEvaluation';
-import ScenarioSelector, { ScenarioType } from '@/components/ScenarioSelector';
 import BankDetailsForm from '@/components/BankDetailsForm';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { useLocation } from 'react-router-dom';
+import { ScenarioType } from '@/components/Header';
 
 const Index = () => {
   const [activeScenario, setActiveScenario] = useState<ScenarioType>(null);
+  const location = useLocation();
+  
+  // Check for scenario in state from navigation
+  useEffect(() => {
+    if (location.state?.scenario) {
+      setActiveScenario(location.state.scenario);
+    }
+  }, [location.state]);
 
   return (
     <SidebarProvider>
@@ -24,12 +33,6 @@ const Index = () => {
             <div className="grid grid-cols-12 gap-6 h-full">
               {/* Main content area - Call transcript */}
               <div className="col-span-12 lg:col-span-7 h-full">
-                {/* Scenario selector */}
-                <ScenarioSelector 
-                  onSelectScenario={setActiveScenario} 
-                  activeScenario={activeScenario} 
-                />
-                
                 <TranscriptPanel activeScenario={activeScenario} />
               </div>
               
