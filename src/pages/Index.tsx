@@ -75,14 +75,9 @@ const Index = () => {
           <main className="flex-1 p-6 overflow-auto bg-callflow-background">
             <div className="grid grid-cols-12 gap-6 h-full">
               {/* Main content area - Call transcript */}
-              <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300`}>
-                <TranscriptPanel activeScenario={activeScenario} />
-              </div>
-              
-              {/* Right sidebar with tools and info */}
-              <div className={`relative col-span-12 ${rightSidebarOpen ? 'lg:col-span-5' : 'lg:col-span-1 lg:overflow-hidden'} transition-all duration-300`}>
-                {/* Toggle button for right sidebar - Updated to be more discrete with stroke outline */}
-                <div className="absolute -left-12 top-10 z-10">
+              <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300 relative`}>
+                {/* Toggle button for right sidebar - Positioned at the right edge of content area to always be visible */}
+                <div className="absolute right-0 top-4 z-10">
                   <Button 
                     variant="outline" 
                     size="icon" 
@@ -93,7 +88,11 @@ const Index = () => {
                     {rightSidebarOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                   </Button>
                 </div>
-                
+                <TranscriptPanel activeScenario={activeScenario} />
+              </div>
+              
+              {/* Right sidebar with tools and info */}
+              <div className={`relative col-span-12 ${rightSidebarOpen ? 'lg:col-span-5' : 'lg:col-span-1 lg:overflow-hidden'} transition-all duration-300`}>
                 <div className={`space-y-3 ${rightSidebarOpen ? 'opacity-100' : 'opacity-0 lg:hidden'} transition-opacity duration-300`}>
                   {renderCollapsibleSection(
                     "Call Details", 
