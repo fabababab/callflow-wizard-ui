@@ -76,8 +76,8 @@ const Index = () => {
             <div className="grid grid-cols-12 gap-6 h-full">
               {/* Main content area - Call transcript */}
               <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300 relative`}>
-                {/* Toggle button for right sidebar - Positioned at the right edge of content area to always be visible */}
-                <div className="absolute right-0 top-4 z-10">
+                {/* Toggle button for right sidebar - Positioned more to the right */}
+                <div className="absolute right-4 top-4 z-10">
                   <Button 
                     variant="outline" 
                     size="icon" 
