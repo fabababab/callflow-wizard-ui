@@ -1,5 +1,6 @@
+
 import React, { useRef, useEffect, useState } from 'react';
-import { Mic, CornerDownLeft, PhoneCall, PhoneOff, User, Clock, ArrowRight, Star, UserCircle, MessageSquare } from 'lucide-react';
+import { Mic, CornerDownLeft, PhoneCall, PhoneOff, User, Clock, ArrowRight, Star, UserCircle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from './ScenarioSelector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type Message = {
@@ -50,8 +50,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
   const [callStartTime, setCallStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const [acceptedCallId, setAcceptedCallId] = useState<number | null>(null);
-  const [expandedPreCallId, setExpandedPreCallId] = useState<number | null>(null);
-  const [currentTab, setCurrentTab] = useState<string>("incomingCalls");
+  const [historyCollapsed, setHistoryCollapsed] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
@@ -304,6 +303,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setCallActive(false);
       setCallStartTime(null);
       setElapsedTime('00:00');
+      setAcceptedCallId(null);
+      setHistoryCollapsed(true);
       toast({
         title: "Call Ended",
         description: `Call duration: ${elapsedTime}`,
@@ -315,7 +316,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     setAcceptedCallId(callId);
     setCallActive(true);
     setCallStartTime(new Date());
-    setCurrentTab("transcript");
+    setHistoryCollapsed(true);
     
     const call = incomingCalls.find(call => call.id === callId);
     
@@ -336,8 +337,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     }, 1000);
   };
 
-  const togglePreCallExpansion = (id: number) => {
-    setExpandedPreCallId(expandedPreCallId === id ? null : id);
+  const toggleHistoryCollapse = () => {
+    setHistoryCollapsed(!historyCollapsed);
   };
 
   const renderIncomingCalls = () => (
@@ -400,140 +401,115 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     </div>
   );
 
-  const renderPreCalls = () => (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground mb-2">Previous interactions with automated systems and agents</p>
-      <div className="space-y-3">
-        {preCalls.map(preCall => (
-          <Collapsible 
-            key={preCall.id}
-            open={expandedPreCallId === preCall.id}
-            onOpenChange={() => togglePreCallExpansion(preCall.id)}
-            className="border rounded-md"
+  const renderCallInterface = () => (
+    <div className="flex flex-col h-full">
+      <Collapsible 
+        open={!historyCollapsed}
+        className="mb-4 border rounded-lg overflow-hidden"
+      >
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            onClick={toggleHistoryCollapse}
+            className="w-full flex justify-between items-center p-3 rounded-none border-b"
           >
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full flex justify-between items-center p-3 h-auto">
-                <div className="flex items-center gap-2 text-left">
-                  <UserCircle size={18} />
-                  <div>
-                    <span className="font-medium">{preCall.agent}</span>
-                    <p className="text-xs text-muted-foreground">{preCall.timestamp}</p>
-                  </div>
-                </div>
-                <MessageSquare size={16} />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="p-3 pt-0 border-t bg-muted/30">
-              <div className="text-sm mb-2">
-                <p className="font-medium">Customer:</p>
-                <p>{preCall.content}</p>
-              </div>
-              <div className="text-sm">
-                <p className="font-medium">{preCall.agent}:</p>
-                <p>{preCall.response}</p>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderTranscript = () => (
-    <>
-      <div className="flex-1 overflow-y-auto mb-4">
-        {messages.length === 0 && !callActive ? (
-          <div className="h-full flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <PhoneCall size={48} className="mx-auto mb-2 opacity-20" />
-              <p>No active call</p>
-              <p className="text-sm">Click "Simulate Call" to start</p>
+            <div className="flex items-center gap-2">
+              <UserCircle size={18} />
+              <span className="font-medium">
+                Previous Conversation History
+              </span>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col">
-            {callActive && acceptedCallId && (
-              <div className="mb-6 pb-4 border-b">
-                <div className="px-4 py-2 mb-2 bg-muted/30 text-sm font-medium rounded-lg inline-block">
-                  Previous conversation history with {incomingCalls.find(call => call.id === acceptedCallId)?.customerName}
-                </div>
-                
-                {preCalls.map((preCall) => (
-                  <div key={`precall-${preCall.id}`} className="space-y-3">
-                    <div className="chat-message customer-message flex items-start space-x-2 mb-2">
-                      <Avatar className="h-8 w-8 mt-1">
-                        <AvatarFallback className="bg-callflow-accent/20 text-callflow-accent">
-                          {preCall.customerName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{preCall.customerName}</span>
-                          <span className="text-xs text-muted-foreground">{preCall.timestamp}</span>
-                        </div>
-                        <div className="bg-muted/30 px-4 py-2 rounded-lg text-sm mt-1">
-                          {preCall.content}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="chat-message agent-message flex items-start space-x-2 mb-2 justify-end">
-                      <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">{preCall.timestamp}</span>
-                          <span className="font-medium text-sm">{preCall.agent}</span>
-                        </div>
-                        <div className="bg-callflow-primary/10 text-callflow-primary px-4 py-2 rounded-lg text-sm mt-1">
-                          {preCall.response}
-                        </div>
-                      </div>
-                      <Avatar className="h-8 w-8 mt-1">
-                        <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">
-                          {preCall.agent.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                  </div>
-                ))}
-                
-                <div className="px-4 py-2 my-4 bg-green-100 text-green-700 text-sm font-medium rounded-lg inline-block">
-                  You are now connected with {incomingCalls.find(call => call.id === acceptedCallId)?.customerName}
-                </div>
+            {historyCollapsed ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Customer reported network issues during video calls</span>
+                <ChevronDown size={16} />
               </div>
+            ) : (
+              <ChevronUp size={16} />
             )}
-            
-            {messages.map((message) => (
-              <div 
-                key={message.id} 
-                className={`chat-message flex items-start ${message.sender === 'agent' ? 'justify-end' : ''} mb-4`}
-              >
-                {message.sender === 'customer' && (
-                  <Avatar className="h-8 w-8 mt-1 mr-2">
+          </Button>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent className="p-4 bg-muted/10">
+          <div className="space-y-4">
+            {preCalls.map((preCall) => (
+              <div key={`precall-${preCall.id}`} className="space-y-3">
+                <div className="chat-message customer-message flex items-start space-x-2 mb-2">
+                  <Avatar className="h-8 w-8 mt-1">
                     <AvatarFallback className="bg-callflow-accent/20 text-callflow-accent">
-                      {acceptedCallId ? incomingCalls.find(call => call.id === acceptedCallId)?.customerName.charAt(0) : 'C'}
+                      {preCall.customerName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
-                )}
-                <div className={`max-w-3/4 ${message.sender === 'agent' ? 'text-right' : ''}`}>
-                  <div className={`px-4 py-2 rounded-lg text-sm inline-block ${
-                    message.sender === 'agent' 
-                      ? 'bg-callflow-primary/10 text-callflow-primary' 
-                      : 'bg-muted/30'
-                  }`}>
-                    {message.text}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">{preCall.customerName}</span>
+                      <span className="text-xs text-muted-foreground">{preCall.timestamp}</span>
+                    </div>
+                    <div className="bg-muted/30 px-4 py-2 rounded-lg text-sm mt-1">
+                      {preCall.content}
+                    </div>
                   </div>
-                  <div className="text-xs opacity-70 mt-1">{message.timestamp}</div>
                 </div>
-                {message.sender === 'agent' && (
-                  <Avatar className="h-8 w-8 mt-1 ml-2">
-                    <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">A</AvatarFallback>
+                
+                <div className="chat-message agent-message flex items-start space-x-2 mb-2 justify-end">
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">{preCall.timestamp}</span>
+                      <span className="font-medium text-sm">{preCall.agent}</span>
+                    </div>
+                    <div className="bg-callflow-primary/10 text-callflow-primary px-4 py-2 rounded-lg text-sm mt-1">
+                      {preCall.response}
+                    </div>
+                  </div>
+                  <Avatar className="h-8 w-8 mt-1">
+                    <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">
+                      {preCall.agent.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
-                )}
+                </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
-        )}
+        </CollapsibleContent>
+      </Collapsible>
+
+      <div className="flex-1 overflow-y-auto mb-4">
+        <div className="flex flex-col">
+          <div className="px-4 py-2 mb-4 bg-green-100 text-green-700 text-sm font-medium rounded-lg inline-block">
+            You are now connected with {incomingCalls.find(call => call.id === acceptedCallId)?.customerName}
+          </div>
+          
+          {messages.map((message) => (
+            <div 
+              key={message.id} 
+              className={`chat-message flex items-start ${message.sender === 'agent' ? 'justify-end' : ''} mb-4`}
+            >
+              {message.sender === 'customer' && (
+                <Avatar className="h-8 w-8 mt-1 mr-2">
+                  <AvatarFallback className="bg-callflow-accent/20 text-callflow-accent">
+                    {acceptedCallId ? incomingCalls.find(call => call.id === acceptedCallId)?.customerName.charAt(0) : 'C'}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <div className={`max-w-3/4 ${message.sender === 'agent' ? 'text-right' : ''}`}>
+                <div className={`px-4 py-2 rounded-lg text-sm inline-block ${
+                  message.sender === 'agent' 
+                    ? 'bg-callflow-primary/10 text-callflow-primary' 
+                    : 'bg-muted/30'
+                }`}>
+                  {message.text}
+                </div>
+                <div className="text-xs opacity-70 mt-1">{message.timestamp}</div>
+              </div>
+              {message.sender === 'agent' && (
+                <Avatar className="h-8 w-8 mt-1 ml-2">
+                  <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">A</AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
       
       <div className="border-t pt-4">
@@ -574,7 +550,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
   
   return (
@@ -588,7 +564,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
               {elapsedTime}
             </Badge>
           )}
-          {!callActive && !acceptedCallId && (
+          {!callActive && (
             <Button 
               variant="default" 
               size="sm" 
@@ -613,25 +589,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="flex-1 flex flex-col">
-          <TabsList className="mb-4 grid grid-cols-3 h-10">
-            <TabsTrigger value="incomingCalls">Incoming Calls</TabsTrigger>
-            <TabsTrigger value="preCalls">Pre-Call History</TabsTrigger>
-            <TabsTrigger value="transcript">Live Transcript</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="incomingCalls" className="flex-1 overflow-y-auto">
-            {renderIncomingCalls()}
-          </TabsContent>
-          
-          <TabsContent value="preCalls" className="flex-1 overflow-y-auto">
-            {renderPreCalls()}
-          </TabsContent>
-          
-          <TabsContent value="transcript" className="flex-1 overflow-y-auto flex flex-col">
-            {renderTranscript()}
-          </TabsContent>
-        </Tabs>
+        {!callActive && !acceptedCallId ? (
+          renderIncomingCalls()
+        ) : (
+          renderCallInterface()
+        )}
       </CardContent>
     </Card>
   );
