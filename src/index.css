@@ -45,6 +45,15 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 223 47% 20%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --callflow-background: 210 40% 98%;
+    --callflow-text: 222.2 84% 4.9%;
+    --callflow-primary: 221 83% 53%;
+    --callflow-secondary: 217 33% 17%;
+    --callflow-accent: 243 74% 58%;
+    --callflow-muted-text: 215.4 16.3% 46.9%;
+    --callflow-danger: 0 84.2% 60.2%;
+    --callflow-success: 142.1 76.2% 36.3%;
   }
 
   .dark {
@@ -83,6 +92,15 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --callflow-background: 222.2 84% 4.9%;
+    --callflow-text: 210 40% 98%;
+    --callflow-primary: 224.3 76.3% 48%;
+    --callflow-secondary: 217.2 32.6% 17.5%;
+    --callflow-accent: 243 74% 58%;
+    --callflow-muted-text: 215 20.2% 65.1%;
+    --callflow-danger: 0 62.8% 30.6%;
+    --callflow-success: 142.1 46.2% 36.3%;
   }
 }
 
@@ -112,5 +130,18 @@
 
   .recording-dot {
     @apply h-2 w-2 rounded-full bg-callflow-danger animate-pulse-subtle inline-block mr-2;
+  }
+  
+  @keyframes pulse-subtle {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
