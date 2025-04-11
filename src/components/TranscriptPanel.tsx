@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, User, Clock, ArrowRight, Star, UserCircle, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from './ScenarioSelector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type Message = {
   id: number;
@@ -452,13 +452,83 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </div>
         ) : (
           <div className="flex flex-col">
+            {callActive && acceptedCallId && (
+              <div className="mb-6 pb-4 border-b">
+                <div className="px-4 py-2 mb-2 bg-muted/30 text-sm font-medium rounded-lg inline-block">
+                  Previous conversation history with {incomingCalls.find(call => call.id === acceptedCallId)?.customerName}
+                </div>
+                
+                {preCalls.map((preCall) => (
+                  <div key={`precall-${preCall.id}`} className="space-y-3">
+                    <div className="chat-message customer-message flex items-start space-x-2 mb-2">
+                      <Avatar className="h-8 w-8 mt-1">
+                        <AvatarFallback className="bg-callflow-accent/20 text-callflow-accent">
+                          {preCall.customerName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{preCall.customerName}</span>
+                          <span className="text-xs text-muted-foreground">{preCall.timestamp}</span>
+                        </div>
+                        <div className="bg-muted/30 px-4 py-2 rounded-lg text-sm mt-1">
+                          {preCall.content}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="chat-message agent-message flex items-start space-x-2 mb-2 justify-end">
+                      <div className="flex flex-col items-end">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">{preCall.timestamp}</span>
+                          <span className="font-medium text-sm">{preCall.agent}</span>
+                        </div>
+                        <div className="bg-callflow-primary/10 text-callflow-primary px-4 py-2 rounded-lg text-sm mt-1">
+                          {preCall.response}
+                        </div>
+                      </div>
+                      <Avatar className="h-8 w-8 mt-1">
+                        <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">
+                          {preCall.agent.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                  </div>
+                ))}
+                
+                <div className="px-4 py-2 my-4 bg-green-100 text-green-700 text-sm font-medium rounded-lg inline-block">
+                  You are now connected with {incomingCalls.find(call => call.id === acceptedCallId)?.customerName}
+                </div>
+              </div>
+            )}
+            
             {messages.map((message) => (
               <div 
                 key={message.id} 
-                className={message.sender === 'agent' ? 'transcript-agent' : 'transcript-customer'}
+                className={`chat-message flex items-start ${message.sender === 'agent' ? 'justify-end' : ''} mb-4`}
               >
-                <div className="text-sm">{message.text}</div>
-                <div className="text-xs opacity-70 mt-1 text-right">{message.timestamp}</div>
+                {message.sender === 'customer' && (
+                  <Avatar className="h-8 w-8 mt-1 mr-2">
+                    <AvatarFallback className="bg-callflow-accent/20 text-callflow-accent">
+                      {acceptedCallId ? incomingCalls.find(call => call.id === acceptedCallId)?.customerName.charAt(0) : 'C'}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <div className={`max-w-3/4 ${message.sender === 'agent' ? 'text-right' : ''}`}>
+                  <div className={`px-4 py-2 rounded-lg text-sm inline-block ${
+                    message.sender === 'agent' 
+                      ? 'bg-callflow-primary/10 text-callflow-primary' 
+                      : 'bg-muted/30'
+                  }`}>
+                    {message.text}
+                  </div>
+                  <div className="text-xs opacity-70 mt-1">{message.timestamp}</div>
+                </div>
+                {message.sender === 'agent' && (
+                  <Avatar className="h-8 w-8 mt-1 ml-2">
+                    <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">A</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
             ))}
             <div ref={messagesEndRef} />
