@@ -63,8 +63,8 @@ const Dashboard = () => {
       id: 1,
       timestamp: '14:32:15',
       agent: 'RoboVoice',
-      content: 'Hello, I'm having trouble with my internet connection. It keeps dropping every few minutes.',
-      response: 'I understand that's frustrating. Can you tell me when this issue started and if you've already tried restarting your router?',
+      content: "Hello, I'm having trouble with my internet connection. It keeps dropping every few minutes.",
+      response: "I understand that's frustrating. Can you tell me when this issue started and if you've already tried restarting your router?",
       customerName: 'Emma Wagner',
       callType: 'Technical Support'
     },
@@ -72,8 +72,8 @@ const Dashboard = () => {
       id: 2,
       timestamp: '14:33:20',
       agent: 'RoboVoice',
-      content: 'It started yesterday evening. Yes, I've tried restarting the router multiple times but it doesn't help.',
-      response: 'Thank you for that information. Have you noticed if any specific activities cause the connection to drop more frequently?',
+      content: "It started yesterday evening. Yes, I've tried restarting the router multiple times but it doesn't help.",
+      response: "Thank you for that information. Have you noticed if any specific activities cause the connection to drop more frequently?",
       customerName: 'Emma Wagner',
       callType: 'Technical Support'
     },
@@ -81,8 +81,8 @@ const Dashboard = () => {
       id: 3,
       timestamp: '14:34:45',
       agent: 'Technical Agent Maria',
-      content: 'It seems to happen more when I'm on video calls or streaming videos.',
-      response: 'That suggests it might be related to bandwidth usage. I'll make a note of this and transfer you to one of our network specialists who can help diagnose the issue further.',
+      content: "It seems to happen more when I'm on video calls or streaming videos.",
+      response: "That suggests it might be related to bandwidth usage. I'll make a note of this and transfer you to one of our network specialists who can help diagnose the issue further.",
       customerName: 'Emma Wagner',
       callType: 'Technical Support'
     }
