@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -73,16 +72,16 @@ const Index = () => {
         <div className="flex flex-1 overflow-hidden">
           <Sidebar />
           <div className="flex-1 p-6 overflow-auto bg-callflow-background relative">
-            {/* Toggle button for right sidebar - Positioned outside the content box */}
-            <div className="absolute right-0 z-10" style={{ top: '50%', transform: 'translateY(-50%)', marginRight: '-20px' }}>
+            {/* Toggle button for right sidebar - Positioned outside the content box with more visibility */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 z-20" style={{ marginRight: '-24px' }}>
               <Button 
                 variant="outline" 
                 size="icon" 
-                className="h-10 w-10 rounded-md border border-gray-300 bg-background text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-sm"
+                className="h-12 w-12 rounded-full border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
                 onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
                 aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
               >
-                {rightSidebarOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                {rightSidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               </Button>
             </div>
             
