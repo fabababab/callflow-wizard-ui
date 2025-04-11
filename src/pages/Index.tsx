@@ -72,22 +72,23 @@ const Index = () => {
         <Header />
         <div className="flex flex-1 overflow-hidden">
           <Sidebar />
-          <main className="flex-1 p-6 overflow-auto bg-callflow-background">
+          <div className="flex-1 p-6 overflow-auto bg-callflow-background relative">
+            {/* Toggle button for right sidebar - Positioned outside the content box */}
+            <div className="absolute right-0 z-10" style={{ top: '50%', transform: 'translateY(-50%)', marginRight: '-20px' }}>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="h-10 w-10 rounded-md border border-gray-300 bg-background text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-sm"
+                onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+                aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+              >
+                {rightSidebarOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+              </Button>
+            </div>
+            
             <div className="grid grid-cols-12 gap-6 h-full">
               {/* Main content area - Call transcript */}
-              <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300 relative`}>
-                {/* Toggle button for right sidebar - Positioned more to the right */}
-                <div className="absolute right-4 top-4 z-10">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="h-10 w-10 rounded-md border border-gray-300 bg-background text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all"
-                    onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-                    aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-                  >
-                    {rightSidebarOpen ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-                  </Button>
-                </div>
+              <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300`}>
                 <TranscriptPanel activeScenario={activeScenario} />
               </div>
               
@@ -138,7 +139,7 @@ const Index = () => {
                 </div>
               </div>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
