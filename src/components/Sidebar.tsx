@@ -31,8 +31,8 @@ const Sidebar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <ShadcnSidebar className="w-60 h-[calc(100vh-4rem)]" variant="sidebar" collapsible="icon">
-      <SidebarContent>
+    <ShadcnSidebar className="w-60 h-screen" variant="sidebar" collapsible="icon">
+      <SidebarContent className="flex flex-col h-full">
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -124,12 +124,10 @@ const Sidebar = () => {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-      </SidebarContent>
 
-      <SidebarSeparator />
-      
-      <SidebarContent className="mt-auto">
-        <SidebarGroup>
+        <SidebarSeparator />
+        
+        <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
