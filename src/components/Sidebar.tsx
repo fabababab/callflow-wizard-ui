@@ -13,7 +13,7 @@ import {
   AlertCircle,
   User
 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
@@ -38,21 +38,27 @@ const Sidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Dashboard" isActive={isActive('/')}>
-                  <Home size={20} />
-                  <span>Dashboard</span>
+                <SidebarMenuButton tooltip="Dashboard" isActive={isActive('/')} asChild>
+                  <Link to="/">
+                    <Home size={20} />
+                    <span>Dashboard</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Calls" isActive={isActive('/calls')}>
-                  <PhoneCall size={20} />
-                  <span>Calls</span>
+                <SidebarMenuButton tooltip="Calls" isActive={isActive('/calls')} asChild>
+                  <Link to="/calls">
+                    <PhoneCall size={20} />
+                    <span>Calls</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Contacts" isActive={isActive('/contacts')}>
-                  <Users size={20} />
-                  <span>Contacts</span>
+                <SidebarMenuButton tooltip="Contacts" isActive={isActive('/contacts')} asChild>
+                  <Link to="/contacts">
+                    <Users size={20} />
+                    <span>Contacts</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -66,21 +72,27 @@ const Sidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Current Queue" isActive={isActive('/queue')}>
-                  <HeadphonesIcon size={20} />
-                  <span>Queue</span>
+                <SidebarMenuButton tooltip="Current Queue" isActive={isActive('/queue')} asChild>
+                  <Link to="/queue">
+                    <HeadphonesIcon size={20} />
+                    <span>Queue</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Call History" isActive={isActive('/history')}>
-                  <FileText size={20} />
-                  <span>Call History</span>
+                <SidebarMenuButton tooltip="Call History" isActive={isActive('/call-history')} asChild>
+                  <Link to="/call-history">
+                    <FileText size={20} />
+                    <span>Call History</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Escalations" isActive={isActive('/escalations')}>
-                  <AlertCircle size={20} />
-                  <span>Escalations</span>
+                <SidebarMenuButton tooltip="Escalations" isActive={isActive('/escalations')} asChild>
+                  <Link to="/escalations">
+                    <AlertCircle size={20} />
+                    <span>Escalations</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -94,15 +106,19 @@ const Sidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Reports" isActive={isActive('/reports')}>
-                  <ClipboardList size={20} />
-                  <span>Reports</span>
+                <SidebarMenuButton tooltip="Reports" isActive={isActive('/reports')} asChild>
+                  <Link to="/reports">
+                    <ClipboardList size={20} />
+                    <span>Reports</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Statistics" isActive={isActive('/stats')}>
-                  <BarChart3 size={20} />
-                  <span>Statistics</span>
+                <SidebarMenuButton tooltip="Statistics" isActive={isActive('/stats')} asChild>
+                  <Link to="/stats">
+                    <BarChart3 size={20} />
+                    <span>Statistics</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -117,21 +133,27 @@ const Sidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Profile" isActive={isActive('/profile')}>
-                  <User size={20} />
-                  <span>Profile</span>
+                <SidebarMenuButton tooltip="Profile" isActive={isActive('/profile')} asChild>
+                  <Link to="/profile">
+                    <User size={20} />
+                    <span>Profile</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings" isActive={isActive('/settings')}>
-                  <Settings size={20} />
-                  <span>Settings</span>
+                <SidebarMenuButton tooltip="Settings" isActive={isActive('/settings')} asChild>
+                  <Link to="/settings">
+                    <Settings size={20} />
+                    <span>Settings</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Help & Support" isActive={isActive('/help')}>
-                  <HelpCircle size={20} />
-                  <span>Help & Support</span>
+                <SidebarMenuButton tooltip="Help & Support" isActive={isActive('/help')} asChild>
+                  <Link to="/help">
+                    <HelpCircle size={20} />
+                    <span>Help & Support</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
