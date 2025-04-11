@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -69,22 +70,22 @@ const Index = () => {
     <SidebarProvider>
       <div className="flex flex-col h-screen w-full">
         <Header />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Toggle button for right sidebar - Positioned right beneath the navbar */}
+          <div className="absolute right-0 top-0 z-20 mt-2" style={{ marginRight: '-24px' }}>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-12 w-12 rounded-full border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
+              onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+              aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              {rightSidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </Button>
+          </div>
+          
           <Sidebar />
-          <div className="flex-1 p-6 overflow-auto bg-callflow-background relative">
-            {/* Toggle button for right sidebar - Positioned outside the content box with more visibility */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 z-20" style={{ marginRight: '-24px' }}>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-12 w-12 rounded-full border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
-                onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
-                aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-              >
-                {rightSidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-              </Button>
-            </div>
-            
+          <div className="flex-1 p-6 overflow-auto bg-callflow-background">
             <div className="grid grid-cols-12 gap-6 h-full">
               {/* Main content area - Call transcript */}
               <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300`}>
