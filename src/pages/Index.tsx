@@ -81,12 +81,12 @@ const Index = () => {
               
               {/* Right sidebar with tools and info */}
               <div className={`relative col-span-12 ${rightSidebarOpen ? 'lg:col-span-5' : 'lg:col-span-1 lg:overflow-hidden'} transition-all duration-300`}>
-                {/* Toggle button for right sidebar - Updated positioning and styling */}
-                <div className="absolute -left-3 top-24 transform z-10">
+                {/* Toggle button for right sidebar - Updated to be square and positioned higher */}
+                <div className="absolute -left-6 top-16 z-10">
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-10 w-10 rounded-full shadow-md bg-accent text-white hover:bg-accent/90 hover:scale-105 transition-all"
+                    className="h-12 w-12 rounded-md shadow-md bg-accent text-white hover:bg-accent/90 hover:scale-105 transition-all"
                     onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
                     aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
                   >
