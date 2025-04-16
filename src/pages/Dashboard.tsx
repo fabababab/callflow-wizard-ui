@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { HeadphonesIcon, Phone, Clock, User, ArrowRight, AlertCircle, MessageSquare, Star, CheckCircle, UserCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -18,11 +17,11 @@ const Dashboard = () => {
   const [acceptedCallId, setAcceptedCallId] = useState<number | null>(null);
   const [expandedPreCallId, setExpandedPreCallId] = useState<number | null>(null);
 
-  const dashboardStats = {
+  const queueStats = {
     activeAgents: 12,
-    waitingCalls: 5,
-    averageWaitTime: '2m 45s',
-    serviceLevelToday: 87
+    waitingCalls: 18,
+    averageWaitTime: '3m 45s',
+    serviceLevelToday: 82
   };
 
   const incomingCalls = [
@@ -138,7 +137,7 @@ const Dashboard = () => {
                     <HeadphonesIcon className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.activeAgents}</div>
+                    <div className="text-2xl font-bold">{queueStats.activeAgents}</div>
                     <p className="text-xs text-callflow-success">
                       All agents online
                     </p>
@@ -152,9 +151,9 @@ const Dashboard = () => {
                     <Phone className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.waitingCalls}</div>
+                    <div className="text-2xl font-bold">{queueStats.waitingCalls}</div>
                     <p className="text-xs text-callflow-accent">
-                      2 high priority
+                      3 high priority
                     </p>
                   </CardContent>
                 </Card>
@@ -166,9 +165,9 @@ const Dashboard = () => {
                     <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.averageWaitTime}</div>
-                    <p className="text-xs text-callflow-success">
-                      -30s from target
+                    <div className="text-2xl font-bold">{queueStats.averageWaitTime}</div>
+                    <p className="text-xs text-callflow-accent">
+                      +45s from target
                     </p>
                   </CardContent>
                 </Card>
@@ -180,8 +179,8 @@ const Dashboard = () => {
                     <AlertCircle className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{dashboardStats.serviceLevelToday}%</div>
-                    <Progress value={dashboardStats.serviceLevelToday} className="h-2" />
+                    <div className="text-2xl font-bold">{queueStats.serviceLevelToday}%</div>
+                    <Progress value={queueStats.serviceLevelToday} className="h-2" />
                   </CardContent>
                 </Card>
               </div>
