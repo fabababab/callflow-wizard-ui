@@ -11,7 +11,9 @@ import {
   CheckCircle, 
   History, 
   FileText,
-  UserCircle
+  UserCircle,
+  CornerDownLeft,
+  ChevronDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +26,8 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import SidebarTrigger from '@/components/SidebarTrigger';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -31,6 +35,17 @@ const Dashboard = () => {
   const [acceptedCallId, setAcceptedCallId] = React.useState<number | null>(null);
   const [expandedPreCallId, setExpandedPreCallId] = React.useState<number | null>(null);
   const [rightSidebarOpen, setRightSidebarOpen] = React.useState(true);
+  const [messages, setMessages] = React.useState<Array<{
+    id: number;
+    text: string;
+    sender: 'agent' | 'customer';
+    timestamp: string;
+  }>>([]);
+  const [inputValue, setInputValue] = React.useState('');
+  const [callActive, setCallActive] = React.useState(false);
+  const [callStartTime, setCallStartTime] = React.useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = React.useState('00:00');
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   const queueStats = {
     activeAgents: 12,
@@ -137,31 +152,202 @@ const Dashboard = () => {
     }
   ];
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Timer for call duration
+  React.useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    
+    if (callActive && callStartTime) {
+      interval = setInterval(() => {
+        const now = new Date();
+        const diff = now.getTime() - callStartTime.getTime();
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        setElapsedTime(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      }, 1000);
+    }
+    
+    return () => clearInterval(interval);
+  }, [callActive, callStartTime]);
+
   const handleAcceptCall = (callId: number) => {
     setAcceptedCallId(callId);
+    setCallActive(true);
+    setCallStartTime(new Date());
     const call = incomingCalls.find(call => call.id === callId);
     
     toast({
       title: "Call Accepted",
       description: `You are now connected with ${call?.customerName}`,
     });
-  };
 
-  const togglePreCallExpansion = (id: number) => {
-    setExpandedPreCallId(expandedPreCallId === id ? null : id);
+    // Simulate initial greeting after a brief delay
+    setTimeout(() => {
+      const initialMessage = {
+        id: 1,
+        text: `Hello ${call?.customerName}, thank you for calling technical support. I understand you're experiencing issues with your internet connection. How can I assist you today?`,
+        sender: 'agent' as const,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages([initialMessage]);
+
+      // Simulate customer response
+      setTimeout(() => {
+        const customerResponse = {
+          id: 2,
+          text: "Yes, my internet keeps dropping every few minutes. It's really frustrating, especially during video calls.",
+          sender: 'customer' as const,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, customerResponse]);
+      }, 2000);
+    }, 1000);
   };
 
   const handleEndCall = () => {
+    setCallActive(false);
+    setCallStartTime(null);
+    setElapsedTime('00:00');
+    setAcceptedCallId(null);
+    setMessages([]);
     toast({
       title: "Call Ended",
       description: "Call has been successfully completed",
     });
-    setAcceptedCallId(null);
   };
 
-  const handleViewCallDetails = (callId: number) => {
-    navigate('/');
+  const handleSendMessage = () => {
+    if (inputValue.trim()) {
+      const newMessage = {
+        id: messages.length + 1,
+        text: inputValue,
+        sender: 'agent' as const,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setInputValue('');
+
+      // Simulate customer response after agent's message
+      setTimeout(() => {
+        const responses = [
+          "I've already tried restarting the router multiple times.",
+          "Yes, it happens more frequently during video calls.",
+          "The issue started yesterday evening.",
+          "No other devices are having this problem.",
+          "Thank you for your help with this."
+        ];
+        
+        const customerResponse = {
+          id: messages.length + 2,
+          text: responses[Math.min(Math.floor(messages.length / 2), responses.length - 1)],
+          sender: 'customer' as const,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, customerResponse]);
+      }, 2000);
+    }
   };
+
+  // Update the active call section rendering in the component's JSX
+  const renderActiveCall = () => (
+    <Card className="border-green-500 border-2">
+      <CardHeader className="bg-green-50">
+        <div className="flex justify-between items-center">
+          <CardTitle>Active Call - {incomingCalls.find(c => c.id === acceptedCallId)?.customerName}</CardTitle>
+          <Badge className="bg-green-500">Live</Badge>
+        </div>
+        <CardDescription>
+          {incomingCalls.find(c => c.id === acceptedCallId)?.callType} • 
+          {incomingCalls.find(c => c.id === acceptedCallId)?.phoneNumber}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="mb-6">
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full flex justify-between items-center p-3">
+                <span className="font-medium">Pre-Call History</span>
+                <ChevronDown size={16} />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-3">
+              {preCalls.map(preCall => (
+                <div key={preCall.id} className="p-3 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <UserCircle size={18} />
+                    <span className="font-medium">{preCall.agent}</span>
+                    <span className="text-sm text-muted-foreground">{preCall.timestamp}</span>
+                  </div>
+                  <p className="text-sm">{preCall.content}</p>
+                  <p className="text-sm text-muted-foreground mt-2">{preCall.response}</p>
+                </div>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+
+        <div className="space-y-4 max-h-[400px] overflow-y-auto mb-4">
+          {messages.map((message) => (
+            <div 
+              key={message.id}
+              className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} items-start gap-2`}
+            >
+              {message.sender === 'customer' && (
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary/10">
+                    {incomingCalls.find(c => c.id === acceptedCallId)?.customerName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <div className={`max-w-[80%] ${message.sender === 'agent' ? 'text-right' : ''}`}>
+                <div
+                  className={`px-4 py-2 rounded-lg text-sm ${
+                    message.sender === 'agent'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  {message.text}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {message.timestamp}
+                </div>
+              </div>
+              {message.sender === 'agent' && (
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>A</AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="flex items-center gap-2 pt-4 border-t">
+          <Input
+            placeholder="Type your message..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSendMessage();
+              }
+            }}
+          />
+          <Button onClick={handleSendMessage} disabled={!inputValue.trim()}>
+            <CornerDownLeft size={18} />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <SidebarProvider>
@@ -343,94 +529,7 @@ const Dashboard = () => {
                         </CardContent>
                       </Card>
                     ) : (
-                      <>
-                        <Card className="border-green-500 border-2">
-                          <CardHeader className="bg-green-50">
-                            <div className="flex justify-between items-center">
-                              <CardTitle>Active Call - {incomingCalls.find(c => c.id === acceptedCallId)?.customerName}</CardTitle>
-                              <Badge className="bg-green-500">Live</Badge>
-                            </div>
-                            <CardDescription>{incomingCalls.find(c => c.id === acceptedCallId)?.callType} • {incomingCalls.find(c => c.id === acceptedCallId)?.phoneNumber}</CardDescription>
-                          </CardHeader>
-                          <CardContent className="pt-6">
-                            <div className="mb-6">
-                              <h3 className="text-sm font-medium mb-2">Pre-Call History</h3>
-                              <div className="space-y-3">
-                                {preCalls.map(preCall => (
-                                  <Collapsible 
-                                    key={preCall.id}
-                                    open={expandedPreCallId === preCall.id}
-                                    onOpenChange={() => togglePreCallExpansion(preCall.id)}
-                                    className="border rounded-md"
-                                  >
-                                    <CollapsibleTrigger asChild>
-                                      <Button variant="ghost" className="w-full flex justify-between items-center p-3 h-auto">
-                                        <div className="flex items-center gap-2 text-left">
-                                          <UserCircle size={18} />
-                                          <div>
-                                            <span className="font-medium">{preCall.agent}</span>
-                                            <p className="text-xs text-muted-foreground">{preCall.timestamp}</p>
-                                          </div>
-                                        </div>
-                                        <MessageSquare size={16} />
-                                      </Button>
-                                    </CollapsibleTrigger>
-                                    <CollapsibleContent className="p-3 pt-0 border-t bg-muted/30">
-                                      <div className="text-sm mb-2">
-                                        <p className="font-medium">Customer:</p>
-                                        <p>{preCall.content}</p>
-                                      </div>
-                                      <div className="text-sm">
-                                        <p className="font-medium">{preCall.agent}:</p>
-                                        <p>{preCall.response}</p>
-                                      </div>
-                                    </CollapsibleContent>
-                                  </Collapsible>
-                                ))}
-                              </div>
-                            </div>
-                            
-                            <div className="flex gap-3">
-                              <Button 
-                                variant="default" 
-                                className="flex-1"
-                                onClick={() => handleViewCallDetails(acceptedCallId)}
-                              >
-                                View Full Call Details
-                              </Button>
-                              <Button 
-                                variant="destructive" 
-                                className="flex-1"
-                                onClick={handleEndCall}
-                              >
-                                End Call
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Recommended Actions</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2">
-                              <Button variant="outline" className="w-full justify-start gap-2">
-                                <CheckCircle size={16} />
-                                Verify Customer Identity
-                              </Button>
-                              <Button variant="outline" className="w-full justify-start gap-2">
-                                <CheckCircle size={16} />
-                                Run Network Diagnostics
-                              </Button>
-                              <Button variant="outline" className="w-full justify-start gap-2">
-                                <CheckCircle size={16} />
-                                Check Recent Account Changes
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </>
+                      renderActiveCall()
                     )}
 
                     <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
