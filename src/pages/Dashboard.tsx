@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HeadphonesIcon, Phone, Clock, User, ArrowRight, AlertCircle, MessageSquare, Star, CheckCircle, UserCircle } from 'lucide-react';
+import { HeadphonesIcon, Phone, Clock, User, ArrowRight, AlertCircle, MessageSquare, Star, CheckCircle, History, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,41 @@ const Dashboard = () => {
     waitingCalls: 18,
     averageWaitTime: '3m 45s',
     serviceLevelToday: 82
+  };
+
+  const incomingCall = {
+    id: 1,
+    customerName: 'Emma Wagner',
+    phoneNumber: '+49 123 987 6543',
+    waitTime: '3m 12s',
+    callType: 'Technical Support',
+    priority: 'high',
+    expertise: 'Network Issues',
+    matchScore: 95,
+    caseHistory: [
+      {
+        date: '2025-04-10',
+        type: 'Technical Support',
+        status: 'Resolved',
+        description: 'Router configuration issues'
+      },
+      {
+        date: '2025-03-15',
+        type: 'Billing Inquiry',
+        status: 'Resolved',
+        description: 'Monthly payment adjustment'
+      }
+    ],
+    roboCallSummary: {
+      duration: '2m 45s',
+      intents: ['Network Connectivity', 'Router Issues'],
+      sentiment: 'Frustrated',
+      keyPoints: [
+        'Internet connection drops frequently',
+        'Router has been restarted multiple times',
+        'Issues persist for the last 24 hours'
+      ]
+    }
   };
 
   const incomingCalls = [
@@ -128,7 +163,7 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">
@@ -193,67 +228,96 @@ const Dashboard = () => {
               </div>
 
               {!acceptedCallId ? (
-                <Card>
+                <Card className="overflow-hidden">
                   <CardHeader>
-                    <CardTitle>Recommended Calls for You</CardTitle>
-                    <CardDescription>Based on your expertise and call handling history</CardDescription>
+                    <CardTitle>Priority Call</CardTitle>
+                    <CardDescription>Recommended based on your expertise and availability</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {incomingCalls.map(call => (
-                        <div 
-                          key={call.id} 
-                          className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/5 transition-colors"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="bg-callflow-primary/10 w-10 h-10 rounded-full flex items-center justify-center text-callflow-primary">
-                              <User size={20} />
-                            </div>
-                            <div>
-                              <h3 className="font-medium">{call.customerName}</h3>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span>{call.phoneNumber}</span>
-                                <span>•</span>
-                                <span>{call.callType}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <div className="flex items-center gap-1">
-                                <Clock size={14} className="text-muted-foreground" />
-                                <span className="text-sm">{call.waitTime}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Star size={14} className="text-yellow-500" />
-                                <span className="text-sm">{call.matchScore}% expertise match</span>
-                              </div>
-                            </div>
-                            <Badge 
-                              variant="outline" 
-                              className={
-                                `text-xs font-normal ${
-                                  call.priority === 'high'
-                                    ? 'bg-destructive/10 text-destructive border-destructive/20'
-                                    : call.priority === 'medium'
-                                    ? 'bg-callflow-accent/10 text-callflow-accent border-callflow-accent/20'
-                                    : 'bg-callflow-muted-text/10 text-callflow-muted-text border-callflow-muted-text/20'
-                                }`
-                              }
-                            >
-                              {call.priority} priority
-                            </Badge>
-                            <Button 
-                              size="sm" 
-                              className="gap-2"
-                              onClick={() => handleAcceptCall(call.id)}
-                            >
-                              Accept <ArrowRight size={14} />
-                            </Button>
+                  <CardContent className="space-y-6">
+                    <div className="flex items-start gap-6 p-4 bg-accent/5 rounded-lg">
+                      <div className="bg-callflow-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-callflow-primary shrink-0">
+                        <User size={32} />
+                      </div>
+                      <div className="space-y-4 flex-1">
+                        <div>
+                          <h3 className="text-xl font-semibold">{incomingCall.customerName}</h3>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone size={16} />
+                            <span>{incomingCall.phoneNumber}</span>
+                            <span>•</span>
+                            <span>{incomingCall.callType}</span>
                           </div>
                         </div>
-                      ))}
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <h4 className="font-medium flex items-center gap-2">
+                              <History size={16} />
+                              Case History
+                            </h4>
+                            <div className="space-y-2">
+                              {incomingCall.caseHistory.map((case_, index) => (
+                                <div key={index} className="text-sm p-2 bg-background rounded-md">
+                                  <div className="flex justify-between">
+                                    <span className="font-medium">{case_.type}</span>
+                                    <span className="text-muted-foreground">{case_.date}</span>
+                                  </div>
+                                  <p className="text-muted-foreground mt-1">{case_.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="font-medium flex items-center gap-2">
+                              <FileText size={16} />
+                              Robo-Call Summary
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="p-2 bg-background rounded-md">
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="font-medium">Duration</span>
+                                  <span>{incomingCall.roboCallSummary.duration}</span>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="font-medium">Key Points:</p>
+                                  <ul className="list-disc list-inside text-muted-foreground">
+                                    {incomingCall.roboCallSummary.keyPoints.map((point, index) => (
+                                      <li key={index}>{point}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t pt-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <Clock size={16} className="text-muted-foreground" />
+                          <span>Waiting: {incomingCall.waitTime}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star size={16} className="text-yellow-500" />
+                          <span>{incomingCall.matchScore}% match</span>
+                        </div>
+                        <Badge 
+                          variant="outline" 
+                          className="bg-destructive/10 text-destructive border-destructive/20"
+                        >
+                          High priority
+                        </Badge>
+                      </div>
+                      <Button 
+                        size="lg" 
+                        className="gap-2"
+                        onClick={() => handleAcceptCall(incomingCall.id)}
+                      >
+                        Accept Call <ArrowRight size={16} />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
