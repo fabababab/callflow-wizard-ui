@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import TranscriptPanel from '@/components/TranscriptPanel';
@@ -14,24 +14,24 @@ import { ScenarioType } from '@/components/Header';
 import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const Index = () => {
-  const [activeScenario, setActiveScenario] = useState<ScenarioType>(null);
+  // Move useState hooks inside the component body
+  const [activeScenario, setActiveScenario] = React.useState<ScenarioType>(null);
   const location = useLocation();
   
   // State for collapsible panels
-  const [callDetailsOpen, setCallDetailsOpen] = useState(true);
-  const [identityValidationOpen, setIdentityValidationOpen] = useState(true);
-  const [bankDetailsOpen, setBankDetailsOpen] = useState(true);
-  const [actionPanelOpen, setActionPanelOpen] = useState(true);
-  const [callEvaluationOpen, setCallEvaluationOpen] = useState(true);
+  const [callDetailsOpen, setCallDetailsOpen] = React.useState(true);
+  const [identityValidationOpen, setIdentityValidationOpen] = React.useState(true);
+  const [bankDetailsOpen, setBankDetailsOpen] = React.useState(true);
+  const [actionPanelOpen, setActionPanelOpen] = React.useState(true);
+  const [callEvaluationOpen, setCallEvaluationOpen] = React.useState(true);
   
   // State for right sidebar collapse
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+  const [rightSidebarOpen, setRightSidebarOpen] = React.useState(true);
   
   // Check for scenario in state from navigation
-  useEffect(() => {
+  React.useEffect(() => {
     if (location.state?.scenario) {
       setActiveScenario(location.state.scenario);
     }
