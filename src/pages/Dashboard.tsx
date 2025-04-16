@@ -160,7 +160,6 @@ const Dashboard = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Timer for call duration
   React.useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     
@@ -188,7 +187,6 @@ const Dashboard = () => {
       description: `You are now connected with ${call?.customerName}`,
     });
 
-    // Simulate initial greeting after a brief delay
     setTimeout(() => {
       const initialMessage = {
         id: 1,
@@ -198,7 +196,6 @@ const Dashboard = () => {
       };
       setMessages([initialMessage]);
 
-      // Simulate customer response
       setTimeout(() => {
         const customerResponse = {
           id: 2,
@@ -234,7 +231,6 @@ const Dashboard = () => {
       setMessages(prev => [...prev, newMessage]);
       setInputValue('');
 
-      // Simulate customer response after agent's message
       setTimeout(() => {
         const responses = [
           "I've already tried restarting the router multiple times.",
@@ -255,7 +251,6 @@ const Dashboard = () => {
     }
   };
 
-  // Update the active call section rendering in the component's JSX
   const renderActiveCall = () => (
     <Card className="border-green-500 border-2">
       <CardHeader className="bg-green-50">
@@ -359,8 +354,8 @@ const Dashboard = () => {
             <div className="absolute right-0 top-0 z-20 mt-4 mr-6">
               <SidebarTrigger />
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-12 gap-6">
+            <div className="p-6 px-4 md:px-6">
+              <div className="grid grid-cols-12 gap-4 md:gap-6">
                 <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300`}>
                   <div className="space-y-6">
                     <div>
