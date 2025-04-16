@@ -1,5 +1,19 @@
+
 import React, { useState } from 'react';
-import { HeadphonesIcon, Phone, Clock, User, ArrowRight, AlertCircle, MessageSquare, Star, CheckCircle, History, FileText } from 'lucide-react';
+import { 
+  HeadphonesIcon, 
+  Phone, 
+  Clock, 
+  User,
+  ArrowRight, 
+  AlertCircle, 
+  MessageSquare, 
+  Star, 
+  CheckCircle, 
+  History, 
+  FileText,
+  UserCircle
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
