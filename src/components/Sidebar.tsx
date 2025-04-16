@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Home, 
@@ -38,8 +37,8 @@ const Sidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Dashboard" isActive={isActive('/')} asChild>
-                  <Link to="/">
+                <SidebarMenuButton tooltip="Dashboard" isActive={isActive('/dashboard')} asChild>
+                  <Link to="/dashboard">
                     <Home size={20} />
                     <span>Dashboard</span>
                   </Link>
