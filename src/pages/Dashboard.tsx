@@ -11,9 +11,7 @@ import {
   CheckCircle, 
   History, 
   FileText,
-  UserCircle,
-  ChevronRight,
-  ChevronLeft
+  UserCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -25,12 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
-import {
-  
-} from 'lucide-react';
-import {
-  
-} from '@/components/ui/sidebar';
+import SidebarTrigger from '@/components/SidebarTrigger';
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -38,7 +31,6 @@ const Dashboard = () => {
   const [acceptedCallId, setAcceptedCallId] = React.useState<number | null>(null);
   const [expandedPreCallId, setExpandedPreCallId] = React.useState<number | null>(null);
   const [rightSidebarOpen, setRightSidebarOpen] = React.useState(true);
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
 
   const queueStats = {
     activeAgents: 12,
@@ -179,15 +171,7 @@ const Dashboard = () => {
           <Header />
           <main className="flex-1 overflow-auto bg-callflow-background relative">
             <div className="absolute right-0 top-0 z-20 mt-4 mr-6">
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-10 w-10 rounded-full border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-              >
-                {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-              </Button>
+              <SidebarTrigger />
             </div>
             <div className="p-6">
               <div className="grid grid-cols-12 gap-6">
