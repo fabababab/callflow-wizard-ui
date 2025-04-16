@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   HeadphonesIcon, 
@@ -12,7 +11,9 @@ import {
   CheckCircle, 
   History, 
   FileText,
-  UserCircle
+  UserCircle,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [acceptedCallId, setAcceptedCallId] = useState<number | null>(null);
   const [expandedPreCallId, setExpandedPreCallId] = useState<number | null>(null);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
 
   const queueStats = {
     activeAgents: 12,
@@ -166,372 +168,394 @@ const Dashboard = () => {
     <SidebarProvider>
       <div className="flex flex-col h-screen w-full">
         <Header />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
+          <div className="absolute right-0 top-0 z-20 mt-4 mr-6">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-10 w-10 rounded-full border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
+              onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+              aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              {rightSidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            </Button>
+          </div>
+          
           <Sidebar />
-          <main className="flex-1 p-6 overflow-auto bg-callflow-background">
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">Current Queue</h1>
-                <p className="text-muted-foreground">
-                  Manage incoming calls and call queue
-                </p>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Active Agents
-                    </CardTitle>
-                    <HeadphonesIcon className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{queueStats.activeAgents}</div>
-                    <p className="text-xs text-callflow-success">
-                      All agents online
+          <div className="flex-1 p-6 overflow-auto bg-callflow-background">
+            <div className="grid grid-cols-12 gap-6 h-full">
+              <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300`}>
+                <div className="space-y-6">
+                  <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Current Queue</h1>
+                    <p className="text-muted-foreground">
+                      Manage incoming calls and call queue
                     </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Waiting Calls
-                    </CardTitle>
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{queueStats.waitingCalls}</div>
-                    <p className="text-xs text-callflow-accent">
-                      3 high priority
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Average Wait Time
-                    </CardTitle>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{queueStats.averageWaitTime}</div>
-                    <p className="text-xs text-callflow-accent">
-                      +45s from target
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Service Level Today
-                    </CardTitle>
-                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{queueStats.serviceLevelToday}%</div>
-                    <Progress value={queueStats.serviceLevelToday} className="h-2" />
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
 
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-                <p className="text-muted-foreground">
-                  Welcome to the CallFlow Wizard dashboard.
-                </p>
-              </div>
+                  <div className="grid gap-4 md:grid-cols-4">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Active Agents
+                        </CardTitle>
+                        <HeadphonesIcon className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{queueStats.activeAgents}</div>
+                        <p className="text-xs text-callflow-success">
+                          All agents online
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Waiting Calls
+                        </CardTitle>
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{queueStats.waitingCalls}</div>
+                        <p className="text-xs text-callflow-accent">
+                          3 high priority
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Average Wait Time
+                        </CardTitle>
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{queueStats.averageWaitTime}</div>
+                        <p className="text-xs text-callflow-accent">
+                          +45s from target
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Service Level Today
+                        </CardTitle>
+                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{queueStats.serviceLevelToday}%</div>
+                        <Progress value={queueStats.serviceLevelToday} className="h-2" />
+                      </CardContent>
+                    </Card>
+                  </div>
 
-              {!acceptedCallId ? (
-                <Card className="overflow-hidden">
-                  <CardHeader>
-                    <CardTitle>Priority Call</CardTitle>
-                    <CardDescription>Recommended based on your expertise and availability</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-start gap-6 p-4 bg-accent/5 rounded-lg">
-                      <div className="bg-callflow-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-callflow-primary shrink-0">
-                        <User size={32} />
-                      </div>
-                      <div className="space-y-4 flex-1">
-                        <div>
-                          <h3 className="text-xl font-semibold">{incomingCall.customerName}</h3>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone size={16} />
-                            <span>{incomingCall.phoneNumber}</span>
-                            <span>•</span>
-                            <span>{incomingCall.callType}</span>
+                  <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+                    <p className="text-muted-foreground">
+                      Welcome to the CallFlow Wizard dashboard.
+                    </p>
+                  </div>
+
+                  {!acceptedCallId ? (
+                    <Card className="overflow-hidden">
+                      <CardHeader>
+                        <CardTitle>Priority Call</CardTitle>
+                        <CardDescription>Recommended based on your expertise and availability</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex items-start gap-6 p-4 bg-accent/5 rounded-lg">
+                          <div className="bg-callflow-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-callflow-primary shrink-0">
+                            <User size={32} />
                           </div>
-                        </div>
-
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <div className="space-y-2">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <History size={16} />
-                              Case History
-                            </h4>
-                            <div className="space-y-2">
-                              {incomingCall.caseHistory.map((case_, index) => (
-                                <div key={index} className="text-sm p-2 bg-background rounded-md">
-                                  <div className="flex justify-between">
-                                    <span className="font-medium">{case_.type}</span>
-                                    <span className="text-muted-foreground">{case_.date}</span>
-                                  </div>
-                                  <p className="text-muted-foreground mt-1">{case_.description}</p>
-                                </div>
-                              ))}
+                          <div className="space-y-4 flex-1">
+                            <div>
+                              <h3 className="text-xl font-semibold">{incomingCall.customerName}</h3>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Phone size={16} />
+                                <span>{incomingCall.phoneNumber}</span>
+                                <span>•</span>
+                                <span>{incomingCall.callType}</span>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="space-y-2">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <FileText size={16} />
-                              Robo-Call Summary
-                            </h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="p-2 bg-background rounded-md">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="font-medium">Duration</span>
-                                  <span>{incomingCall.roboCallSummary.duration}</span>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <h4 className="font-medium flex items-center gap-2">
+                                  <History size={16} />
+                                  Case History
+                                </h4>
+                                <div className="space-y-2">
+                                  {incomingCall.caseHistory.map((case_, index) => (
+                                    <div key={index} className="text-sm p-2 bg-background rounded-md">
+                                      <div className="flex justify-between">
+                                        <span className="font-medium">{case_.type}</span>
+                                        <span className="text-muted-foreground">{case_.date}</span>
+                                      </div>
+                                      <p className="text-muted-foreground mt-1">{case_.description}</p>
+                                    </div>
+                                  ))}
                                 </div>
-                                <div className="space-y-1">
-                                  <p className="font-medium">Key Points:</p>
-                                  <ul className="list-disc list-inside text-muted-foreground">
-                                    {incomingCall.roboCallSummary.keyPoints.map((point, index) => (
-                                      <li key={index}>{point}</li>
-                                    ))}
-                                  </ul>
+                              </div>
+
+                              <div className="space-y-2">
+                                <h4 className="font-medium flex items-center gap-2">
+                                  <FileText size={16} />
+                                  Robo-Call Summary
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  <div className="p-2 bg-background rounded-md">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <span className="font-medium">Duration</span>
+                                      <span>{incomingCall.roboCallSummary.duration}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="font-medium">Key Points:</p>
+                                      <ul className="list-disc list-inside text-muted-foreground">
+                                        {incomingCall.roboCallSummary.keyPoints.map((point, index) => (
+                                          <li key={index}>{point}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between border-t pt-4">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
-                          <Clock size={16} className="text-muted-foreground" />
-                          <span>Waiting: {incomingCall.waitTime}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star size={16} className="text-yellow-500" />
-                          <span>{incomingCall.matchScore}% match</span>
-                        </div>
-                        <Badge 
-                          variant="outline" 
-                          className="bg-destructive/10 text-destructive border-destructive/20"
-                        >
-                          High priority
-                        </Badge>
-                      </div>
-                      <Button 
-                        size="lg" 
-                        className="gap-2"
-                        onClick={() => handleAcceptCall(incomingCall.id)}
-                      >
-                        Accept Call <ArrowRight size={16} />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <>
-                  <Card className="border-green-500 border-2">
-                    <CardHeader className="bg-green-50">
-                      <div className="flex justify-between items-center">
-                        <CardTitle>Active Call - {incomingCalls.find(c => c.id === acceptedCallId)?.customerName}</CardTitle>
-                        <Badge className="bg-green-500">Live</Badge>
-                      </div>
-                      <CardDescription>{incomingCalls.find(c => c.id === acceptedCallId)?.callType} • {incomingCalls.find(c => c.id === acceptedCallId)?.phoneNumber}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="mb-6">
-                        <h3 className="text-sm font-medium mb-2">Pre-Call History</h3>
-                        <div className="space-y-3">
-                          {preCalls.map(preCall => (
-                            <Collapsible 
-                              key={preCall.id}
-                              open={expandedPreCallId === preCall.id}
-                              onOpenChange={() => togglePreCallExpansion(preCall.id)}
-                              className="border rounded-md"
+                        <div className="flex items-center justify-between border-t pt-4">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <Clock size={16} className="text-muted-foreground" />
+                              <span>Waiting: {incomingCall.waitTime}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Star size={16} className="text-yellow-500" />
+                              <span>{incomingCall.matchScore}% match</span>
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className="bg-destructive/10 text-destructive border-destructive/20"
                             >
-                              <CollapsibleTrigger asChild>
-                                <Button variant="ghost" className="w-full flex justify-between items-center p-3 h-auto">
-                                  <div className="flex items-center gap-2 text-left">
-                                    <UserCircle size={18} />
-                                    <div>
-                                      <span className="font-medium">{preCall.agent}</span>
-                                      <p className="text-xs text-muted-foreground">{preCall.timestamp}</p>
+                              High priority
+                            </Badge>
+                          </div>
+                          <Button 
+                            size="lg" 
+                            className="gap-2"
+                            onClick={() => handleAcceptCall(incomingCall.id)}
+                          >
+                            Accept Call <ArrowRight size={16} />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      <Card className="border-green-500 border-2">
+                        <CardHeader className="bg-green-50">
+                          <div className="flex justify-between items-center">
+                            <CardTitle>Active Call - {incomingCalls.find(c => c.id === acceptedCallId)?.customerName}</CardTitle>
+                            <Badge className="bg-green-500">Live</Badge>
+                          </div>
+                          <CardDescription>{incomingCalls.find(c => c.id === acceptedCallId)?.callType} • {incomingCalls.find(c => c.id === acceptedCallId)?.phoneNumber}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                          <div className="mb-6">
+                            <h3 className="text-sm font-medium mb-2">Pre-Call History</h3>
+                            <div className="space-y-3">
+                              {preCalls.map(preCall => (
+                                <Collapsible 
+                                  key={preCall.id}
+                                  open={expandedPreCallId === preCall.id}
+                                  onOpenChange={() => togglePreCallExpansion(preCall.id)}
+                                  className="border rounded-md"
+                                >
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="ghost" className="w-full flex justify-between items-center p-3 h-auto">
+                                      <div className="flex items-center gap-2 text-left">
+                                        <UserCircle size={18} />
+                                        <div>
+                                          <span className="font-medium">{preCall.agent}</span>
+                                          <p className="text-xs text-muted-foreground">{preCall.timestamp}</p>
+                                        </div>
+                                      </div>
+                                      <MessageSquare size={16} />
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="p-3 pt-0 border-t bg-muted/30">
+                                    <div className="text-sm mb-2">
+                                      <p className="font-medium">Customer:</p>
+                                      <p>{preCall.content}</p>
                                     </div>
-                                  </div>
-                                  <MessageSquare size={16} />
-                                </Button>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent className="p-3 pt-0 border-t bg-muted/30">
-                                <div className="text-sm mb-2">
-                                  <p className="font-medium">Customer:</p>
-                                  <p>{preCall.content}</p>
-                                </div>
-                                <div className="text-sm">
-                                  <p className="font-medium">{preCall.agent}:</p>
-                                  <p>{preCall.response}</p>
-                                </div>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          ))}
-                        </div>
-                      </div>
+                                    <div className="text-sm">
+                                      <p className="font-medium">{preCall.agent}:</p>
+                                      <p>{preCall.response}</p>
+                                    </div>
+                                  </CollapsibleContent>
+                                </Collapsible>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-3">
+                            <Button 
+                              variant="default" 
+                              className="flex-1"
+                              onClick={() => handleViewCallDetails(acceptedCallId)}
+                            >
+                              View Full Call Details
+                            </Button>
+                            <Button 
+                              variant="destructive" 
+                              className="flex-1"
+                              onClick={handleEndCall}
+                            >
+                              End Call
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
                       
-                      <div className="flex gap-3">
-                        <Button 
-                          variant="default" 
-                          className="flex-1"
-                          onClick={() => handleViewCallDetails(acceptedCallId)}
-                        >
-                          View Full Call Details
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          className="flex-1"
-                          onClick={handleEndCall}
-                        >
-                          End Call
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recommended Actions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <Button variant="outline" className="w-full justify-start gap-2">
-                          <CheckCircle size={16} />
-                          Verify Customer Identity
-                        </Button>
-                        <Button variant="outline" className="w-full justify-start gap-2">
-                          <CheckCircle size={16} />
-                          Run Network Diagnostics
-                        </Button>
-                        <Button variant="outline" className="w-full justify-start gap-2">
-                          <CheckCircle size={16} />
-                          Check Recent Account Changes
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Recommended Actions</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <Button variant="outline" className="w-full justify-start gap-2">
+                              <CheckCircle size={16} />
+                              Verify Customer Identity
+                            </Button>
+                            <Button variant="outline" className="w-full justify-start gap-2">
+                              <CheckCircle size={16} />
+                              Run Network Diagnostics
+                            </Button>
+                            <Button variant="outline" className="w-full justify-start gap-2">
+                              <CheckCircle size={16} />
+                              Check Recent Account Changes
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
+                  )}
 
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                <Card className="col-span-1">
-                  <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
-                    <CardDescription>
-                      Your recent call handling
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-blue-100 p-2 rounded-full">
-                            <Phone size={14} className="text-blue-500" />
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                    <Card className="col-span-1">
+                      <CardHeader>
+                        <CardTitle>Recent Activity</CardTitle>
+                        <CardDescription>
+                          Your recent call handling
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-blue-100 p-2 rounded-full">
+                                <Phone size={14} className="text-blue-500" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">Thomas Weber</p>
+                                <p className="text-xs text-muted-foreground">Technical Support</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => navigate('/call-history')}>
+                              View
+                            </Button>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">Thomas Weber</p>
-                            <p className="text-xs text-muted-foreground">Technical Support</p>
+                          
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-green-100 p-2 rounded-full">
+                                <Phone size={14} className="text-green-500" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">Julia Fischer</p>
+                                <p className="text-xs text-muted-foreground">Billing</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => navigate('/call-history')}>
+                              View
+                            </Button>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-purple-100 p-2 rounded-full">
+                                <Phone size={14} className="text-purple-500" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium">Leon Schneider</p>
+                                <p className="text-xs text-muted-foreground">General Inquiry</p>
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => navigate('/call-history')}>
+                              View
+                            </Button>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => navigate('/call-history')}>
-                          View
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="outline" className="w-full" onClick={() => navigate('/call-history')}>
+                          View All Activity
                         </Button>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-green-100 p-2 rounded-full">
-                            <Phone size={14} className="text-green-500" />
-                          </div>
+                      </CardFooter>
+                    </Card>
+                    
+                    <Card className="col-span-1">
+                      <CardHeader>
+                        <CardTitle>Your Performance</CardTitle>
+                        <CardDescription>
+                          Last 7 days metrics
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
                           <div>
-                            <p className="text-sm font-medium">Julia Fischer</p>
-                            <p className="text-xs text-muted-foreground">Billing</p>
+                            <div className="flex justify-between mb-2">
+                              <span className="text-sm">Customer Satisfaction</span>
+                              <span className="text-sm font-medium">92%</span>
+                            </div>
+                            <Progress value={92} className="h-2" />
                           </div>
-                        </div>
-                        <Button variant="ghost" size="sm" onClick={() => navigate('/call-history')}>
-                          View
-                        </Button>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-purple-100 p-2 rounded-full">
-                            <Phone size={14} className="text-purple-500" />
-                          </div>
+                          
                           <div>
-                            <p className="text-sm font-medium">Leon Schneider</p>
-                            <p className="text-xs text-muted-foreground">General Inquiry</p>
+                            <div className="flex justify-between mb-2">
+                              <span className="text-sm">First Call Resolution</span>
+                              <span className="text-sm font-medium">85%</span>
+                            </div>
+                            <Progress value={85} className="h-2" />
+                          </div>
+                          
+                          <div>
+                            <div className="flex justify-between mb-2">
+                              <span className="text-sm">Average Handle Time</span>
+                              <span className="text-sm font-medium">4m 23s</span>
+                            </div>
+                            <Progress value={78} className="h-2" />
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={() => navigate('/call-history')}>
-                          View
+                      </CardContent>
+                      <CardFooter>
+                        <Button variant="outline" className="w-full" onClick={() => navigate('/stats')}>
+                          View Detailed Stats
                         </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full" onClick={() => navigate('/call-history')}>
-                      View All Activity
-                    </Button>
-                  </CardFooter>
-                </Card>
-                
-                <Card className="col-span-1">
-                  <CardHeader>
-                    <CardTitle>Your Performance</CardTitle>
-                    <CardDescription>
-                      Last 7 days metrics
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm">Customer Satisfaction</span>
-                          <span className="text-sm font-medium">92%</span>
-                        </div>
-                        <Progress value={92} className="h-2" />
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm">First Call Resolution</span>
-                          <span className="text-sm font-medium">85%</span>
-                        </div>
-                        <Progress value={85} className="h-2" />
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm">Average Handle Time</span>
-                          <span className="text-sm font-medium">4m 23s</span>
-                        </div>
-                        <Progress value={78} className="h-2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button variant="outline" className="w-full" onClick={() => navigate('/stats')}>
-                      View Detailed Stats
-                    </Button>
-                  </CardFooter>
-                </Card>
+                      </CardFooter>
+                    </Card>
+                  </div>
+                </div>
+              </div>
+              
+              <div className={`relative col-span-12 ${rightSidebarOpen ? 'lg:col-span-5' : 'lg:col-span-1 lg:overflow-hidden'} transition-all duration-300`}>
+                <div className={`space-y-3 ${rightSidebarOpen ? 'opacity-100' : 'opacity-0 lg:hidden'} transition-opacity duration-300`}>
+                  {/* Sidebar content */}
+                </div>
               </div>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
