@@ -72,11 +72,11 @@ const Index = () => {
         <Header />
         <div className="flex flex-1 overflow-hidden relative">
           {/* Toggle button for right sidebar - Positioned right beneath the navbar */}
-          <div className="absolute right-0 top-0 z-20 mt-2" style={{ marginRight: '-24px' }}>
+          <div className="absolute right-0 top-0 z-20 mt-4 mr-6">
             <Button 
               variant="outline" 
               size="icon" 
-              className="h-12 w-12 rounded-full border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
+              className="h-10 w-10 rounded-full border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
               onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
               aria-label={rightSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             >

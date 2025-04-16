@@ -122,9 +122,9 @@ const Dashboard = () => {
           <main className="flex-1 p-6 overflow-auto bg-callflow-background">
             <div className="space-y-6">
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Current Queue</h1>
                 <p className="text-muted-foreground">
-                  Welcome to the CallFlow Wizard dashboard.
+                  Manage incoming calls and call queue
                 </p>
               </div>
 
@@ -183,6 +183,13 @@ const Dashboard = () => {
                     <Progress value={queueStats.serviceLevelToday} className="h-2" />
                   </CardContent>
                 </Card>
+              </div>
+
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+                <p className="text-muted-foreground">
+                  Welcome to the CallFlow Wizard dashboard.
+                </p>
               </div>
 
               {!acceptedCallId ? (
