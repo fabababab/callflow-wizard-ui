@@ -9,16 +9,22 @@ import ActionPanel from '@/components/ActionPanel';
 import CallEvaluation from '@/components/CallEvaluation';
 import BankDetailsForm from '@/components/BankDetailsForm';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ScenarioType } from '@/components/Header';
-import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft, RefreshCw } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   // Move useState hooks inside the component body
   const [activeScenario, setActiveScenario] = React.useState<ScenarioType>(null);
+  const [availableScenarios, setAvailableScenarios] = React.useState<ScenarioType[]>([]);
+  const [showScenarioDialog, setShowScenarioDialog] = React.useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   // State for collapsible panels
   const [callDetailsOpen, setCallDetailsOpen] = React.useState(true);
@@ -36,6 +42,47 @@ const Index = () => {
       setActiveScenario(location.state.scenario);
     }
   }, [location.state]);
+
+  // Initialize available scenarios when component mounts
+  React.useEffect(() => {
+    initializeScenarios();
+  }, []);
+
+  // Function to initialize or reset available scenarios
+  const initializeScenarios = () => {
+    const allScenarios: ScenarioType[] = ['verification', 'bankDetails', 'accountHistory'];
+    
+    // Randomly select 3 scenarios (or fewer if there aren't 3 available)
+    const shuffled = [...allScenarios].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 3);
+    
+    setAvailableScenarios(selected);
+    
+    // Show dialog to select first scenario if no active scenario
+    if (!activeScenario) {
+      setShowScenarioDialog(true);
+    }
+  };
+
+  // Function to select a scenario
+  const selectScenario = (scenario: ScenarioType) => {
+    setActiveScenario(scenario);
+    setShowScenarioDialog(false);
+    toast({
+      title: "Scenario Selected",
+      description: `You are now working on the ${scenario} scenario.`,
+    });
+  };
+
+  // Function to handle "Next Call" button
+  const handleNextCall = () => {
+    setActiveScenario(null);
+    initializeScenarios();
+    toast({
+      title: "Ready for Next Call",
+      description: "Previous call data has been reset.",
+    });
+  };
 
   // Helper function to render collapsible sections
   const renderCollapsibleSection = (
@@ -71,6 +118,18 @@ const Index = () => {
       <div className="flex flex-col h-screen w-full">
         <Header />
         <div className="flex flex-1 overflow-hidden relative">
+          {/* Next Call button - positioned top right */}
+          <div className="absolute left-0 top-0 z-20 mt-4 ml-6">
+            <Button 
+              variant="outline" 
+              onClick={handleNextCall}
+              className="gap-2 border-2 border-gray-300 bg-white text-muted-foreground hover:bg-background hover:text-foreground hover:border-gray-400 transition-all shadow-md"
+            >
+              <RefreshCw size={16} />
+              Next Call
+            </Button>
+          </div>
+          
           {/* Toggle button for right sidebar - Positioned right beneath the navbar */}
           <div className="absolute right-0 top-0 z-20 mt-4 mr-6">
             <Button 
@@ -142,6 +201,34 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      {/* Scenario Selection Dialog */}
+      <Dialog open={showScenarioDialog} onOpenChange={setShowScenarioDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select a Scenario</DialogTitle>
+            <DialogDescription>
+              Please select one of the following scenarios for your call.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {availableScenarios.map((scenario) => (
+              <Button 
+                key={scenario} 
+                onClick={() => selectScenario(scenario)}
+                className="justify-start text-left"
+              >
+                {scenario === 'verification' && 'Customer Identity Verification'}
+                {scenario === 'bankDetails' && 'Update Bank Account Details'}
+                {scenario === 'accountHistory' && 'Review Account History'}
+              </Button>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={initializeScenarios}>Shuffle Scenarios</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
