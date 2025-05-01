@@ -28,6 +28,7 @@ import Sidebar from '@/components/Sidebar';
 import SidebarTrigger from '@/components/SidebarTrigger';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import ActionPanel from '@/components/ActionPanel';
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -423,103 +424,111 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              {!acceptedCallId ? (
-                <Card className="overflow-hidden">
-                  <CardHeader>
-                    <CardTitle>Priority Call</CardTitle>
-                    <CardDescription>Recommended based on your expertise and availability</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex items-start gap-6 p-4 bg-accent/5 rounded-lg">
-                      <div className="bg-callflow-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-callflow-primary shrink-0">
-                        <User size={32} />
-                      </div>
-                      <div className="space-y-4 flex-1">
-                        <div>
-                          <h3 className="text-xl font-semibold">{incomingCall.customerName}</h3>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <Phone size={16} />
-                            <span>{incomingCall.phoneNumber}</span>
-                            <span>•</span>
-                            <span>{incomingCall.callType}</span>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="md:col-span-2">
+                  {!acceptedCallId ? (
+                    <Card className="overflow-hidden">
+                      <CardHeader>
+                        <CardTitle>Priority Call</CardTitle>
+                        <CardDescription>Recommended based on your expertise and availability</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="flex items-start gap-6 p-4 bg-accent/5 rounded-lg">
+                          <div className="bg-callflow-primary/10 w-16 h-16 rounded-full flex items-center justify-center text-callflow-primary shrink-0">
+                            <User size={32} />
                           </div>
-                        </div>
-
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <div className="space-y-2">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <History size={16} />
-                              Case History
-                            </h4>
-                            <div className="space-y-2">
-                              {incomingCall.caseHistory.map((case_, index) => (
-                                <div key={index} className="text-sm p-2 bg-background rounded-md">
-                                  <div className="flex justify-between">
-                                    <span className="font-medium">{case_.type}</span>
-                                    <span className="text-muted-foreground">{case_.date}</span>
-                                  </div>
-                                  <p className="text-muted-foreground mt-1">{case_.description}</p>
-                                </div>
-                              ))}
+                          <div className="space-y-4 flex-1">
+                            <div>
+                              <h3 className="text-xl font-semibold">{incomingCall.customerName}</h3>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Phone size={16} />
+                                <span>{incomingCall.phoneNumber}</span>
+                                <span>•</span>
+                                <span>{incomingCall.callType}</span>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="space-y-2">
-                            <h4 className="font-medium flex items-center gap-2">
-                              <FileText size={16} />
-                              Robo-Call Summary
-                            </h4>
-                            <div className="space-y-2 text-sm">
-                              <div className="p-2 bg-background rounded-md">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="font-medium">Duration</span>
-                                  <span>{incomingCall.roboCallSummary.duration}</span>
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <div className="space-y-2">
+                                <h4 className="font-medium flex items-center gap-2">
+                                  <History size={16} />
+                                  Case History
+                                </h4>
+                                <div className="space-y-2">
+                                  {incomingCall.caseHistory.map((case_, index) => (
+                                    <div key={index} className="text-sm p-2 bg-background rounded-md">
+                                      <div className="flex justify-between">
+                                        <span className="font-medium">{case_.type}</span>
+                                        <span className="text-muted-foreground">{case_.date}</span>
+                                      </div>
+                                      <p className="text-muted-foreground mt-1">{case_.description}</p>
+                                    </div>
+                                  ))}
                                 </div>
-                                <div className="space-y-1">
-                                  <p className="font-medium">Key Points:</p>
-                                  <ul className="list-disc list-inside text-muted-foreground">
-                                    {incomingCall.roboCallSummary.keyPoints.map((point, index) => (
-                                      <li key={index}>{point}</li>
-                                    ))}
-                                  </ul>
+                              </div>
+
+                              <div className="space-y-2">
+                                <h4 className="font-medium flex items-center gap-2">
+                                  <FileText size={16} />
+                                  Robo-Call Summary
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  <div className="p-2 bg-background rounded-md">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <span className="font-medium">Duration</span>
+                                      <span>{incomingCall.roboCallSummary.duration}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <p className="font-medium">Key Points:</p>
+                                      <ul className="list-disc list-inside text-muted-foreground">
+                                        {incomingCall.roboCallSummary.keyPoints.map((point, index) => (
+                                          <li key={index}>{point}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between border-t pt-4">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
-                          <Clock size={16} className="text-muted-foreground" />
-                          <span>Waiting: {incomingCall.waitTime}</span>
+                        <div className="flex items-center justify-between border-t pt-4">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-1">
+                              <Clock size={16} className="text-muted-foreground" />
+                              <span>Waiting: {incomingCall.waitTime}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Star size={16} className="text-yellow-500" />
+                              <span>{incomingCall.matchScore}% match</span>
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className="bg-destructive/10 text-destructive border-destructive/20"
+                            >
+                              High priority
+                            </Badge>
+                          </div>
+                          <Button 
+                            size="lg" 
+                            className="gap-2"
+                            onClick={() => handleAcceptCall(incomingCall.id)}
+                          >
+                            Accept Call <ArrowRight size={16} />
+                          </Button>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Star size={16} className="text-yellow-500" />
-                          <span>{incomingCall.matchScore}% match</span>
-                        </div>
-                        <Badge 
-                          variant="outline" 
-                          className="bg-destructive/10 text-destructive border-destructive/20"
-                        >
-                          High priority
-                        </Badge>
-                      </div>
-                      <Button 
-                        size="lg" 
-                        className="gap-2"
-                        onClick={() => handleAcceptCall(incomingCall.id)}
-                      >
-                        Accept Call <ArrowRight size={16} />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                renderActiveCall()
-              )}
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    renderActiveCall()
+                  )}
+                </div>
+                
+                <div className="md:col-span-1">
+                  <ActionPanel />
+                </div>
+              </div>
 
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                 <Card className="col-span-1">
