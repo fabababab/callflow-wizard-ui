@@ -31,7 +31,7 @@ const ActionPanel = () => {
     {
       id: '3',
       type: 'response',
-      content: 'Thank you for confirming those details. I've updated our records with your new banking information. You'll receive a confirmation email shortly, and the changes will be effective within 1-2 business days.',
+      content: "Thank you for confirming those details. I've updated our records with your new banking information. You'll receive a confirmation email shortly, and the changes will be effective within 1-2 business days.",
     },
   ]);
   
