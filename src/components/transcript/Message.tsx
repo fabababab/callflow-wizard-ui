@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, ChevronRight } from 'lucide-react';
 import AISuggestions, { AISuggestion } from './AISuggestion';
 
 export type MessageSender = 'agent' | 'customer';
@@ -35,7 +35,7 @@ const Message: React.FC<MessageProps> = ({
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
-        className={`rounded-lg max-w-[80%] p-3 shadow-sm 
+        className={`rounded-lg max-w-[85%] p-3 shadow-sm 
           ${message.sender === 'agent'
             ? 'bg-primary text-primary-foreground ml-auto'
             : 'bg-secondary text-secondary-foreground mr-auto'}`}
@@ -74,10 +74,11 @@ const Message: React.FC<MessageProps> = ({
                   key={index}
                   size="sm"
                   variant="outline"
-                  className="text-xs py-1 px-2 h-auto"
+                  className="text-xs py-1 px-2 h-auto flex items-center gap-1 group"
                   onClick={() => onSelectResponse(option)}
                 >
-                  {option.length > 50 ? `${option.substring(0, 50)}...` : option}
+                  <span>{option.length > 50 ? `${option.substring(0, 50)}...` : option}</span>
+                  <ChevronRight size={12} className="opacity-50 group-hover:opacity-100" />
                 </Button>
               ))}
             </div>

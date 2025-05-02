@@ -1,0 +1,165 @@
+
+{
+  "states": {
+    "start": {
+      "type": "info",
+      "agent": "Guten Tag, hier ist der Kundenservice. Wie kann ich Ihnen heute helfen?",
+      "customer": "Guten Tag, ich habe gestern eine Mahnung erhalten, obwohl ich die Rechnung bereits letzte Woche bezahlt habe.",
+      "systemMessage": "Kunde meldet Problem mit Mahnung trotz erfolgter Zahlung. Überprüfen Sie die Zahlungsdetails.",
+      "transitions": {
+        "default": "get_customer_info"
+      }
+    },
+    "get_customer_info": {
+      "type": "verification",
+      "agent": "Das tut mir leid zu hören. Ich helfe Ihnen gerne bei der Klärung dieses Problems. Könnten Sie mir bitte Ihren Namen und Ihre Kundennummer mitteilen?",
+      "customer": "Mein Name ist Michael Schmidt und meine Kundennummer ist KD-567890.",
+      "transitions": {
+        "default": "verify_payment_details"
+      }
+    },
+    "verify_payment_details": {
+      "type": "info",
+      "agent": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte auch die Rechnungsnummer und das Datum Ihrer Zahlung mitteilen?",
+      "customer": "Die Rechnungsnummer ist RE-123456 und ich habe am 25. April bezahlt. Ich habe sogar einen Zahlungsbeleg.",
+      "transitions": {
+        "default": "check_payment"
+      }
+    },
+    "check_payment": {
+      "type": "action",
+      "agent": "Danke für diese Informationen. Ich werde jetzt in unserem System nach Ihrer Zahlung suchen. Bitte haben Sie einen Moment Geduld.",
+      "customer": "Natürlich, ich warte.",
+      "action": "Zahlungsstatus überprüfen",
+      "systemMessage": "Zahlungsdaten werden abgerufen...",
+      "transitions": {
+        "default": "payment_status"
+      }
+    },
+    "payment_status": {
+      "type": "decision",
+      "agent": "Ich habe unsere Zahlungseingänge überprüft. Leider kann ich Ihre Zahlung vom 25. April in unserem System nicht finden. Es kann verschiedene Gründe dafür geben. Wie haben Sie die Zahlung vorgenommen?",
+      "customer": "Ich habe eine Überweisung von meinem Girokonto bei der Sparkasse gemacht.",
+      "suggestions": [
+        "Es könnte zu Verzögerungen bei der Verarbeitung gekommen sein. Haben Sie den Verwendungszweck korrekt angegeben?",
+        "Könnte es sein, dass Sie an eine falsche Kontonummer überwiesen haben?",
+        "Ich benötige mehr Details zu Ihrer Zahlung, um sie zu identifizieren."
+      ],
+      "transitions": {
+        "Es könnte zu Verzögerungen bei der Verarbeitung gekommen sein. Haben Sie den Verwendungszweck korrekt angegeben?": "check_reference",
+        "Könnte es sein, dass Sie an eine falsche Kontonummer überwiesen haben?": "check_account",
+        "Ich benötige mehr Details zu Ihrer Zahlung, um sie zu identifizieren.": "more_payment_details",
+        "default": "check_reference"
+      }
+    },
+    "check_reference": {
+      "type": "info",
+      "agent": "Es könnte zu Verzögerungen bei der Verarbeitung Ihrer Zahlung gekommen sein. Welchen Verwendungszweck haben Sie bei der Überweisung angegeben?",
+      "customer": "Ich habe die Rechnungsnummer RE-123456 und meinen Namen als Verwendungszweck angegeben.",
+      "transitions": {
+        "default": "processing_delay"
+      }
+    },
+    "check_account": {
+      "type": "info",
+      "agent": "Könnten Sie bitte überprüfen, ob Sie an die richtige Kontonummer überwiesen haben? Unsere Bankverbindung lautet IBAN: DE89 3704 0044 0532 0130 00, BIC: COBADEFFXXX.",
+      "customer": "Ja, ich habe an diese Kontonummer überwiesen. Ich habe den Beleg hier vor mir.",
+      "transitions": {
+        "default": "request_proof"
+      }
+    },
+    "more_payment_details": {
+      "type": "info",
+      "agent": "Um Ihre Zahlung besser identifizieren zu können, benötige ich einige zusätzliche Details. Könnten Sie mir den genauen Betrag, den Namen des Kontoinhabers und idealerweise die Transaktionsnummer mitteilen?",
+      "customer": "Der Betrag war 250,00 Euro, Kontoinhaber ist Michael Schmidt. Die Transaktionsnummer lautet TRX-987654321.",
+      "transitions": {
+        "default": "detailed_search"
+      }
+    },
+    "detailed_search": {
+      "type": "action",
+      "agent": "Vielen Dank für diese detaillierten Informationen. Ich werde jetzt eine erweiterte Suche nach Ihrer Zahlung durchführen. Dies kann ein paar Minuten dauern.",
+      "customer": "Okay, ich warte.",
+      "action": "Erweiterte Zahlungssuche durchführen",
+      "transitions": {
+        "default": "payment_found"
+      }
+    },
+    "processing_delay": {
+      "type": "info",
+      "agent": "Der Verwendungszweck ist korrekt. Es könnte tatsächlich zu einer Verzögerung bei der Verarbeitung gekommen sein. Manchmal dauert es einige Werktage, bis Zahlungen in unserem System verbucht werden, besonders wenn sie kurz vor einem Wochenende erfolgen.",
+      "customer": "Ich habe aber den Beleg von meiner Bank, dass das Geld bereits abgebucht wurde.",
+      "transitions": {
+        "default": "request_proof"
+      }
+    },
+    "request_proof": {
+      "type": "action",
+      "agent": "Es wäre hilfreich, wenn Sie uns einen Nachweis Ihrer Zahlung zusenden könnten. Können Sie den Zahlungsbeleg per E-Mail oder über unser Kundenportal hochladen?",
+      "customer": "Ja, ich kann den Beleg als PDF schicken. An welche E-Mail-Adresse soll ich ihn senden?",
+      "action": "Upload-Link für Zahlungsbeleg generieren",
+      "transitions": {
+        "default": "provide_email"
+      }
+    },
+    "provide_email": {
+      "type": "info",
+      "agent": "Bitte senden Sie den Zahlungsbeleg an zahlungen@unternehmen.de oder laden Sie ihn direkt in Ihrem Kundenkonto unter 'Dokumente' hoch. Bitte geben Sie als Betreff Ihre Kundennummer KD-567890 und die Rechnungsnummer RE-123456 an.",
+      "customer": "Alles klar, ich werde den Beleg gleich nach unserem Gespräch senden.",
+      "transitions": {
+        "default": "suspend_reminder"
+      }
+    },
+    "payment_found": {
+      "type": "info",
+      "agent": "Gute Neuigkeiten! Ich habe Ihre Zahlung in unserem System gefunden. Sie wurde am 25. April eingegangen, aber aufgrund eines technischen Problems nicht korrekt der Rechnung zugeordnet. Ich habe dies nun manuell korrigiert.",
+      "customer": "Das freut mich zu hören. Was ist mit der Mahngebühr, die in der Mahnung angegeben war?",
+      "transitions": {
+        "default": "waive_fee"
+      }
+    },
+    "suspend_reminder": {
+      "type": "action",
+      "agent": "Ich habe eine Notiz zu Ihrem Konto hinzugefügt und den Mahnprozess vorübergehend ausgesetzt. Sobald wir Ihren Zahlungsbeleg erhalten und geprüft haben, werden wir die Mahnung stornieren. Dies sollte innerhalb von 1-2 Werktagen erfolgen.",
+      "customer": "Vielen Dank. Und was passiert mit der Mahngebühr?",
+      "action": "Mahnprozess aussetzen",
+      "transitions": {
+        "default": "waive_fee"
+      }
+    },
+    "waive_fee": {
+      "type": "action",
+      "agent": "Die Mahngebühr von 5,00 Euro werde ich selbstverständlich stornieren, da die Mahnung zu Unrecht erfolgt ist. Sie müssen diese nicht bezahlen.",
+      "customer": "Das ist fair. Vielen Dank für Ihre Hilfe.",
+      "action": "Mahngebühr stornieren",
+      "transitions": {
+        "default": "confirmation"
+      }
+    },
+    "confirmation": {
+      "type": "info",
+      "agent": "Ich habe eine Bestätigungsmail über die Stornierung der Mahnung und der Mahngebühr an Ihre hinterlegte E-Mail-Adresse gesendet. Die Angelegenheit ist damit erledigt und Sie müssen nichts weiter unternehmen.",
+      "customer": "Perfekt, vielen Dank für die schnelle Lösung.",
+      "systemMessage": "Mahnungsproblem erfolgreich gelöst.",
+      "transitions": {
+        "default": "conclusion"
+      }
+    },
+    "conclusion": {
+      "type": "info",
+      "agent": "Es tut mir leid, dass es zu diesem Problem gekommen ist. Wir arbeiten kontinuierlich daran, unsere Zahlungsverarbeitung zu verbessern. Gibt es noch etwas, womit ich Ihnen helfen kann?",
+      "customer": "Nein, das war alles. Vielen Dank für Ihre Hilfe.",
+      "transitions": {
+        "default": "end"
+      }
+    },
+    "end": {
+      "type": "info",
+      "agent": "Gerne geschehen. Vielen Dank für Ihre Geduld und Ihr Verständnis. Wenn Sie weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Ich wünsche Ihnen noch einen schönen Tag!",
+      "customer": "Ihnen auch einen schönen Tag. Auf Wiederhören!",
+      "systemMessage": "Gespräch erfolgreich abgeschlossen.",
+      "transitions": {}
+    }
+  },
+  "initialState": "start"
+}

@@ -1,0 +1,204 @@
+
+{
+  "states": {
+    "start": {
+      "type": "info",
+      "agent": "Guten Tag, hier ist der Kundenservice der Versicherung. Wie kann ich Ihnen helfen?",
+      "customer": "Guten Tag, ich schließe nächsten Monat mein Studium ab und muss meine Studentenversicherung auf ein reguläres Paket umstellen.",
+      "systemMessage": "Kunde benötigt Umstellung von studentischer auf reguläre Versicherung. Beratung zu passenden Tarifen erforderlich.",
+      "transitions": {
+        "default": "get_customer_info"
+      }
+    },
+    "get_customer_info": {
+      "type": "verification",
+      "agent": "Herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung. Könnten Sie mir bitte Ihren Namen und Ihre aktuelle Versicherungsnummer mitteilen?",
+      "customer": "Danke! Mein Name ist Michael Schmidt und meine Versicherungsnummer ist ST-7654321.",
+      "transitions": {
+        "default": "verify_current_plan"
+      }
+    },
+    "verify_current_plan": {
+      "type": "action",
+      "agent": "Vielen Dank, Herr Schmidt. Ich schaue mir kurz Ihren aktuellen Tarif an, um zu verstehen, welche Leistungen Sie momentan haben und welche regulären Tarife für Sie in Frage kommen könnten. Einen Moment bitte.",
+      "customer": "Gerne, ich warte.",
+      "action": "Aktuelle Versicherungsdaten abrufen",
+      "systemMessage": "Versicherungsdaten werden abgerufen...",
+      "transitions": {
+        "default": "gather_needs"
+      }
+    },
+    "gather_needs": {
+      "type": "decision",
+      "agent": "Danke für Ihre Geduld. Ich sehe, dass Sie aktuell in unserem studentischen Grundtarif mit Zusatzoptionen für Zahnbehandlung und Auslandsreisen versichert sind. Um Ihnen das passende Paket empfehlen zu können: Werden Sie direkt in eine Anstellung übergehen? Und welche Leistungsbereiche sind Ihnen besonders wichtig?",
+      "customer": "Ja, ich beginne im Juli meinen ersten Job als Softwareentwickler. Mir sind besonders eine gute Zahnversicherung und eventuell eine Zusatzversicherung für Brillen wichtig.",
+      "suggestions": [
+        "Basierend auf Ihren Angaben empfehle ich unser Komfort-Paket mit Zahnzusatz.",
+        "Möchten Sie mehr über unsere speziellen Angebote für Berufseinsteiger erfahren?",
+        "Lassen Sie uns Ihre individuellen Bedürfnisse im Detail besprechen."
+      ],
+      "transitions": {
+        "Basierend auf Ihren Angaben empfehle ich unser Komfort-Paket mit Zahnzusatz.": "recommend_package",
+        "Möchten Sie mehr über unsere speziellen Angebote für Berufseinsteiger erfahren?": "starter_offers",
+        "Lassen Sie uns Ihre individuellen Bedürfnisse im Detail besprechen.": "detailed_needs",
+        "default": "recommend_package"
+      }
+    },
+    "starter_offers": {
+      "type": "info",
+      "agent": "Für Berufseinsteiger bieten wir ein attraktives Starterpaket mit 10% Rabatt auf die ersten zwei Jahre und keine Wartezeiten bei Zusatzleistungen. Dieses Paket beinhaltet auch eine kostenlose Gesundheitsberatung und einen Willkommensgutschein für eine Präventionsmaßnahme Ihrer Wahl.",
+      "customer": "Das klingt interessant. Welche Präventionsmaßnahmen sind da inbegriffen?",
+      "transitions": {
+        "default": "explain_prevention"
+      }
+    },
+    "explain_prevention": {
+      "type": "info",
+      "agent": "Mit dem Willkommensgutschein können Sie aus verschiedenen Präventionsangeboten wählen: Professionelle Zahnreinigung, Gesundheits-Check-up, Fitnessstudio-Mitgliedschaft für einen Monat, oder ein Ernährungsberatungsgespräch. Der Gutschein hat einen Wert von bis zu 100 Euro.",
+      "customer": "Die professionelle Zahnreinigung würde gut zu meinen Prioritäten passen.",
+      "transitions": {
+        "default": "recommend_package"
+      }
+    },
+    "detailed_needs": {
+      "type": "decision",
+      "agent": "Gerne besprechen wir Ihre Bedürfnisse genauer. Bei der Zahnversicherung gibt es verschiedene Stufen: Basis deckt Kontrollen und einfache Füllungen ab, Komfort fügt Wurzelbehandlungen und einfachen Zahnersatz hinzu, Premium deckt auch Implantate und aufwendigen Zahnersatz ab. Welche Stufe entspricht Ihren Erwartungen?",
+      "customer": "Ich denke, die Komfort-Stufe wäre angemessen für mich.",
+      "suggestions": [
+        "Die Komfort-Stufe ist eine gute Wahl. Wie ist es mit der Brillenversicherung?",
+        "Möchten Sie auch Naturheilverfahren oder alternative Medizin abdecken?",
+        "Sind Sie sportlich aktiv und benötigen eine erweiterte Unfallversicherung?"
+      ],
+      "transitions": {
+        "Die Komfort-Stufe ist eine gute Wahl. Wie ist es mit der Brillenversicherung?": "glasses_coverage",
+        "Möchten Sie auch Naturheilverfahren oder alternative Medizin abdecken?": "alternative_medicine",
+        "Sind Sie sportlich aktiv und benötigen eine erweiterte Unfallversicherung?": "accident_coverage",
+        "default": "glasses_coverage"
+      }
+    },
+    "glasses_coverage": {
+      "type": "info",
+      "agent": "Für Brillen und Kontaktlinsen bieten wir einen Zuschuss bis zu 150 Euro alle 2 Jahre in unserem Komfort-Paket, oder bis zu 300 Euro im Premium-Paket. Dies würde zusätzlich etwa 5 Euro im Komfort-Paket oder 10 Euro im Premium-Paket pro Monat kosten.",
+      "customer": "Der Zuschuss von 150 Euro alle 2 Jahre klingt ausreichend für mich.",
+      "transitions": {
+        "default": "recommend_package"
+      }
+    },
+    "alternative_medicine": {
+      "type": "info",
+      "agent": "Wir bieten auch Zusatzversicherungen für Naturheilverfahren und alternative Medizin an. Diese decken Behandlungen wie Akupunktur, Homöopathie, osteopathische Behandlungen und andere alternative Therapiemethoden ab. Die Kosten beginnen bei etwa 15 Euro pro Monat.",
+      "customer": "Im Moment benötige ich das nicht, aber danke für die Information.",
+      "transitions": {
+        "default": "recommend_package"
+      }
+    },
+    "accident_coverage": {
+      "type": "info",
+      "agent": "Für sportlich aktive Personen haben wir eine erweiterte Unfallversicherung, die auch Sportverletzungen abdeckt und zusätzliche physiotherapeutische Behandlungen nach Unfällen beinhaltet. Diese kostet zusätzlich etwa 8 Euro pro Monat.",
+      "customer": "Das könnte nützlich sein, da ich regelmäßig Sport treibe.",
+      "transitions": {
+        "default": "recommend_package"
+      }
+    },
+    "recommend_package": {
+      "type": "action",
+      "agent": "Basierend auf Ihren Wünschen und Bedürfnissen empfehle ich Ihnen unser Komfort-Paket mit Zahnzusatz auf Komfort-Niveau und der Brillenversicherung mit 150 Euro Zuschuss alle 2 Jahre. Als Berufseinsteiger erhalten Sie 10% Rabatt für die ersten zwei Jahre. Die monatliche Prämie würde etwa 135 Euro betragen.",
+      "customer": "Das klingt nach einem passenden Paket für mich. Wie gehe ich vor, um zu wechseln?",
+      "action": "Versicherungsangebot erstellen",
+      "transitions": {
+        "default": "transition_process"
+      }
+    },
+    "transition_process": {
+      "type": "info",
+      "agent": "Der Wechsel ist einfach: Ich kann für Sie alle notwendigen Unterlagen vorbereiten. Sie müssen uns lediglich eine Kopie Ihrer Studienabschlussbescheinigung und einen Nachweis über den Beginn Ihrer Beschäftigung zusenden. Den Versicherungsschutz können wir nahtlos vom studentischen auf das reguläre Paket umstellen.",
+      "customer": "Perfekt. Wann genau sollte ich die Unterlagen einreichen?",
+      "transitions": {
+        "default": "timing_details"
+      }
+    },
+    "timing_details": {
+      "type": "info",
+      "agent": "Am besten reichen Sie die Unterlagen sobald wie möglich, aber spätestens zwei Wochen vor dem Ende Ihrer Studententarif-Berechtigung ein. So haben wir genug Zeit, alles reibungslos umzustellen. Ihr studentischer Tarif läuft automatisch aus, sobald wir die Umstellung vorgenommen haben.",
+      "customer": "Verstanden. Und wie reiche ich die Dokumente ein?",
+      "transitions": {
+        "default": "submission_options"
+      }
+    },
+    "submission_options": {
+      "type": "decision",
+      "agent": "Sie haben mehrere Möglichkeiten: Sie können die Dokumente über unser Online-Kundenportal hochladen, per E-Mail an dokumente@versicherung.de senden oder per Post an unsere Geschäftsstelle schicken. Was wäre für Sie am bequemsten?",
+      "customer": "Das Online-Portal wäre am einfachsten für mich.",
+      "suggestions": [
+        "Ich erkläre Ihnen, wie Sie das Online-Portal nutzen können.",
+        "Möchten Sie, dass ich Ihnen vorab die Unterlagen per E-Mail zusende?",
+        "Soll ich eine Erinnerung für Sie einrichten, damit Sie die Dokumente rechtzeitig einreichen?"
+      ],
+      "transitions": {
+        "Ich erkläre Ihnen, wie Sie das Online-Portal nutzen können.": "portal_instructions",
+        "Möchten Sie, dass ich Ihnen vorab die Unterlagen per E-Mail zusende?": "send_documents",
+        "Soll ich eine Erinnerung für Sie einrichten, damit Sie die Dokumente rechtzeitig einreichen?": "set_reminder",
+        "default": "portal_instructions"
+      }
+    },
+    "portal_instructions": {
+      "type": "info",
+      "agent": "Um das Online-Portal zu nutzen, loggen Sie sich auf www.versicherung.de/portal mit Ihrer Versicherungsnummer als Benutzername ein. Falls Sie noch kein Passwort haben, klicken Sie auf 'Passwort vergessen' und folgen Sie den Anweisungen. Im Portal finden Sie unter 'Dokumente' eine Option zum Hochladen. Wählen Sie dort 'Tarifwechsel' als Kategorie aus.",
+      "customer": "Danke für die Anleitung. Das sollte ich hinbekommen.",
+      "transitions": {
+        "default": "offer_confirmation"
+      }
+    },
+    "send_documents": {
+      "type": "action",
+      "agent": "Ich sende Ihnen gerne alle notwendigen Unterlagen und Formulare per E-Mail zu. Bitte bestätigen Sie, dass wir Ihre E-Mail-Adresse m.schmidt@email.de verwenden dürfen.",
+      "customer": "Ja, diese E-Mail-Adresse ist korrekt.",
+      "action": "Unterlagen per E-Mail versenden",
+      "transitions": {
+        "default": "offer_confirmation"
+      }
+    },
+    "set_reminder": {
+      "type": "action",
+      "agent": "Ich richte gerne eine Erinnerung für Sie ein. Wann genau ist Ihr letzter Studientag bzw. wann beginnt Ihre neue Beschäftigung?",
+      "customer": "Mein Studium endet offiziell am 30. Juni und ich beginne meinen Job am 1. Juli.",
+      "action": "Erinnerung einrichten",
+      "transitions": {
+        "default": "reminder_confirmation"
+      }
+    },
+    "reminder_confirmation": {
+      "type": "info",
+      "agent": "Ich habe eine Erinnerung für den 15. Juni eingerichtet. Sie erhalten dann eine E-Mail und eine SMS, die Sie an die Einreichung der Dokumente erinnert. So haben Sie noch ausreichend Zeit vor dem Wechsel.",
+      "customer": "Das ist perfekt, vielen Dank.",
+      "transitions": {
+        "default": "offer_confirmation"
+      }
+    },
+    "offer_confirmation": {
+      "type": "info",
+      "agent": "Ich habe für Sie ein detailliertes Angebot mit allen Leistungen und Konditionen erstellt und an Ihre E-Mail-Adresse gesendet. Sie können es in Ruhe durchlesen und bei Fragen jederzeit auf uns zukommen. Sobald Sie die Dokumente eingereicht haben, kümmern wir uns um alles Weitere.",
+      "customer": "Vielen Dank für die umfassende Beratung und Unterstützung.",
+      "systemMessage": "Angebot erstellt und versendet.",
+      "transitions": {
+        "default": "conclusion"
+      }
+    },
+    "conclusion": {
+      "type": "info",
+      "agent": "Gerne geschehen. Haben Sie noch weitere Fragen zu Ihrer Versicherungsumstellung oder zu anderen Themen?",
+      "customer": "Nein, das war alles. Sie haben mir sehr geholfen.",
+      "transitions": {
+        "default": "end"
+      }
+    },
+    "end": {
+      "type": "info",
+      "agent": "Es freut mich, dass ich Ihnen helfen konnte. Ich wünsche Ihnen einen erfolgreichen Studienabschluss und einen guten Start in Ihren neuen Job. Sollten Sie noch Fragen haben, zögern Sie nicht, uns zu kontaktieren. Einen schönen Tag noch!",
+      "customer": "Vielen Dank, Ihnen auch einen schönen Tag! Auf Wiederhören.",
+      "systemMessage": "Gespräch erfolgreich abgeschlossen.",
+      "transitions": {}
+    }
+  },
+  "initialState": "start"
+}
