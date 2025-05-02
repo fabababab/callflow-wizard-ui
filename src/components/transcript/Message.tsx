@@ -33,7 +33,7 @@ const Message: React.FC<MessageProps> = ({
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   
   return (
-    <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
         className={`rounded-lg max-w-[80%] p-3 shadow-sm 
           ${message.sender === 'agent'
@@ -77,7 +77,7 @@ const Message: React.FC<MessageProps> = ({
                   className="text-xs py-1 px-2 h-auto"
                   onClick={() => onSelectResponse(option)}
                 >
-                  {option}
+                  {option.length > 50 ? `${option.substring(0, 50)}...` : option}
                 </Button>
               ))}
             </div>

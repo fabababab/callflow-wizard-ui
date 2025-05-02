@@ -1,4 +1,3 @@
-
 // Define types for state machines
 export type StateType = 'info' | 'question' | 'decision' | 'verification';
 
@@ -46,7 +45,7 @@ export const physioStateMachine: StateMachine = {
     systemMessage: "Kunde konnte nicht identifiziert werden. Bitte fragen Sie nach alternativen Identifikationsdaten.",
   },
   authentifizierung_erfolg: {
-    agent: "Alles klar, Herr Keller, ich habe Ihr Profil gefunden. Haben Sie die Versichertennummer?",
+    agent: "Alles klar, Herr Keller, ich habe Ihr Profil gefunden. Haben Sie die Versicherungsnummer?",
     customer: "756.1234.5678.90.",
     nextState: "waehle_leistungserbringer",
     stateType: "verification",
@@ -250,12 +249,276 @@ export const verificationStateMachine: StateMachine = {
   }
 };
 
+// Account History state machine
+export const accountHistoryStateMachine: StateMachine = {
+  start: {
+    agent: "Guten Tag, wie kann ich Ihnen helfen?",
+    customer: "Hallo, ich möchte gerne meine Kontoaktivitäten der letzten Monate überprüfen.",
+    nextState: "identify_customer",
+    stateType: "info"
+  },
+  identify_customer: {
+    agent: "Natürlich kann ich Ihnen dabei helfen. Zu Ihrer Sicherheit muss ich zunächst Ihre Identität bestätigen. Können Sie mir bitte Ihren Namen und Ihr Geburtsdatum nennen?",
+    customer: "Mein Name ist Laura Becker, geboren am 21. September 1979.",
+    nextState: "verify_identity",
+    stateType: "verification",
+    systemMessage: "Bitte verifizieren Sie die Identität der Kundin vor dem Zugriff auf Kontodaten."
+  },
+  verify_identity: {
+    agent: "Vielen Dank. Können Sie mir bitte auch Ihre Kundennummer oder die letzten vier Ziffern Ihres Kontos nennen?",
+    customer: "Die letzten vier Ziffern meines Kontos sind 4321.",
+    nextState: "identity_confirmed",
+    stateType: "verification",
+    action: "prüfeKundenidentität",
+    systemMessage: "Überprüfen Sie die Kundendaten im System."
+  },
+  identity_confirmed: {
+    agent: "Vielen Dank, Frau Becker. Ich habe Ihr Konto gefunden und Ihre Identität bestätigt. Für welchen Zeitraum möchten Sie Ihre Kontoaktivitäten überprüfen?",
+    customer: "Ich interessiere mich besonders für die Transaktionen der letzten drei Monate.",
+    nextState: "specify_timeframe",
+    stateType: "info",
+    systemMessage: "Kundin wurde erfolgreich identifiziert. Sie können mit der Kontoüberprüfung fortfahren."
+  },
+  specify_timeframe: {
+    agent: "Ich zeige Ihnen die Transaktionen der letzten drei Monate an. Möchten Sie nach bestimmten Transaktionen filtern oder alle sehen?",
+    customer: "Ich möchte zunächst alle sehen, aber ich suche besonders nach einer bestimmten Transaktion von letzter Woche, die ich nicht erkenne.",
+    nextState: "show_transactions",
+    stateType: "question",
+    systemMessage: "Zeigen Sie der Kundin eine Übersicht der Kontobewegungen der letzten drei Monate."
+  },
+  show_transactions: {
+    agent: "Ich habe die Transaktionen der letzten drei Monate für Sie aufbereitet. Ich sehe hier mehrere Transaktionen aus der letzten Woche. Können Sie mir mehr Details zu der unbekannten Transaktion geben?",
+    customer: "Es handelt sich um eine Zahlung an einen Online Shop GmbH für 79,99 € vom letzten Dienstag.",
+    nextState: "identify_transaction",
+    stateType: "info",
+    action: "zeigeKontotransaktionen",
+    systemMessage: "Überprüfen Sie die genannte Transaktion in den Kontobewegungen."
+  },
+  identify_transaction: {
+    agent: "Ich habe die Transaktion gefunden. Es handelt sich um eine Zahlung an 'Top Online Shop GmbH' vom 14. April über 79,99 €. Diese Zahlung wurde über Ihre hinterlegte Kreditkarte abgewickelt. Erkennen Sie diese Transaktion jetzt?",
+    customer: "Ah, jetzt erinnere ich mich. Das war eine Bestellung für Kleidung. Vielen Dank für die Information.",
+    nextState: "offer_additional_help",
+    stateType: "info",
+    systemMessage: "Die Kundin hat die Transaktion identifiziert. Bieten Sie weitere Unterstützung an."
+  },
+  offer_additional_help: {
+    agent: "Gerne. Gibt es etwas anderes bezüglich Ihrer Kontoaktivitäten, wobei ich Ihnen helfen kann?",
+    suggestions: ["Kontoauszug senden", "Transaktionsdetails erklären", "Benachrichtigungen einrichten"],
+    customer: "Könnten Sie mir vielleicht einen Kontoauszug für diesen Zeitraum per E-Mail zusenden?",
+    nextState: "send_statement",
+    stateType: "decision",
+    systemMessage: "Die Kundin wünscht einen Kontoauszug. Bereiten Sie den Versand vor."
+  },
+  send_statement: {
+    agent: "Selbstverständlich. Ich werde Ihnen einen digitalen Kontoauszug der letzten drei Monate an Ihre hinterlegte E-Mail-Adresse zusenden. Möchten Sie eine Bestätigung, sobald der Auszug versendet wurde?",
+    customer: "Ja, das wäre hilfreich. Vielen Dank für Ihre Hilfe!",
+    nextState: "finish",
+    stateType: "question",
+    action: "sendeKontoauszug",
+    systemMessage: "Bereiten Sie den Versand des Kontoauszugs vor und informieren Sie die Kundin."
+  },
+  finish: {
+    agent: "Der Kontoauszug wurde soeben an Ihre E-Mail-Adresse gesendet. Sie sollten ihn in Kürze erhalten. Kann ich Ihnen mit etwas anderem behilflich sein?",
+    customer: "Nein, das war alles. Vielen Dank für Ihre Hilfe.",
+    nextState: "end",
+    stateType: "question",
+    systemMessage: "Die Anfrage wurde erfolgreich bearbeitet."
+  },
+  end: {
+    agent: "Vielen Dank für Ihren Anruf, Frau Becker. Sollten Sie weitere Fragen haben, stehen wir Ihnen jederzeit zur Verfügung. Einen schönen Tag noch!",
+    stateType: "info",
+    systemMessage: "Gespräch kann beendet werden. Kein weiterer Handlungsbedarf."
+  }
+};
+
+// Payment Reminder state machine
+export const paymentReminderStateMachine: StateMachine = {
+  start: {
+    agent: "Guten Tag, wie kann ich Ihnen helfen?",
+    customer: "Guten Tag, ich habe eine Zahlungserinnerung bekommen, obwohl ich den Betrag bereits überwiesen habe.",
+    nextState: "identify_customer",
+    stateType: "info"
+  },
+  identify_customer: {
+    agent: "Das tut mir leid zu hören. Ich helfe Ihnen gerne bei der Klärung. Darf ich zunächst nach Ihrem Namen und Ihrer Kundennummer fragen?",
+    customer: "Ich heiße Sophia Klein und meine Kundennummer ist KD-789456.",
+    nextState: "verify_identity",
+    stateType: "verification",
+    systemMessage: "Bitte verifizieren Sie die Identität der Kundin."
+  },
+  verify_identity: {
+    agent: "Vielen Dank, Frau Klein. Zur Sicherheit benötige ich noch Ihr Geburtsdatum.",
+    customer: "Mein Geburtsdatum ist der 5. März 1990.",
+    nextState: "identity_confirmed",
+    stateType: "verification",
+    action: "prüfeKundenidentität",
+    systemMessage: "Überprüfen Sie die Kundendaten im System."
+  },
+  identity_confirmed: {
+    agent: "Danke für die Bestätigung. Ich sehe hier, dass Sie eine Zahlungserinnerung über 250€ erhalten haben. Wann haben Sie die Zahlung getätigt?",
+    customer: "Ich habe den Betrag bereits am 15. April überwiesen.",
+    nextState: "payment_details",
+    stateType: "info",
+    systemMessage: "Kundin wurde erfolgreich identifiziert. Sie können mit der Überprüfung der Zahlung fortfahren."
+  },
+  payment_details: {
+    agent: "Verstanden. Können Sie mir bitte mitteilen, von welchem Konto Sie die Überweisung getätigt haben und welche Referenznummer Sie verwendet haben?",
+    customer: "Die Überweisung erfolgte von meinem Girokonto bei der Sparkasse. Die Referenznummer auf der Rechnung war KD-789456.",
+    nextState: "check_payment",
+    stateType: "info",
+    systemMessage: "Sammeln Sie alle relevanten Zahlungsdetails für die Überprüfung."
+  },
+  check_payment: {
+    agent: "Vielen Dank für diese Informationen. Ich werde jetzt in unserem System nachsehen, ob die Zahlung eingegangen ist. Einen Moment bitte.",
+    customer: "Ja, danke. Ich warte.",
+    nextState: "payment_found",
+    stateType: "info",
+    action: "prüfeZahlungseingang",
+    systemMessage: "Überprüfen Sie den Zahlungseingang im System."
+  },
+  payment_found: {
+    agent: "Ich kann tatsächlich eine Zahlung von Ihnen über 250€ vom 15. April in unserem System sehen. Die Zahlung wurde korrekt verbucht, aber es scheint, dass die Zahlungserinnerung automatisch vor der Verbuchung Ihrer Zahlung generiert wurde.",
+    customer: "Das ist gut zu wissen. Muss ich jetzt etwas unternehmen?",
+    nextState: "resolve_issue",
+    stateType: "info",
+    systemMessage: "Die Zahlung wurde im System gefunden. Klären Sie das weitere Vorgehen."
+  },
+  resolve_issue: {
+    agent: "Nein, Sie müssen nichts weiter unternehmen. Ich habe die Zahlungserinnerung in unserem System als erledigt markiert. Sie können die Mahnung ignorieren. Entschuldigen Sie bitte die Unannehmlichkeiten.",
+    suggestions: ["Bestätigung per E-Mail senden", "Kulanzgutschrift anbieten", "Zahlungsbestätigung erklären"],
+    customer: "Alles klar, vielen Dank für die Klärung.",
+    nextState: "offer_confirmation",
+    stateType: "decision",
+    action: "markiereZahlungAlsErledigt",
+    systemMessage: "Das Problem wurde gelöst. Bieten Sie eine Bestätigung an."
+  },
+  offer_confirmation: {
+    agent: "Gerne. Möchten Sie eine schriftliche Bestätigung per E-Mail erhalten, dass die Angelegenheit erledigt ist?",
+    customer: "Ja, das wäre sehr hilfreich. Danke.",
+    nextState: "send_confirmation",
+    stateType: "question",
+    systemMessage: "Bieten Sie der Kundin eine schriftliche Bestätigung an."
+  },
+  send_confirmation: {
+    agent: "Ich werde Ihnen sofort eine Bestätigung an Ihre hinterlegte E-Mail-Adresse senden. Sie sollte in den nächsten Minuten bei Ihnen eingehen.",
+    customer: "Perfekt, vielen Dank für Ihre Hilfe.",
+    nextState: "finish",
+    stateType: "info",
+    action: "sendeBestätigung",
+    systemMessage: "Senden Sie eine E-Mail-Bestätigung an die Kundin."
+  },
+  finish: {
+    agent: "Sehr gerne. Gibt es noch etwas anderes, womit ich Ihnen helfen kann?",
+    customer: "Nein, das war alles. Vielen Dank für die schnelle Lösung.",
+    nextState: "end",
+    stateType: "question",
+    systemMessage: "Die Anfrage wurde erfolgreich bearbeitet."
+  },
+  end: {
+    agent: "Gerne geschehen, Frau Klein. Vielen Dank für Ihren Anruf und entschuldigen Sie nochmals die Unannehmlichkeiten mit der Zahlungserinnerung. Einen schönen Tag noch!",
+    stateType: "info",
+    systemMessage: "Gespräch kann beendet werden. Kein weiterer Handlungsbedarf."
+  }
+};
+
+// Insurance Package state machine
+export const insurancePackageStateMachine: StateMachine = {
+  start: {
+    agent: "Guten Tag, wie kann ich Ihnen helfen?",
+    customer: "Hallo, ich war bisher in der studentischen Krankenversicherung, aber jetzt beginne ich meinen ersten Job und brauche ein neues Versicherungspaket.",
+    nextState: "identify_customer",
+    stateType: "info"
+  },
+  identify_customer: {
+    agent: "Herzlichen Glückwunsch zum Berufseinstieg! Ich helfe Ihnen gerne bei der Auswahl eines passenden Versicherungspakets. Darf ich zunächst nach Ihrem Namen und Ihrer Versicherungsnummer fragen?",
+    customer: "Mein Name ist Jonas Schwarz und meine Versicherungsnummer ist VS-67890123.",
+    nextState: "verify_identity",
+    stateType: "verification",
+    systemMessage: "Bitte verifizieren Sie die Identität des Kunden."
+  },
+  verify_identity: {
+    agent: "Vielen Dank, Herr Schwarz. Zur Sicherheit benötige ich noch Ihr Geburtsdatum.",
+    customer: "Ich wurde am 12. Juni 1997 geboren.",
+    nextState: "identity_confirmed",
+    stateType: "verification",
+    action: "prüfeKundenidentität",
+    systemMessage: "Überprüfen Sie die Kundendaten im System."
+  },
+  identity_confirmed: {
+    agent: "Danke für die Bestätigung. Ich sehe, dass Sie bisher in unserer Studentenversicherung waren. Ab wann beginnen Sie mit Ihrer Berufstätigkeit, und wie hoch wird ungefähr Ihr Jahresgehalt sein?",
+    customer: "Ich beginne am 1. Juni und mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
+    nextState: "collect_requirements",
+    stateType: "info",
+    systemMessage: "Kunde wurde erfolgreich identifiziert. Sie können mit der Beratung fortfahren."
+  },
+  collect_requirements: {
+    agent: "Verstanden. Haben Sie besondere Bedürfnisse oder Wünsche für Ihre neue Krankenversicherung? Zum Beispiel zusätzliche Leistungen für Zahnbehandlung, Brille oder besondere Therapien?",
+    customer: "Ja, ich interessiere mich für einen umfassenden Schutz mit Zusatzleistungen für Zahnbehandlung und Brille.",
+    nextState: "suggest_package",
+    stateType: "question",
+    systemMessage: "Erfassen Sie die speziellen Anforderungen des Kunden für ein passendes Angebot."
+  },
+  suggest_package: {
+    agent: "Basierend auf Ihren Angaben würde ich Ihnen unser 'Premium Plus'-Paket empfehlen. Es enthält eine umfassende Grundversicherung sowie Zusatzleistungen für Zahnbehandlungen bis zu 80% und eine Brillenzuzahlung von bis zu 200€ alle zwei Jahre. Der monatliche Beitrag läge bei etwa 350€.",
+    suggestions: ["Günstigere Alternative", "Details zu Zahnleistungen", "Auslandsschutz erklären"],
+    customer: "Das klingt interessant. Gibt es spezielle Angebote für Berufseinsteiger?",
+    nextState: "explain_starter_offer",
+    stateType: "decision",
+    systemMessage: "Präsentieren Sie das empfohlene Versicherungspaket und bereiten Sie sich auf Folgefragen vor."
+  },
+  explain_starter_offer: {
+    agent: "In der Tat haben wir ein spezielles Angebot für Berufseinsteiger wie Sie. In den ersten 12 Monaten erhalten Sie 15% Rabatt auf den monatlichen Beitrag, was den Preis auf etwa 298€ pro Monat senkt. Zudem können Sie in den ersten 6 Monaten kostenlos zwischen verschiedenen Zusatzleistungen wechseln, um das für Sie passende Paket zu finden.",
+    customer: "Diese Option klingt interessant. Können Sie mir weitere Details zusenden?",
+    nextState: "send_information",
+    stateType: "info",
+    systemMessage: "Erklären Sie die besonderen Konditionen für Berufseinsteiger."
+  },
+  send_information: {
+    agent: "Selbstverständlich. Ich werde Ihnen gerne alle Informationen zum 'Premium Plus'-Paket mit dem Berufseinsteiger-Rabatt per E-Mail zusenden. Möchten Sie auch einen persönlichen Beratungstermin vereinbaren, um alle Details zu besprechen?",
+    suggestions: ["Ja, Termin vereinbaren", "Nur E-Mail-Info", "Telefonische Nachberatung"],
+    customer: "Ja, ein persönlicher Beratungstermin wäre hilfreich.",
+    nextState: "schedule_appointment",
+    stateType: "decision",
+    action: "sendeInfomaterial",
+    systemMessage: "Bereiten Sie den Versand der Informationsunterlagen vor."
+  },
+  schedule_appointment: {
+    agent: "Sehr gerne. Ich kann Ihnen einen Termin mit unserem Versicherungsberater, Herrn Müller, anbieten. Er ist spezialisiert auf Berufseinsteiger. Würde Ihnen nächste Woche Dienstag um 14:00 Uhr oder Donnerstag um 10:00 Uhr passen?",
+    customer: "Dienstag um 14:00 Uhr passt mir gut.",
+    nextState: "confirm_appointment",
+    stateType: "question",
+    systemMessage: "Vereinbaren Sie einen Beratungstermin mit dem Kunden."
+  },
+  confirm_appointment: {
+    agent: "Perfekt! Ich habe den Termin für Sie am nächsten Dienstag um 14:00 Uhr mit Herrn Müller eingetragen. Sie können wählen, ob der Termin in unserer Filiale in der Hauptstraße 45 stattfinden soll oder ob Sie eine Online-Beratung per Video bevorzugen.",
+    customer: "Eine Online-Beratung wäre mir lieber.",
+    nextState: "finalize",
+    stateType: "question",
+    action: "bucheBeratertermin",
+    systemMessage: "Bestätigen Sie die Termindetails und klären Sie das Format (vor Ort oder online)."
+  },
+  finalize: {
+    agent: "Alles klar. Ich habe notiert, dass Sie eine Online-Beratung bevorzugen. Sie werden morgen eine E-Mail mit den Informationsunterlagen und allen Details zum Online-Meeting am Dienstag erhalten. Haben Sie noch weitere Fragen?",
+    customer: "Nein, das war alles. Vielen Dank für Ihre Hilfe!",
+    nextState: "end",
+    stateType: "question",
+    systemMessage: "Alle Vereinbarungen wurden getroffen. Fassen Sie die nächsten Schritte zusammen."
+  },
+  end: {
+    agent: "Gerne geschehen, Herr Schwarz! Sie erhalten in Kürze die E-Mail mit allen Informationen. Falls Sie vorab noch Fragen haben, können Sie uns jederzeit kontaktieren. Vielen Dank für Ihren Anruf und einen schönen Tag noch!",
+    stateType: "info",
+    systemMessage: "Gespräch kann beendet werden. Kein weiterer Handlungsbedarf."
+  }
+};
+
 // Map from scenario type to state machine
 export const stateMachines: Record<string, StateMachine> = {
   'physioTherapy': physioStateMachine,
   'bankDetails': bankDetailsStateMachine,
   'verification': verificationStateMachine,
-  // Add more state machines as they are created
+  'accountHistory': accountHistoryStateMachine,
+  'paymentReminder': paymentReminderStateMachine,
+  'insurancePackage': insurancePackageStateMachine
 };
 
 export const scenarioInitialStates: Record<string, string> = {
@@ -266,4 +529,3 @@ export const scenarioInitialStates: Record<string, string> = {
   'paymentReminder': 'start',
   'insurancePackage': 'start'
 };
-
