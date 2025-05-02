@@ -12,11 +12,16 @@ import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw, Check } from 'lucide-react';
+import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw, Check, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
 import { useToast } from '@/hooks/use-toast';
+import StateMachineSelector from '@/components/StateMachineSelector';
+import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
+import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
+import { ScenarioType } from '@/components/ScenarioSelector';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type Message = {
   id: string;
@@ -51,6 +56,11 @@ const TestScenario = () => {
     invalid: number;
   }>({ validated: 0, pending: 0, invalid: 0 });
   const [verificationBlocking, setVerificationBlocking] = useState(false);
+  const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>('physioCoverage');
+  const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
+  const [jsonContent, setJsonContent] = useState<string>("");
+  const [stateChanged, setStateChanged] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -84,6 +94,32 @@ const TestScenario = () => {
     ? customerScenario.getAgentOptions 
     : (() => []);
 
+  // Load state machine when selected scenario changes
+  useEffect(() => {
+    async function fetchStateMachine() {
+      if (selectedStateMachine) {
+        try {
+          const machine = await loadStateMachine(selectedStateMachine);
+          setLoadedStateMachine(machine);
+          
+          // Also load the JSON content for display
+          if (machine) {
+            setJsonContent(JSON.stringify(machine, null, 2));
+          }
+        } catch (error) {
+          console.error("Failed to load state machine:", error);
+          toast({
+            title: "Error",
+            description: `Failed to load ${selectedStateMachine} state machine`,
+            variant: "destructive"
+          });
+        }
+      }
+    }
+    
+    fetchStateMachine();
+  }, [selectedStateMachine, toast]);
+
   // Scroll to bottom whenever messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -112,6 +148,30 @@ const TestScenario = () => {
       }
     };
   }, [callActive]);
+
+  // Reset state changed indicator after some time
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    if (stateChanged) {
+      timeout = setTimeout(() => {
+        setStateChanged(false);
+      }, 3000);
+    }
+    
+    return () => clearTimeout(timeout);
+  }, [stateChanged]);
+
+  // Monitor state changes
+  useEffect(() => {
+    if (previousState && currentState !== previousState) {
+      setStateChanged(true);
+      
+      toast({
+        title: "State Changed",
+        description: `Transitioned from "${previousState}" to "${currentState}"`,
+      });
+    }
+  }, [currentState, previousState, toast]);
 
   // Add a system message
   const addSystemMessage = (text: string, requiresVerification: boolean = false) => {
@@ -404,15 +464,6 @@ const TestScenario = () => {
     });
   };
 
-  // Get JSON data for the active scenario
-  const getScenarioJson = () => {
-    if (isAgentMode) {
-      return JSON.stringify(customerScenario, null, 2);
-    } else {
-      return JSON.stringify(require('../data/stateMachines/physioCoverage.json'), null, 2);
-    }
-  };
-
   return (
     <div className="flex h-screen bg-background">
       <SidebarProvider>
@@ -422,18 +473,38 @@ const TestScenario = () => {
           <div className="flex-1 overflow-auto p-4 md:p-6">
             <div className="grid gap-6">
               <Card className="flex-1">
-                <CardHeader>
-                  <CardTitle>
-                    {isAgentMode ? "Agent Mode: You help the customer" : "Customer Mode: AI helps you"}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch id="agent-mode" checked={isAgentMode} onCheckedChange={handleToggleAgentMode} disabled={callActive} />
-                      <Label htmlFor="agent-mode">You are the agent</Label>
-                    </div>
-                    {!isAgentMode && "Using physio coverage conversation flow"}
-                    {isAgentMode && "Using customer scenario flow"}
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      {isAgentMode ? "Agent Mode: You help the customer" : "Customer Mode: AI helps you"}
+                      {stateChanged && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <AlertCircle size={16} className="text-amber-500 animate-pulse" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>State updated: {currentState}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch id="agent-mode" checked={isAgentMode} onCheckedChange={handleToggleAgentMode} disabled={callActive} />
+                        <Label htmlFor="agent-mode">You are the agent</Label>
+                      </div>
+                      {!isAgentMode && "Using physio coverage conversation flow"}
+                      {isAgentMode && "Using customer scenario flow"}
+                    </CardDescription>
+                  </div>
+                  
+                  <StateMachineSelector 
+                    activeStateMachine={selectedStateMachine} 
+                    onSelectStateMachine={setSelectedStateMachine}
+                    disabled={callActive}
+                  />
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-4 flex-wrap">
@@ -538,9 +609,10 @@ const TestScenario = () => {
                   </CardHeader>
                   <CardContent className="p-0">
                     <Tabs defaultValue="chat" className="w-full">
-                      <TabsList className="grid grid-cols-2 mx-4 mt-4">
+                      <TabsList className="grid grid-cols-3 mx-4 mt-4">
                         <TabsTrigger value="chat">Chat View</TabsTrigger>
                         <TabsTrigger value="state">State Machine</TabsTrigger>
+                        <TabsTrigger value="visualization">Decision Tree</TabsTrigger>
                       </TabsList>
                       <TabsContent value="chat" className="p-4 max-h-[60vh] overflow-y-auto">
                         <div className="space-y-4 mb-4">
@@ -698,7 +770,28 @@ const TestScenario = () => {
                           </div>
                         </div>
                       </TabsContent>
+                      <TabsContent value="visualization" className="p-4">
+                        <DecisionTreeVisualizer 
+                          stateMachine={loadedStateMachine}
+                          currentState={currentState}
+                        />
+                      </TabsContent>
                     </Tabs>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Display the state machine visualizer when not in a call */}
+              {!callActive && selectedStateMachine && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>State Machine: {selectedStateMachine}</CardTitle>
+                    <CardDescription>
+                      Visual representation of the selected state machine
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DecisionTreeVisualizer stateMachine={loadedStateMachine} />
                   </CardContent>
                 </Card>
               )}
@@ -712,12 +805,15 @@ const TestScenario = () => {
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
-              {isAgentMode ? "Customer Scenario JSON" : "Physio Coverage JSON"}
+              {selectedStateMachine} State Machine
             </DialogTitle>
+            <CardDescription>
+              Complete JSON representation of the state machine flow
+            </CardDescription>
           </DialogHeader>
           <div className="overflow-auto max-h-[60vh]">
             <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
-              {getScenarioJson()}
+              {jsonContent}
             </pre>
           </div>
         </DialogContent>
