@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, User, Clock, ArrowRight, Star, UserCircle, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,6 +15,14 @@ type Message = {
   text: string;
   sender: 'agent' | 'customer';
   timestamp: string;
+};
+
+type AISuggestion = {
+  id: number;
+  text: string;
+  type: 'info' | 'action' | 'response';
+  accepted?: boolean;
+  rejected?: boolean;
 };
 
 type IncomingCall = {
@@ -43,6 +52,7 @@ interface TranscriptPanelProps {
 
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [callActive, setCallActive] = useState(false);
@@ -124,7 +134,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
   
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, aiSuggestions]);
 
   // Timer for call duration
   useEffect(() => {
@@ -148,6 +158,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     if (callActive && activeScenario) {
       // Reset message history
       setMessages([]);
+      setAiSuggestions([]);
       
       // Add initial agent greeting
       setTimeout(() => {
@@ -195,10 +206,150 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           };
           
           setMessages(prev => [...prev, customerMessage]);
+
+          // Generate first AI suggestion based on scenario
+          generateAiSuggestion(activeScenario, 2);
         }, 1500);
       }, 1000);
     }
   }, [activeScenario, callActive]);
+
+  // Generate AI suggestions based on context
+  const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: number) => {
+    let suggestion: AISuggestion | null = null;
+    
+    switch(scenario) {
+      case 'verification':
+        if (afterMessageId === 2) {
+          suggestion = {
+            id: Date.now(),
+            text: "Bitte fragen Sie nach Kundennummer und Geburtsdatum für die Verifizierung.",
+            type: 'action'
+          };
+        } else if (afterMessageId === 4) {
+          suggestion = {
+            id: Date.now(),
+            text: "Kunde verifiziert - Sie können zusätzlich Two-Factor Authentication anbieten.",
+            type: 'info'
+          };
+        } else if (afterMessageId > 5) {
+          suggestion = {
+            id: Date.now(),
+            text: "Ich habe Ihr Konto gesichert und ein neues Passwort eingerichtet. Sie erhalten in Kürze eine E-Mail mit einem Link zur Passwortänderung. Bitte aktivieren Sie auch die Zwei-Faktor-Authentifizierung für zusätzliche Sicherheit.",
+            type: 'response'
+          };
+        }
+        break;
+      case 'bankDetails':
+        if (afterMessageId === 2) {
+          suggestion = {
+            id: Date.now(),
+            text: "Bitte verifizieren Sie den Kunden bevor Sie Bankdaten ändern.",
+            type: 'action'
+          };
+        } else if (afterMessageId === 4) {
+          suggestion = {
+            id: Date.now(),
+            text: "Kunde verwendet seit 5 Jahren Lastschriftverfahren.",
+            type: 'info'
+          };
+        } else if (afterMessageId > 5) {
+          suggestion = {
+            id: Date.now(),
+            text: "Vielen Dank für die Bestätigung. Ich habe Ihre Bankverbindung aktualisiert. Die Änderung wird ab dem nächsten Abrechnungszyklus wirksam. Sie erhalten eine Bestätigungs-E-Mail mit allen Details.",
+            type: 'response'
+          };
+        }
+        break;
+      case 'physioTherapy':
+        if (afterMessageId === 2) {
+          suggestion = {
+            id: Date.now(),
+            text: "Tarif des Kunden: PremiumPlus mit 100% Erstattung für verschriebene Physiotherapie.",
+            type: 'info'
+          };
+        } else if (afterMessageId === 4) {
+          suggestion = {
+            id: Date.now(),
+            text: "Bitte prüfen Sie die Verschreibung und ob eine Vorabgenehmigung nötig ist.",
+            type: 'action'
+          };
+        } else if (afterMessageId > 5) {
+          suggestion = {
+            id: Date.now(),
+            text: "Ich kann bestätigen, dass Ihre Versicherung alle 10 Physiotherapie-Sitzungen zu 100% abdeckt, da sie ärztlich verschrieben wurden. Sie müssen keine Vorabgenehmigung einholen. Reichen Sie einfach die Rechnung zusammen mit der Verschreibung ein.",
+            type: 'response'
+          };
+        }
+        break;
+      case 'paymentReminder':
+        if (afterMessageId === 2) {
+          suggestion = {
+            id: Date.now(),
+            text: "Zahlungseingang vom 25. April wurde im System vermerkt, aber noch nicht verarbeitet.",
+            type: 'info'
+          };
+        } else if (afterMessageId === 4) {
+          suggestion = {
+            id: Date.now(),
+            text: "Bitte prüfen Sie die Zahlungsreferenz und stornieren Sie die Mahngebühren.",
+            type: 'action'
+          };
+        } else if (afterMessageId > 5) {
+          suggestion = {
+            id: Date.now(),
+            text: "Ich habe den Zahlungseingang bestätigt und die Mahnung sowie alle Mahngebühren storniert. Sie erhalten innerhalb der nächsten 24 Stunden eine Bestätigung per E-Mail. Ich entschuldige mich für die Unannehmlichkeiten.",
+            type: 'response'
+          };
+        }
+        break;
+      case 'insurancePackage':
+        if (afterMessageId === 2) {
+          suggestion = {
+            id: Date.now(),
+            text: "Empfohlenes Paket: StartPlus mit erweitertem Zahnschutz und Sehhilfen-Option.",
+            type: 'info'
+          };
+        } else if (afterMessageId === 4) {
+          suggestion = {
+            id: Date.now(),
+            text: "Informieren Sie über 15% Neukundenrabatt für Berufseinsteiger im ersten Jahr.",
+            type: 'action'
+          };
+        } else if (afterMessageId > 5) {
+          suggestion = {
+            id: Date.now(),
+            text: "Unser StartPlus-Paket mit erweitertem Zahnschutz und Brillenoption kostet 89€ monatlich. Als Berufseinsteiger erhalten Sie im ersten Jahr einen Rabatt von 15%. Ich kann Ihnen detaillierte Informationen per E-Mail zusenden und einen persönlichen Beratungstermin anbieten.",
+            type: 'response'
+          };
+        }
+        break;
+      default:
+        if (afterMessageId === 2) {
+          suggestion = {
+            id: Date.now(),
+            text: "Kundenhistorie zeigt mehrere technische Probleme in den letzten 30 Tagen.",
+            type: 'info'
+          };
+        } else if (afterMessageId === 4) {
+          suggestion = {
+            id: Date.now(),
+            text: "Empfehlung: Router-Firmware aktualisieren und Bandbreiten-Test durchführen.",
+            type: 'action'
+          };
+        } else if (afterMessageId > 5) {
+          suggestion = {
+            id: Date.now(),
+            text: "Basierend auf unserer Diagnose scheint das Problem mit Ihrer Netzwerkausrüstung zusammenzuhängen. Ich empfehle ein Firmware-Update für Ihren Router und die Durchführung eines Bandbreiten-Tests. Ich kann Ihnen einen Techniker schicken, der das Problem weiter untersuchen kann.",
+            type: 'response'
+          };
+        }
+    }
+    
+    if (suggestion) {
+      setAiSuggestions(prev => [...prev, suggestion as AISuggestion]);
+    }
+  };
 
   // Trigger contact suggestion based on keywords in the transcript
   useEffect(() => {
@@ -305,9 +456,43 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           };
           
           setMessages(prev => [...prev, customerMessage]);
+          
+          // Generate new AI suggestion based on the conversation
+          generateAiSuggestion(activeScenario, messages.length + 2);
         }, 1500);
       }
     }
+  };
+  
+  const handleAcceptSuggestion = (suggestionId: number) => {
+    setAiSuggestions(prev => 
+      prev.map(suggestion => 
+        suggestion.id === suggestionId 
+          ? { ...suggestion, accepted: true, rejected: false }
+          : suggestion
+      )
+    );
+    
+    // If it's a response suggestion, automatically fill the input with it
+    const suggestion = aiSuggestions.find(s => s.id === suggestionId);
+    if (suggestion && suggestion.type === 'response') {
+      setInputValue(suggestion.text);
+    }
+    
+    toast({
+      title: "Suggestion accepted",
+      description: "The AI suggestion has been applied.",
+    });
+  };
+  
+  const handleRejectSuggestion = (suggestionId: number) => {
+    setAiSuggestions(prev => 
+      prev.map(suggestion => 
+        suggestion.id === suggestionId 
+          ? { ...suggestion, rejected: true, accepted: false }
+          : suggestion
+      )
+    );
   };
   
   const toggleRecording = () => {
@@ -341,6 +526,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setElapsedTime('00:00');
       setAcceptedCallId(null);
       setHistoryCollapsed(true);
+      setAiSuggestions([]);
       toast({
         title: "Call Ended",
         description: `Call duration: ${elapsedTime}`,
@@ -437,6 +623,64 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     </div>
   );
 
+  const renderAiSuggestion = (suggestion: AISuggestion) => {
+    if (suggestion.rejected) return null;
+    
+    return (
+      <div 
+        key={`suggestion-${suggestion.id}`}
+        className={`w-full max-w-md mx-auto my-2 p-3 rounded-lg ${
+          suggestion.type === 'info' 
+            ? 'bg-blue-50 border-l-4 border-blue-500' 
+            : suggestion.type === 'action'
+            ? 'bg-amber-50 border-l-4 border-amber-500'
+            : 'bg-purple-50 border-l-4 border-purple-500'
+        } ${suggestion.accepted ? 'opacity-60' : ''}`}
+      >
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex items-center gap-2 text-xs font-medium uppercase text-gray-500 mb-1">
+            <MessageSquare size={14} className={
+              suggestion.type === 'info' ? 'text-blue-500' : 
+              suggestion.type === 'action' ? 'text-amber-500' : 'text-purple-500'
+            } />
+            AI {suggestion.type}
+          </div>
+          {!suggestion.accepted && (
+            <div className="flex gap-1">
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-6 w-6 p-0 rounded-full text-green-600" 
+                onClick={() => handleAcceptSuggestion(suggestion.id)}
+              >
+                <CheckCircle size={14} />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-6 w-6 p-0 rounded-full text-red-600" 
+                onClick={() => handleRejectSuggestion(suggestion.id)}
+              >
+                <X size={14} />
+              </Button>
+            </div>
+          )}
+        </div>
+        <p className="text-sm">{suggestion.text}</p>
+        {suggestion.type === 'response' && !suggestion.accepted && (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="text-xs mt-1 h-7" 
+            onClick={() => handleAcceptSuggestion(suggestion.id)}
+          >
+            Use this response
+          </Button>
+        )}
+      </div>
+    );
+  };
+
   const renderCallInterface = () => (
     <div className="flex flex-col h-full">
       <Collapsible 
@@ -515,34 +759,45 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
             Sie sind jetzt mit {incomingCalls.find(call => call.id === acceptedCallId)?.customerName} verbunden
           </div>
           
-          {messages.map((message) => (
-            <div 
-              key={message.id} 
-              className={`chat-message flex items-start ${message.sender === 'agent' ? 'justify-end' : ''} mb-4`}
-            >
-              {message.sender === 'customer' && (
-                <Avatar className="h-8 w-8 mt-1 mr-2">
-                  <AvatarFallback className="bg-callflow-accent/20 text-callflow-accent">
-                    {acceptedCallId ? incomingCalls.find(call => call.id === acceptedCallId)?.customerName.charAt(0) : 'C'}
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div className={`max-w-3/4 ${message.sender === 'agent' ? 'text-right' : ''}`}>
-                <div className={`px-4 py-2 rounded-lg text-sm inline-block ${
-                  message.sender === 'agent' 
-                    ? 'bg-callflow-primary/10 text-callflow-primary' 
-                    : 'bg-muted/30'
-                }`}>
-                  {message.text}
+          {messages.map((message, index) => (
+            <React.Fragment key={`message-group-${message.id}`}>
+              <div 
+                className={`chat-message flex items-start ${message.sender === 'agent' ? 'justify-end' : ''} mb-2`}
+              >
+                {message.sender === 'customer' && (
+                  <Avatar className="h-8 w-8 mt-1 mr-2">
+                    <AvatarFallback className="bg-callflow-accent/20 text-callflow-accent">
+                      {acceptedCallId ? incomingCalls.find(call => call.id === acceptedCallId)?.customerName.charAt(0) : 'C'}
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+                <div className={`max-w-3/4 ${message.sender === 'agent' ? 'text-right' : ''}`}>
+                  <div className={`px-4 py-2 rounded-lg text-sm inline-block ${
+                    message.sender === 'agent' 
+                      ? 'bg-callflow-primary/10 text-callflow-primary' 
+                      : 'bg-muted/30'
+                  }`}>
+                    {message.text}
+                  </div>
+                  <div className="text-xs opacity-70 mt-1">{message.timestamp}</div>
                 </div>
-                <div className="text-xs opacity-70 mt-1">{message.timestamp}</div>
+                {message.sender === 'agent' && (
+                  <Avatar className="h-8 w-8 mt-1 ml-2">
+                    <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">A</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
-              {message.sender === 'agent' && (
-                <Avatar className="h-8 w-8 mt-1 ml-2">
-                  <AvatarFallback className="bg-callflow-primary/20 text-callflow-primary">A</AvatarFallback>
-                </Avatar>
+              
+              {/* Show AI suggestions after customer messages */}
+              {message.sender === 'customer' && 
+               aiSuggestions.find(s => s.id % 10 === message.id % 10) && (
+                <div className="ml-12 mb-4">
+                  {aiSuggestions
+                    .filter(s => s.id % 10 === message.id % 10)
+                    .map(suggestion => renderAiSuggestion(suggestion))}
+                </div>
               )}
-            </div>
+            </React.Fragment>
           ))}
           <div ref={messagesEndRef} />
         </div>
