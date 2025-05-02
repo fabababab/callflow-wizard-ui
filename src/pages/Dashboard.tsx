@@ -520,8 +520,8 @@ const Dashboard = () => {
           <CardTitle>Active Call - {incomingCall.customerName}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge className="bg-green-500">Live</Badge>
-            {/* Add state machine JSON button only if this scenario has a state machine */}
-            {activeScenario && stateMachines[activeScenario as string] && (
+            {/* Always show the state machine JSON button for active scenarios */}
+            {activeScenario && (
               <Button
                 size="icon"
                 variant="outline"
@@ -539,6 +539,7 @@ const Dashboard = () => {
           {incomingCall.callType} • {incomingCall.phoneNumber}
         </CardDescription>
       </CardHeader>
+      
       <CardContent className="pt-6">
         <div className="mb-6">
           <Collapsible>

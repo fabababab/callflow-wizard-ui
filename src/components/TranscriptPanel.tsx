@@ -90,7 +90,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          {callActive && hasStateMachine && (
+          {callActive && activeScenario && (
             <Button
               size="icon"
               variant="outline"

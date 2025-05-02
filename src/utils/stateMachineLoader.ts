@@ -113,3 +113,15 @@ export async function getStateMachineJson(scenario: ScenarioType): Promise<strin
     return `Error loading state machine for ${scenario}`;
   }
 }
+
+// Helper to check if a state machine exists for a scenario
+export function hasStateMachine(scenario: ScenarioType): boolean {
+  if (!scenario) return false;
+  try {
+    // Check if the file exists by doing a sync require
+    require(`../data/stateMachines/${scenario}.json`);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
