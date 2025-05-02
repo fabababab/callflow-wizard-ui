@@ -1,166 +1,237 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { nanoid } from 'nanoid';
-import { Message } from '@/components/transcript/Message';
-import { AISuggestion } from '@/components/transcript/AISuggestion';
+import { useToast } from '@/hooks/use-toast';
+import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
 
-interface MessageHandlingProps {
-  stateData: any;
-  onProcessSelection: (selection: string) => boolean;
-  onDefaultTransition: () => boolean;
-  callActive: boolean;
-  isAgentMode?: boolean;
-}
+type SensitiveDataField = {
+  id: string;
+  type: string;
+  value: string;
+  status: ValidationStatus;
+  notes?: string;
+  requiresVerification?: boolean;
+};
 
-export function useMessageHandling({
-  stateData,
-  onProcessSelection,
-  onDefaultTransition,
-  callActive,
-  isAgentMode = false
-}: MessageHandlingProps) {
+export type Message = {
+  id: string;
+  text: string;
+  sender: 'agent' | 'customer' | 'system';
+  timestamp: Date;
+  responseOptions?: string[];
+  sensitiveData?: SensitiveDataField[];
+  requiresVerification?: boolean;
+  isVerified?: boolean;
+};
+
+export function useMessageHandling() {
+  const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sensitiveDataStats, setSensitiveDataStats] = useState<{
+    validated: number;
+    pending: number;
+    invalid: number;
+  }>({ validated: 0, pending: 0, invalid: 0 });
+  const [verificationBlocking, setVerificationBlocking] = useState(false);
+  const [lastMessageUpdate, setLastMessageUpdate] = useState<Date>(new Date());
 
-  // Send a message from the user or agent depending on mode
-  const handleSendMessage = useCallback(() => {
-    if (!inputValue.trim() || !callActive) return;
-
-    const newMessage: Message = {
+  // Add a system message
+  const addSystemMessage = (text: string, requiresVerification: boolean = false) => {
+    console.log('Adding system message:', text);
+    const newMessage = {
       id: nanoid(),
-      text: inputValue,
-      sender: isAgentMode ? 'agent' : 'customer',
-      timestamp: new Date()
+      text,
+      sender: 'system' as const,
+      timestamp: new Date(),
+      requiresVerification,
+      isVerified: !requiresVerification
     };
-
+    
     setMessages(prev => [...prev, newMessage]);
-    setInputValue('');
+    setLastMessageUpdate(new Date());
     
-    // Try to process the selection, if it doesn't match any transition
-    // we just let the message stand as free text
-    onProcessSelection(inputValue);
-    
-    // Scroll to bottom after message is sent
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  }, [inputValue, callActive, isAgentMode, onProcessSelection]);
-
-  // Handle selecting a response option
-  const handleSelectResponse = useCallback((response: string) => {
-    if (!callActive) return;
-    
-    // Special handling for product information and contract cancellation
-    if (response.includes('product_info:')) {
-      const productName = response.split('product_info:')[1].trim();
-      const newMessage: Message = {
-        id: nanoid(),
-        text: `I'd like more information about ${productName}`,
-        sender: isAgentMode ? 'agent' : 'customer',
-        timestamp: new Date(),
-        productInfo: {
-          name: productName,
-          videoUrl: `https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0`, // Example video URL
-          description: `${productName} is our premium service that includes comprehensive coverage and 24/7 customer support.`,
-          details: ["Coverage in all EU countries", "No hidden fees", "Premium customer support", "Mobile app access"]
-        }
-      };
-      
-      setMessages(prev => [...prev, newMessage]);
-      onProcessSelection('show_product_info');
-    } 
-    else if (response.includes('cancel_contract:')) {
-      const contractType = response.split('cancel_contract:')[1].trim();
-      const contracts = [
-        { id: "c-1001", name: "Health Insurance Basic", startDate: "2020-01-15", monthly: "€49.99" },
-        { id: "c-1002", name: "Home Insurance Premium", startDate: "2021-03-10", monthly: "€35.50" },
-        { id: "c-1003", name: "Car Insurance Full Coverage", startDate: "2019-11-22", monthly: "€89.99" }
-      ];
-      
-      const newMessage: Message = {
-        id: nanoid(),
-        text: `I'd like to cancel my ${contractType} contract.`,
-        sender: isAgentMode ? 'agent' : 'customer',
-        timestamp: new Date(),
-        cancellation: {
-          type: contractType,
-          contracts: contracts,
-          requiresVerification: true
-        }
-      };
-      
-      setMessages(prev => [...prev, newMessage]);
-      onProcessSelection('show_contracts_for_cancellation');
-    }
-    else {
-      // Standard response handling
-      const newMessage: Message = {
-        id: nanoid(),
-        text: response,
-        sender: isAgentMode ? 'agent' : 'customer',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, newMessage]);
-      
-      // Process the selection
-      onProcessSelection(response);
+    if (requiresVerification) {
+      setVerificationBlocking(true);
     }
     
-    // Scroll to bottom after selection
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  }, [callActive, isAgentMode, onProcessSelection]);
+    return newMessage;
+  };
 
-  // Handle accepting a suggestion
-  const handleAcceptSuggestion = useCallback((messageId: string, suggestionId: string) => {
-    setMessages(prev => 
-      prev.map(message => {
-        if (message.id === messageId && message.suggestions) {
-          return {
-            ...message,
-            suggestions: message.suggestions.map(suggestion => 
-              suggestion.id === suggestionId 
-                ? { ...suggestion, accepted: true, rejected: false }
-                : suggestion
-            )
-          };
-        }
-        return message;
-      })
-    );
-  }, []);
+  // Add an agent message
+  const addAgentMessage = (text: string, responseOptions: string[] = []) => {
+    console.log('Adding agent message:', text, 'with options:', responseOptions);
+    const newMessage = {
+      id: nanoid(),
+      text,
+      sender: 'agent' as const,
+      timestamp: new Date(),
+      responseOptions
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    setLastMessageUpdate(new Date());
+    
+    return newMessage;
+  };
 
-  // Handle rejecting a suggestion
-  const handleRejectSuggestion = useCallback((messageId: string) => {
-    setMessages(prev => 
-      prev.map(message => {
-        if (message.id === messageId) {
-          return { ...message, isRejected: true };
-        }
-        return message;
-      })
-    );
-  }, []);
+  // Add a customer message with sensitive data detection
+  const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
+    console.log('Adding customer message:', text);
+    // Detect sensitive data in the message
+    const sensitiveData = detectSensitiveData(text);
+    
+    // Check if any sensitive data requires verification
+    const hasVerificationRequired = sensitiveData.some(data => data.requiresVerification);
+    
+    // If sensitive data is found, show a toast notification
+    if (sensitiveData.length > 0) {
+      toast({
+        title: "Sensitive Data Detected",
+        description: hasVerificationRequired 
+          ? `${sensitiveData.length} sensitive data fields found that require verification` 
+          : `${sensitiveData.length} sensitive data fields found in message`,
+        variant: hasVerificationRequired ? "destructive" : "default"
+      });
+      
+      // Update sensitive data stats
+      setSensitiveDataStats(prev => ({
+        ...prev,
+        pending: prev.pending + sensitiveData.length
+      }));
+      
+      // Block progress if verification is required
+      if (hasVerificationRequired) {
+        setVerificationBlocking(true);
+      }
+    }
+    
+    const newMessage = {
+      id: nanoid(),
+      text,
+      sender: 'customer' as const,
+      timestamp: new Date(),
+      responseOptions,
+      sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    setLastMessageUpdate(new Date());
+    
+    return newMessage;
+  };
 
-  // Toggle recording state
-  const toggleRecording = useCallback(() => {
-    setIsRecording(prev => !prev);
-  }, []);
+  // Clear all messages
+  const clearMessages = () => {
+    setMessages([]);
+    setLastMessageUpdate(new Date());
+    setSensitiveDataStats({ validated: 0, pending: 0, invalid: 0 });
+    setVerificationBlocking(false);
+  };
+
+  // Handle validating sensitive data
+  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
+    setMessages(prev => prev.map(message => {
+      if (message.id === messageId && message.sensitiveData) {
+        const updatedFields = message.sensitiveData.map(field => {
+          if (field.id === fieldId) {
+            const previousStatus = field.status;
+            
+            // Update stats based on status change
+            if (previousStatus !== status) {
+              setSensitiveDataStats(stats => {
+                const newStats = { ...stats };
+                if (previousStatus === 'pending') newStats.pending--;
+                else if (previousStatus === 'valid') newStats.validated--;
+                else if (previousStatus === 'invalid') newStats.invalid--;
+                
+                if (status === 'pending') newStats.pending++;
+                else if (status === 'valid') newStats.validated++;
+                else if (status === 'invalid') newStats.invalid++;
+                
+                return newStats;
+              });
+            }
+            
+            // If this is a required verification field being marked as valid or invalid
+            // check if we can unblock the conversation
+            if (field.requiresVerification && (status === 'valid' || status === 'invalid')) {
+              checkIfVerificationComplete();
+            }
+            
+            return { ...field, status, notes };
+          }
+          return field;
+        });
+        
+        return { ...message, sensitiveData: updatedFields };
+      }
+      return message;
+    }));
+    
+    setLastMessageUpdate(new Date());
+    
+    // Show validation toast
+    toast({
+      title: status === 'valid' ? "Validated" : "Validation Failed",
+      description: `Customer data marked as ${status}`,
+      variant: status === 'valid' ? "default" : "destructive"
+    });
+  };
+  
+  // Check if all required verifications are completed
+  const checkIfVerificationComplete = () => {
+    // Check all messages with sensitive data that require verification
+    const allVerified = messages.every(message => {
+      if (!message.sensitiveData) return true;
+      
+      // Check if any sensitive data field requires verification but is still pending
+      return !message.sensitiveData.some(field => 
+        field.requiresVerification && field.status === 'pending'
+      );
+    });
+    
+    if (allVerified) {
+      setVerificationBlocking(false);
+      toast({
+        title: "All Required Verifications Completed",
+        description: "The conversation can now continue",
+        variant: "default"
+      });
+    }
+  };
+
+  // Handle verifying system check
+  const handleVerifySystemCheck = (messageId: string) => {
+    setMessages(prev => prev.map(message => {
+      if (message.id === messageId && message.requiresVerification) {
+        return { ...message, isVerified: true };
+      }
+      return message;
+    }));
+    
+    setLastMessageUpdate(new Date());
+    
+    // Unblock the scenario progress
+    setVerificationBlocking(false);
+    
+    toast({
+      title: "Verification Complete",
+      description: "The system check has been verified and the scenario can continue",
+      variant: "default"
+    });
+  };
 
   return {
     messages,
-    inputValue,
-    setInputValue,
-    isRecording,
-    messagesEndRef,
-    handleSendMessage,
-    handleSelectResponse,
-    handleAcceptSuggestion,
-    handleRejectSuggestion,
-    toggleRecording
+    sensitiveDataStats,
+    verificationBlocking,
+    lastMessageUpdate,
+    addSystemMessage,
+    addAgentMessage,
+    addCustomerMessage,
+    clearMessages,
+    handleValidateSensitiveData,
+    handleVerifySystemCheck,
+    setVerificationBlocking
   };
 }

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -22,6 +23,11 @@ import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranscript } from '@/hooks/useTranscript';
+import ChatMessages from '@/components/TestScenario/ChatMessages';
+import StateDataDisplay from '@/components/TestScenario/StateDataDisplay';
+import CallControl from '@/components/TestScenario/CallControl';
+import MessageInput from '@/components/TestScenario/MessageInput';
+import EmptyChat from '@/components/TestScenario/EmptyChat';
 
 type Message = {
   id: string;
@@ -186,171 +192,6 @@ const TestScenario = () => {
     }
   }, [currentState, previousState, toast]);
 
-  // Add a system message
-  const addSystemMessage = (text: string, requiresVerification: boolean = false) => {
-    setMessages(prev => [
-      ...prev,
-      {
-        id: nanoid(),
-        text,
-        sender: 'system',
-        timestamp: new Date(),
-        requiresVerification,
-        isVerified: !requiresVerification
-      }
-    ]);
-    
-    if (requiresVerification) {
-      setVerificationBlocking(true);
-    }
-  };
-
-  // Add an agent message
-  const addAgentMessage = (text: string, responseOptions: string[] = []) => {
-    setMessages(prev => [
-      ...prev,
-      {
-        id: nanoid(),
-        text,
-        sender: 'agent',
-        timestamp: new Date(),
-        responseOptions
-      }
-    ]);
-  };
-
-  // Add a customer message with sensitive data detection
-  const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
-    // Detect sensitive data in the message
-    const sensitiveData = detectSensitiveData(text);
-    
-    // Check if any sensitive data requires verification
-    const hasVerificationRequired = sensitiveData.some(data => data.requiresVerification);
-    
-    // If sensitive data is found, show a toast notification
-    if (sensitiveData.length > 0) {
-      toast({
-        title: "Sensitive Data Detected",
-        description: hasVerificationRequired 
-          ? `${sensitiveData.length} sensitive data fields found that require verification` 
-          : `${sensitiveData.length} sensitive data fields found in message`,
-        variant: hasVerificationRequired ? "destructive" : "default"
-      });
-      
-      // Update sensitive data stats
-      setSensitiveDataStats(prev => ({
-        ...prev,
-        pending: prev.pending + sensitiveData.length
-      }));
-      
-      // Block progress if verification is required
-      if (hasVerificationRequired) {
-        setVerificationBlocking(true);
-      }
-    }
-    
-    setMessages(prev => [
-      ...prev,
-      {
-        id: nanoid(),
-        text,
-        sender: 'customer',
-        timestamp: new Date(),
-        responseOptions,
-        sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined,
-      }
-    ]);
-  };
-
-  // Handle validating sensitive data
-  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
-    setMessages(prev => prev.map(message => {
-      if (message.id === messageId && message.sensitiveData) {
-        const updatedFields = message.sensitiveData.map(field => {
-          if (field.id === fieldId) {
-            const previousStatus = field.status;
-            
-            // Update stats based on status change
-            if (previousStatus !== status) {
-              setSensitiveDataStats(stats => {
-                const newStats = { ...stats };
-                if (previousStatus === 'pending') newStats.pending--;
-                else if (previousStatus === 'valid') newStats.validated--;
-                else if (previousStatus === 'invalid') newStats.invalid--;
-                
-                if (status === 'pending') newStats.pending++;
-                else if (status === 'valid') newStats.validated++;
-                else if (status === 'invalid') newStats.invalid++;
-                
-                return newStats;
-              });
-            }
-            
-            // If this is a required verification field being marked as valid or invalid
-            // check if we can unblock the conversation
-            if (field.requiresVerification && (status === 'valid' || status === 'invalid')) {
-              checkIfVerificationComplete();
-            }
-            
-            return { ...field, status, notes };
-          }
-          return field;
-        });
-        
-        return { ...message, sensitiveData: updatedFields };
-      }
-      return message;
-    }));
-    
-    // Show validation toast
-    toast({
-      title: status === 'valid' ? "Validated" : "Validation Failed",
-      description: `Customer data marked as ${status}`,
-      variant: status === 'valid' ? "default" : "destructive"
-    });
-  };
-  
-  // Check if all required verifications are completed
-  const checkIfVerificationComplete = () => {
-    // Check all messages with sensitive data that require verification
-    const allVerified = messages.every(message => {
-      if (!message.sensitiveData) return true;
-      
-      // Check if any sensitive data field requires verification but is still pending
-      return !message.sensitiveData.some(field => 
-        field.requiresVerification && field.status === 'pending'
-      );
-    });
-    
-    if (allVerified) {
-      setVerificationBlocking(false);
-      toast({
-        title: "All Required Verifications Completed",
-        description: "The conversation can now continue",
-        variant: "default"
-      });
-    }
-  };
-
-  // Handle verifying system check
-  const handleVerifySystemCheck = (messageId: string) => {
-    setMessages(prev => prev.map(message => {
-      if (message.id === messageId && message.requiresVerification) {
-        return { ...message, isVerified: true };
-      }
-      return message;
-    }));
-    
-    // Unblock the scenario progress
-    setVerificationBlocking(false);
-    
-    toast({
-      title: "Verification Complete",
-      description: "The system check has been verified and the scenario can continue",
-      variant: "default"
-    });
-  };
-
   // Update messages based on state changes - using useTranscript hook
   useEffect(() => {
     // Use the transcript's messages directly when they update
@@ -412,7 +253,7 @@ const TestScenario = () => {
   // Handle toggling the agent mode
   const handleToggleAgentMode = () => {
     if (callActive) {
-      addSystemMessage("Can't change roles during an active call");
+      transcript.addSystemMessage("Can't change roles during an active call");
       return;
     }
     setIsAgentMode(!isAgentMode);
@@ -440,7 +281,7 @@ const TestScenario = () => {
     });
   };
 
-  // Add this new function to handle state selection from the visualizer
+  // Handle state selection from visualizer
   const handleStateSelect = (state: string) => {
     if (!callActive) {
       // If no call is active, start a call and then jump to the state
@@ -500,6 +341,16 @@ const TestScenario = () => {
     setActiveTab(value);
   };
 
+  // Handle validating sensitive data
+  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
+    transcript.handleValidateSensitiveData(messageId, fieldId, status, notes);
+  };
+
+  // Handle verifying system check
+  const handleVerifySystemCheck = (messageId: string) => {
+    transcript.handleVerifySystemCheck(messageId);
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <SidebarProvider>
@@ -543,40 +394,13 @@ const TestScenario = () => {
                   />
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-4 flex-wrap">
-                    {!callActive ? (
-                      <Button 
-                        onClick={handleStartCall} 
-                        className="flex items-center gap-1"
-                      >
-                        <PhoneCall size={16} />
-                        Start Test Call
-                      </Button>
-                    ) : (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium flex items-center gap-1">
-                          <Clock size={14} className="text-red-500" />
-                          {elapsedTime}
-                        </span>
-                        <Button 
-                          onClick={handleEndCall} 
-                          variant="destructive"
-                          className="flex items-center gap-1"
-                        >
-                          <PhoneOff size={16} />
-                          End Test Call
-                        </Button>
-                        <Button 
-                          onClick={handleResetScenario}
-                          variant="outline" 
-                          className="flex items-center gap-1"
-                        >
-                          <RefreshCcw size={16} />
-                          Reset Scenario
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                  <CallControl 
+                    callActive={callActive}
+                    elapsedTime={elapsedTime}
+                    onStartCall={handleStartCall}
+                    onEndCall={handleEndCall}
+                    onResetScenario={handleResetScenario}
+                  />
                 </CardContent>
               </Card>
 
@@ -678,194 +502,38 @@ const TestScenario = () => {
                         </TabsTrigger>
                       </TabsList>
                       <TabsContent value="chat" className="p-4 max-h-[60vh] overflow-y-auto">
-                        <div className="space-y-4 mb-4">
-                          {transcript.messages.length > 0 ? (
-                            transcript.messages.map((message) => (
-                              <div 
-                                key={message.id}
-                                className={`p-3 rounded-lg ${
-                                  message.sender === 'agent' 
-                                    ? 'bg-primary/10 ml-4' 
-                                    : message.sender === 'customer' 
-                                    ? 'bg-secondary/20 mr-4' 
-                                    : 'bg-muted text-center italic text-sm'
-                                }`}
-                              >
-                                <p className="text-xs font-semibold mb-1">
-                                  {message.sender === 'agent' ? 'Agent' : 
-                                   message.sender === 'customer' ? 'Customer' : 'System'}
-                                  {isAgentMode && message.sender === 'agent' && " (You)"}
-                                  {!isAgentMode && message.sender === 'customer' && " (You)"}
-                                </p>
-                                <p>{message.text}</p>
-
-                                {/* Show verification button if needed */}
-                                {message.requiresVerification && !message.isVerified && (
-                                  <div className="mt-2 p-2 rounded bg-yellow-50 border border-yellow-200">
-                                    <p className="text-sm text-yellow-700 mb-1">This requires manual verification to continue</p>
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline" 
-                                      onClick={() => transcript.handleVerifySystemCheck(message.id)}
-                                      className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                                    >
-                                      Verify and Continue
-                                    </Button>
-                                  </div>
-                                )}
-
-                                {message.isVerified && message.requiresVerification && (
-                                  <div className="mt-2 flex items-center gap-1 text-green-700">
-                                    <Check size={14} />
-                                    <span className="text-xs">Verified</span>
-                                  </div>
-                                )}
-
-                                {/* Show sensitive data validation UI */}
-                                {message.sensitiveData && message.sensitiveData.length > 0 && message.sender === 'customer' && (
-                                  <div className="mt-3 pt-2 border-t border-gray-300/30">
-                                    <div className="text-xs flex items-center gap-1 mb-2">
-                                      <Shield size={14} className="text-primary" />
-                                      <span className="font-medium">Sensitive Data Detected</span>
-                                    </div>
-                                    <div className="space-y-2">
-                                      {message.sensitiveData.map((field) => (
-                                        <div key={field.id} className={`p-2 rounded text-sm border ${
-                                          field.status === 'valid'
-                                            ? 'bg-green-50 border-green-200 text-green-800'
-                                            : field.status === 'invalid'
-                                            ? 'bg-red-50 border-red-200 text-red-800'
-                                            : 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                                        }`}>
-                                          <div className="flex justify-between">
-                                            <span>{field.type}: <strong>{field.value}</strong></span>
-                                            <span className="capitalize text-xs font-medium">{field.status}</span>
-                                          </div>
-                                          
-                                          {field.notes && (
-                                            <p className="mt-1 text-xs opacity-70">{field.notes}</p>
-                                          )}
-                                          
-                                          {field.status === 'pending' && (
-                                            <div className="flex gap-2 mt-2">
-                                              <Button 
-                                                size="sm" 
-                                                variant="outline"
-                                                className="text-xs h-7 bg-green-50 hover:bg-green-100 border-green-200 text-green-800"
-                                                onClick={() => handleValidateSensitiveData(message.id, field.id, 'valid')}
-                                              >
-                                                Valid
-                                              </Button>
-                                              <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="text-xs h-7 bg-red-50 hover:bg-red-100 border-red-200 text-red-800"
-                                                onClick={() => handleValidateSensitiveData(message.id, field.id, 'invalid')}
-                                              >
-                                                Invalid
-                                              </Button>
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Display response options for messages */}
-                                {message.responseOptions && message.responseOptions.length > 0 && (
-                                  (isAgentMode && message.sender === 'agent' && !message.text || 
-                                   !isAgentMode && message.sender === 'agent') && (
-                                    <div className="mt-3 flex flex-wrap gap-2">
-                                      {message.responseOptions.map((option) => (
-                                        <Button 
-                                          key={option} 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => handleSelectResponse(option)}
-                                        >
-                                          {option}
-                                        </Button>
-                                      ))}
-                                    </div>
-                                  )
-                                )}
-                              </div>
-                            ))
-                          ) : !callActive ? (
-                            <div className="text-center p-6 text-muted-foreground">
-                              <MessageSquare className="mx-auto h-12 w-12 opacity-20 mb-3" />
-                              <p>Select a scenario and start a call to begin the conversation</p>
-                              <Button 
-                                onClick={handleStartCall} 
-                                variant="default"
-                                size="sm"
-                                className="mt-3"
-                              >
-                                <PhoneCall size={16} className="mr-2" />
-                                Start Test Call
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="text-center p-6 text-muted-foreground">
-                              <p>Waiting for messages...</p>
-                            </div>
-                          )}
-                          <div ref={messagesEndRef} />
-                        </div>
+                        {transcript.messages.length > 0 ? (
+                          <ChatMessages 
+                            messages={transcript.messages}
+                            isAgentMode={isAgentMode}
+                            onSelectResponse={handleSelectResponse}
+                            onVerifySystemCheck={handleVerifySystemCheck}
+                            onValidateSensitiveData={handleValidateSensitiveData}
+                            messagesEndRef={messagesEndRef}
+                          />
+                        ) : !callActive ? (
+                          <EmptyChat onStartCall={handleStartCall} />
+                        ) : (
+                          <div className="text-center p-6 text-muted-foreground">
+                            <p>Waiting for messages...</p>
+                          </div>
+                        )}
 
                         {callActive && (
-                          <div className="py-2 border-t">
-                            <div className="flex gap-2">
-                              <Input 
-                                placeholder={`Type your own ${isAgentMode ? 'agent' : 'customer'} response...`} 
-                                value={inputValue} 
-                                onChange={(e) => setInputValue(e.target.value)} 
-                                className="flex-1"
-                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                              />
-                              <Button 
-                                type="submit" 
-                                onClick={handleSendMessage}
-                                disabled={!inputValue.trim() || verificationBlocking}
-                              >
-                                Send
-                              </Button>
-                            </div>
-                          </div>
+                          <MessageInput 
+                            inputValue={inputValue}
+                            setInputValue={setInputValue}
+                            handleSendMessage={handleSendMessage}
+                            isBlocked={verificationBlocking}
+                            isAgentMode={isAgentMode}
+                          />
                         )}
                       </TabsContent>
                       <TabsContent value="state" className="p-4 max-h-[60vh] overflow-y-auto">
-                        <div className="space-y-4">
-                          <div className="bg-muted p-3 rounded-lg">
-                            <h3 className="font-medium">Current State</h3>
-                            <p className="text-sm mt-1">{transcript.currentState || currentState}</p>
-                          </div>
-                          <div className="bg-muted p-3 rounded-lg">
-                            <h3 className="font-medium">Available Options</h3>
-                            <div className="mt-2 space-y-1">
-                              {transcript.stateData?.meta?.suggestions ? (
-                                transcript.stateData.meta.suggestions.map((suggestion) => (
-                                  <p key={suggestion} className="text-sm">{suggestion}</p>
-                                ))
-                              ) : (
-                                <p className="text-sm text-muted-foreground">No options available</p>
-                              )}
-                            </div>
-                          </div>
-                          {transcript.stateData?.meta?.agentText && (
-                            <div className="bg-muted p-3 rounded-lg">
-                              <h3 className="font-medium">Agent Text</h3>
-                              <p className="text-sm mt-1">{transcript.stateData.meta.agentText}</p>
-                            </div>
-                          )}
-                          {transcript.stateData?.meta?.systemMessage && (
-                            <div className="bg-muted p-3 rounded-lg">
-                              <h3 className="font-medium">System Message</h3>
-                              <p className="text-sm mt-1">{transcript.stateData.meta.systemMessage}</p>
-                            </div>
-                          )}
-                        </div>
+                        <StateDataDisplay 
+                          currentState={transcript.currentState || currentState}
+                          stateData={transcript.stateData}
+                        />
                       </TabsContent>
                       <TabsContent value="visualization" className="p-4">
                         <DecisionTreeVisualizer 

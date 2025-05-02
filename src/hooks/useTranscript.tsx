@@ -1,32 +1,12 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
 import { useStateMachine } from '@/hooks/useStateMachine';
-
-type Message = {
-  id: string;
-  text: string;
-  sender: 'agent' | 'customer' | 'system';
-  timestamp: Date;
-  responseOptions?: string[];
-  sensitiveData?: Array<{
-    id: string;
-    type: string;
-    value: string;
-    status: ValidationStatus;
-    notes?: string;
-    requiresVerification?: boolean;
-  }>;
-  requiresVerification?: boolean;
-  isVerified?: boolean;
-};
+import { useMessageHandling } from '@/hooks/useMessageHandling';
 
 export function useTranscript(activeScenario: ScenarioType) {
   const { toast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [callActive, setCallActive] = useState(false);
@@ -34,14 +14,23 @@ export function useTranscript(activeScenario: ScenarioType) {
   const [acceptedCallId, setAcceptedCallId] = useState<string | null>(null);
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [sensitiveDataStats, setSensitiveDataStats] = useState<{
-    validated: number;
-    pending: number;
-    invalid: number;
-  }>({ validated: 0, pending: 0, invalid: 0 });
-  const [verificationBlocking, setVerificationBlocking] = useState(false);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  
+  // Get the message handling functionality
+  const {
+    messages,
+    sensitiveDataStats,
+    verificationBlocking,
+    lastMessageUpdate,
+    addSystemMessage,
+    addAgentMessage,
+    addCustomerMessage,
+    clearMessages,
+    handleValidateSensitiveData,
+    handleVerifySystemCheck,
+    setVerificationBlocking
+  } = useMessageHandling();
   
   // Get the state machine data
   const {
@@ -71,10 +60,12 @@ export function useTranscript(activeScenario: ScenarioType) {
     }
   }, [stateData, lastStateChange, callActive]);
   
-  // Scroll to bottom whenever messages update
+  // Update when messages update
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (lastMessageUpdate) {
+      setLastTranscriptUpdate(lastMessageUpdate);
+    }
+  }, [lastMessageUpdate]);
 
   // Update timer when call is active
   useEffect(() => {
@@ -99,174 +90,6 @@ export function useTranscript(activeScenario: ScenarioType) {
       }
     };
   }, [callActive]);
-
-  // Add a system message
-  const addSystemMessage = (text: string, requiresVerification: boolean = false) => {
-    console.log('Adding system message:', text);
-    setMessages(prev => [
-      ...prev,
-      {
-        id: nanoid(),
-        text,
-        sender: 'system',
-        timestamp: new Date(),
-        requiresVerification,
-        isVerified: !requiresVerification
-      }
-    ]);
-    
-    if (requiresVerification) {
-      setVerificationBlocking(true);
-    }
-  };
-
-  // Add an agent message
-  const addAgentMessage = (text: string, responseOptions: string[] = []) => {
-    console.log('Adding agent message:', text, 'with options:', responseOptions);
-    setMessages(prev => [
-      ...prev,
-      {
-        id: nanoid(),
-        text,
-        sender: 'agent',
-        timestamp: new Date(),
-        responseOptions
-      }
-    ]);
-  };
-
-  // Add a customer message with sensitive data detection
-  const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
-    console.log('Adding customer message:', text);
-    // Detect sensitive data in the message
-    const sensitiveData = detectSensitiveData(text);
-    
-    // Check if any sensitive data requires verification
-    const hasVerificationRequired = sensitiveData.some(data => data.requiresVerification);
-    
-    // If sensitive data is found, show a toast notification
-    if (sensitiveData.length > 0) {
-      toast({
-        title: "Sensitive Data Detected",
-        description: hasVerificationRequired 
-          ? `${sensitiveData.length} sensitive data fields found that require verification` 
-          : `${sensitiveData.length} sensitive data fields found in message`,
-        variant: hasVerificationRequired ? "destructive" : "default"
-      });
-      
-      // Update sensitive data stats
-      setSensitiveDataStats(prev => ({
-        ...prev,
-        pending: prev.pending + sensitiveData.length
-      }));
-      
-      // Block progress if verification is required
-      if (hasVerificationRequired) {
-        setVerificationBlocking(true);
-      }
-    }
-    
-    setMessages(prev => [
-      ...prev,
-      {
-        id: nanoid(),
-        text,
-        sender: 'customer',
-        timestamp: new Date(),
-        responseOptions,
-        sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined,
-      }
-    ]);
-  };
-
-  // Handle validating sensitive data
-  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
-    setMessages(prev => prev.map(message => {
-      if (message.id === messageId && message.sensitiveData) {
-        const updatedFields = message.sensitiveData.map(field => {
-          if (field.id === fieldId) {
-            const previousStatus = field.status;
-            
-            // Update stats based on status change
-            if (previousStatus !== status) {
-              setSensitiveDataStats(stats => {
-                const newStats = { ...stats };
-                if (previousStatus === 'pending') newStats.pending--;
-                else if (previousStatus === 'valid') newStats.validated--;
-                else if (previousStatus === 'invalid') newStats.invalid--;
-                
-                if (status === 'pending') newStats.pending++;
-                else if (status === 'valid') newStats.validated++;
-                else if (status === 'invalid') newStats.invalid++;
-                
-                return newStats;
-              });
-            }
-            
-            // If this is a required verification field being marked as valid or invalid
-            // check if we can unblock the conversation
-            if (field.requiresVerification && (status === 'valid' || status === 'invalid')) {
-              checkIfVerificationComplete();
-            }
-            
-            return { ...field, status, notes };
-          }
-          return field;
-        });
-        
-        return { ...message, sensitiveData: updatedFields };
-      }
-      return message;
-    }));
-    
-    // Show validation toast
-    toast({
-      title: status === 'valid' ? "Validated" : "Validation Failed",
-      description: `Customer data marked as ${status}`,
-      variant: status === 'valid' ? "default" : "destructive"
-    });
-  };
-  
-  // Check if all required verifications are completed
-  const checkIfVerificationComplete = () => {
-    // Check all messages with sensitive data that require verification
-    const allVerified = messages.every(message => {
-      if (!message.sensitiveData) return true;
-      
-      // Check if any sensitive data field requires verification but is still pending
-      return !message.sensitiveData.some(field => 
-        field.requiresVerification && field.status === 'pending'
-      );
-    });
-    
-    if (allVerified) {
-      setVerificationBlocking(false);
-      toast({
-        title: "All Required Verifications Completed",
-        description: "The conversation can now continue",
-        variant: "default"
-      });
-    }
-  };
-
-  // Handle verifying system check
-  const handleVerifySystemCheck = (messageId: string) => {
-    setMessages(prev => prev.map(message => {
-      if (message.id === messageId && message.requiresVerification) {
-        return { ...message, isVerified: true };
-      }
-      return message;
-    }));
-    
-    // Unblock the scenario progress
-    setVerificationBlocking(false);
-    
-    toast({
-      title: "Verification Complete",
-      description: "The system check has been verified and the scenario can continue",
-      variant: "default"
-    });
-  };
 
   // Handle sending a message
   const handleSendMessage = () => {
@@ -316,7 +139,7 @@ export function useTranscript(activeScenario: ScenarioType) {
   // Reset the conversation
   const resetConversation = () => {
     console.log('Resetting conversation');
-    setMessages([]);
+    clearMessages();
     resetStateMachine();
     setLastTranscriptUpdate(new Date());
   };
@@ -326,7 +149,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     if (!callActive) {
       console.log('Starting call for scenario:', activeScenario);
       setCallActive(true);
-      setMessages([]);
+      clearMessages();
       setLastTranscriptUpdate(new Date());
       
       addSystemMessage('Call started');
@@ -405,6 +228,9 @@ export function useTranscript(activeScenario: ScenarioType) {
     addCustomerMessage,
     addSystemMessage,
     handleVerifySystemCheck,
-    resetConversation
+    resetConversation,
+    handleValidateSensitiveData,
+    sensitiveDataStats,
+    verificationBlocking
   };
 }
