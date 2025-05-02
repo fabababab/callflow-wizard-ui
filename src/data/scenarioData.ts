@@ -17,7 +17,7 @@ export const scenarioInitialMessages: Record<string, string> = {
 
 // Define the scenario data for each call type
 export const scenarioCallData: Record<string, {
-  id: number;
+  id: string;
   customerName: string;
   phoneNumber: string;
   waitTime: string;
@@ -39,7 +39,7 @@ export const scenarioCallData: Record<string, {
   };
 }> = {
   verification: {
-    id: 1,
+    id: "1",
     customerName: 'Emma Wagner',
     phoneNumber: '+49 123 987 6543',
     waitTime: '3m 12s',
@@ -73,7 +73,7 @@ export const scenarioCallData: Record<string, {
     }
   },
   bankDetails: {
-    id: 1,
+    id: "1",
     customerName: 'Max Hoffman',
     phoneNumber: '+49 176 2345 6789',
     waitTime: '2m 35s',
@@ -107,7 +107,7 @@ export const scenarioCallData: Record<string, {
     }
   },
   accountHistory: {
-    id: 1,
+    id: "1",
     customerName: 'Laura Becker',
     phoneNumber: '+49 157 8765 4321',
     waitTime: '1m 47s',
@@ -141,7 +141,7 @@ export const scenarioCallData: Record<string, {
     }
   },
   physioTherapy: {
-    id: 1,
+    id: "1",
     customerName: 'Thomas Müller',
     phoneNumber: '+49 160 9876 5432',
     waitTime: '4m 08s',
@@ -176,7 +176,7 @@ export const scenarioCallData: Record<string, {
     }
   },
   paymentReminder: {
-    id: 1,
+    id: "1",
     customerName: 'Sophia Klein',
     phoneNumber: '+49 151 2345 6789',
     waitTime: '2m 52s',
@@ -211,7 +211,7 @@ export const scenarioCallData: Record<string, {
     }
   },
   insurancePackage: {
-    id: 1,
+    id: "1",
     customerName: 'Jonas Schwarz',
     phoneNumber: '+49 172 8765 4321',
     waitTime: '1m 35s',
@@ -250,7 +250,7 @@ export const scenarioCallData: Record<string, {
 // Sample incoming calls data
 export const incomingCalls: IncomingCall[] = [
   {
-    id: 1,
+    id: "1",
     customerName: 'Emma Wagner',
     phoneNumber: '+49 123 987 6543',
     waitTime: '3m 12s',
@@ -260,7 +260,7 @@ export const incomingCalls: IncomingCall[] = [
     matchScore: 95
   },
   {
-    id: 2,
+    id: "2",
     customerName: 'Max Hoffmann',
     phoneNumber: '+49 234 876 5432',
     waitTime: '2m 35s',
@@ -270,7 +270,7 @@ export const incomingCalls: IncomingCall[] = [
     matchScore: 72
   },
   {
-    id: 3,
+    id: "3",
     customerName: 'Sophie Becker',
     phoneNumber: '+49 345 765 4321',
     waitTime: '1m 47s',
@@ -284,7 +284,7 @@ export const incomingCalls: IncomingCall[] = [
 // Sample pre-calls data
 export const preCalls: PreCall[] = [
   {
-    id: 1,
+    id: "1",
     timestamp: '14:32:15',
     agent: 'RoboVoice',
     content: "Hello, I'm having trouble with my internet connection. It keeps dropping every few minutes.",
@@ -293,7 +293,7 @@ export const preCalls: PreCall[] = [
     callType: 'Technical Support'
   },
   {
-    id: 2,
+    id: "2",
     timestamp: '14:33:20',
     agent: 'RoboVoice',
     content: "It started yesterday evening. Yes, I've tried restarting the router multiple times but it doesn't help.",
@@ -302,7 +302,7 @@ export const preCalls: PreCall[] = [
     callType: 'Technical Support'
   },
   {
-    id: 3,
+    id: "3",
     timestamp: '14:34:45',
     agent: 'Technical Agent Maria',
     content: "It seems to happen more when I'm on video calls or streaming videos.",

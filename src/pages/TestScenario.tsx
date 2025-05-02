@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -27,6 +28,7 @@ const TestScenario = () => {
   const [inputValue, setInputValue] = useState('');
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
+  const [previousState, setPreviousState] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -132,10 +134,13 @@ const TestScenario = () => {
 
   // Update messages based on state changes
   useEffect(() => {
-    if (!callActive || isLoading) return;
+    if (!callActive || isLoading || currentState === previousState) return;
 
-    const systemMessage = getSystemMessage();
+    // Update the previous state to avoid duplicate messages
+    setPreviousState(currentState);
     
+    // Handle system message if present
+    const systemMessage = getSystemMessage();
     if (systemMessage) {
       addSystemMessage(systemMessage);
     }
@@ -143,29 +148,21 @@ const TestScenario = () => {
     if (isAgentMode) {
       // In agent mode, we show customer messages and agent response options
       const customerText = getCustomerText();
-      const agentOptions = getAgentOptions();
       
       if (customerText) {
-        addCustomerMessage(customerText, []);
-      }
-      
-      // If the customer text is displayed and there are agent options, 
-      // automatically show the last agent message with response options
-      if (customerText && agentOptions && agentOptions.length > 0) {
-        // Find the last agent message
-        const lastAgentMessageIndex = [...messages].reverse().findIndex(m => m.sender === 'agent');
+        addCustomerMessage(customerText);
         
-        if (lastAgentMessageIndex === -1 || lastAgentMessageIndex > 0) {
-          // No agent message yet or not the most recent, add a new one with options
+        // After adding customer message, get agent options and add empty agent message with options
+        const agentOptions = getAgentOptions();
+        if (agentOptions && agentOptions.length > 0) {
           addAgentMessage("", agentOptions);
         }
       }
     } else {
       // In customer mode (original behavior)
       const agentText = physioCoverage.getAgentText();
-      const suggestions = physioCoverage.getSuggestions();
-      
       if (agentText) {
+        const suggestions = physioCoverage.getSuggestions();
         addAgentMessage(agentText, suggestions);
       }
     }
@@ -174,12 +171,13 @@ const TestScenario = () => {
     if (isFinalState()) {
       setTimeout(() => setCallActive(false), 3000);
     }
-  }, [callActive, currentState, isLoading, getSystemMessage, isAgentMode, getCustomerText, getAgentOptions, physioCoverage, messages, isFinalState]);
+  }, [callActive, currentState, isLoading, getSystemMessage, isAgentMode, getCustomerText, getAgentOptions, physioCoverage, previousState, isFinalState]);
 
   // Handle starting a call
   const handleStartCall = () => {
     setMessages([]);
     setCallActive(true);
+    setPreviousState('');
     resetConversation();
     addSystemMessage('Call started');
     startConversation();
