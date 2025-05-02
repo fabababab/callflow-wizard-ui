@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -37,18 +36,29 @@ const TestScenario = () => {
   const physioCoverage = usePhysioCoverageStateMachine();
   
   // Use the appropriate scenario based on the mode
+  const activeScenario = isAgentMode ? customerScenario : physioCoverage;
   const {
     currentState,
     isLoading,
     error,
     getSystemMessage,
-    processAgentResponse,
     startConversation,
     resetConversation,
     isFinalState,
-    getCustomerText,
-    getAgentOptions
-  } = isAgentMode ? customerScenario : physioCoverage;
+  } = activeScenario;
+  
+  // Use type narrowing to safely access mode-specific properties
+  const processAgentResponse = isAgentMode 
+    ? customerScenario.processAgentResponse 
+    : physioCoverage.processEvent;
+    
+  const getCustomerText = isAgentMode 
+    ? customerScenario.getCustomerText 
+    : (() => '');
+    
+  const getAgentOptions = isAgentMode 
+    ? customerScenario.getAgentOptions 
+    : (() => []);
 
   // Scroll to bottom whenever messages update
   useEffect(() => {

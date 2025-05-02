@@ -321,19 +321,19 @@ export const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: num
     case 'verification':
       if (afterMessageId === 2) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Bitte fragen Sie nach Kundennummer und Geburtsdatum für die Verifizierung.",
           type: 'action'
         }];
       } else if (afterMessageId === 4) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Kunde verifiziert - Sie können zusätzlich Two-Factor Authentication anbieten.",
           type: 'info'
         }];
       } else if (afterMessageId > 5) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Ich habe Ihr Konto gesichert und ein neues Passwort eingerichtet. Sie erhalten in Kürze eine E-Mail mit einem Link zur Passwortänderung. Bitte aktivieren Sie auch die Zwei-Faktor-Authentifizierung für zusätzliche Sicherheit.",
           type: 'response'
         }];
@@ -342,19 +342,19 @@ export const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: num
     case 'bankDetails':
       if (afterMessageId === 2) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Bitte verifizieren Sie den Kunden bevor Sie Bankdaten ändern.",
           type: 'action'
         }];
       } else if (afterMessageId === 4) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Kunde verwendet seit 5 Jahren Lastschriftverfahren.",
           type: 'info'
         }];
       } else if (afterMessageId > 5) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Vielen Dank für die Bestätigung. Ich habe Ihre Bankverbindung aktualisiert. Die Änderung wird ab dem nächsten Abrechnungszyklus wirksam. Sie erhalten eine Bestätigungs-E-Mail mit allen Details.",
           type: 'response'
         }];
@@ -363,19 +363,19 @@ export const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: num
     case 'accountHistory':
       if (afterMessageId === 2) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Fragen Sie nach dem Zeitraum und den betroffenen Transaktionen.",
           type: 'action'
         }];
       } else if (afterMessageId === 4) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Kunde hat in den letzten 6 Monaten keine verdächtigen Aktivitäten gemeldet.",
           type: 'info'
         }];
       } else if (afterMessageId > 5) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Ich habe die verdächtigen Transaktionen markiert und eine Untersuchung eingeleitet. Sie erhalten innerhalb von 48 Stunden eine Rückmeldung von unserem Sicherheitsteam. Als Vorsichtsmaßnahme habe ich Ihre Karte gesperrt und eine neue Karte bestellt.",
           type: 'response'
         }];
@@ -384,19 +384,19 @@ export const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: num
     case 'paymentReminder':
       if (afterMessageId === 2) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Zahlungseingang vom 25. April wurde im System vermerkt, aber noch nicht verarbeitet.",
           type: 'info'
         }];
       } else if (afterMessageId === 4) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Bitte prüfen Sie die Zahlungsreferenz und stornieren Sie die Mahngebühren.",
           type: 'action'
         }];
       } else if (afterMessageId > 5) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Ich habe den Zahlungseingang bestätigt und die Mahnung sowie alle Mahngebühren storniert. Sie erhalten innerhalb der nächsten 24 Stunden eine Bestätigung per E-Mail. Ich entschuldige mich für die Unannehmlichkeiten.",
           type: 'response'
         }];
@@ -405,19 +405,19 @@ export const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: num
     case 'insurancePackage':
       if (afterMessageId === 2) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Empfohlenes Paket: StartPlus mit erweitertem Zahnschutz und Sehhilfen-Option.",
           type: 'info'
         }];
       } else if (afterMessageId === 4) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Informieren Sie über 15% Neukundenrabatt für Berufseinsteiger im ersten Jahr.",
           type: 'action'
         }];
       } else if (afterMessageId > 5) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Unser StartPlus-Paket mit erweitertem Zahnschutz und Brillenoption kostet 89€ monatlich. Als Berufseinsteiger erhalten Sie im ersten Jahr einen Rabatt von 15%. Ich kann Ihnen detaillierte Informationen per E-Mail zusenden und einen persönlichen Beratungstermin anbieten.",
           type: 'response'
         }];
@@ -426,19 +426,19 @@ export const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: num
     default:
       if (afterMessageId === 2) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Kundenhistorie zeigt mehrere technische Probleme in den letzten 30 Tagen.",
           type: 'info'
         }];
       } else if (afterMessageId === 4) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Empfehlung: Router-Firmware aktualisieren und Bandbreiten-Test durchführen.",
           type: 'action'
         }];
       } else if (afterMessageId > 5) {
         return [{
-          id: Date.now(),
+          id: String(Date.now()),
           text: "Basierend auf unserer Diagnose scheint das Problem mit Ihrer Netzwerkausrüstung zusammenzuhängen. Ich empfehle ein Firmware-Update für Ihren Router und die Durchführung eines Bandbreiten-Tests. Ich kann Ihnen einen Techniker schicken, der das Problem weiter untersuchen kann.",
           type: 'response'
         }];
