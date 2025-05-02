@@ -6,9 +6,12 @@ import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
+import { useCustomerScenario } from '@/hooks/useCustomerScenario';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { PhoneCall, PhoneOff, Clock } from 'lucide-react';
 
 type Message = {
@@ -24,22 +27,28 @@ const TestScenario = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [elapsedTime, setElapsedTime] = useState('00:00');
+  const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   
+  // Choose the appropriate state machine based on the mode
+  const customerScenario = useCustomerScenario();
+  const physioCoverage = usePhysioCoverageStateMachine();
+  
+  // Use the appropriate scenario based on the mode
   const {
     currentState,
     isLoading,
     error,
-    getAgentText,
-    getSuggestions,
     getSystemMessage,
-    processEvent,
+    processAgentResponse,
     startConversation,
     resetConversation,
-    isFinalState
-  } = usePhysioCoverageStateMachine();
+    isFinalState,
+    getCustomerText,
+    getAgentOptions
+  } = isAgentMode ? customerScenario : physioCoverage;
 
   // Scroll to bottom whenever messages update
   useEffect(() => {
@@ -98,14 +107,15 @@ const TestScenario = () => {
   };
 
   // Add a customer message
-  const addCustomerMessage = (text: string) => {
+  const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
     setMessages(prev => [
       ...prev,
       {
         id: nanoid(),
         text,
         sender: 'customer',
-        timestamp: new Date()
+        timestamp: new Date(),
+        responseOptions
       }
     ]);
   };
@@ -114,23 +124,47 @@ const TestScenario = () => {
   useEffect(() => {
     if (!callActive || isLoading) return;
 
-    const agentText = getAgentText();
-    const suggestions = getSuggestions();
     const systemMessage = getSystemMessage();
-
+    
     if (systemMessage) {
       addSystemMessage(systemMessage);
     }
 
-    if (agentText) {
-      addAgentMessage(agentText, suggestions);
+    if (isAgentMode) {
+      // In agent mode, we show customer messages and agent response options
+      const customerText = getCustomerText();
+      const agentOptions = getAgentOptions();
+      
+      if (customerText) {
+        addCustomerMessage(customerText, []);
+      }
+      
+      // If the customer text is displayed and there are agent options, 
+      // automatically show the last agent message with response options
+      if (customerText && agentOptions && agentOptions.length > 0) {
+        // Find the last agent message
+        const lastAgentMessageIndex = [...messages].reverse().findIndex(m => m.sender === 'agent');
+        
+        if (lastAgentMessageIndex === -1 || lastAgentMessageIndex > 0) {
+          // No agent message yet or not the most recent, add a new one with options
+          addAgentMessage("", agentOptions);
+        }
+      }
+    } else {
+      // In customer mode (original behavior)
+      const agentText = physioCoverage.getAgentText();
+      const suggestions = physioCoverage.getSuggestions();
+      
+      if (agentText) {
+        addAgentMessage(agentText, suggestions);
+      }
     }
 
     // Auto-end call when reaching final state
     if (isFinalState()) {
       setTimeout(() => setCallActive(false), 3000);
     }
-  }, [callActive, currentState, isLoading, getAgentText, getSuggestions, getSystemMessage, isFinalState]);
+  }, [callActive, currentState, isLoading, getSystemMessage, isAgentMode, getCustomerText, getAgentOptions, physioCoverage, messages, isFinalState]);
 
   // Handle starting a call
   const handleStartCall = () => {
@@ -149,18 +183,36 @@ const TestScenario = () => {
 
   // Handle selecting a response option
   const handleSelectResponse = (response: string) => {
-    addCustomerMessage(response);
-    processEvent(response);
+    if (isAgentMode) {
+      addAgentMessage(response);
+      processAgentResponse(response);
+    } else {
+      addCustomerMessage(response);
+      physioCoverage.processEvent(response);
+    }
   };
 
   // Handle sending a custom message
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
     
-    addCustomerMessage(inputValue);
-    setInputValue('');
+    if (isAgentMode) {
+      addAgentMessage(inputValue);
+    } else {
+      addCustomerMessage(inputValue);
+    }
     
+    setInputValue('');
     // Not processing any event, just for free text input
+  };
+
+  // Handle toggling the agent mode
+  const handleToggleAgentMode = () => {
+    if (callActive) {
+      addSystemMessage("Can't change roles during an active call");
+      return;
+    }
+    setIsAgentMode(!isAgentMode);
   };
 
   return (
@@ -173,9 +225,16 @@ const TestScenario = () => {
             <div className="grid gap-6">
               <Card className="flex-1">
                 <CardHeader>
-                  <CardTitle>Physio Coverage Scenario</CardTitle>
-                  <CardDescription>
-                    Test the physio coverage conversation flow
+                  <CardTitle>
+                    {isAgentMode ? "Agent Mode: You help the customer" : "Customer Mode: AI helps you"}
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="agent-mode" checked={isAgentMode} onCheckedChange={handleToggleAgentMode} disabled={callActive} />
+                      <Label htmlFor="agent-mode">You are the agent</Label>
+                    </div>
+                    {!isAgentMode && "Using physio coverage conversation flow"}
+                    {isAgentMode && "Using customer scenario flow"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -254,22 +313,27 @@ const TestScenario = () => {
                               <p className="text-xs font-semibold mb-1">
                                 {message.sender === 'agent' ? 'Agent' : 
                                  message.sender === 'customer' ? 'Customer' : 'System'}
+                                {isAgentMode && message.sender === 'agent' && " (You)"}
+                                {!isAgentMode && message.sender === 'customer' && " (You)"}
                               </p>
                               <p>{message.text}</p>
 
                               {message.responseOptions && message.responseOptions.length > 0 && (
-                                <div className="mt-3 flex flex-wrap gap-2">
-                                  {message.responseOptions.map((option) => (
-                                    <Button 
-                                      key={option} 
-                                      variant="outline" 
-                                      size="sm"
-                                      onClick={() => handleSelectResponse(option)}
-                                    >
-                                      {option}
-                                    </Button>
-                                  ))}
-                                </div>
+                                (isAgentMode && message.sender === 'agent' && !message.text || 
+                                 !isAgentMode && message.sender === 'agent') && (
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {message.responseOptions.map((option) => (
+                                      <Button 
+                                        key={option} 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleSelectResponse(option)}
+                                      >
+                                        {option}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                )
                               )}
                             </div>
                           ))}
@@ -279,7 +343,7 @@ const TestScenario = () => {
                         <div className="py-2 border-t">
                           <div className="flex gap-2">
                             <Input 
-                              placeholder="Type your own response..." 
+                              placeholder={`Type your own ${isAgentMode ? 'agent' : 'customer'} response...`} 
                               value={inputValue} 
                               onChange={(e) => setInputValue(e.target.value)} 
                               className="flex-1"
@@ -304,9 +368,14 @@ const TestScenario = () => {
                           <div className="bg-muted p-3 rounded-lg">
                             <h3 className="font-medium">Available Options</h3>
                             <div className="mt-2 space-y-1">
-                              {getSuggestions().map((suggestion) => (
-                                <p key={suggestion} className="text-sm">{suggestion}</p>
-                              ))}
+                              {isAgentMode ? 
+                                getAgentOptions().map((option) => (
+                                  <p key={option} className="text-sm">{option}</p>
+                                )) :
+                                physioCoverage.getSuggestions().map((suggestion) => (
+                                  <p key={suggestion} className="text-sm">{suggestion}</p>
+                                ))
+                              }
                             </div>
                           </div>
                         </div>

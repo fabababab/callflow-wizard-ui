@@ -9,27 +9,29 @@ interface MessageHandlingProps {
   onProcessSelection: (selection: string) => boolean;
   onDefaultTransition: () => boolean;
   callActive: boolean;
+  isAgentMode?: boolean;
 }
 
 export function useMessageHandling({
   stateData,
   onProcessSelection,
   onDefaultTransition,
-  callActive
+  callActive,
+  isAgentMode = false
 }: MessageHandlingProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Send a message from the user
+  // Send a message from the user or agent depending on mode
   const handleSendMessage = useCallback(() => {
     if (!inputValue.trim() || !callActive) return;
 
     const newMessage: Message = {
       id: nanoid(),
       text: inputValue,
-      sender: 'customer',
+      sender: isAgentMode ? 'agent' : 'customer',
       timestamp: new Date()
     };
 
@@ -44,7 +46,7 @@ export function useMessageHandling({
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
-  }, [inputValue, callActive, onProcessSelection]);
+  }, [inputValue, callActive, isAgentMode, onProcessSelection]);
 
   // Handle selecting a response option
   const handleSelectResponse = useCallback((response: string) => {
@@ -53,7 +55,7 @@ export function useMessageHandling({
     const newMessage: Message = {
       id: nanoid(),
       text: response,
-      sender: 'customer',
+      sender: isAgentMode ? 'agent' : 'customer',
       timestamp: new Date()
     };
 
@@ -66,7 +68,7 @@ export function useMessageHandling({
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
-  }, [callActive, onProcessSelection]);
+  }, [callActive, isAgentMode, onProcessSelection]);
 
   // Handle accepting a suggestion
   const handleAcceptSuggestion = useCallback((messageId: string, suggestionId: string) => {

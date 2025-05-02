@@ -24,13 +24,15 @@ interface MessageProps {
   onAcceptSuggestion: (suggestionId: string, messageId: string) => void;
   onRejectSuggestion: (suggestionId: string, messageId: string) => void;
   onSelectResponse?: (response: string) => void;
+  isAgentMode?: boolean;
 }
 
 const Message: React.FC<MessageProps> = ({ 
   message, 
   onAcceptSuggestion, 
   onRejectSuggestion,
-  onSelectResponse
+  onSelectResponse,
+  isAgentMode = false
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
@@ -69,8 +71,10 @@ const Message: React.FC<MessageProps> = ({
           />
         )}
         
-        {/* Display response options if available and message is from customer */}
-        {hasResponseOptions && message.sender === 'customer' && onSelectResponse && (
+        {/* Display response options based on who's speaking */}
+        {hasResponseOptions && (
+          (isAgentMode && message.sender === 'customer' || !isAgentMode && message.sender === 'agent') && 
+          onSelectResponse && (
           <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
             <div className="text-xs flex items-center gap-1">
               <MessageSquare size={12} />
