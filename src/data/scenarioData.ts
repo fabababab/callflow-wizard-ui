@@ -1,6 +1,20 @@
 
 import { nanoid } from 'nanoid';
 
+// Define sensitive data validation types
+export type SensitiveDataType = 'insurance_number' | 'customer_id' | 'bank_account' | 'date_of_birth' | 'address';
+
+export type ValidationStatus = 'pending' | 'valid' | 'invalid';
+
+export type SensitiveField = {
+  id: string;
+  type: SensitiveDataType;
+  value: string;
+  pattern?: string;
+  status: ValidationStatus;
+  notes?: string;
+};
+
 // Define call data types
 export type IncomingCall = {
   id: string;
@@ -74,3 +88,50 @@ export const preCalls: PreCallInfo[] = [
     type: "tip"
   }
 ];
+
+// Sample sensitive data patterns
+export const sensitiveDataPatterns = {
+  insurance_number: {
+    regex: /\b[A-Z]{2}[0-9]{8}\b/,
+    description: "Insurance number (format: XX12345678)",
+    exampleValue: "DE12345678"
+  },
+  customer_id: {
+    regex: /\b[0-9]{9}\b/,
+    description: "Customer ID (9 digits)",
+    exampleValue: "987654321"
+  },
+  bank_account: {
+    regex: /\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]{0,16})?\b/i,
+    description: "IBAN (International Bank Account Number)",
+    exampleValue: "CH9300762011623852957"
+  },
+  date_of_birth: {
+    regex: /\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d\d\b/,
+    description: "Date of birth (DD.MM.YYYY)",
+    exampleValue: "15.03.1985"
+  }
+};
+
+// Helper function to detect sensitive data in text
+export const detectSensitiveData = (text: string): SensitiveField[] => {
+  const results: SensitiveField[] = [];
+  
+  // Check each pattern against the text
+  Object.entries(sensitiveDataPatterns).forEach(([type, pattern]) => {
+    const matches = text.match(pattern.regex);
+    if (matches) {
+      matches.forEach(match => {
+        results.push({
+          id: nanoid(),
+          type: type as SensitiveDataType,
+          value: match,
+          pattern: pattern.regex.toString(),
+          status: 'pending'
+        });
+      });
+    }
+  });
+  
+  return results;
+};

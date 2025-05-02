@@ -10,10 +10,74 @@ import { useTranscript } from '@/hooks/useTranscript';
 import Message from './transcript/Message';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
-import { incomingCalls, preCalls } from '@/data/scenarioData';
+import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls } from '@/data/scenarioData';
 import { stateMachines } from '@/data/stateMachines';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader';
+
+// Define the PreCall type to match what PreCallInfo component expects
+export type PreCall = {
+  id: string;
+  timestamp: string;
+  agent: string;
+  content: string;
+  response: string;
+  customerName: string;
+  callType: string;
+};
+
+// Convert PreCallInfo[] to PreCall[]
+const convertPreCallsToPrecallFormat = (): PreCall[] => {
+  return scenarioPreCalls.map((preCall) => ({
+    id: preCall.id,
+    timestamp: '14:32:15', // Default time
+    agent: 'RoboVoice',
+    content: preCall.content,
+    response: preCall.title, // Using title as response
+    customerName: scenarioIncomingCalls[0]?.name || 'Customer',
+    callType: 'Support Call'
+  }));
+};
+
+// Convert IncomingCall to IncomingCallWithCustomFields
+type IncomingCallWithCustomFields = {
+  id: string;
+  customerName: string;
+  phoneNumber: string;
+  waitTime: string;
+  callType: string;
+  priority: 'low' | 'medium' | 'high';
+  expertise: string;
+  matchScore: number;
+  caseHistory: any[];
+  roboCallSummary: {
+    duration: string;
+    intents: string[];
+    sentiment: string;
+    keyPoints: string[];
+  };
+};
+
+// Convert IncomingCall[] to IncomingCallWithCustomFields[]
+const convertIncomingCallsToCustomFormat = (): IncomingCallWithCustomFields[] => {
+  return scenarioIncomingCalls.map((call) => ({
+    id: call.id,
+    customerName: call.name,
+    phoneNumber: call.phoneNumber,
+    waitTime: `${call.waitTime}s`,
+    callType: call.reason,
+    priority: call.urgency,
+    expertise: call.company || 'General Inquiry',
+    matchScore: 80,
+    caseHistory: [],
+    roboCallSummary: {
+      duration: '0m 0s',
+      intents: [],
+      sentiment: 'Neutral',
+      keyPoints: []
+    }
+  }));
+};
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -25,6 +89,10 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
   const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
+  
+  // Convert the scenario data to the expected format
+  const preCalls = convertPreCallsToPrecallFormat();
+  const incomingCalls = convertIncomingCallsToCustomFormat();
   
   const {
     messages,

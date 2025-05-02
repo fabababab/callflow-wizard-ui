@@ -2,8 +2,10 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, ChevronRight } from 'lucide-react';
+import { MessageSquare, ChevronRight, Shield } from 'lucide-react';
 import AISuggestions, { AISuggestion } from './AISuggestion';
+import ValidationField from './ValidationField';
+import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 
 export type MessageSender = 'agent' | 'customer' | 'system';
 
@@ -14,6 +16,7 @@ export type Message = {
   timestamp: Date | string;
   suggestions?: AISuggestion[];
   responseOptions?: string[];
+  sensitiveData?: SensitiveField[];
   isAccepted?: boolean;
   isRejected?: boolean;
   systemType?: 'info' | 'warning' | 'error' | 'success';
@@ -24,6 +27,7 @@ interface MessageProps {
   onAcceptSuggestion: (suggestionId: string, messageId: string) => void;
   onRejectSuggestion: (suggestionId: string, messageId: string) => void;
   onSelectResponse?: (response: string) => void;
+  onValidateSensitiveData?: (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => void;
   isAgentMode?: boolean;
 }
 
@@ -32,10 +36,19 @@ const Message: React.FC<MessageProps> = ({
   onAcceptSuggestion, 
   onRejectSuggestion,
   onSelectResponse,
+  onValidateSensitiveData,
   isAgentMode = false
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
+  const hasSensitiveData = message.sensitiveData && message.sensitiveData.length > 0;
+  
+  // Handler for validating sensitive data
+  const handleValidate = (fieldId: string, status: ValidationStatus, notes?: string) => {
+    if (onValidateSensitiveData) {
+      onValidateSensitiveData(message.id, fieldId, status, notes);
+    }
+  };
   
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -59,7 +72,27 @@ const Message: React.FC<MessageProps> = ({
             {typeof message.timestamp === 'string' ? message.timestamp : message.timestamp.toLocaleTimeString()}
           </span>
         </div>
+        
         <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+        
+        {/* Display sensitive data validation fields if present */}
+        {hasSensitiveData && message.sender === 'customer' && (
+          <div className="mt-3 pt-2 border-t border-gray-300/20">
+            <div className="text-xs font-medium flex items-center gap-1 mb-2">
+              <Shield size={12} />
+              <span>Sensitive Data Detected</span>
+            </div>
+            <div className="space-y-2">
+              {message.sensitiveData.map((field) => (
+                <ValidationField 
+                  key={field.id} 
+                  field={field} 
+                  onValidate={handleValidate} 
+                />
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Display AI suggestions if available */}
         {hasSuggestions && (

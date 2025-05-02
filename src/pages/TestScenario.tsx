@@ -12,8 +12,10 @@ import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PhoneCall, PhoneOff, Clock, FileJson } from 'lucide-react';
+import { PhoneCall, PhoneOff, Clock, FileJson, Shield } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
+import { useToast } from '@/hooks/use-toast';
 
 type Message = {
   id: string;
@@ -21,9 +23,17 @@ type Message = {
   sender: 'agent' | 'customer' | 'system';
   timestamp: Date;
   responseOptions?: string[];
+  sensitiveData?: Array<{
+    id: string;
+    type: string;
+    value: string;
+    status: ValidationStatus;
+    notes?: string;
+  }>;
 };
 
 const TestScenario = () => {
+  const { toast } = useToast();
   const [callActive, setCallActive] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -31,6 +41,11 @@ const TestScenario = () => {
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
   const [previousState, setPreviousState] = useState<string>('');
   const [showJsonDialog, setShowJsonDialog] = useState(false);
+  const [sensitiveDataStats, setSensitiveDataStats] = useState<{
+    validated: number;
+    pending: number;
+    invalid: number;
+  }>({ validated: 0, pending: 0, invalid: 0 });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -120,8 +135,26 @@ const TestScenario = () => {
     ]);
   };
 
-  // Add a customer message
+  // Add a customer message with sensitive data detection
   const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
+    // Detect sensitive data in the message
+    const sensitiveData = detectSensitiveData(text);
+    
+    // If sensitive data is found, show a toast notification
+    if (sensitiveData.length > 0) {
+      toast({
+        title: "Sensitive Data Detected",
+        description: `${sensitiveData.length} sensitive data fields found in message`,
+        variant: "default"
+      });
+      
+      // Update sensitive data stats
+      setSensitiveDataStats(prev => ({
+        ...prev,
+        pending: prev.pending + sensitiveData.length
+      }));
+    }
+    
     setMessages(prev => [
       ...prev,
       {
@@ -129,9 +162,52 @@ const TestScenario = () => {
         text,
         sender: 'customer',
         timestamp: new Date(),
-        responseOptions
+        responseOptions,
+        sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined
       }
     ]);
+  };
+
+  // Handle validating sensitive data
+  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
+    setMessages(prev => prev.map(message => {
+      if (message.id === messageId && message.sensitiveData) {
+        const updatedFields = message.sensitiveData.map(field => {
+          if (field.id === fieldId) {
+            const previousStatus = field.status;
+            
+            // Update stats based on status change
+            if (previousStatus !== status) {
+              setSensitiveDataStats(stats => {
+                const newStats = { ...stats };
+                if (previousStatus === 'pending') newStats.pending--;
+                else if (previousStatus === 'valid') newStats.validated--;
+                else if (previousStatus === 'invalid') newStats.invalid--;
+                
+                if (status === 'pending') newStats.pending++;
+                else if (status === 'valid') newStats.validated++;
+                else if (status === 'invalid') newStats.invalid++;
+                
+                return newStats;
+              });
+            }
+            
+            return { ...field, status, notes };
+          }
+          return field;
+        });
+        
+        return { ...message, sensitiveData: updatedFields };
+      }
+      return message;
+    }));
+    
+    // Show validation toast
+    toast({
+      title: status === 'valid' ? "Validated" : "Validation Failed",
+      description: `Customer data marked as ${status}`,
+      variant: status === 'valid' ? "default" : "destructive"
+    });
   };
 
   // Update messages based on state changes
@@ -181,6 +257,7 @@ const TestScenario = () => {
     setCallActive(true);
     setPreviousState('');
     resetConversation();
+    setSensitiveDataStats({ validated: 0, pending: 0, invalid: 0 });
     addSystemMessage('Call started');
     startConversation();
   };
@@ -311,15 +388,38 @@ const TestScenario = () => {
                         Current state: {currentState}
                       </CardDescription>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1"
-                      onClick={() => setShowJsonDialog(true)}
-                    >
-                      <FileJson size={16} />
-                      View JSON
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {sensitiveDataStats.pending + sensitiveDataStats.validated + sensitiveDataStats.invalid > 0 && (
+                        <div className="bg-secondary/10 p-1.5 rounded-md flex items-center gap-2 text-xs">
+                          <Shield size={16} className="text-primary" />
+                          <span className="font-medium">Sensitive Data:</span>
+                          {sensitiveDataStats.validated > 0 && (
+                            <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-200">
+                              {sensitiveDataStats.validated} validated
+                            </Badge>
+                          )}
+                          {sensitiveDataStats.pending > 0 && (
+                            <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 hover:bg-yellow-200">
+                              {sensitiveDataStats.pending} pending
+                            </Badge>
+                          )}
+                          {sensitiveDataStats.invalid > 0 && (
+                            <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-200">
+                              {sensitiveDataStats.invalid} invalid
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => setShowJsonDialog(true)}
+                      >
+                        <FileJson size={16} />
+                        View JSON
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent className="p-0">
                     <Tabs defaultValue="chat" className="w-full">
@@ -347,6 +447,57 @@ const TestScenario = () => {
                                 {!isAgentMode && message.sender === 'customer' && " (You)"}
                               </p>
                               <p>{message.text}</p>
+
+                              {/* Show sensitive data validation UI */}
+                              {message.sensitiveData && message.sensitiveData.length > 0 && message.sender === 'customer' && (
+                                <div className="mt-3 pt-2 border-t border-gray-300/30">
+                                  <div className="text-xs flex items-center gap-1 mb-2">
+                                    <Shield size={14} className="text-primary" />
+                                    <span className="font-medium">Sensitive Data Detected</span>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {message.sensitiveData.map((field) => (
+                                      <div key={field.id} className={`p-2 rounded text-sm border ${
+                                        field.status === 'valid'
+                                          ? 'bg-green-50 border-green-200 text-green-800'
+                                          : field.status === 'invalid'
+                                          ? 'bg-red-50 border-red-200 text-red-800'
+                                          : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                                      }`}>
+                                        <div className="flex justify-between">
+                                          <span>{field.type}: <strong>{field.value}</strong></span>
+                                          <span className="capitalize text-xs font-medium">{field.status}</span>
+                                        </div>
+                                        
+                                        {field.notes && (
+                                          <p className="mt-1 text-xs opacity-70">{field.notes}</p>
+                                        )}
+                                        
+                                        {field.status === 'pending' && (
+                                          <div className="flex gap-2 mt-2">
+                                            <Button 
+                                              size="sm" 
+                                              variant="outline"
+                                              className="text-xs h-7 bg-green-50 hover:bg-green-100 border-green-200 text-green-800"
+                                              onClick={() => handleValidateSensitiveData(message.id, field.id, 'valid')}
+                                            >
+                                              Valid
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="text-xs h-7 bg-red-50 hover:bg-red-100 border-red-200 text-red-800"
+                                              onClick={() => handleValidateSensitiveData(message.id, field.id, 'invalid')}
+                                            >
+                                              Invalid
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
 
                               {message.responseOptions && message.responseOptions.length > 0 && (
                                 (isAgentMode && message.sender === 'agent' && !message.text || 
