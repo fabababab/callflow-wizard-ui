@@ -1,25 +1,16 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
 import { useCustomerScenario } from '@/hooks/useCustomerScenario';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Network, FileJson, MessageSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import ChatMessages from '@/components/TestScenario/ChatMessages';
-import StateDataDisplay from '@/components/TestScenario/StateDataDisplay';
-import MessageInput from '@/components/TestScenario/MessageInput';
-import EmptyChat from '@/components/TestScenario/EmptyChat';
 import StateMachineSelector from '@/components/StateMachineSelector';
-import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { useToast } from '@/hooks/use-toast';
 import TranscriptPanel from '@/components/TranscriptPanel'; 
 
@@ -32,7 +23,6 @@ const TestScenario = () => {
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("bankDetails");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
-  const [activeTab, setActiveTab] = useState("chat");
 
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(selectedStateMachine);
@@ -66,9 +56,6 @@ const TestScenario = () => {
           if (transcript.callActive) {
             transcript.handleHangUpCall();
           }
-
-          // Force switch to chat view when selecting a new state machine
-          setActiveTab("chat");
         } catch (error) {
           console.error("Failed to load state machine:", error);
           toast({
@@ -82,10 +69,6 @@ const TestScenario = () => {
     fetchStateMachine();
   }, [selectedStateMachine, toast, transcript]);
 
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-  };
   return <div className="flex h-screen bg-background">
       <SidebarProvider>
         <Sidebar />
@@ -93,7 +76,7 @@ const TestScenario = () => {
           <Header />
           <div className="flex-1 overflow-auto p-4 md:p-6">
             <div className="grid gap-6">
-              {/* Main content section with all controls integrated */}
+              {/* Main content section with transcript panel as the main view */}
               {loadedStateMachine && <Card className="flex-1 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div className="flex items-center gap-4 flex-wrap">
@@ -108,37 +91,10 @@ const TestScenario = () => {
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <Tabs defaultValue="chat" value={activeTab} onValueChange={handleTabChange} className="w-full">
-                      <TabsList className="grid grid-cols-3 mx-4 mt-4">
-                        <TabsTrigger value="chat" className="flex items-center gap-1">
-                          <MessageSquare size={16} />
-                          Agent View
-                        </TabsTrigger>
-                        <TabsTrigger value="state" className="flex items-center gap-1">
-                          <FileJson size={16} />
-                          State Data
-                        </TabsTrigger>
-                        <TabsTrigger value="visualization" className="flex items-center gap-1">
-                          <Network size={16} />
-                          Decision Tree
-                        </TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="chat" className="p-0">
-                        {/* We're now properly embedding the TranscriptPanel component directly */}
-                        <div className="h-[70vh]">
-                          <TranscriptPanel activeScenario={selectedStateMachine} />
-                        </div>
-                      </TabsContent>
-                      <TabsContent value="state" className="p-4 max-h-[60vh] overflow-y-auto">
-                        <StateDataDisplay currentState={transcript.currentState || currentState} stateData={transcript.stateData} />
-                      </TabsContent>
-                      <TabsContent value="visualization" className="p-4">
-                        <DecisionTreeVisualizer stateMachine={loadedStateMachine} currentState={transcript.currentState || currentState} onStateClick={state => {
-                      console.log("State clicked:", state);
-                      // Implementation for state click if needed
-                    }} />
-                      </TabsContent>
-                    </Tabs>
+                    {/* Directly embed the transcript panel without tabs */}
+                    <div className="h-[75vh]">
+                      <TranscriptPanel activeScenario={selectedStateMachine} />
+                    </div>
                   </CardContent>
                 </Card>}
 
@@ -172,9 +128,9 @@ const TestScenario = () => {
             <DialogTitle>
               {selectedStateMachine} State Machine
             </DialogTitle>
-            <CardDescription>
+            <DialogDescription>
               Complete JSON representation of the state machine flow
-            </CardDescription>
+            </DialogDescription>
           </DialogHeader>
           <div className="overflow-auto max-h-[60vh]">
             <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
