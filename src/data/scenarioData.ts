@@ -3,6 +3,16 @@ import { ScenarioType } from '@/components/ScenarioSelector';
 import { IncomingCall } from '@/components/transcript/IncomingCall';
 import { PreCall } from '@/components/transcript/PreCallInfo';
 
+// Define initial messages for each scenario
+export const scenarioInitialMessages: Record<string, string> = {
+  verification: "Guten Tag, ich habe eine E-Mail über einen verdächtigen Login-Versuch auf meinem Konto erhalten und muss meine Identität bestätigen.",
+  bankDetails: "Hallo, ich möchte meine Bankverbindung ändern, da ich zu einer neuen Bank gewechselt bin.",
+  accountHistory: "Ich möchte meine Kontohistorie prüfen. Ich glaube, da stimmt etwas nicht mit den letzten Transaktionen.",
+  physioTherapy: "Guten Tag, ich habe eine Verordnung für Physiotherapie und möchte wissen, ob die Behandlungen von meiner Versicherung übernommen werden.",
+  paymentReminder: "Ich habe eine Mahnung erhalten, obwohl ich die Rechnung bereits letzte Woche bezahlt habe.",
+  insurancePackage: "Hallo, ich schließe bald mein Studium ab und benötige ein neues Versicherungspaket. Können Sie mir dabei helfen?"
+};
+
 // Define the scenario data for each call type
 export const scenarioCallData: Record<string, {
   id: number;
