@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,8 +9,8 @@ import { useTranscript } from '@/hooks/useTranscript';
 import Message from './transcript/Message';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
-import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls } from '@/data/scenarioData';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls, SensitiveField, ValidationStatus, SensitiveDataType } from '@/data/scenarioData';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -290,15 +289,30 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           )}
           
           {/* Message transcript */}
-          {messages.map((message) => (
-            <Message 
-              key={message.id} 
-              message={message}
-              onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)}
-              onRejectSuggestion={(suggestionId, messageId) => handleRejectSuggestion(messageId)}
-              onSelectResponse={handleSelectResponse}
-            />
-          ))}
+          {messages.map((message) => {
+            // Convert any sensitive data to the correct SensitiveField type
+            const typedSensitiveData = message.sensitiveData ? 
+              message.sensitiveData.map(item => ({
+                ...item,
+                type: item.type as SensitiveDataType // Cast the type to SensitiveDataType
+              })) : undefined;
+            
+            // Create a properly typed message for the Message component
+            const typedMessage = {
+              ...message,
+              sensitiveData: typedSensitiveData
+            };
+            
+            return (
+              <Message 
+                key={message.id} 
+                message={typedMessage}
+                onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)}
+                onRejectSuggestion={handleRejectSuggestion}
+                onSelectResponse={handleSelectResponse}
+              />
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
         
@@ -360,6 +374,9 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>State Machine for {activeScenario}</DialogTitle>
+            <DialogDescription>
+              Full state machine configuration
+            </DialogDescription>
           </DialogHeader>
           <div className="overflow-auto max-h-[60vh]">
             <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
