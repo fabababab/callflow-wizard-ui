@@ -136,7 +136,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
               </div>
             )}
 
-            {/* Display response options for messages */}
+            {/* Display response options for messages with dark blue text color */}
             {message.responseOptions && message.responseOptions.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {message.responseOptions.map((option) => (
@@ -145,6 +145,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                     variant="outline" 
                     size="sm"
                     onClick={() => onSelectResponse(option)}
+                    className="text-blue-800 hover:bg-blue-50"
                   >
                     {option}
                   </Button>

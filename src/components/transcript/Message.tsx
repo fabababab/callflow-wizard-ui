@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -191,11 +192,11 @@ const Message: React.FC<MessageProps> = ({
                     key={index}
                     size="sm"
                     variant="outline"
-                    className="text-xs py-1 px-2 h-auto flex items-center gap-1 group"
+                    className="text-xs py-1 px-2 h-auto flex items-center gap-1 group text-blue-800 hover:bg-blue-50"
                     onClick={() => onSelectResponse(option)}
                   >
                     <span>{option.length > 50 ? `${option.substring(0, 50)}...` : option}</span>
-                    <ChevronRight size={12} className="opacity-50 group-hover:opacity-100" />
+                    <ChevronRight size={12} className="text-blue-600" />
                   </Button>
                 ))}
               </div>
