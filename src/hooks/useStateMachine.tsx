@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -8,8 +7,7 @@ import {
   getNextState, 
   getStateData, 
   StateMachine, 
-  StateMachineState,
-  StateData
+  StateMachineState
 } from '@/utils/stateMachineLoader';
 
 export function useStateMachine(activeScenario: ScenarioType) {
