@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -24,25 +23,31 @@ import { useToast } from '@/hooks/use-toast';
 import TranscriptPanel from '@/components/TranscriptPanel'; // Properly import TranscriptPanel
 
 const TestScenario = () => {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
   const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("bankDetails");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [activeTab, setActiveTab] = useState("chat");
-  
+
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(selectedStateMachine);
-  
+
   // Choose the appropriate state machine based on the mode
   const customerScenario = useCustomerScenario();
   const physioCoverage = usePhysioCoverageStateMachine();
-  
+
   // Use the appropriate scenario based on the mode
   const activeScenario = isAgentMode ? customerScenario : physioCoverage;
-  const { currentState, isLoading, error } = activeScenario;
-  
+  const {
+    currentState,
+    isLoading,
+    error
+  } = activeScenario;
+
   // Load state machine when selected scenario changes
   useEffect(() => {
     async function fetchStateMachine() {
@@ -50,20 +55,19 @@ const TestScenario = () => {
         try {
           const machine = await loadStateMachine(selectedStateMachine);
           setLoadedStateMachine(machine);
-          
+
           // Also load the JSON content for display
           if (machine) {
             setJsonContent(JSON.stringify(machine, null, 2));
           }
-          
+
           // Reset any active call when changing scenarios
           if (transcript.callActive) {
             transcript.handleHangUpCall();
           }
-          
+
           // Force switch to chat view when selecting a new state machine
           setActiveTab("chat");
-          
         } catch (error) {
           console.error("Failed to load state machine:", error);
           toast({
@@ -74,7 +78,6 @@ const TestScenario = () => {
         }
       }
     }
-    
     fetchStateMachine();
   }, [selectedStateMachine, toast, transcript]);
 
@@ -82,9 +85,7 @@ const TestScenario = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
   };
-
-  return (
-    <div className="flex h-screen bg-background">
+  return <div className="flex h-screen bg-background">
       <SidebarProvider>
         <Sidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
@@ -92,28 +93,15 @@ const TestScenario = () => {
           <div className="flex-1 overflow-auto p-4 md:p-6">
             <div className="grid gap-6">
               {/* Main content section with all controls integrated */}
-              {loadedStateMachine && (
-                <Card className="flex-1 overflow-hidden">
+              {loadedStateMachine && <Card className="flex-1 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         Call Center Agent Simulator
                       </CardTitle>
                       <CardDescription className="flex items-center gap-4">
-                        <div className="flex items-center space-x-2">
-                          <Switch 
-                            id="agent-mode" 
-                            checked={isAgentMode} 
-                            onCheckedChange={(checked) => setIsAgentMode(checked)} 
-                            disabled={transcript.callActive}
-                          />
-                          <Label htmlFor="agent-mode">You are the agent</Label>
-                        </div>
-                        <StateMachineSelector 
-                          activeStateMachine={selectedStateMachine} 
-                          onSelectStateMachine={setSelectedStateMachine}
-                          disabled={transcript.callActive}
-                        />
+                        
+                        <StateMachineSelector activeStateMachine={selectedStateMachine} onSelectStateMachine={setSelectedStateMachine} disabled={transcript.callActive} />
                       </CardDescription>
                     </div>
                   </CardHeader>
@@ -140,50 +128,36 @@ const TestScenario = () => {
                         </div>
                       </TabsContent>
                       <TabsContent value="state" className="p-4 max-h-[60vh] overflow-y-auto">
-                        <StateDataDisplay 
-                          currentState={transcript.currentState || currentState}
-                          stateData={transcript.stateData}
-                        />
+                        <StateDataDisplay currentState={transcript.currentState || currentState} stateData={transcript.stateData} />
                       </TabsContent>
                       <TabsContent value="visualization" className="p-4">
-                        <DecisionTreeVisualizer 
-                          stateMachine={loadedStateMachine}
-                          currentState={transcript.currentState || currentState}
-                          onStateClick={(state) => {
-                            console.log("State clicked:", state);
-                            // Implementation for state click if needed
-                          }}
-                        />
+                        <DecisionTreeVisualizer stateMachine={loadedStateMachine} currentState={transcript.currentState || currentState} onStateClick={state => {
+                      console.log("State clicked:", state);
+                      // Implementation for state click if needed
+                    }} />
                       </TabsContent>
                     </Tabs>
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
 
               {/* Display loading or error states */}
-              {isLoading && (
-                <Card>
+              {isLoading && <Card>
                   <CardContent className="py-4">
                     <p className="text-center">Loading state machine...</p>
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
 
-              {error && (
-                <Card>
+              {error && <Card>
                   <CardContent className="py-4">
                     <p className="text-red-500">{error}</p>
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
               
-              {!loadedStateMachine && !isLoading && !error && (
-                <Card>
+              {!loadedStateMachine && !isLoading && !error && <Card>
                   <CardContent className="py-8 text-center">
                     <p>Please select a state machine to start testing</p>
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
             </div>
           </div>
         </div>
@@ -207,9 +181,6 @@ const TestScenario = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
-
 export default TestScenario;
-
