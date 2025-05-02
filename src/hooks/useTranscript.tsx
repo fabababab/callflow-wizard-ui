@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Message, MessageSender } from '@/components/transcript/Message';
@@ -109,8 +108,9 @@ export const useTranscript = (activeScenario: ScenarioType) => {
             }
           }
           
-          // Generate suggestions based on the current state
+          // Generate suggestions and response options based on the current state
           let suggestions: AISuggestion[] = [];
+          let responseOptions: string[] = [];
           
           if (currentStateMachine && currentState) {
             const state = currentStateMachine[currentState];
@@ -152,12 +152,42 @@ export const useTranscript = (activeScenario: ScenarioType) => {
                     text: option,
                     type: 'response'
                   });
+                  
+                  // Also add to response options for menu selection
+                  responseOptions.push(option);
                 });
               }
+              
+              // If we need more response options to reach 4, add some generic ones
+              while (responseOptions.length < 4) {
+                const genericResponses = [
+                  "Verstanden, vielen Dank für die Information.",
+                  "Könnten Sie mir mehr Details geben?",
+                  "Ich werde das sofort für Sie bearbeiten.",
+                  "Haben Sie noch weitere Fragen?"
+                ];
+                const randomResponse = genericResponses[Math.floor(Math.random() * genericResponses.length)];
+                if (!responseOptions.includes(randomResponse)) {
+                  responseOptions.push(randomResponse);
+                }
+                // Safety check to avoid infinite loop if everything has been added
+                if (responseOptions.length === genericResponses.length) break;
+              }
+              
+              // Limit to 4 options if we have more
+              responseOptions = responseOptions.slice(0, 4);
             }
           } else {
             // Fallback to the old suggestion system for scenarios without state machines
             suggestions = generateAiSuggestion(activeScenario, 2);
+            
+            // Add generic response options
+            responseOptions = [
+              "Verstanden, vielen Dank für die Information.",
+              "Könnten Sie mir mehr Details geben?",
+              "Ich werde das sofort für Sie bearbeiten.",
+              "Haben Sie noch weitere Fragen?"
+            ];
           }
           
           const customerMessage: Message = {
@@ -165,7 +195,8 @@ export const useTranscript = (activeScenario: ScenarioType) => {
             text: customerResponse,
             sender: 'customer',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            suggestions: suggestions
+            suggestions: suggestions,
+            responseOptions: responseOptions
           };
           
           setMessages(prev => [...prev, customerMessage]);
@@ -179,6 +210,7 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     if (!activeScenario) return;
     
     let suggestions: AISuggestion[] = [];
+    let responseOptions: string[] = [];
     
     if (currentStateMachine && currentState) {
       // If we're using a state machine, get suggestions from it
@@ -220,6 +252,9 @@ export const useTranscript = (activeScenario: ScenarioType) => {
             text: nextState.agent,
             type: 'response'
           });
+          
+          // Add to response options menu
+          responseOptions.push(nextState.agent);
         }
         
         // Add quick reply suggestions if available
@@ -230,8 +265,30 @@ export const useTranscript = (activeScenario: ScenarioType) => {
               text: option,
               type: 'response'
             });
+            
+            // Also add to response options menu
+            responseOptions.push(option);
           });
         }
+        
+        // If we need more response options to reach 4, add some generic ones
+        while (responseOptions.length < 4) {
+          const genericResponses = [
+            "Verstanden, vielen Dank für die Information.",
+            "Könnten Sie mir mehr Details geben?",
+            "Ich werde das sofort für Sie bearbeiten.",
+            "Haben Sie noch weitere Fragen?"
+          ];
+          const randomResponse = genericResponses[Math.floor(Math.random() * genericResponses.length)];
+          if (!responseOptions.includes(randomResponse)) {
+            responseOptions.push(randomResponse);
+          }
+          // Safety check to avoid infinite loop if everything has been added
+          if (responseOptions.length === genericResponses.length) break;
+        }
+        
+        // Limit to 4 options if we have more
+        responseOptions = responseOptions.slice(0, 4);
       }
     } else {
       // For scenarios without state machines, use the predefined suggestions
@@ -251,9 +308,17 @@ export const useTranscript = (activeScenario: ScenarioType) => {
           type: 'action'
         });
       }
+      
+      // Add generic response options
+      responseOptions = [
+        "Verstanden, vielen Dank für die Information.",
+        "Könnten Sie mir mehr Details geben?",
+        "Ich werde das sofort für Sie bearbeiten.",
+        "Haben Sie noch weitere Fragen?"
+      ];
     }
     
-    if (suggestions.length > 0) {
+    if (suggestions.length > 0 || responseOptions.length > 0) {
       // Add suggestions to the last message
       const updatedMessages = [...messages];
       const lastMessageIndex = updatedMessages.length - 1;
@@ -261,7 +326,8 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       if (lastMessageIndex >= 0) {
         updatedMessages[lastMessageIndex] = {
           ...updatedMessages[lastMessageIndex],
-          suggestions: suggestions
+          suggestions: suggestions,
+          responseOptions: responseOptions
         };
         
         setMessages(updatedMessages);
@@ -293,6 +359,192 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       }
     }
   }, [messages, callActive, toast]);
+  
+  const handleSelectResponse = useCallback((selectedResponse: string) => {
+    // Set the input value to the selected response
+    setInputValue(selectedResponse);
+    
+    // Automatically send the message
+    setTimeout(() => {
+      const newMessage: Message = {
+        id: messages.length + 1,
+        text: selectedResponse,
+        sender: 'agent',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages([...messages, newMessage]);
+      setInputValue('');
+      
+      // Process state transition with state machine if available
+      if (currentStateMachine && currentState) {
+        const currentStateData = currentStateMachine[currentState];
+        
+        if (currentStateData && currentStateData.nextState) {
+          // Move to next state
+          let nextStateName = currentStateData.nextState;
+          
+          // Special handling for decision points with multiple options
+          if (currentStateData.stateType === 'decision') {
+            // Check the message content against available options
+            if (currentStateData.suggestions) {
+              // Try to match the input with one of the suggestions
+              for (const suggestion of currentStateData.suggestions) {
+                if (selectedResponse.toLowerCase().includes(suggestion.toLowerCase())) {
+                  // For now we just use the standard next state
+                  // In a real application, different choices might lead to different states
+                  console.log(`Matched suggestion: ${suggestion}`);
+                  break;
+                }
+              }
+            }
+          }
+          
+          // Randomly simulate auth failure or other special cases
+          if (currentState === 'authentifizierung_plz' && Math.random() < 0.2) {
+            nextStateName = 'authentifizierung_failed';
+          }
+          
+          // Show toast to indicate state transition
+          toast({
+            title: "State changed",
+            description: `Moved from ${currentState} to ${nextStateName}`,
+          });
+          
+          setCurrentState(nextStateName);
+          
+          // Simulate customer response after a short delay
+          setTimeout(() => {
+            const nextState = currentStateMachine[nextStateName];
+            
+            if (nextState && nextState.customer) {
+              let responseOptions: string[] = [];
+              
+              // Prepare response options for the next state
+              if (nextState.suggestions && nextState.suggestions.length > 0) {
+                responseOptions = [...nextState.suggestions];
+              }
+              
+              // If we need more response options to reach 4, add some generic ones
+              while (responseOptions.length < 4) {
+                const genericResponses = [
+                  "Verstanden, vielen Dank für die Information.",
+                  "Könnten Sie mir mehr Details geben?",
+                  "Ich werde das sofort für Sie bearbeiten.",
+                  "Haben Sie noch weitere Fragen?"
+                ];
+                const randomResponse = genericResponses[Math.floor(Math.random() * genericResponses.length)];
+                if (!responseOptions.includes(randomResponse)) {
+                  responseOptions.push(randomResponse);
+                }
+                // Safety check to avoid infinite loop if everything has been added
+                if (responseOptions.length === genericResponses.length) break;
+              }
+              
+              // Limit to 4 options if we have more
+              responseOptions = responseOptions.slice(0, 4);
+              
+              const customerResponse: Message = {
+                id: messages.length + 2,
+                text: nextState.customer,
+                sender: 'customer',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                responseOptions: responseOptions
+              };
+              
+              setMessages(prev => [...prev, customerResponse]);
+              
+              // Generate new suggestion based on the next state
+              setTimeout(() => {
+                generateAiSuggestionForMessage(messages.length + 2);
+              }, 500);
+            }
+          }, 1500);
+        }
+      } else {
+        // Fallback for scenarios without state machines
+        setTimeout(() => {
+          let customerResponse = "";
+          
+          // Scenario-specific responses
+          if (activeScenario === 'bankDetails') {
+            const bankResponses = [
+              "Ja, ich möchte meine Bank von Deutsche Bank zu Commerzbank ändern.",
+              "Meine neue IBAN ist DE89370400440532013001.",
+              "Ja, das ist richtig. Ich habe kürzlich die Bank gewechselt.",
+              "Vielen Dank für die Aktualisierung meiner Daten."
+            ];
+            customerResponse = bankResponses[Math.min(Math.floor(messages.length / 2), bankResponses.length - 1)];
+          } else if (activeScenario === 'verification') {
+            const verificationResponses = [
+              "Ja, das stimmt. Mein Name ist Michael Schmidt.",
+              "Ich wurde am 15. März 1985 geboren.",
+              "Meine Adresse ist Hauptstraße 123, Berlin.",
+              "Die letzten vier Ziffern meines Kontos sind 4321."
+            ];
+            customerResponse = verificationResponses[Math.min(Math.floor(messages.length / 2), verificationResponses.length - 1)];
+          } else if (activeScenario === 'accountHistory') {
+            const defaultResponses = [
+              "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
+              "Ja, insbesondere die letzten drei Monate.",
+              "Ich erkenne eine Transaktion von letzter Woche nicht.",
+              "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
+              "Vielen Dank für Ihre Hilfe."
+            ];
+            customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
+          } else if (activeScenario === 'paymentReminder') {
+            const reminderResponses = [
+              "Ich habe den Betrag von 250€ bereits am 15. April überwiesen.",
+              "Die Überweisung erfolgte von meinem Girokonto bei der Sparkasse.",
+              "Die Referenznummer auf der Rechnung war KD-789456.",
+              "Können Sie bitte prüfen, ob die Zahlung eingegangen ist?",
+              "Alles klar, ich warte auf Ihre Rückmeldung. Vielen Dank."
+            ];
+            customerResponse = reminderResponses[Math.min(Math.floor(messages.length / 2), reminderResponses.length - 1)];
+          } else if (activeScenario === 'insurancePackage') {
+            const insuranceResponses = [
+              "Ich war bisher in der studentischen Krankenversicherung, aber jetzt beginne ich meinen ersten Job.",
+              "Mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
+              "Ich interessiere mich für einen umfassenden Schutz mit Zusatzleistungen für Zahnbehandlung und Brille.",
+              "Gibt es spezielle Angebote für Berufseinsteiger?",
+              "Diese Option klingt interessant. Können Sie mir weitere Details zusenden?"
+            ];
+            customerResponse = insuranceResponses[Math.min(Math.floor(messages.length / 2), insuranceResponses.length - 1)];
+          } else {
+            // Default responses
+            const defaultResponses = [
+              "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
+              "Ja, insbesondere die letzten drei Monate.",
+              "Ich erkenne eine Transaktion von letzter Woche nicht.",
+              "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
+              "Vielen Dank für Ihre Hilfe."
+            ];
+            customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
+          }
+          
+          const customerMessage: Message = {
+            id: messages.length + 2,
+            text: customerResponse,
+            sender: 'customer',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          
+          setMessages(prev => [...prev, customerMessage]);
+          
+          // Generate new AI suggestion based on the conversation
+          setTimeout(() => {
+            generateAiSuggestionForMessage(messages.length + 2);
+          }, 500);
+        }, 1500);
+      }
+    }, 100);
+  }, [
+    messages,
+    currentState,
+    currentStateMachine,
+    activeScenario,
+    generateAiSuggestionForMessage,
+    toast
+  ]);
   
   const handleSendMessage = useCallback(() => {
     if (inputValue.trim()) {
@@ -622,32 +874,3 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     
     // Reset state if we have a state machine for the current scenario
     if (activeScenario && stateMachines[activeScenario as string]) {
-      const initialState = scenarioInitialStates[activeScenario as string] || 'start';
-      setCurrentState(initialState);
-      setCurrentStateMachine(stateMachines[activeScenario as string]);
-    }
-    
-    toast({
-      title: "Call Accepted",
-      description: `You are now connected with Customer ${callId}`,
-    });
-  }, [activeScenario, toast]);
-
-  return {
-    messages,
-    inputValue,
-    setInputValue,
-    isRecording,
-    callActive,
-    elapsedTime,
-    acceptedCallId,
-    messagesEndRef,
-    handleSendMessage,
-    handleAcceptSuggestion,
-    handleRejectSuggestion,
-    toggleRecording,
-    handleCall,
-    handleAcceptCall,
-    currentState
-  };
-};

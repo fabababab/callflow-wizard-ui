@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MessageSquare } from 'lucide-react';
 import AISuggestions, { AISuggestion } from './AISuggestion';
 
 export type MessageSender = 'agent' | 'customer';
@@ -11,20 +13,24 @@ export type Message = {
   sender: MessageSender;
   timestamp: string;
   suggestions?: AISuggestion[];
+  responseOptions?: string[];
 };
 
 interface MessageProps {
   message: Message;
   onAcceptSuggestion: (suggestionId: number, messageId: number) => void;
   onRejectSuggestion: (suggestionId: number, messageId: number) => void;
+  onSelectResponse?: (response: string) => void;
 }
 
 const Message: React.FC<MessageProps> = ({ 
   message, 
   onAcceptSuggestion, 
-  onRejectSuggestion 
+  onRejectSuggestion,
+  onSelectResponse
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
+  const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'}`}>
@@ -53,6 +59,29 @@ const Message: React.FC<MessageProps> = ({
             onAccept={onAcceptSuggestion}
             onReject={onRejectSuggestion}
           />
+        )}
+        
+        {/* Display response options if available and message is from customer */}
+        {hasResponseOptions && message.sender === 'customer' && onSelectResponse && (
+          <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
+            <div className="text-xs flex items-center gap-1">
+              <MessageSquare size={12} />
+              <span>Quick Responses</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {message.responseOptions.map((option, index) => (
+                <Button
+                  key={index}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs py-1 px-2 h-auto"
+                  onClick={() => onSelectResponse(option)}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

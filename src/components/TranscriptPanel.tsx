@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -33,6 +32,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     handleSendMessage,
     handleAcceptSuggestion,
     handleRejectSuggestion,
+    handleSelectResponse,
     toggleRecording,
     handleCall,
     handleAcceptCall,
@@ -168,6 +168,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
               message={message} 
               onAcceptSuggestion={handleAcceptSuggestion}
               onRejectSuggestion={handleRejectSuggestion}
+              onSelectResponse={handleSelectResponse}
             />
           ))}
           <div ref={messagesEndRef} />
