@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   HeadphonesIcon, 
@@ -29,7 +28,6 @@ import Sidebar from '@/components/Sidebar';
 import SidebarTrigger from '@/components/SidebarTrigger';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import ActionPanel from '@/components/ActionPanel';
 import ScenarioSelector, { ScenarioType, scenarioCallData } from '@/components/ScenarioSelector';
 
 const Dashboard = () => {
@@ -633,6 +631,7 @@ const Dashboard = () => {
           <Sidebar />
           <main className="flex-1 p-6 overflow-auto bg-callflow-background">
             <div className="space-y-6">
+              {/* Queue stats section */}
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Current Queue</h1>
                 <p className="text-muted-foreground">
@@ -640,11 +639,13 @@ const Dashboard = () => {
                 </p>
               </div>
 
+              {/* Scenario selector */}
               <ScenarioSelector 
                 activeScenario={activeScenario} 
                 onSelectScenario={handleSelectScenario} 
               />
 
+              {/* Stats cards */}
               <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -702,6 +703,7 @@ const Dashboard = () => {
                 </Card>
               </div>
 
+              {/* Dashboard section */}
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
                 <p className="text-muted-foreground">
@@ -709,8 +711,10 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="md:col-span-2">
+              {/* Main section - Changed grid to remove ActionPanel */}
+              <div className="grid gap-4">
+                {/* Active call section - now takes full width */}
+                <div className="col-span-1">
                   {!acceptedCallId ? (
                     <Card className="overflow-hidden">
                       <CardHeader>
@@ -809,13 +813,11 @@ const Dashboard = () => {
                     renderActiveCall()
                   )}
                 </div>
-                
-                <div className="md:col-span-1">
-                  <ActionPanel />
-                </div>
               </div>
 
+              {/* Recent activity and performance section */}
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                {/* Recent Activity card */}
                 <Card className="col-span-1">
                   <CardHeader>
                     <CardTitle>Recent Activity</CardTitle>
@@ -878,6 +880,7 @@ const Dashboard = () => {
                   </CardFooter>
                 </Card>
                 
+                {/* Performance card */}
                 <Card className="col-span-1">
                   <CardHeader>
                     <CardTitle>Your Performance</CardTitle>
