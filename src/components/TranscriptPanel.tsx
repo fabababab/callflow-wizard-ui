@@ -134,7 +134,15 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     messages.forEach(message => {
       if (message.sender === 'system') {
         // Add to current system message group
-        systemMessageGroup.push(message);
+        // Need to convert the useMessageHandling Message type to MessageType from Message component
+        const convertedMessage: MessageType = {
+          ...message,
+          sensitiveData: message.sensitiveData ? message.sensitiveData.map(field => ({
+            ...field,
+            type: field.type as SensitiveDataType // Type assertion to match the expected SensitiveDataType
+          })) : undefined
+        };
+        systemMessageGroup.push(convertedMessage);
       } else {
         // If we have system messages stored, push them first
         if (systemMessageGroup.length > 0) {
@@ -142,7 +150,15 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           systemMessageGroup = [];
         }
         // Then push the current non-system message
-        result.push(message);
+        // Also convert non-system message types
+        const convertedMessage: MessageType = {
+          ...message,
+          sensitiveData: message.sensitiveData ? message.sensitiveData.map(field => ({
+            ...field,
+            type: field.type as SensitiveDataType // Type assertion to match the expected SensitiveDataType
+          })) : undefined
+        };
+        result.push(convertedMessage);
       }
     });
     
@@ -299,7 +315,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                 // If only one system message, render it normally
                 <MessageComponent 
                   key={item[0].id} 
-                  message={{...item[0], sensitiveData: item[0].sensitiveData as SensitiveField[] | undefined}}
+                  message={item[0]} // Already converted in groupedMessages
                   onAcceptSuggestion={handleAcceptSuggestion} 
                   onRejectSuggestion={handleRejectSuggestion} 
                   onSelectResponse={handleSelectResponse}
@@ -309,23 +325,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                 <SystemMessageGroup key={`group-${index}`} messages={item} />
               );
             } else {
-              // Regular message
-              // Convert any sensitive data to the correct SensitiveField type
-              const typedSensitiveData = item.sensitiveData ? item.sensitiveData.map(dataItem => ({
-                ...dataItem,
-                type: dataItem.type as SensitiveDataType
-              })) : undefined;
-
-              // Create a properly typed message for the Message component
-              const typedMessage = {
-                ...item,
-                sensitiveData: typedSensitiveData
-              };
-              
+              // Regular message - already converted in groupedMessages
               return (
                 <MessageComponent 
                   key={item.id} 
-                  message={typedMessage}
+                  message={item}
                   onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)} 
                   onRejectSuggestion={handleRejectSuggestion} 
                   onSelectResponse={handleSelectResponse}

@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
-import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
+import { detectSensitiveData, ValidationStatus, SensitiveDataType } from '@/data/scenarioData';
 
 type SensitiveDataField = {
   id: string;
-  type: string;
+  type: SensitiveDataType; // Updated to use the SensitiveDataType enum instead of string
   value: string;
   status: ValidationStatus;
   notes?: string;
