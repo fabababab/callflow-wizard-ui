@@ -49,7 +49,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     stateData,
     processSelection,
     processStartCall,
-    lastStateChange
+    lastStateChange,
+    resetStateMachine
   } = useStateMachine(activeScenario);
   
   // Update to properly update UI when state changes
@@ -282,7 +283,7 @@ export function useTranscript(activeScenario: ScenarioType) {
   // Handle accepting a suggestion
   const handleAcceptSuggestion = (messageId: string, suggestionId: string) => {
     // Find the suggestion text by ID
-    const suggestionText = stateData?.suggestions?.find((_, index) => index.toString() === suggestionId);
+    const suggestionText = stateData?.meta?.suggestions?.find((_, index) => index.toString() === suggestionId);
     
     if (suggestionText) {
       console.log('Accepting suggestion:', suggestionId, suggestionText);
@@ -312,11 +313,20 @@ export function useTranscript(activeScenario: ScenarioType) {
     setIsRecording(!isRecording);
   };
 
+  // Reset the conversation
+  const resetConversation = () => {
+    console.log('Resetting conversation');
+    setMessages([]);
+    resetStateMachine();
+    setLastTranscriptUpdate(new Date());
+  };
+
   // Start a call
   const handleCall = () => {
     if (!callActive) {
       console.log('Starting call for scenario:', activeScenario);
       setCallActive(true);
+      setMessages([]);
       setLastTranscriptUpdate(new Date());
       
       addSystemMessage('Call started');
@@ -326,6 +336,12 @@ export function useTranscript(activeScenario: ScenarioType) {
         console.log('Triggering processStartCall');
         const success = processStartCall();
         console.log('Process start call result:', success);
+        
+        // If start call wasn't successful, try sending the START_CALL event directly
+        if (!success) {
+          console.log('Trying to process START_CALL event manually');
+          processSelection('START_CALL');
+        }
       }, 100);
     } else {
       console.log('Ending call');
@@ -347,6 +363,12 @@ export function useTranscript(activeScenario: ScenarioType) {
       console.log('Triggering processStartCall from accept call');
       const success = processStartCall();
       console.log('Process start call result:', success);
+      
+      // If start call wasn't successful, try sending the START_CALL event directly
+      if (!success) {
+        console.log('Trying to process START_CALL event manually');
+        processSelection('START_CALL');
+      }
     }, 100);
   };
 
@@ -381,6 +403,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     lastStateChange,
     addAgentMessage,
     addCustomerMessage,
-    addSystemMessage
+    addSystemMessage,
+    handleVerifySystemCheck,
+    resetConversation
   };
 }

@@ -35,12 +35,15 @@ export function useStateMachine(activeScenario: ScenarioType) {
       setError(null);
 
       try {
+        console.log(`Loading state machine for scenario: ${activeScenario}`);
         const machine = await loadStateMachine(activeScenario);
         setStateMachine(machine);
         
         if (machine) {
           const initialState = getInitialState(machine);
+          console.log(`Initial state for ${activeScenario}: ${initialState}`);
           setCurrentState(initialState);
+          
           // Set the initial state data
           const initialStateData = getStateData(machine, initialState);
           setStateData(initialStateData);
@@ -70,6 +73,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
   // Update state data whenever current state changes
   useEffect(() => {
     if (stateMachine && currentState) {
+      console.log(`Updating state data for state: ${currentState}`);
       const data = getStateData(stateMachine, currentState);
       
       // Check if this state requires verification
@@ -141,36 +145,28 @@ export function useStateMachine(activeScenario: ScenarioType) {
   // Process option selection
   const processSelection = useCallback((selectedOption: string): boolean => {
     if (!stateMachine || !currentState) {
+      console.log('Cannot process selection: No state machine or current state');
       return false;
     }
 
-    // Handle special options for product info and cancellation
-    if (selectedOption === 'show_product_info') {
-      return transitionToState('show_product_info');
-    }
-    
-    if (selectedOption === 'show_contracts_for_cancellation') {
-      return transitionToState('show_contracts_for_cancellation');
-    }
-    
-    if (selectedOption === 'request_product_info') {
-      return transitionToState('show_product_info');
-    }
-    
-    if (selectedOption === 'request_cancellation') {
-      return transitionToState('show_contracts_for_cancellation');
-    }
-
-    console.log(`Processing selection: ${selectedOption} from state: ${currentState}`);
+    console.log(`Processing selection: "${selectedOption}" from state: ${currentState}`);
     const nextState = getNextState(stateMachine, currentState, selectedOption);
     
     if (!nextState) {
-      // No valid transition found
-      console.log(`No transition found for option: ${selectedOption}`);
-      return false;
+      // Try DEFAULT transition if no matching option is found
+      console.log(`No transition found for option: "${selectedOption}", trying DEFAULT`);
+      const defaultNextState = getNextState(stateMachine, currentState, 'DEFAULT');
+      
+      if (!defaultNextState) {
+        console.log('No DEFAULT transition found either');
+        return false;
+      }
+      
+      console.log(`Found DEFAULT transition to: ${defaultNextState}`);
+      return transitionToState(defaultNextState);
     }
 
-    console.log(`Found next state: ${nextState} for option: ${selectedOption}`);
+    console.log(`Found next state: ${nextState} for option: "${selectedOption}"`);
     return transitionToState(nextState);
   }, [stateMachine, currentState, transitionToState]);
 
@@ -180,7 +176,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
       return false;
     }
 
-    const nextState = getNextState(stateMachine, currentState);
+    const nextState = getNextState(stateMachine, currentState, 'DEFAULT');
     
     if (!nextState) {
       // No valid transition found
@@ -193,6 +189,8 @@ export function useStateMachine(activeScenario: ScenarioType) {
 
   // Process START_CALL event to move from start to first active state
   const processStartCall = useCallback((): boolean => {
+    console.log('processStartCall called');
+    
     if (!stateMachine) {
       console.error('Cannot process START_CALL: No state machine loaded');
       return false;
@@ -217,9 +215,16 @@ export function useStateMachine(activeScenario: ScenarioType) {
   const resetStateMachine = useCallback(() => {
     if (stateMachine) {
       const initialState = getInitialState(stateMachine);
+      console.log(`Resetting state machine to initial state: ${initialState}`);
       setCurrentState(initialState);
       setStateData(getStateData(stateMachine, initialState));
       setVerificationRequired(false);
+      
+      // Set a state change to trigger UI update
+      setLastStateChange({
+        from: currentState,
+        to: initialState
+      });
       
       toast({
         title: "Scenario Reset",
@@ -229,7 +234,24 @@ export function useStateMachine(activeScenario: ScenarioType) {
       return true;
     }
     return false;
-  }, [stateMachine, toast]);
+  }, [stateMachine, currentState, toast]);
+
+  // Manually set current state (useful for testing)
+  const setCurrentStateManually = useCallback((newState: string) => {
+    if (stateMachine && stateMachine.states[newState]) {
+      console.log(`Manually setting state to: ${newState} from: ${currentState}`);
+      
+      // Store the state change information for UI display
+      setLastStateChange({
+        from: currentState,
+        to: newState
+      });
+      
+      setCurrentState(newState);
+      return true;
+    }
+    return false;
+  }, [stateMachine, currentState]);
 
   // Check if current state is a final state (ending the conversation)
   const isFinalState = useCallback(() => {
@@ -255,6 +277,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
     processDefaultTransition,
     processStartCall,
     resetStateMachine,
-    isFinalState
+    isFinalState,
+    setCurrentState: setCurrentStateManually
   };
 }

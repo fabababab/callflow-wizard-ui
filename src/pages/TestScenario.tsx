@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw, Check, AlertCircle } from 'lucide-react';
+import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw, Check, AlertCircle, MessageSquare, FlowChart } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
@@ -21,6 +21,7 @@ import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTranscript } from '@/hooks/useTranscript';
 
 type Message = {
   id: string;
@@ -59,10 +60,14 @@ const TestScenario = () => {
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [stateChanged, setStateChanged] = useState(false);
+  const [activeTab, setActiveTab] = useState("chat");
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  
+  // Use the useTranscript hook for the active scenario
+  const transcript = useTranscript(selectedStateMachine);
   
   // Choose the appropriate state machine based on the mode
   const customerScenario = useCustomerScenario();
@@ -105,6 +110,15 @@ const TestScenario = () => {
           if (machine) {
             setJsonContent(JSON.stringify(machine, null, 2));
           }
+          
+          // Reset any active call when changing scenarios
+          if (callActive) {
+            handleEndCall();
+          }
+          
+          // Force switch to chat view when selecting a new state machine
+          setActiveTab("chat");
+          
         } catch (error) {
           console.error("Failed to load state machine:", error);
           toast({
@@ -122,7 +136,7 @@ const TestScenario = () => {
   // Scroll to bottom whenever messages update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, transcript.messages]);
 
   // Update timer when call is active
   useEffect(() => {
@@ -337,93 +351,62 @@ const TestScenario = () => {
     });
   };
 
-  // Update messages based on state changes
+  // Update messages based on state changes - using useTranscript hook
   useEffect(() => {
-    if (!callActive || isLoading || currentState === previousState || verificationBlocking) return;
-
-    // Update the previous state to avoid duplicate messages
-    setPreviousState(currentState);
-    
-    // Handle system message if present
-    const systemMessage = getSystemMessage();
-    if (systemMessage) {
-      // Randomly determine if this system message requires verification (20% chance)
-      const requiresVerification = Math.random() < 0.2;
-      addSystemMessage(systemMessage, requiresVerification);
-      
-      // If verification is required, don't proceed with rest of the updates
-      if (requiresVerification) return;
+    // Use the transcript's messages directly when they update
+    if (transcript.messages.length > 0) {
+      setMessages(transcript.messages);
     }
-
-    if (isAgentMode) {
-      // In agent mode, we show customer messages and agent response options
-      const customerText = getCustomerText();
-      
-      if (customerText) {
-        addCustomerMessage(customerText);
-        
-        // After adding customer message, get agent options and add empty agent message with options
-        const agentOptions = getAgentOptions();
-        if (agentOptions && agentOptions.length > 0) {
-          addAgentMessage("", agentOptions);
-        }
-      }
-    } else {
-      // In customer mode (original behavior)
-      const agentText = physioCoverage.getAgentText();
-      if (agentText) {
-        const suggestions = physioCoverage.getSuggestions();
-        addAgentMessage(agentText, suggestions);
-      }
-    }
-
-    // Auto-end call when reaching final state
-    if (isFinalState()) {
-      setTimeout(() => setCallActive(false), 3000);
-    }
-  }, [callActive, currentState, isLoading, getSystemMessage, isAgentMode, getCustomerText, getAgentOptions, physioCoverage, previousState, isFinalState, verificationBlocking]);
+  }, [transcript.messages, transcript.lastTranscriptUpdate]);
 
   // Handle starting a call
   const handleStartCall = () => {
+    console.log('Starting test call for scenario:', selectedStateMachine);
     setMessages([]);
     setCallActive(true);
     setPreviousState('');
-    resetConversation();
+    setActiveTab("chat");
     setSensitiveDataStats({ validated: 0, pending: 0, invalid: 0 });
     setVerificationBlocking(false);
-    addSystemMessage('Call started');
-    startConversation();
+    
+    // Use the transcript hook to handle the call
+    transcript.handleCall();
+    
+    toast({
+      title: "Call Started",
+      description: `Test call started for ${selectedStateMachine} scenario`,
+    });
   };
 
   // Handle ending a call
   const handleEndCall = () => {
     setCallActive(false);
-    addSystemMessage('Call ended');
+    
+    // Use the transcript hook to handle call ending
+    if (transcript.callActive) {
+      transcript.handleHangUpCall();
+    }
+    
+    toast({
+      title: "Call Ended",
+      description: "Test call has been ended",
+    });
   };
 
   // Handle selecting a response option
   const handleSelectResponse = (response: string) => {
-    if (isAgentMode) {
-      addAgentMessage(response);
-      processAgentResponse(response);
-    } else {
-      addCustomerMessage(response);
-      physioCoverage.processEvent(response);
-    }
+    transcript.handleSelectResponse(response);
   };
 
   // Handle sending a custom message
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
     
-    if (isAgentMode) {
-      addAgentMessage(inputValue);
-    } else {
-      addCustomerMessage(inputValue);
-    }
+    // Use transcript to handle message sending
+    transcript.setInputValue(inputValue);
+    transcript.handleSendMessage();
     
     setInputValue('');
-    // Not processing any event, just for free text input
   };
 
   // Handle toggling the agent mode
@@ -437,21 +420,15 @@ const TestScenario = () => {
 
   // Handle resetting the scenario
   const handleResetScenario = () => {
-    // Only allow reset if call is active
-    if (!callActive) return;
+    if (!callActive) {
+      // Start a new call if none is active
+      handleStartCall();
+      return;
+    }
     
-    // Reset the state machine
-    resetConversation();
-    
-    // Reset all local state
-    setMessages([]);
-    setPreviousState('');
-    setSensitiveDataStats({ validated: 0, pending: 0, invalid: 0 });
-    setVerificationBlocking(false);
-    
-    // Add the initial system message and start the conversation again
-    addSystemMessage('Scenario reset');
-    startConversation();
+    console.log('Resetting scenario');
+    // Reset the state machine via transcript
+    transcript.addSystemMessage('Scenario reset');
     
     // Reset the timer
     startTimeRef.current = Date.now();
@@ -466,12 +443,27 @@ const TestScenario = () => {
   // Add this new function to handle state selection from the visualizer
   const handleStateSelect = (state: string) => {
     if (!callActive) {
-      // If no call is active, just update the UI to show the selected state
-      setPreviousState('');
-      toast({
-        title: "State Selected",
-        description: `Selected state: ${state}`,
-      });
+      // If no call is active, start a call and then jump to the state
+      handleStartCall();
+      
+      // Delay the state transition to ensure the call has started
+      setTimeout(() => {
+        setPreviousState('');
+        transcript.handleCall();
+        
+        if (loadedStateMachine && loadedStateMachine.states[state]) {
+          // Force transition to the selected state
+          if (isAgentMode) {
+            customerScenario.setCurrentState(state);
+          } else {
+            physioCoverage.setCurrentState(state);
+          }
+          
+          // Add a system message about the state change
+          transcript.addSystemMessage(`State manually set to: ${state}`);
+        }
+      }, 500);
+      
       return;
     }
     
@@ -493,7 +485,7 @@ const TestScenario = () => {
       });
       
       // Add a system message about the state change
-      addSystemMessage(`State manually changed to: ${state}`);
+      transcript.addSystemMessage(`State manually changed to: ${state}`);
     } else {
       toast({
         title: "Invalid State",
@@ -501,6 +493,11 @@ const TestScenario = () => {
         variant: "destructive"
       });
     }
+  };
+
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
   return (
@@ -599,17 +596,24 @@ const TestScenario = () => {
                 </Card>
               )}
 
-              {callActive && !isLoading && !error && (
+              {/* Main content section - now shows up whether call is active or not */}
+              {loadedStateMachine && (
                 <Card className="flex-1 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                       <CardTitle>Test Conversation</CardTitle>
                       <CardDescription>
-                        Current state: {currentState}
-                        {verificationBlocking && (
-                          <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-700">
-                            Waiting for verification
-                          </Badge>
+                        {callActive ? (
+                          <>
+                            Current state: {transcript.currentState}
+                            {verificationBlocking && (
+                              <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-700">
+                                Waiting for verification
+                              </Badge>
+                            )}
+                          </>
+                        ) : (
+                          "Select a state machine and start a test call"
                         )}
                       </CardDescription>
                     </div>
@@ -644,175 +648,229 @@ const TestScenario = () => {
                         <FileJson size={16} />
                         View JSON
                       </Button>
+                      {!callActive && (
+                        <Button 
+                          onClick={handleStartCall} 
+                          variant="default"
+                          size="sm"
+                          className="flex items-center gap-1"
+                        >
+                          <PhoneCall size={16} />
+                          Start Call
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <Tabs defaultValue="chat" className="w-full">
+                    <Tabs defaultValue="chat" value={activeTab} onValueChange={handleTabChange} className="w-full">
                       <TabsList className="grid grid-cols-3 mx-4 mt-4">
-                        <TabsTrigger value="chat">Chat View</TabsTrigger>
-                        <TabsTrigger value="state">State Machine</TabsTrigger>
-                        <TabsTrigger value="visualization">Decision Tree</TabsTrigger>
+                        <TabsTrigger value="chat" className="flex items-center gap-1">
+                          <MessageSquare size={16} />
+                          Chat View
+                        </TabsTrigger>
+                        <TabsTrigger value="state" className="flex items-center gap-1">
+                          <FileJson size={16} />
+                          State Data
+                        </TabsTrigger>
+                        <TabsTrigger value="visualization" className="flex items-center gap-1">
+                          <FlowChart size={16} />
+                          Decision Tree
+                        </TabsTrigger>
                       </TabsList>
                       <TabsContent value="chat" className="p-4 max-h-[60vh] overflow-y-auto">
                         <div className="space-y-4 mb-4">
-                          {messages.map((message) => (
-                            <div 
-                              key={message.id}
-                              className={`p-3 rounded-lg ${
-                                message.sender === 'agent' 
-                                  ? 'bg-primary/10 ml-4' 
-                                  : message.sender === 'customer' 
-                                  ? 'bg-secondary/20 mr-4' 
-                                  : 'bg-muted text-center italic text-sm'
-                              }`}
-                            >
-                              <p className="text-xs font-semibold mb-1">
-                                {message.sender === 'agent' ? 'Agent' : 
-                                 message.sender === 'customer' ? 'Customer' : 'System'}
-                                {isAgentMode && message.sender === 'agent' && " (You)"}
-                                {!isAgentMode && message.sender === 'customer' && " (You)"}
-                              </p>
-                              <p>{message.text}</p>
+                          {transcript.messages.length > 0 ? (
+                            transcript.messages.map((message) => (
+                              <div 
+                                key={message.id}
+                                className={`p-3 rounded-lg ${
+                                  message.sender === 'agent' 
+                                    ? 'bg-primary/10 ml-4' 
+                                    : message.sender === 'customer' 
+                                    ? 'bg-secondary/20 mr-4' 
+                                    : 'bg-muted text-center italic text-sm'
+                                }`}
+                              >
+                                <p className="text-xs font-semibold mb-1">
+                                  {message.sender === 'agent' ? 'Agent' : 
+                                   message.sender === 'customer' ? 'Customer' : 'System'}
+                                  {isAgentMode && message.sender === 'agent' && " (You)"}
+                                  {!isAgentMode && message.sender === 'customer' && " (You)"}
+                                </p>
+                                <p>{message.text}</p>
 
-                              {/* Show verification button if needed */}
-                              {message.requiresVerification && !message.isVerified && (
-                                <div className="mt-2 p-2 rounded bg-yellow-50 border border-yellow-200">
-                                  <p className="text-sm text-yellow-700 mb-1">This requires manual verification to continue</p>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    onClick={() => handleVerifySystemCheck(message.id)}
-                                    className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-                                  >
-                                    Verify and Continue
-                                  </Button>
-                                </div>
-                              )}
-
-                              {message.isVerified && message.requiresVerification && (
-                                <div className="mt-2 flex items-center gap-1 text-green-700">
-                                  <Check size={14} />
-                                  <span className="text-xs">Verified</span>
-                                </div>
-                              )}
-
-                              {/* Show sensitive data validation UI */}
-                              {message.sensitiveData && message.sensitiveData.length > 0 && message.sender === 'customer' && (
-                                <div className="mt-3 pt-2 border-t border-gray-300/30">
-                                  <div className="text-xs flex items-center gap-1 mb-2">
-                                    <Shield size={14} className="text-primary" />
-                                    <span className="font-medium">Sensitive Data Detected</span>
+                                {/* Show verification button if needed */}
+                                {message.requiresVerification && !message.isVerified && (
+                                  <div className="mt-2 p-2 rounded bg-yellow-50 border border-yellow-200">
+                                    <p className="text-sm text-yellow-700 mb-1">This requires manual verification to continue</p>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      onClick={() => transcript.handleVerifySystemCheck(message.id)}
+                                      className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                    >
+                                      Verify and Continue
+                                    </Button>
                                   </div>
-                                  <div className="space-y-2">
-                                    {message.sensitiveData.map((field) => (
-                                      <div key={field.id} className={`p-2 rounded text-sm border ${
-                                        field.status === 'valid'
-                                          ? 'bg-green-50 border-green-200 text-green-800'
-                                          : field.status === 'invalid'
-                                          ? 'bg-red-50 border-red-200 text-red-800'
-                                          : 'bg-yellow-50 border-yellow-200 text-yellow-800'
-                                      }`}>
-                                        <div className="flex justify-between">
-                                          <span>{field.type}: <strong>{field.value}</strong></span>
-                                          <span className="capitalize text-xs font-medium">{field.status}</span>
-                                        </div>
-                                        
-                                        {field.notes && (
-                                          <p className="mt-1 text-xs opacity-70">{field.notes}</p>
-                                        )}
-                                        
-                                        {field.status === 'pending' && (
-                                          <div className="flex gap-2 mt-2">
-                                            <Button 
-                                              size="sm" 
-                                              variant="outline"
-                                              className="text-xs h-7 bg-green-50 hover:bg-green-100 border-green-200 text-green-800"
-                                              onClick={() => handleValidateSensitiveData(message.id, field.id, 'valid')}
-                                            >
-                                              Valid
-                                            </Button>
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="text-xs h-7 bg-red-50 hover:bg-red-100 border-red-200 text-red-800"
-                                              onClick={() => handleValidateSensitiveData(message.id, field.id, 'invalid')}
-                                            >
-                                              Invalid
-                                            </Button>
+                                )}
+
+                                {message.isVerified && message.requiresVerification && (
+                                  <div className="mt-2 flex items-center gap-1 text-green-700">
+                                    <Check size={14} />
+                                    <span className="text-xs">Verified</span>
+                                  </div>
+                                )}
+
+                                {/* Show sensitive data validation UI */}
+                                {message.sensitiveData && message.sensitiveData.length > 0 && message.sender === 'customer' && (
+                                  <div className="mt-3 pt-2 border-t border-gray-300/30">
+                                    <div className="text-xs flex items-center gap-1 mb-2">
+                                      <Shield size={14} className="text-primary" />
+                                      <span className="font-medium">Sensitive Data Detected</span>
+                                    </div>
+                                    <div className="space-y-2">
+                                      {message.sensitiveData.map((field) => (
+                                        <div key={field.id} className={`p-2 rounded text-sm border ${
+                                          field.status === 'valid'
+                                            ? 'bg-green-50 border-green-200 text-green-800'
+                                            : field.status === 'invalid'
+                                            ? 'bg-red-50 border-red-200 text-red-800'
+                                            : 'bg-yellow-50 border-yellow-200 text-yellow-800'
+                                        }`}>
+                                          <div className="flex justify-between">
+                                            <span>{field.type}: <strong>{field.value}</strong></span>
+                                            <span className="capitalize text-xs font-medium">{field.status}</span>
                                           </div>
-                                        )}
-                                      </div>
-                                    ))}
+                                          
+                                          {field.notes && (
+                                            <p className="mt-1 text-xs opacity-70">{field.notes}</p>
+                                          )}
+                                          
+                                          {field.status === 'pending' && (
+                                            <div className="flex gap-2 mt-2">
+                                              <Button 
+                                                size="sm" 
+                                                variant="outline"
+                                                className="text-xs h-7 bg-green-50 hover:bg-green-100 border-green-200 text-green-800"
+                                                onClick={() => handleValidateSensitiveData(message.id, field.id, 'valid')}
+                                              >
+                                                Valid
+                                              </Button>
+                                              <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="text-xs h-7 bg-red-50 hover:bg-red-100 border-red-200 text-red-800"
+                                                onClick={() => handleValidateSensitiveData(message.id, field.id, 'invalid')}
+                                              >
+                                                Invalid
+                                              </Button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {message.responseOptions && message.responseOptions.length > 0 && (
-                                (isAgentMode && message.sender === 'agent' && !message.text || 
-                                 !isAgentMode && message.sender === 'agent') && (
-                                  <div className="mt-3 flex flex-wrap gap-2">
-                                    {message.responseOptions.map((option) => (
-                                      <Button 
-                                        key={option} 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => handleSelectResponse(option)}
-                                      >
-                                        {option}
-                                      </Button>
-                                    ))}
-                                  </div>
-                                )
-                              )}
+                                {/* Display response options for messages */}
+                                {message.responseOptions && message.responseOptions.length > 0 && (
+                                  (isAgentMode && message.sender === 'agent' && !message.text || 
+                                   !isAgentMode && message.sender === 'agent') && (
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                      {message.responseOptions.map((option) => (
+                                        <Button 
+                                          key={option} 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => handleSelectResponse(option)}
+                                        >
+                                          {option}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  )
+                                )}
+                              </div>
+                            ))
+                          ) : !callActive ? (
+                            <div className="text-center p-6 text-muted-foreground">
+                              <MessageSquare className="mx-auto h-12 w-12 opacity-20 mb-3" />
+                              <p>Select a scenario and start a call to begin the conversation</p>
+                              <Button 
+                                onClick={handleStartCall} 
+                                variant="default"
+                                size="sm"
+                                className="mt-3"
+                              >
+                                <PhoneCall size={16} className="mr-2" />
+                                Start Test Call
+                              </Button>
                             </div>
-                          ))}
+                          ) : (
+                            <div className="text-center p-6 text-muted-foreground">
+                              <p>Waiting for messages...</p>
+                            </div>
+                          )}
                           <div ref={messagesEndRef} />
                         </div>
 
-                        <div className="py-2 border-t">
-                          <div className="flex gap-2">
-                            <Input 
-                              placeholder={`Type your own ${isAgentMode ? 'agent' : 'customer'} response...`} 
-                              value={inputValue} 
-                              onChange={(e) => setInputValue(e.target.value)} 
-                              className="flex-1"
-                              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                            />
-                            <Button 
-                              type="submit" 
-                              onClick={handleSendMessage}
-                              disabled={!inputValue.trim() || verificationBlocking}
-                            >
-                              Send
-                            </Button>
+                        {callActive && (
+                          <div className="py-2 border-t">
+                            <div className="flex gap-2">
+                              <Input 
+                                placeholder={`Type your own ${isAgentMode ? 'agent' : 'customer'} response...`} 
+                                value={inputValue} 
+                                onChange={(e) => setInputValue(e.target.value)} 
+                                className="flex-1"
+                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                              />
+                              <Button 
+                                type="submit" 
+                                onClick={handleSendMessage}
+                                disabled={!inputValue.trim() || verificationBlocking}
+                              >
+                                Send
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </TabsContent>
                       <TabsContent value="state" className="p-4 max-h-[60vh] overflow-y-auto">
                         <div className="space-y-4">
                           <div className="bg-muted p-3 rounded-lg">
                             <h3 className="font-medium">Current State</h3>
-                            <p className="text-sm mt-1">{currentState}</p>
+                            <p className="text-sm mt-1">{transcript.currentState || currentState}</p>
                           </div>
                           <div className="bg-muted p-3 rounded-lg">
                             <h3 className="font-medium">Available Options</h3>
                             <div className="mt-2 space-y-1">
-                              {isAgentMode ? 
-                                getAgentOptions().map((option) => (
-                                  <p key={option} className="text-sm">{option}</p>
-                                )) :
-                                physioCoverage.getSuggestions().map((suggestion) => (
+                              {transcript.stateData?.meta?.suggestions ? (
+                                transcript.stateData.meta.suggestions.map((suggestion) => (
                                   <p key={suggestion} className="text-sm">{suggestion}</p>
                                 ))
-                              }
+                              ) : (
+                                <p className="text-sm text-muted-foreground">No options available</p>
+                              )}
                             </div>
                           </div>
+                          {transcript.stateData?.meta?.agentText && (
+                            <div className="bg-muted p-3 rounded-lg">
+                              <h3 className="font-medium">Agent Text</h3>
+                              <p className="text-sm mt-1">{transcript.stateData.meta.agentText}</p>
+                            </div>
+                          )}
+                          {transcript.stateData?.meta?.systemMessage && (
+                            <div className="bg-muted p-3 rounded-lg">
+                              <h3 className="font-medium">System Message</h3>
+                              <p className="text-sm mt-1">{transcript.stateData.meta.systemMessage}</p>
+                            </div>
+                          )}
                         </div>
                       </TabsContent>
                       <TabsContent value="visualization" className="p-4">
                         <DecisionTreeVisualizer 
                           stateMachine={loadedStateMachine}
-                          currentState={currentState}
+                          currentState={transcript.currentState || currentState}
                           onStateClick={handleStateSelect}
                         />
                       </TabsContent>
@@ -822,19 +880,10 @@ const TestScenario = () => {
               )}
 
               {/* Display the state machine visualizer when not in a call */}
-              {!callActive && selectedStateMachine && (
+              {!loadedStateMachine && (
                 <Card>
-                  <CardHeader>
-                    <CardTitle>State Machine: {selectedStateMachine}</CardTitle>
-                    <CardDescription>
-                      Visual representation of the selected state machine
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DecisionTreeVisualizer 
-                      stateMachine={loadedStateMachine} 
-                      onStateClick={handleStateSelect}
-                    />
+                  <CardContent className="py-8 text-center">
+                    <p>Please select a state machine to start testing</p>
                   </CardContent>
                 </Card>
               )}

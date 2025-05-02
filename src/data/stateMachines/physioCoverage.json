@@ -8,7 +8,8 @@
         "systemMessage": "System bereit für Anrufbeginn"
       },
       "on": {
-        "START_CALL": "agent_greet"
+        "START_CALL": "agent_greet",
+        "DEFAULT": "agent_greet"
       }
     },
     "agent_greet": {
@@ -97,7 +98,8 @@
           "8004 Zürich",
           "3000 Bern",
           "Anders"
-        ]
+        ],
+        "systemMessage": "Kunde gibt PLZ ein"
       },
       "on": {
         "8004 Zürich": "auth_vs",
@@ -129,7 +131,8 @@
           "Ja, bitte",
           "Nein, danke",
           "Abbrechen"
-        ]
+        ],
+        "systemMessage": "Authentifizierung fehlgeschlagen"
       },
       "on": {
         "Ja, bitte": "auth_birthdate",
@@ -156,7 +159,8 @@
           "Ja, bitte",
           "Nein, danke",
           "Noch Fragen"
-        ]
+        ],
+        "systemMessage": "Leistungserbringer gefunden"
       },
       "on": {
         "Ja, bitte": "details_verordnung",
@@ -172,7 +176,8 @@
           "Ja",
           "Nein",
           "Abbrechen"
-        ]
+        ],
+        "systemMessage": "Leistungserbringer nicht gefunden"
       },
       "on": {
         "Ja": "agent_ask_issue",
@@ -188,7 +193,8 @@
           "Verstanden",
           "Mehr Infos",
           "Abbrechen"
-        ]
+        ],
+        "systemMessage": "Verordnungsdetails angezeigt"
       },
       "on": {
         "Verstanden": "abschluss",
@@ -199,7 +205,8 @@
     },
     "abschluss": {
       "meta": {
-        "agentText": "Vielen Dank für Ihren Anruf. Gute Besserung und auf Wiederhören!"
+        "agentText": "Vielen Dank für Ihren Anruf. Gute Besserung und auf Wiederhören!",
+        "systemMessage": "Gespräch beendet"
       }
     }
   }
