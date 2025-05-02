@@ -110,6 +110,11 @@ export const sensitiveDataPatterns = {
     regex: /\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d\d\b/,
     description: "Date of birth (DD.MM.YYYY)",
     exampleValue: "15.03.1985"
+  },
+  address: {
+    regex: /\b[A-Za-zäöüÄÖÜß\s\d\.\-]+\s\d+,\s\d{4,5}\s[A-Za-zäöüÄÖÜß\s\.\-]+\b/,
+    description: "Address (format: Street Number, ZIP City)",
+    exampleValue: "Musterstrasse 123, 8000 Zürich"
   }
 };
 
