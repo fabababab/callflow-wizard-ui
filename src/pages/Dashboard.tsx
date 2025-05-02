@@ -15,7 +15,7 @@ import {
   CornerDownLeft,
   ChevronDown,
   FileJson,
-  Compare
+  ArrowLeftRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -548,7 +548,7 @@ const Dashboard = () => {
               title="Compare Components"
               onClick={toggleComparisonView}
             >
-              <Compare size={16} />
+              <ArrowLeftRight size={16} />
             </Button>
           </div>
         </div>
