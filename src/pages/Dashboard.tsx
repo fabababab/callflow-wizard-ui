@@ -14,7 +14,8 @@ import {
   UserCircle,
   CornerDownLeft,
   ChevronDown,
-  FileJson
+  FileJson,
+  Compare
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -31,8 +32,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import ScenarioSelector, { ScenarioType, scenarioCallData } from '@/components/ScenarioSelector';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getStateMachineJson } from '@/utils/stateMachineLoader';
+import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader';
 import { stateMachines } from '@/data/stateMachines';
+import TranscriptPanel from '@/components/TranscriptPanel';
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -56,6 +58,7 @@ const Dashboard = () => {
   const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
+  const [showComparisonView, setShowComparisonView] = useState(false);
 
   // Check if a scenario was passed via navigation
   useEffect(() => {
@@ -513,6 +516,11 @@ const Dashboard = () => {
     }
   };
 
+  // Function to toggle comparison view
+  const toggleComparisonView = () => {
+    setShowComparisonView(!showComparisonView);
+  };
+
   const renderActiveCall = () => (
     <Card className="border-green-500 border-2">
       <CardHeader className="bg-green-50">
@@ -520,7 +528,7 @@ const Dashboard = () => {
           <CardTitle>Active Call - {incomingCall.customerName}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge className="bg-green-500">Live</Badge>
-            {/* Always show the state machine JSON button for active scenarios */}
+            {/* Always show the JSON button for active scenarios */}
             {activeScenario && (
               <Button
                 size="icon"
@@ -533,6 +541,15 @@ const Dashboard = () => {
                 <FileJson size={16} />
               </Button>
             )}
+            <Button
+              size="icon"
+              variant="outline"
+              className={`h-8 w-8 ${showComparisonView ? 'bg-muted' : ''}`}
+              title="Compare Components"
+              onClick={toggleComparisonView}
+            >
+              <Compare size={16} />
+            </Button>
           </div>
         </div>
         <CardDescription>
@@ -823,6 +840,23 @@ const Dashboard = () => {
                     renderActiveCall()
                   )}
                 </div>
+
+                {/* Comparison view - show TranscriptPanel when comparison is enabled */}
+                {showComparisonView && acceptedCallId && activeScenario && (
+                  <div className="col-span-1 mt-4">
+                    <Card className="border border-muted">
+                      <CardHeader className="bg-muted/20 px-4 py-3">
+                        <CardTitle className="text-base">TranscriptPanel Component</CardTitle>
+                        <CardDescription className="text-xs">
+                          Compare with the active call implementation
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <TranscriptPanel activeScenario={activeScenario} />
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
               </div>
 
               {/* Recent activity and performance section */}

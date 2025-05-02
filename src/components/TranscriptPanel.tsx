@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,7 +12,7 @@ import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls, preCalls } from '@/data/scenarioData';
 import { stateMachines } from '@/data/stateMachines';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getStateMachineJson } from '@/utils/stateMachineLoader';
+import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -46,7 +45,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
   } = useTranscript(activeScenario);
 
   // Check if this scenario has a state machine
-  const hasStateMachine = activeScenario && stateMachines[activeScenario as string];
+  const hasStateMachineAvailable = activeScenario && stateMachines[activeScenario as string];
   
   // Function to open the JSON dialog
   const handleViewJson = async () => {
@@ -76,7 +75,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
                 {activeScenario}
               </Badge>
             )}
-            {hasStateMachine && currentState && (
+            {hasStateMachineAvailable && currentState && (
               <Badge 
                 variant="secondary" 
                 className="cursor-help flex items-center gap-1"
@@ -132,7 +131,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         </div>
       </CardHeader>
       
-      {showStateMachineInfo && hasStateMachine && (
+      {showStateMachineInfo && hasStateMachineAvailable && (
         <div className="mx-4 mb-2 p-2 bg-muted/50 rounded-md border border-border text-xs">
           <div className="flex justify-between items-center">
             <h4 className="font-medium">State Machine Information</h4>
@@ -189,7 +188,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           )}
           
           {/* State machine not available warning */}
-          {callActive && activeScenario && !hasStateMachine && (
+          {callActive && activeScenario && !hasStateMachineAvailable && (
             <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 mb-3">
               <AlertCircle size={16} />
               <span>No state machine available for the current scenario. Using fallback conversation flow.</span>
