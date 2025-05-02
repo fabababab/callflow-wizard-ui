@@ -21,8 +21,8 @@ export type Message = {
 
 interface MessageProps {
   message: Message;
-  onAcceptSuggestion: (suggestionId: string, messageId: string) => void; // Updated to use string types
-  onRejectSuggestion: (suggestionId: string, messageId: string) => void; // Updated to use string types
+  onAcceptSuggestion: (suggestionId: string, messageId: string) => void;
+  onRejectSuggestion: (suggestionId: string, messageId: string) => void;
   onSelectResponse?: (response: string) => void;
 }
 

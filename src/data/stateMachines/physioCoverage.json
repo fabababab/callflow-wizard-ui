@@ -1,0 +1,176 @@
+
+{
+  "id": "physio-coverage-play",
+  "initial": "start",
+  "states": {
+    "start": {
+      "on": {
+        "START_CALL": "agent_greet"
+      }
+    },
+    "agent_greet": {
+      "meta": {
+        "agentText": "Grüezi, hier ist Ihr Service-Center. Wie kann ich Ihnen helfen?",
+        "suggestions": [
+          "Ich möchte meine Physiotherapie prüfen.",
+          "Ich habe eine allgemeine Frage.",
+          "Nichts, nur Test."
+        ]
+      },
+      "on": {
+        "Ich möchte meine Physiotherapie prüfen.": "agent_ask_issue",
+        "Ich habe eine allgemeine Frage.": "agent_general_help",
+        "Nichts, nur Test.": "abschluss"
+      }
+    },
+    "agent_general_help": {
+      "meta": {
+        "agentText": "Natürlich, was möchten Sie sonst wissen?",
+        "suggestions": [
+          "Deckungsfragen",
+          "Vertragsdetails",
+          "Zurück"
+        ]
+      },
+      "on": {
+        "Deckungsfragen": "agent_ask_issue",
+        "Vertragsdetails": "agent_contract_info",
+        "Zurück": "agent_greet"
+      }
+    },
+    "agent_ask_issue": {
+      "meta": {
+        "agentText": "Erzählen Sie mir bitte kurz Ihr Anliegen mit der Physiotherapie.",
+        "suggestions": [
+          "Ich habe Knieprobleme.",
+          "Ich habe Rückenprobleme.",
+          "Anderes."
+        ]
+      },
+      "on": {
+        "Ich habe Knieprobleme.": "auth_birthdate",
+        "Ich habe Rückenprobleme.": "auth_birthdate",
+        "Anderes.": "auth_birthdate"
+      }
+    },
+    "auth_birthdate": {
+      "meta": {
+        "agentText": "Gerne. Zur Identifikation: Ihr Geburtsdatum bitte.",
+        "suggestions": [
+          "14.05.1985",
+          "01.01.1990",
+          "Anderes Datum"
+        ]
+      },
+      "on": {
+        "14.05.1985": "auth_plz",
+        "01.01.1990": "auth_plz",
+        "Anderes Datum": "auth_plz"
+      }
+    },
+    "auth_plz": {
+      "meta": {
+        "agentText": "Und Ihre Postleitzahl?",
+        "suggestions": [
+          "8004 Zürich",
+          "3000 Bern",
+          "Anders"
+        ]
+      },
+      "on": {
+        "8004 Zürich": "auth_vs",
+        "3000 Bern": "auth_vs",
+        "Anders": "auth_vs"
+      }
+    },
+    "auth_vs": {
+      "meta": {
+        "agentText": "Bitte Ihre Versichertennummer.",
+        "suggestions": [
+          "756.1234.5678.90",
+          "xxx.yyyy.zzzz",
+          "Keine Nummer"
+        ]
+      },
+      "on": {
+        "756.1234.5678.90": "lookup_provider",
+        "xxx.yyyy.zzzz": "lookup_provider",
+        "Keine Nummer": "auth_failed"
+      }
+    },
+    "auth_failed": {
+      "meta": {
+        "agentText": "Leider stimmen Ihre Angaben nicht. Möchten Sie es erneut versuchen?",
+        "suggestions": [
+          "Ja, bitte",
+          "Nein, danke",
+          "Abbrechen"
+        ]
+      },
+      "on": {
+        "Ja, bitte": "auth_birthdate",
+        "Nein, danke": "abschluss",
+        "Abbrechen": "abschluss"
+      }
+    },
+    "lookup_provider": {
+      "meta": {
+        "systemMessage": "Suche nach Leistungserbringer..."
+      },
+      "on": {
+        "PROVIDER_FOUND": "provider_found",
+        "PROVIDER_NOT_FOUND": "provider_not_found"
+      }
+    },
+    "provider_found": {
+      "meta": {
+        "agentText": "Ihre Therapeutin ist anerkannt. Benötigen Sie Details zur ärztlichen Verordnung?",
+        "suggestions": [
+          "Ja, bitte",
+          "Nein, danke",
+          "Noch Fragen"
+        ]
+      },
+      "on": {
+        "Ja, bitte": "details_verordnung",
+        "Nein, danke": "abschluss",
+        "Noch Fragen": "agent_general_help"
+      }
+    },
+    "provider_not_found": {
+      "meta": {
+        "agentText": "Wir haben diesen Therapeuten nicht gefunden. Möchten Sie einen anderen Namen nennen?",
+        "suggestions": [
+          "Ja",
+          "Nein",
+          "Abbrechen"
+        ]
+      },
+      "on": {
+        "Ja": "agent_ask_issue",
+        "Nein": "abschluss",
+        "Abbrechen": "abschluss"
+      }
+    },
+    "details_verordnung": {
+      "meta": {
+        "agentText": "Die Grundversicherung übernimmt 9 Sitzungen. Therapie muss innerhalb 5 Wochen beginnen.",
+        "suggestions": [
+          "Verstanden",
+          "Mehr Infos",
+          "Abbrechen"
+        ]
+      },
+      "on": {
+        "Verstanden": "abschluss",
+        "Mehr Infos": "agent_general_help",
+        "Abbrechen": "abschluss"
+      }
+    },
+    "abschluss": {
+      "meta": {
+        "agentText": "Vielen Dank für Ihren Anruf. Gute Besserung und auf Wiederhören!"
+      }
+    }
+  }
+}
