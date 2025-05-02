@@ -24,6 +24,8 @@ const Message: React.FC<MessageProps> = ({
   onAcceptSuggestion, 
   onRejectSuggestion 
 }) => {
+  const hasSuggestions = message.suggestions && message.suggestions.length > 0;
+  
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'}`}>
       <div
@@ -43,7 +45,8 @@ const Message: React.FC<MessageProps> = ({
         </div>
         <p className="text-sm whitespace-pre-wrap">{message.text}</p>
         
-        {message.suggestions && message.suggestions.length > 0 && (
+        {/* Display AI suggestions if available */}
+        {hasSuggestions && (
           <AISuggestions 
             suggestions={message.suggestions}
             messageId={message.id}

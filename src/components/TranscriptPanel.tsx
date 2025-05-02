@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock } from 'lucide-react';
+import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import Message from './transcript/Message';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls, preCalls } from '@/data/scenarioData';
+import { stateMachines } from '@/data/stateMachines';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -18,6 +19,7 @@ interface TranscriptPanelProps {
 
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => {
   const [historyCollapsed, setHistoryCollapsed] = useState(true);
+  const [showStateMachineInfo, setShowStateMachineInfo] = useState(false);
   
   const {
     messages,
@@ -34,18 +36,31 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     toggleRecording,
     handleCall,
     handleAcceptCall,
-    currentPhysioState
+    currentState
   } = useTranscript(activeScenario);
+
+  // Check if this scenario has a state machine
+  const hasStateMachine = activeScenario && stateMachines[activeScenario as string];
 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
       <CardHeader className="px-4 py-3 flex flex-row items-center justify-between space-y-0">
         <div>
           <CardTitle className="text-lg">Transcript</CardTitle>
-          <CardDescription>
-            {activeScenario === 'physioTherapy' && currentPhysioState && (
-              <Badge variant="outline" className="mr-2">
-                State: {currentPhysioState}
+          <CardDescription className="flex items-center gap-2 flex-wrap">
+            {activeScenario && (
+              <Badge variant="outline" className="capitalize">
+                {activeScenario}
+              </Badge>
+            )}
+            {hasStateMachine && currentState && (
+              <Badge 
+                variant="secondary" 
+                className="cursor-help flex items-center gap-1"
+                onClick={() => setShowStateMachineInfo(!showStateMachineInfo)}
+              >
+                <span>State: {currentState}</span>
+                <ExternalLink size={10} />
               </Badge>
             )}
             Call transcript and suggestions
@@ -82,6 +97,44 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         </div>
       </CardHeader>
       
+      {showStateMachineInfo && hasStateMachine && (
+        <div className="mx-4 mb-2 p-2 bg-muted/50 rounded-md border border-border text-xs">
+          <div className="flex justify-between items-center">
+            <h4 className="font-medium">State Machine Information</h4>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 w-6 p-0"
+              onClick={() => setShowStateMachineInfo(false)}
+            >
+              <PhoneOff size={14} />
+            </Button>
+          </div>
+          <p className="text-muted-foreground mt-1">
+            Current state: <span className="font-medium">{currentState}</span>
+          </p>
+          <p className="text-muted-foreground mt-1">
+            Type: <span className="font-medium">
+              {stateMachines[activeScenario as string][currentState]?.stateType || "unknown"}
+            </span>
+          </p>
+          {stateMachines[activeScenario as string][currentState]?.nextState && (
+            <p className="text-muted-foreground mt-1">
+              Next state: <span className="font-medium">
+                {stateMachines[activeScenario as string][currentState]?.nextState}
+              </span>
+            </p>
+          )}
+          {stateMachines[activeScenario as string][currentState]?.action && (
+            <p className="text-muted-foreground mt-1">
+              Action: <span className="font-medium">
+                {stateMachines[activeScenario as string][currentState]?.action}
+              </span>
+            </p>
+          )}
+        </div>
+      )}
+      
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         <div className="p-4 flex-1 overflow-y-auto space-y-4">
           {!callActive && !acceptedCallId && (
@@ -97,6 +150,14 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
               
               {/* Pre-call information section */}
               <PreCallInfo preCalls={preCalls} />
+            </div>
+          )}
+          
+          {/* State machine not available warning */}
+          {callActive && activeScenario && !hasStateMachine && (
+            <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 mb-3">
+              <AlertCircle size={16} />
+              <span>No state machine available for the current scenario. Using fallback conversation flow.</span>
             </div>
           )}
           
@@ -120,6 +181,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
                 variant="outline" 
                 className={`${isRecording ? 'bg-red-100 text-red-500' : ''} h-9`}
                 onClick={toggleRecording}
+                aria-label="Toggle microphone"
               >
                 <Mic size={16} />
               </Button>
@@ -136,6 +198,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
                 onClick={handleSendMessage}
                 disabled={!inputValue.trim()}
                 className="h-9"
+                aria-label="Send message"
               >
                 <CornerDownLeft size={16} />
               </Button>

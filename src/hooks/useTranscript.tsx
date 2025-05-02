@@ -1,10 +1,11 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Message, MessageSender } from '@/components/transcript/Message';
 import { AISuggestion } from '@/components/transcript/AISuggestion';
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { generateAiSuggestion, scenarioInitialMessages } from '@/data/scenarioData';
-import { physioStateMachine, State } from '@/data/stateMachines';
+import { generateAiSuggestion } from '@/data/scenarioData';
+import { physioStateMachine, State, StateMachine, stateMachines, scenarioInitialStates } from '@/data/stateMachines';
 
 export const useTranscript = (activeScenario: ScenarioType) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -14,7 +15,8 @@ export const useTranscript = (activeScenario: ScenarioType) => {
   const [callStartTime, setCallStartTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const [acceptedCallId, setAcceptedCallId] = useState<number | null>(null);
-  const [currentPhysioState, setCurrentPhysioState] = useState<string>('start');
+  const [currentState, setCurrentState] = useState<string>('start');
+  const [currentStateMachine, setCurrentStateMachine] = useState<StateMachine | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -25,6 +27,25 @@ export const useTranscript = (activeScenario: ScenarioType) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Set the appropriate state machine when the scenario changes
+  useEffect(() => {
+    if (activeScenario) {
+      const machine = stateMachines[activeScenario as string];
+      if (machine) {
+        setCurrentStateMachine(machine);
+        // Reset to the initial state for this scenario
+        const initialState = scenarioInitialStates[activeScenario as string] || 'start';
+        setCurrentState(initialState);
+        
+        // Log the state machine for debugging
+        console.log(`Loaded state machine for scenario: ${activeScenario}`, machine);
+      } else {
+        console.log(`No state machine found for scenario: ${activeScenario}`);
+        setCurrentStateMachine(null);
+      }
+    }
+  }, [activeScenario]);
 
   // Timer for call duration
   useEffect(() => {
@@ -49,16 +70,28 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       // Reset message history
       setMessages([]);
       
-      // Reset physio state if we're in that scenario
-      if (activeScenario === 'physioTherapy') {
-        setCurrentPhysioState('start');
+      // Reset state if we have a state machine
+      if (stateMachines[activeScenario as string]) {
+        const initialState = scenarioInitialStates[activeScenario as string] || 'start';
+        setCurrentState(initialState);
+        setCurrentStateMachine(stateMachines[activeScenario as string]);
       }
       
       // Add initial agent greeting
       setTimeout(() => {
+        let initialAgentMessage = "Hallo, vielen Dank für Ihren Anruf bei unserem Kundenservice. Wie kann ich Ihnen heute helfen?";
+        
+        // If we have a state machine, use its initial agent message
+        if (currentStateMachine && currentState) {
+          const stateData = currentStateMachine[currentState];
+          if (stateData && stateData.agent) {
+            initialAgentMessage = stateData.agent;
+          }
+        }
+        
         const initialMessage: Message = {
           id: 1,
-          text: "Hallo, vielen Dank für Ihren Anruf bei unserem Kundenservice. Wie kann ich Ihnen heute helfen?",
+          text: initialAgentMessage,
           sender: 'agent',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -66,99 +99,134 @@ export const useTranscript = (activeScenario: ScenarioType) => {
         
         // Add scenario-specific customer response
         setTimeout(() => {
-          let customerResponse = scenarioInitialMessages[activeScenario as string] || "Hallo, ich habe einige Fragen zu meinem Konto.";
+          let customerResponse = "Hallo, ich habe einige Fragen zu meinem Konto.";
           
-          if (activeScenario === 'physioTherapy' && physioStateMachine.start.customer) {
-            customerResponse = physioStateMachine.start.customer;
+          // If we have a state machine, use its initial customer response
+          if (currentStateMachine && currentState) {
+            const stateData = currentStateMachine[currentState];
+            if (stateData && stateData.customer) {
+              customerResponse = stateData.customer;
+            }
+          }
+          
+          // Generate suggestions based on the current state
+          let suggestions: AISuggestion[] = [];
+          
+          if (currentStateMachine && currentState) {
+            const state = currentStateMachine[currentState];
             
-            // For physio scenario, immediately generate system suggestion
-            const systemMsg = physioStateMachine.start.systemMessage;
-            const agentNextResponse = physioStateMachine.authentifizierung?.agent || "";
-            
-            const suggestion: AISuggestion[] = [
-              {
-                id: Date.now(),
-                text: systemMsg || "Starten Sie mit der Kundenverifizierung",
-                type: 'info'
-              },
-              {
-                id: Date.now() + 1,
-                text: agentNextResponse,
-                type: 'response'
+            if (state) {
+              // Add system message as info suggestion
+              if (state.systemMessage) {
+                suggestions.push({
+                  id: Date.now(),
+                  text: state.systemMessage,
+                  type: 'info'
+                });
               }
-            ];
-            
-            const customerMessage: Message = {
-              id: 2,
-              text: customerResponse,
-              sender: 'customer',
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              suggestions: suggestion
-            };
-            
-            setMessages(prev => [...prev, customerMessage]);
-            return; // Skip the general customer message below
+              
+              // Add next state's agent response as response suggestion
+              const nextState = state.nextState && currentStateMachine[state.nextState];
+              if (nextState && nextState.agent) {
+                suggestions.push({
+                  id: Date.now() + 1,
+                  text: nextState.agent,
+                  type: 'response'
+                });
+              }
+              
+              // Add action suggestion if defined
+              if (state.action) {
+                suggestions.push({
+                  id: Date.now() + 2,
+                  text: `Aktion ausführen: ${state.action}`,
+                  type: 'action'
+                });
+              }
+              
+              // Add quick reply suggestions if available
+              if (state.suggestions && state.suggestions.length > 0) {
+                state.suggestions.forEach((option, index) => {
+                  suggestions.push({
+                    id: Date.now() + 3 + index,
+                    text: option,
+                    type: 'response'
+                  });
+                });
+              }
+            }
+          } else {
+            // Fallback to the old suggestion system for scenarios without state machines
+            suggestions = generateAiSuggestion(activeScenario, 2);
           }
           
           const customerMessage: Message = {
             id: 2,
             text: customerResponse,
             sender: 'customer',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            suggestions: suggestions
           };
           
           setMessages(prev => [...prev, customerMessage]);
-          
-          // Generate first AI suggestion based on scenario
-          setTimeout(() => {
-            generateAiSuggestionForMessage(activeScenario, 2);
-          }, 500);
         }, 1500);
       }, 1000);
     }
-  }, [activeScenario, callActive, toast]);
+  }, [activeScenario, callActive, currentStateMachine, currentState, toast]);
 
   // Generate AI suggestions for messages
-  const generateAiSuggestionForMessage = useCallback((scenario: ScenarioType, afterMessageId: number) => {
-    if (!scenario) return;
+  const generateAiSuggestionForMessage = useCallback((messageId: number) => {
+    if (!activeScenario) return;
     
     let suggestions: AISuggestion[] = [];
     
-    if (scenario === 'physioTherapy') {
-      // If we're in the physio scenario, use the state machine for suggestions
-      const currentState = physioStateMachine[currentPhysioState];
+    if (currentStateMachine && currentState) {
+      // If we're using a state machine, get suggestions from it
+      const state = currentStateMachine[currentState];
       
-      if (currentState) {
-        if (currentState.systemMessage) {
+      if (state) {
+        // Add system message as info suggestion
+        if (state.systemMessage) {
           suggestions.push({
             id: Date.now(),
-            text: currentState.systemMessage,
+            text: state.systemMessage,
             type: 'info'
           });
         }
         
-        if (currentState.agent && currentState !== physioStateMachine.start) {
+        // Add agent response as suggestion
+        if (state.agent && currentState !== 'start') {
           suggestions.push({
             id: Date.now() + 1,
-            text: currentState.agent,
+            text: state.agent,
             type: 'response'
           });
         }
         
-        // Add an action suggestion if there's an action defined
-        if (currentState.action) {
+        // Add action suggestion if defined
+        if (state.action) {
           suggestions.push({
             id: Date.now() + 2,
-            text: `Aktion ausführen: ${currentState.action}`,
+            text: `Aktion ausführen: ${state.action}`,
             type: 'action'
           });
         }
         
-        // Add quick-reply suggestions if available
-        if (currentState.suggestions && currentState.suggestions.length > 0) {
-          currentState.suggestions.forEach((option, index) => {
+        // Add next state's agent response as response suggestion
+        const nextState = state.nextState && currentStateMachine[state.nextState];
+        if (nextState && nextState.agent) {
+          suggestions.push({
+            id: Date.now() + 3,
+            text: nextState.agent,
+            type: 'response'
+          });
+        }
+        
+        // Add quick reply suggestions if available
+        if (state.suggestions && state.suggestions.length > 0) {
+          state.suggestions.forEach((option, index) => {
             suggestions.push({
-              id: Date.now() + 3 + index,
+              id: Date.now() + 4 + index,
               text: option,
               type: 'response'
             });
@@ -166,17 +234,17 @@ export const useTranscript = (activeScenario: ScenarioType) => {
         }
       }
     } else {
-      // For other scenarios, use the predefined suggestions
-      suggestions = generateAiSuggestion(scenario, afterMessageId);
+      // For scenarios without state machines, use the predefined suggestions
+      suggestions = generateAiSuggestion(activeScenario, messageId);
       
       // Add some action suggestions for other scenarios too
-      if (scenario === 'bankDetails') {
+      if (activeScenario === 'bankDetails') {
         suggestions.push({
           id: Date.now() + 100,
           text: "Bankdatenformular öffnen",
           type: 'action'
         });
-      } else if (scenario === 'verification') {
+      } else if (activeScenario === 'verification') {
         suggestions.push({
           id: Date.now() + 100,
           text: "Identitätsprüfung starten",
@@ -199,7 +267,7 @@ export const useTranscript = (activeScenario: ScenarioType) => {
         setMessages(updatedMessages);
       }
     }
-  }, [currentPhysioState, messages]);
+  }, [currentState, currentStateMachine, activeScenario, messages]);
 
   // Trigger contact suggestion based on keywords in the transcript
   useEffect(() => {
@@ -237,41 +305,46 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       setMessages([...messages, newMessage]);
       setInputValue('');
       
-      // If in physio therapy scenario, progress through state machine
-      if (activeScenario === 'physioTherapy') {
-        const currentState = physioStateMachine[currentPhysioState];
+      // Process state transition with state machine if available
+      if (currentStateMachine && currentState) {
+        const currentStateData = currentStateMachine[currentState];
         
-        if (currentState && currentState.nextState) {
+        if (currentStateData && currentStateData.nextState) {
           // Move to next state
-          let nextStateName = currentState.nextState;
+          let nextStateName = currentStateData.nextState;
           
-          // Special handling for verordnung_abfragen decision point
-          if (currentPhysioState === 'verordnung_abfragen') {
-            // Check if the message contains an answer to the question
-            if (inputValue.toLowerCase().includes('ja') || 
-                inputValue.toLowerCase().includes('details')) {
-              nextStateName = 'details_verordnung';
-            } else {
-              nextStateName = 'abschluss';
+          // Special handling for decision points with multiple options
+          if (currentStateData.stateType === 'decision') {
+            // Check the message content against available options
+            if (currentStateData.suggestions) {
+              // Try to match the input with one of the suggestions
+              for (const suggestion of currentStateData.suggestions) {
+                if (inputValue.toLowerCase().includes(suggestion.toLowerCase())) {
+                  // For now we just use the standard next state
+                  // In a real application, different choices might lead to different states
+                  console.log(`Matched suggestion: ${suggestion}`);
+                  break;
+                }
+              }
             }
           }
           
-          // Randomly simulate auth failure for demo purposes (20% chance)
-          if (currentPhysioState === 'authentifizierung_plz' && Math.random() < 0.2) {
+          // Randomly simulate auth failure or other special cases
+          if (currentState === 'authentifizierung_plz' && Math.random() < 0.2) {
             nextStateName = 'authentifizierung_failed';
           }
           
           // Show toast to indicate state transition
           toast({
             title: "State changed",
-            description: `Moved from ${currentPhysioState} to ${nextStateName}`,
+            description: `Moved from ${currentState} to ${nextStateName}`,
           });
           
-          setCurrentPhysioState(nextStateName);
+          setCurrentState(nextStateName);
           
           // Simulate customer response after a short delay
           setTimeout(() => {
-            const nextState = physioStateMachine[nextStateName] as State;
+            const nextState = currentStateMachine[nextStateName];
             
             if (nextState && nextState.customer) {
               const customerResponse: Message = {
@@ -285,91 +358,97 @@ export const useTranscript = (activeScenario: ScenarioType) => {
               
               // Generate new suggestion based on the next state
               setTimeout(() => {
-                generateAiSuggestionForMessage(activeScenario, messages.length + 2);
+                generateAiSuggestionForMessage(messages.length + 2);
               }, 500);
             }
           }, 1500);
         }
       } else {
-        // Simulate customer response after a short delay (original logic)
-        if (messages.length % 2 === 0 || messages.length === 0) {
+        // Fallback for scenarios without state machines
+        setTimeout(() => {
+          let customerResponse = "";
+          
+          // Scenario-specific responses
+          if (activeScenario === 'bankDetails') {
+            const bankResponses = [
+              "Ja, ich möchte meine Bank von Deutsche Bank zu Commerzbank ändern.",
+              "Meine neue IBAN ist DE89370400440532013001.",
+              "Ja, das ist richtig. Ich habe kürzlich die Bank gewechselt.",
+              "Vielen Dank für die Aktualisierung meiner Daten."
+            ];
+            customerResponse = bankResponses[Math.min(Math.floor(messages.length / 2), bankResponses.length - 1)];
+          } else if (activeScenario === 'verification') {
+            const verificationResponses = [
+              "Ja, das stimmt. Mein Name ist Michael Schmidt.",
+              "Ich wurde am 15. März 1985 geboren.",
+              "Meine Adresse ist Hauptstraße 123, Berlin.",
+              "Die letzten vier Ziffern meines Kontos sind 4321."
+            ];
+            customerResponse = verificationResponses[Math.min(Math.floor(messages.length / 2), verificationResponses.length - 1)];
+          } else if (activeScenario === 'accountHistory') {
+            const defaultResponses = [
+              "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
+              "Ja, insbesondere die letzten drei Monate.",
+              "Ich erkenne eine Transaktion von letzter Woche nicht.",
+              "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
+              "Vielen Dank für Ihre Hilfe."
+            ];
+            customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
+          } else if (activeScenario === 'paymentReminder') {
+            const reminderResponses = [
+              "Ich habe den Betrag von 250€ bereits am 15. April überwiesen.",
+              "Die Überweisung erfolgte von meinem Girokonto bei der Sparkasse.",
+              "Die Referenznummer auf der Rechnung war KD-789456.",
+              "Können Sie bitte prüfen, ob die Zahlung eingegangen ist?",
+              "Alles klar, ich warte auf Ihre Rückmeldung. Vielen Dank."
+            ];
+            customerResponse = reminderResponses[Math.min(Math.floor(messages.length / 2), reminderResponses.length - 1)];
+          } else if (activeScenario === 'insurancePackage') {
+            const insuranceResponses = [
+              "Ich war bisher in der studentischen Krankenversicherung, aber jetzt beginne ich meinen ersten Job.",
+              "Mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
+              "Ich interessiere mich für einen umfassenden Schutz mit Zusatzleistungen für Zahnbehandlung und Brille.",
+              "Gibt es spezielle Angebote für Berufseinsteiger?",
+              "Diese Option klingt interessant. Können Sie mir weitere Details zusenden?"
+            ];
+            customerResponse = insuranceResponses[Math.min(Math.floor(messages.length / 2), insuranceResponses.length - 1)];
+          } else {
+            // Default responses
+            const defaultResponses = [
+              "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
+              "Ja, insbesondere die letzten drei Monate.",
+              "Ich erkenne eine Transaktion von letzter Woche nicht.",
+              "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
+              "Vielen Dank für Ihre Hilfe."
+            ];
+            customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
+          }
+          
+          const customerMessage: Message = {
+            id: messages.length + 2,
+            text: customerResponse,
+            sender: 'customer',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          
+          setMessages(prev => [...prev, customerMessage]);
+          
+          // Generate new AI suggestion based on the conversation
           setTimeout(() => {
-            let customerResponse = "";
-            
-            // Scenario-specific responses
-            if (activeScenario === 'bankDetails') {
-              const bankResponses = [
-                "Ja, ich möchte meine Bank von Deutsche Bank zu Commerzbank ändern.",
-                "Meine neue IBAN ist DE89370400440532013001.",
-                "Ja, das ist richtig. Ich habe kürzlich die Bank gewechselt.",
-                "Vielen Dank für die Aktualisierung meiner Daten."
-              ];
-              customerResponse = bankResponses[Math.min(Math.floor(messages.length / 2), bankResponses.length - 1)];
-            } else if (activeScenario === 'verification') {
-              const verificationResponses = [
-                "Ja, das stimmt. Mein Name ist Michael Schmidt.",
-                "Ich wurde am 15. März 1985 geboren.",
-                "Meine Adresse ist Hauptstraße 123, Berlin.",
-                "Die letzten vier Ziffern meines Kontos sind 4321."
-              ];
-              customerResponse = verificationResponses[Math.min(Math.floor(messages.length / 2), verificationResponses.length - 1)];
-            } else if (activeScenario === 'accountHistory') {
-              const defaultResponses = [
-                "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
-                "Ja, insbesondere die letzten drei Monate.",
-                "Ich erkenne eine Transaktion von letzter Woche nicht.",
-                "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
-                "Vielen Dank für Ihre Hilfe."
-              ];
-              customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
-            } else if (activeScenario === 'paymentReminder') {
-              const reminderResponses = [
-                "Ich habe den Betrag von 250€ bereits am 15. April überwiesen.",
-                "Die Überweisung erfolgte von meinem Girokonto bei der Sparkasse.",
-                "Die Referenznummer auf der Rechnung war KD-789456.",
-                "Können Sie bitte prüfen, ob die Zahlung eingegangen ist?",
-                "Alles klar, ich warte auf Ihre Rückmeldung. Vielen Dank."
-              ];
-              customerResponse = reminderResponses[Math.min(Math.floor(messages.length / 2), reminderResponses.length - 1)];
-            } else if (activeScenario === 'insurancePackage') {
-              const insuranceResponses = [
-                "Ich war bisher in der studentischen Krankenversicherung, aber jetzt beginne ich meinen ersten Job.",
-                "Mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
-                "Ich interessiere mich für einen umfassenden Schutz mit Zusatzleistungen für Zahnbehandlung und Brille.",
-                "Gibt es spezielle Angebote für Berufseinsteiger?",
-                "Diese Option klingt interessant. Können Sie mir weitere Details zusenden?"
-              ];
-              customerResponse = insuranceResponses[Math.min(Math.floor(messages.length / 2), insuranceResponses.length - 1)];
-            } else {
-              // Default responses
-              const defaultResponses = [
-                "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
-                "Ja, insbesondere die letzten drei Monate.",
-                "Ich erkenne eine Transaktion von letzter Woche nicht.",
-                "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
-                "Vielen Dank für Ihre Hilfe."
-              ];
-              customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
-            }
-            
-            const customerMessage: Message = {
-              id: messages.length + 2,
-              text: customerResponse,
-              sender: 'customer',
-              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
-            
-            setMessages(prev => [...prev, customerMessage]);
-            
-            // Generate new AI suggestion based on the conversation
-            setTimeout(() => {
-              generateAiSuggestionForMessage(activeScenario, messages.length + 2);
-            }, 500);
-          }, 1500);
-        }
+            generateAiSuggestionForMessage(messages.length + 2);
+          }, 500);
+        }, 1500);
       }
     }
-  }, [inputValue, messages, currentPhysioState, activeScenario, generateAiSuggestionForMessage, toast]);
+  }, [
+    inputValue, 
+    messages, 
+    currentState, 
+    currentStateMachine, 
+    activeScenario, 
+    generateAiSuggestionForMessage, 
+    toast
+  ]);
   
   const handleAcceptSuggestion = useCallback((suggestionId: number, parentMessageId: number) => {
     // Find the suggestion
@@ -401,7 +480,7 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       setInputValue(suggestion.text);
     }
     
-    // If it's an action suggestion, show a toast
+    // If it's an action suggestion, show a toast and perform the action
     if (suggestion.type === 'action') {
       toast({
         title: "Action triggered",
@@ -415,6 +494,38 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       } else if (suggestion.text.includes("Identitätsprüfung")) {
         // Simulate starting identity verification
         window.dispatchEvent(new CustomEvent('start-identity-verification'));
+      } else if (suggestion.text.includes("prüfe")) {
+        // Simulate looking up data
+        toast({
+          title: "System Action",
+          description: "Performing data lookup...",
+        });
+        setTimeout(() => {
+          toast({
+            title: "Data Verification Complete",
+            description: "Customer data verified successfully.",
+          });
+        }, 1500);
+      }
+      
+      // Advance state automatically after action is performed
+      if (currentStateMachine && currentState) {
+        const currentStateData = currentStateMachine[currentState];
+        if (currentStateData && currentStateData.nextState) {
+          const nextStateName = currentStateData.nextState;
+          setTimeout(() => {
+            toast({
+              title: "State advanced automatically",
+              description: `Action completed. Moving from ${currentState} to ${nextStateName}`,
+            });
+            setCurrentState(nextStateName);
+            
+            // Generate new suggestions for the next state
+            setTimeout(() => {
+              generateAiSuggestionForMessage(parentMessageId);
+            }, 500);
+          }, 1000);
+        }
       }
     }
     
@@ -422,7 +533,7 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       title: "Suggestion accepted",
       description: "The AI suggestion has been applied.",
     });
-  }, [messages, toast]);
+  }, [messages, currentStateMachine, currentState, generateAiSuggestionForMessage, toast]);
   
   const handleRejectSuggestion = useCallback((suggestionId: number, parentMessageId: number) => {
     // Mark the suggestion as rejected
@@ -441,7 +552,12 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     });
     
     setMessages(updatedMessages);
-  }, [messages]);
+    
+    toast({
+      title: "Suggestion rejected",
+      description: "The AI suggestion has been dismissed.",
+    });
+  }, [messages, toast]);
   
   const toggleRecording = useCallback(() => {
     setIsRecording(!isRecording);
@@ -457,16 +573,28 @@ export const useTranscript = (activeScenario: ScenarioType) => {
         description: "Call from +49 123 456 7890",
       });
       
-      // Reset physio state if applicable
-      if (activeScenario === 'physioTherapy') {
-        setCurrentPhysioState('start');
+      // Reset state if we have a state machine for the current scenario
+      if (activeScenario && stateMachines[activeScenario as string]) {
+        const initialState = scenarioInitialStates[activeScenario as string] || 'start';
+        setCurrentState(initialState);
+        setCurrentStateMachine(stateMachines[activeScenario as string]);
       }
       
       // Add initial agent greeting after a brief delay
       setTimeout(() => {
+        let initialAgentMessage = "Hallo, vielen Dank für Ihren Anruf bei unserem Kundenservice. Wie kann ich Ihnen heute helfen?";
+        
+        // If we have a state machine, use its initial agent message
+        if (currentStateMachine && currentState) {
+          const stateData = currentStateMachine[currentState];
+          if (stateData && stateData.agent) {
+            initialAgentMessage = stateData.agent;
+          }
+        }
+        
         const initialMessage: Message = {
           id: 1,
-          text: "Hallo, vielen Dank für Ihren Anruf bei unserem Kundenservice. Wie kann ich Ihnen heute helfen?",
+          text: initialAgentMessage,
           sender: 'agent',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -479,22 +607,24 @@ export const useTranscript = (activeScenario: ScenarioType) => {
       setElapsedTime('00:00');
       setAcceptedCallId(null);
       setMessages([]);
-      setCurrentPhysioState('start');
+      setCurrentState('start');
       toast({
         title: "Call Ended",
         description: `Call duration: ${elapsedTime}`,
       });
     }
-  }, [callActive, elapsedTime, activeScenario, toast]);
+  }, [callActive, elapsedTime, activeScenario, currentStateMachine, currentState, toast]);
 
   const handleAcceptCall = useCallback((callId: number) => {
     setAcceptedCallId(callId);
     setCallActive(true);
     setCallStartTime(new Date());
     
-    // Reset physio state if applicable
-    if (activeScenario === 'physioTherapy') {
-      setCurrentPhysioState('start');
+    // Reset state if we have a state machine for the current scenario
+    if (activeScenario && stateMachines[activeScenario as string]) {
+      const initialState = scenarioInitialStates[activeScenario as string] || 'start';
+      setCurrentState(initialState);
+      setCurrentStateMachine(stateMachines[activeScenario as string]);
     }
     
     toast({
@@ -518,6 +648,6 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     toggleRecording,
     handleCall,
     handleAcceptCall,
-    currentPhysioState
+    currentState
   };
 };
