@@ -23,6 +23,7 @@ const StateMachineSelector = ({
   onSelectStateMachine, 
   disabled = false 
 }: StateMachineSelectorProps) => {
+  // Get all available state machines from the stateMachines object
   const availableStateMachines = Object.keys(stateMachines) as ScenarioType[];
 
   return (

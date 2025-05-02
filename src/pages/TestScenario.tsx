@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -56,7 +55,7 @@ const TestScenario = () => {
     invalid: number;
   }>({ validated: 0, pending: 0, invalid: 0 });
   const [verificationBlocking, setVerificationBlocking] = useState(false);
-  const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>('physioCoverage');
+  const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("bankDetails");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [stateChanged, setStateChanged] = useState(false);
