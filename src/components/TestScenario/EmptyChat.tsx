@@ -11,15 +11,16 @@ const EmptyChat: React.FC<EmptyChatProps> = ({ onStartCall }) => {
   return (
     <div className="text-center p-6 text-muted-foreground">
       <MessageSquare className="mx-auto h-12 w-12 opacity-20 mb-3" />
-      <p>Select a scenario and start a call to begin the conversation</p>
+      <p className="mb-2">Welcome to the Call Center Agent Simulator</p>
+      <p className="mb-4 text-sm opacity-70">Select a scenario and start a call to begin handling customer inquiries</p>
       <Button 
         onClick={onStartCall} 
         variant="default"
         size="lg"
-        className="mt-5"
+        className="mt-2"
       >
         <PhoneCall size={16} className="mr-2" />
-        Start Test Call
+        Answer Incoming Call
       </Button>
     </div>
   );

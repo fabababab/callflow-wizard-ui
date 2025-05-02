@@ -14,6 +14,8 @@ import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls, S
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import CallControl from './TestScenario/CallControl';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // Define the PreCall type to match what PreCallInfo component expects
 export type PreCall = {
@@ -114,7 +116,9 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     handleAcceptCall,
     currentState,
     stateData,
-    lastStateChange
+    lastStateChange,
+    handleHangUpCall,
+    resetConversation
   } = useTranscript(activeScenario);
 
   // Check if this scenario has a state machine
@@ -192,50 +196,56 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
                 </TooltipProvider>
               )}
               
-              Call transcript and suggestions
+              Agent call transcript
             </CardDescription>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {activeScenario && (
-            <Button
-              size="icon"
-              variant="outline"
-              className="h-8 w-8"
-              title="View State Machine JSON"
-              onClick={handleViewJson}
-              disabled={isLoadingJson}
-            >
-              <FileJson size={16} />
-            </Button>
+          {/* Timer display for active calls */}
+          {callActive && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Clock size={14} className="text-red-500" />
+              <span>{elapsedTime}</span>
+            </Badge>
           )}
-          {callActive ? (
-            <>
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Clock size={14} className="text-red-500" />
-                <span>{elapsedTime}</span>
-              </Badge>
-              <Button 
-                size="icon" 
-                variant="destructive" 
-                onClick={handleCall}
-                title="End Call"
-                className="h-8 w-8"
-              >
-                <PhoneOff size={16} />
+          
+          {/* JSON viewer button */}
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8"
+            title="View State Machine JSON"
+            onClick={handleViewJson}
+            disabled={isLoadingJson}
+          >
+            <FileJson size={16} />
+          </Button>
+          
+          {/* Call control buttons */}
+          <CallControl 
+            callActive={callActive}
+            elapsedTime={elapsedTime}
+            onStartCall={handleCall}
+            onEndCall={handleHangUpCall}
+            onResetScenario={resetConversation}
+          />
+          
+          {/* Menu with additional options */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="h-8 w-8">
+                <MessageSquare size={16} />
               </Button>
-            </>
-          ) : (
-            <Button 
-              size="sm" 
-              variant="default" 
-              onClick={handleCall}
-              className="h-8"
-            >
-              <PhoneCall size={16} className="mr-1" />
-              Start Call
-            </Button>
-          )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-white">
+              <DropdownMenuItem onClick={() => setShowStateMachineInfo(!showStateMachineInfo)}>
+                {showStateMachineInfo ? "Hide" : "Show"} State Info
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={resetConversation}>
+                Reset Conversation
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
       
@@ -303,13 +313,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
             </div>
           )}
           
-          {/* Debug information during call */}
-          {callActive && (process.env.NODE_ENV === 'development' || true) && (
-            <div className="text-xs p-2 bg-gray-50 border border-gray-100 rounded mb-2">
-              <p><strong>Current state:</strong> {currentState}</p>
-              {stateData && (
-                <p><strong>Has response options:</strong> {stateData.meta?.suggestions?.length > 0 ? 'Yes' : 'No'}</p>
-              )}
+          {/* Agent guidance - new section */}
+          {callActive && (
+            <div className="text-xs p-2 mb-2 bg-blue-50 border border-blue-100 rounded">
+              <p className="font-medium text-blue-800">Agent Instructions:</p>
+              <p className="text-blue-700">You're the call center agent. Review customer messages and select appropriate responses.</p>
             </div>
           )}
           
@@ -345,7 +353,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           <div className="p-4 border-t">
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare size={16} className="text-primary" />
-              <span className="text-sm font-medium">Available Responses:</span>
+              <span className="text-sm font-medium">Available Agent Responses:</span>
             </div>
             <div className="grid gap-2">
               {stateData.meta.suggestions.map((option, index) => (
@@ -373,7 +381,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
                 <Mic size={16} />
               </Button>
               <Input 
-                placeholder="Type your response here..." 
+                placeholder="Type your agent response here..." 
                 value={inputValue} 
                 onChange={(e) => setInputValue(e.target.value)} 
                 className="flex-1"
