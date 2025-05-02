@@ -67,6 +67,11 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
           <Badge variant={field.status === 'pending' ? 'outline' : field.status === 'valid' ? 'default' : 'destructive'} className="text-xs">
             {field.status.toUpperCase()}
           </Badge>
+          {field.requiresVerification && (
+            <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+              Verification Required
+            </Badge>
+          )}
         </div>
         <StatusIcon />
       </div>

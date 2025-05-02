@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -30,6 +29,7 @@ type Message = {
     value: string;
     status: ValidationStatus;
     notes?: string;
+    requiresVerification?: boolean;
   }>;
   numberInput?: {
     userValue: string | number;
@@ -185,12 +185,17 @@ const TestScenario = () => {
       setSystemValue('');
     }
     
+    // Check if any sensitive data requires verification
+    const hasVerificationRequired = sensitiveData.some(data => data.requiresVerification);
+    
     // If sensitive data is found, show a toast notification
     if (sensitiveData.length > 0) {
       toast({
         title: "Sensitive Data Detected",
-        description: `${sensitiveData.length} sensitive data fields found in message`,
-        variant: "default"
+        description: hasVerificationRequired 
+          ? `${sensitiveData.length} sensitive data fields found that require verification` 
+          : `${sensitiveData.length} sensitive data fields found in message`,
+        variant: hasVerificationRequired ? "destructive" : "default"
       });
       
       // Update sensitive data stats
@@ -198,6 +203,11 @@ const TestScenario = () => {
         ...prev,
         pending: prev.pending + sensitiveData.length
       }));
+      
+      // Block progress if verification is required
+      if (hasVerificationRequired) {
+        setVerificationBlocking(true);
+      }
     }
     
     setMessages(prev => [
@@ -238,6 +248,12 @@ const TestScenario = () => {
               });
             }
             
+            // If this is a required verification field being marked as valid or invalid
+            // check if we can unblock the conversation
+            if (field.requiresVerification && (status === 'valid' || status === 'invalid')) {
+              checkIfVerificationComplete();
+            }
+            
             return { ...field, status, notes };
           }
           return field;
@@ -254,6 +270,28 @@ const TestScenario = () => {
       description: `Customer data marked as ${status}`,
       variant: status === 'valid' ? "default" : "destructive"
     });
+  };
+  
+  // Check if all required verifications are completed
+  const checkIfVerificationComplete = () => {
+    // Check all messages with sensitive data that require verification
+    const allVerified = messages.every(message => {
+      if (!message.sensitiveData) return true;
+      
+      // Check if any sensitive data field requires verification but is still pending
+      return !message.sensitiveData.some(field => 
+        field.requiresVerification && field.status === 'pending'
+      );
+    });
+    
+    if (allVerified) {
+      setVerificationBlocking(false);
+      toast({
+        title: "All Required Verifications Completed",
+        description: "The conversation can now continue",
+        variant: "default"
+      });
+    }
   };
 
   // Handle verifying system check

@@ -1,4 +1,3 @@
-
 import { nanoid } from 'nanoid';
 
 // Define sensitive data validation types
@@ -13,6 +12,7 @@ export type SensitiveField = {
   pattern?: string;
   status: ValidationStatus;
   notes?: string;
+  requiresVerification?: boolean;
 };
 
 // Define call data types
@@ -89,32 +89,37 @@ export const preCalls: PreCallInfo[] = [
   }
 ];
 
-// Sample sensitive data patterns
+// Sample sensitive data patterns with verification requirements
 export const sensitiveDataPatterns = {
   insurance_number: {
     regex: /\b[A-Z]{2}[0-9]{8}\b/,
     description: "Insurance number (format: XX12345678)",
-    exampleValue: "DE12345678"
+    exampleValue: "DE12345678",
+    requiresVerification: true
   },
   customer_id: {
     regex: /\b[0-9]{9}\b/,
     description: "Customer ID (9 digits)",
-    exampleValue: "987654321"
+    exampleValue: "987654321",
+    requiresVerification: false
   },
   bank_account: {
     regex: /\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]{0,16})?\b/i,
     description: "IBAN (International Bank Account Number)",
-    exampleValue: "CH9300762011623852957"
+    exampleValue: "CH9300762011623852957",
+    requiresVerification: false
   },
   date_of_birth: {
     regex: /\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d\d\b/,
     description: "Date of birth (DD.MM.YYYY)",
-    exampleValue: "15.03.1985"
+    exampleValue: "15.03.1985",
+    requiresVerification: true
   },
   address: {
     regex: /\b[A-Za-zäöüÄÖÜß\s\d\.\-]+\s\d+,\s\d{4,5}\s[A-Za-zäöüÄÖÜß\s\.\-]+\b/,
     description: "Address (format: Street Number, ZIP City)",
-    exampleValue: "Musterstrasse 123, 8000 Zürich"
+    exampleValue: "Musterstrasse 123, 8000 Zürich",
+    requiresVerification: true
   }
 };
 
@@ -132,7 +137,8 @@ export const detectSensitiveData = (text: string): SensitiveField[] => {
           type: type as SensitiveDataType,
           value: match,
           pattern: pattern.regex.toString(),
-          status: 'pending'
+          status: 'pending',
+          requiresVerification: pattern.requiresVerification
         });
       });
     }
