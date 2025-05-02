@@ -138,21 +138,18 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
             {/* Display response options for messages */}
             {message.responseOptions && message.responseOptions.length > 0 && (
-              (isAgentMode && message.sender === 'agent' && !message.text || 
-               !isAgentMode && message.sender === 'agent') && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {message.responseOptions.map((option) => (
-                    <Button 
-                      key={option} 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onSelectResponse(option)}
-                    >
-                      {option}
-                    </Button>
-                  ))}
-                </div>
-              )
+              <div className="mt-3 flex flex-wrap gap-2">
+                {message.responseOptions.map((option) => (
+                  <Button 
+                    key={option} 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onSelectResponse(option)}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </div>
             )}
           </div>
         ))

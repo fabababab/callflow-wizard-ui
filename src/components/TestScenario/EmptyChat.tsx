@@ -15,8 +15,8 @@ const EmptyChat: React.FC<EmptyChatProps> = ({ onStartCall }) => {
       <Button 
         onClick={onStartCall} 
         variant="default"
-        size="sm"
-        className="mt-3"
+        size="lg"
+        className="mt-5"
       >
         <PhoneCall size={16} className="mr-2" />
         Start Test Call

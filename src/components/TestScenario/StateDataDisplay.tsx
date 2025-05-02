@@ -16,9 +16,9 @@ const StateDataDisplay: React.FC<StateDataDisplayProps> = ({ currentState, state
       <div className="bg-muted p-3 rounded-lg">
         <h3 className="font-medium">Available Options</h3>
         <div className="mt-2 space-y-1">
-          {stateData?.meta?.suggestions ? (
-            stateData.meta.suggestions.map((suggestion: string) => (
-              <p key={suggestion} className="text-sm">{suggestion}</p>
+          {stateData?.meta?.suggestions?.length > 0 ? (
+            stateData.meta.suggestions.map((suggestion: string, index: number) => (
+              <p key={index} className="text-sm">{suggestion}</p>
             ))
           ) : (
             <p className="text-sm text-muted-foreground">No options available</p>
