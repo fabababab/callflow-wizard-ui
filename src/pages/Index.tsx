@@ -10,7 +10,7 @@ import CallEvaluation from '@/components/CallEvaluation';
 import BankDetailsForm from '@/components/BankDetailsForm';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ScenarioType } from '@/components/Header';
+import { ScenarioType } from '@/components/ScenarioSelector';
 import { ChevronDown, ChevronUp, ChevronRight, ChevronLeft, RefreshCw } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -50,9 +50,16 @@ const Index = () => {
 
   // Function to initialize or reset available scenarios
   const initializeScenarios = () => {
-    const allScenarios: ScenarioType[] = ['verification', 'bankDetails', 'accountHistory'];
+    const allScenarios: ScenarioType[] = [
+      'verification', 
+      'bankDetails', 
+      'accountHistory', 
+      'physioTherapy', 
+      'paymentReminder', 
+      'insurancePackage'
+    ];
     
-    // Randomly select 3 scenarios (or fewer if there aren't 3 available)
+    // Randomly select 3 scenarios (or fewer if there aren't 6 available)
     const shuffled = [...allScenarios].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
     
@@ -68,9 +75,19 @@ const Index = () => {
   const selectScenario = (scenario: ScenarioType) => {
     setActiveScenario(scenario);
     setShowScenarioDialog(false);
+    
+    const scenarioNames = {
+      'verification': 'Identity Verification',
+      'bankDetails': 'Change Bank Details',
+      'accountHistory': 'Account History Review',
+      'physioTherapy': 'Leistungsabdeckung Physiobehandlung',
+      'paymentReminder': 'Mahnung trotz Zahlung',
+      'insurancePackage': 'Neues Versicherungspacket (Studiumsabschluss)'
+    };
+    
     toast({
       title: "Scenario Selected",
-      description: `You are now working on the ${scenario} scenario.`,
+      description: `You are now working on the ${scenarioNames[scenario as keyof typeof scenarioNames]} scenario.`,
     });
   };
 
@@ -221,6 +238,9 @@ const Index = () => {
                 {scenario === 'verification' && 'Customer Identity Verification'}
                 {scenario === 'bankDetails' && 'Update Bank Account Details'}
                 {scenario === 'accountHistory' && 'Review Account History'}
+                {scenario === 'physioTherapy' && 'Leistungsabdeckung Physiobehandlung'}
+                {scenario === 'paymentReminder' && 'Mahnung trotz Zahlung'}
+                {scenario === 'insurancePackage' && 'Neues Versicherungspacket (Studiumsabschluss)'}
               </Button>
             ))}
           </div>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Settings, User, CreditCard, Shield, FileText, Phone, X } from 'lucide-react';
+import { Bell, Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -22,7 +22,14 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 
-export type ScenarioType = 'verification' | 'bankDetails' | 'accountHistory' | null;
+export type ScenarioType = 
+  | 'verification' 
+  | 'bankDetails' 
+  | 'accountHistory'
+  | 'physioTherapy'
+  | 'paymentReminder'
+  | 'insurancePackage'
+  | null;
 
 const Header = () => {
   const navigate = useNavigate();
@@ -35,7 +42,10 @@ const Header = () => {
     const scenarioNames = {
       'verification': 'Identity Verification',
       'bankDetails': 'Change Bank Details',
-      'accountHistory': 'Account History Review'
+      'accountHistory': 'Account History Review',
+      'physioTherapy': 'Leistungsabdeckung Physiobehandlung',
+      'paymentReminder': 'Mahnung trotz Zahlung',
+      'insurancePackage': 'Neues Versicherungspacket (Studiumsabschluss)'
     };
     
     toast({
@@ -43,7 +53,7 @@ const Header = () => {
       description: `${scenarioNames[selectedScenario as keyof typeof scenarioNames]} scenario activated`,
     });
     
-    navigate('/');
+    navigate('/', { state: { scenario: selectedScenario } });
   };
 
   return (
@@ -70,7 +80,7 @@ const Header = () => {
                 Select a scenario to simulate a customer call.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-3 gap-3 py-4">
+            <div className="grid grid-cols-2 gap-3 py-4">
               <Button 
                 variant={scenario === 'verification' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
@@ -96,6 +106,33 @@ const Header = () => {
               >
                 <FileText className="h-8 w-8 mb-2" />
                 <span className="text-xs text-center">Account History</span>
+              </Button>
+
+              <Button 
+                variant={scenario === 'physioTherapy' ? 'default' : 'outline'} 
+                className="flex flex-col items-center justify-center h-24 p-2"
+                onClick={() => handleSelectScenario('physioTherapy')}
+              >
+                <Calendar className="h-8 w-8 mb-2" />
+                <span className="text-xs text-center">Leistungsabdeckung Physiobehandlung</span>
+              </Button>
+              
+              <Button 
+                variant={scenario === 'paymentReminder' ? 'default' : 'outline'} 
+                className="flex flex-col items-center justify-center h-24 p-2"
+                onClick={() => handleSelectScenario('paymentReminder')}
+              >
+                <AlertCircle className="h-8 w-8 mb-2" />
+                <span className="text-xs text-center">Mahnung trotz Zahlung</span>
+              </Button>
+              
+              <Button 
+                variant={scenario === 'insurancePackage' ? 'default' : 'outline'} 
+                className="flex flex-col items-center justify-center h-24 p-2"
+                onClick={() => handleSelectScenario('insurancePackage')}
+              >
+                <Phone className="h-8 w-8 mb-2" />
+                <span className="text-xs text-center">Neues Versicherungspacket</span>
               </Button>
             </div>
             <DialogClose asChild>

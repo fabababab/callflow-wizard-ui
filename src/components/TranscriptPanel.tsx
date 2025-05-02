@@ -153,7 +153,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setTimeout(() => {
         const initialMessage: Message = {
           id: 1,
-          text: "Hello, thank you for calling customer service. How can I help you today?",
+          text: "Hallo, vielen Dank für Ihren Anruf bei unserem Kundenservice. Wie kann ich Ihnen heute helfen?",
           sender: 'agent',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -162,19 +162,29 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         // Add scenario-specific customer response
         setTimeout(() => {
           let customerResponse = "";
+          let customerName = "Michael Schmidt";
           
           switch (activeScenario) {
             case 'verification':
-              customerResponse = "Hi, this is Michael Schmidt. I need to verify my account details.";
+              customerResponse = "Hallo, hier spricht Michael Schmidt. Ich muss meine Kontodaten verifizieren.";
               break;
             case 'bankDetails':
-              customerResponse = "Hello, I need to update my bank details for my account.";
+              customerResponse = "Hallo, ich möchte meine Bankdaten für mein Konto aktualisieren.";
               break;
             case 'accountHistory':
-              customerResponse = "Hello, I'd like to check my recent account activity.";
+              customerResponse = "Hallo, ich möchte meine letzten Kontoaktivitäten überprüfen.";
+              break;
+            case 'physioTherapy':
+              customerResponse = "Guten Tag, ich habe eine Frage zur Kostenübernahme für meine Physiotherapie. Werden die Kosten von meiner Versicherung übernommen?";
+              break;
+            case 'paymentReminder':
+              customerResponse = "Hallo, ich habe eine Mahnung erhalten, obwohl ich den Betrag bereits überwiesen habe. Das verstehe ich nicht.";
+              break;
+            case 'insurancePackage':
+              customerResponse = "Guten Tag, ich habe gerade mein Studium abgeschlossen und brauche ein neues Versicherungspaket für Berufstätige.";
               break;
             default:
-              customerResponse = "Hello, I have some questions about my account.";
+              customerResponse = "Hallo, ich habe einige Fragen zu meinem Konto.";
           }
           
           const customerMessage: Message = {
@@ -234,28 +244,55 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           // Scenario-specific responses
           if (activeScenario === 'bankDetails') {
             const bankResponses = [
-              "Yes, I'd like to change my bank from Deutsche Bank to Commerzbank.",
-              "My new IBAN is DE89370400440532013001.",
-              "Yes, that's correct. I recently switched banks.",
-              "Thank you for updating my information."
+              "Ja, ich möchte meine Bank von Deutsche Bank zu Commerzbank ändern.",
+              "Meine neue IBAN ist DE89370400440532013001.",
+              "Ja, das ist richtig. Ich habe kürzlich die Bank gewechselt.",
+              "Vielen Dank für die Aktualisierung meiner Daten."
             ];
             customerResponse = bankResponses[Math.min(Math.floor(messages.length / 2), bankResponses.length - 1)];
           } else if (activeScenario === 'verification') {
             const verificationResponses = [
-              "Yes, that's right. My name is Michael Schmidt.",
-              "I was born on March 15, 1985.",
-              "My address is Hauptstrasse 123, Berlin.",
-              "The last four digits of my account are 4321."
+              "Ja, das stimmt. Mein Name ist Michael Schmidt.",
+              "Ich wurde am 15. März 1985 geboren.",
+              "Meine Adresse ist Hauptstraße 123, Berlin.",
+              "Die letzten vier Ziffern meines Kontos sind 4321."
             ];
             customerResponse = verificationResponses[Math.min(Math.floor(messages.length / 2), verificationResponses.length - 1)];
+          } else if (activeScenario === 'physioTherapy') {
+            const physioResponses = [
+              "Mein Arzt hat mir 10 Sitzungen Physiotherapie verschrieben wegen Rückenschmerzen.",
+              "Ja, ich habe die ärztliche Überweisung hier vorliegen.",
+              "Die Behandlung kostet 45€ pro Sitzung.",
+              "Verstehe ich das richtig, dass ich 10% der Kosten selbst tragen muss?",
+              "Vielen Dank für die Information."
+            ];
+            customerResponse = physioResponses[Math.min(Math.floor(messages.length / 2), physioResponses.length - 1)];
+          } else if (activeScenario === 'paymentReminder') {
+            const reminderResponses = [
+              "Ich habe den Betrag von 250€ bereits am 15. April überwiesen.",
+              "Die Überweisung erfolgte von meinem Girokonto bei der Sparkasse.",
+              "Die Referenznummer auf der Rechnung war KD-789456.",
+              "Können Sie bitte prüfen, ob die Zahlung eingegangen ist?",
+              "Alles klar, ich warte auf Ihre Rückmeldung. Vielen Dank."
+            ];
+            customerResponse = reminderResponses[Math.min(Math.floor(messages.length / 2), reminderResponses.length - 1)];
+          } else if (activeScenario === 'insurancePackage') {
+            const insuranceResponses = [
+              "Ich war bisher in der studentischen Krankenversicherung, aber jetzt beginne ich meinen ersten Job.",
+              "Mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
+              "Ich interessiere mich für einen umfassenden Schutz mit Zusatzleistungen für Zahnbehandlung und Brille.",
+              "Gibt es spezielle Angebote für Berufseinsteiger?",
+              "Diese Option klingt interessant. Können Sie mir weitere Details zusenden?"
+            ];
+            customerResponse = insuranceResponses[Math.min(Math.floor(messages.length / 2), insuranceResponses.length - 1)];
           } else {
             // Default or account history responses
             const defaultResponses = [
-              "I'd like to know about my recent transactions.",
-              "Yes, specifically the last three months.",
-              "I don't recognize a transaction from last week.",
-              "It was a payment to Online Shop GmbH for €79.99.",
-              "Thank you for your help."
+              "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
+              "Ja, insbesondere die letzten drei Monate.",
+              "Ich erkenne eine Transaktion von letzter Woche nicht.",
+              "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
+              "Vielen Dank für Ihre Hilfe."
             ];
             customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
           }
@@ -291,7 +328,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setTimeout(() => {
         const initialMessage: Message = {
           id: 1,
-          text: "Hello, thank you for calling customer service. How can I help you today?",
+          text: "Hallo, vielen Dank für Ihren Anruf bei unserem Kundenservice. Wie kann ich Ihnen heute helfen?",
           sender: 'agent',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -328,7 +365,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     setTimeout(() => {
       const initialMessage: Message = {
         id: 1,
-        text: `Hello ${call?.customerName}, thank you for calling customer service. I understand you need help with ${call?.expertise}. How can I assist you today?`,
+        text: `Hallo ${call?.customerName}, vielen Dank für Ihren Anruf bei unserem Kundenservice. I understand you need help with ${call?.expertise}. Wie kann ich Ihnen heute helfen?`,
         sender: 'agent',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -475,7 +512,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       <div className="flex-1 overflow-y-auto mb-4">
         <div className="flex flex-col">
           <div className="px-4 py-2 mb-4 bg-green-100 text-green-700 text-sm font-medium rounded-lg inline-block">
-            You are now connected with {incomingCalls.find(call => call.id === acceptedCallId)?.customerName}
+            Sie sind jetzt mit {incomingCalls.find(call => call.id === acceptedCallId)?.customerName} verbunden
           </div>
           
           {messages.map((message) => (

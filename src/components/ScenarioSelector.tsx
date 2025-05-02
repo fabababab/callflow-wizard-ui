@@ -2,10 +2,17 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Shield, FileText, Phone } from 'lucide-react';
+import { CreditCard, Shield, FileText, Phone, Calendar, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-export type ScenarioType = 'verification' | 'bankDetails' | 'accountHistory' | null;
+export type ScenarioType = 
+  | 'verification' 
+  | 'bankDetails' 
+  | 'accountHistory' 
+  | 'physioTherapy'
+  | 'paymentReminder'
+  | 'insurancePackage'
+  | null;
 
 interface ScenarioSelectorProps {
   onSelectScenario: (scenario: ScenarioType) => void;
@@ -24,7 +31,10 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
     const scenarioNames = {
       'verification': 'Identity Verification',
       'bankDetails': 'Change Bank Details',
-      'accountHistory': 'Account History Review'
+      'accountHistory': 'Account History Review',
+      'physioTherapy': 'Leistungsabdeckung Physiobehandlung',
+      'paymentReminder': 'Mahnung trotz Zahlung',
+      'insurancePackage': 'Neues Versicherungspacket (Studiumsabschluss)'
     };
     
     toast({
@@ -65,6 +75,33 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
           >
             <FileText className="h-6 w-6 mb-1" />
             <span className="text-xs text-center">Account History</span>
+          </Button>
+
+          <Button 
+            variant={activeScenario === 'physioTherapy' ? 'default' : 'outline'} 
+            className="flex flex-col items-center justify-center h-20 p-2"
+            onClick={() => handleSelectScenario('physioTherapy')}
+          >
+            <Calendar className="h-6 w-6 mb-1" />
+            <span className="text-xs text-center">Physiobehandlung</span>
+          </Button>
+          
+          <Button 
+            variant={activeScenario === 'paymentReminder' ? 'default' : 'outline'} 
+            className="flex flex-col items-center justify-center h-20 p-2"
+            onClick={() => handleSelectScenario('paymentReminder')}
+          >
+            <AlertCircle className="h-6 w-6 mb-1" />
+            <span className="text-xs text-center">Mahnung</span>
+          </Button>
+          
+          <Button 
+            variant={activeScenario === 'insurancePackage' ? 'default' : 'outline'} 
+            className="flex flex-col items-center justify-center h-20 p-2"
+            onClick={() => handleSelectScenario('insurancePackage')}
+          >
+            <Phone className="h-6 w-6 mb-1" />
+            <span className="text-xs text-center">Versicherungspacket</span>
           </Button>
         </div>
       </CardContent>
