@@ -171,7 +171,7 @@ export const bankDetailsStateMachine: StateMachine = {
     systemMessage: "IBAN-Format ist gültig. Vergleichen Sie mit den bisherigen Bankdaten."
   },
   confirm_changes: {
-    agent: "Danke für die Informationen. Ich habe die Änderung vorbereitet. Ihre Bankverbindung wird von Deutsche Bank zu Commerzbank mit der IBAN DE89370400440532013000 geändert. Möchten Sie diese Änderung bestätigen?",
+    agent: "Danke für die Informationen. Ich habe die Änderung vorbereitet. Ihre Bankverbindung wird von Deutsche Bank zu Commerzbank mit der IBAN DE89370400440532013000 geändert. Möchten Sie diese Änderung best��tigen?",
     suggestions: ["Ja, Änderung bestätigen", "Nein, abbrechen"],
     nextState: "process_changes",
     stateType: "decision",
@@ -577,3 +577,39 @@ export const insurancePackageStateMachine: StateMachine = {
     systemMessage: "Bereiten Sie den Versand der Informationsunterlagen vor."
   },
   schedule_appointment: {
+    agent: "Wunderbar, ich kann Ihnen gerne bei der Terminvereinbarung helfen. Wir haben folgende Termine verfügbar: Montag 10-12 Uhr, Dienstag 14-16 Uhr oder Freitag 9-11 Uhr. Welcher Termin wäre für Sie am besten?",
+    customer: "Der Dienstag um 15 Uhr würde mir gut passen.",
+    nextState: "confirm_appointment",
+    stateType: "decision",
+    suggestions: ["Termin bestätigen", "Anderen Termin vorschlagen", "Lieber telefonische Beratung"],
+    systemMessage: "Erfassen Sie den gewünschten Beratungstermin des Kunden."
+  },
+  confirm_appointment: {
+    agent: "Ich habe den Termin für Dienstag, 15 Uhr, für Sie eingetragen. Unser Versicherungsberater Herr Müller wird Sie in unserem Büro in der Hauptstraße 20 empfangen. Möchten Sie eine Erinnerungs-SMS am Tag vor dem Termin erhalten?",
+    customer: "Ja, das wäre hilfreich. Vielen Dank.",
+    nextState: "appointment_confirmed",
+    stateType: "decision",
+    suggestions: ["SMS-Erinnerung einrichten", "E-Mail-Erinnerung einrichten", "Keine Erinnerung nötig"],
+    action: "terminEintragen",
+    systemMessage: "Bestätigen Sie den Beratungstermin und bieten Sie eine Erinnerungsoption an."
+  },
+  appointment_confirmed: {
+    agent: "Perfekt, ich habe die SMS-Erinnerung für Sie eingerichtet. Sie erhalten alle Details auch noch per E-Mail. Haben Sie noch weitere Fragen zum Versicherungspaket oder zum Termin?",
+    customer: "Nein, das war alles. Vielen Dank für Ihre Hilfe.",
+    nextState: "conclusion",
+    stateType: "question",
+    systemMessage: "Der Termin wurde erfolgreich vereinbart. Fragen Sie, ob es noch weitere Anliegen gibt."
+  },
+  conclusion: {
+    agent: "Gerne geschehen. Wir freuen uns auf Ihren Besuch am Dienstag. Sollten Sie vorab noch Fragen haben, können Sie uns jederzeit kontaktieren. Einen schönen Tag noch!",
+    customer: "Vielen Dank, Ihnen auch einen schönen Tag!",
+    nextState: "end",
+    stateType: "info",
+    systemMessage: "Das Gespräch kann abgeschlossen werden."
+  },
+  end: {
+    agent: "Auf Wiederhören.",
+    stateType: "info",
+    systemMessage: "Gespräch beendet."
+  }
+};
