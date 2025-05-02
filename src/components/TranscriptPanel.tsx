@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScenarioType } from './ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
 import Message from './transcript/Message';
+import SystemMessageGroup from './transcript/SystemMessageGroup';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls, SensitiveField, ValidationStatus, SensitiveDataType } from '@/data/scenarioData';
@@ -81,9 +82,11 @@ const convertIncomingCallsToCustomFormat = (): IncomingCallWithCustomFields[] =>
     }
   }));
 };
+
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
 }
+
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   activeScenario
 }) => {
@@ -122,6 +125,34 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 
   // Check if this scenario has a state machine
   const hasStateMachineAvailable = activeScenario && hasStateMachine(activeScenario);
+
+  // Group consecutive system messages
+  const groupedMessages = React.useMemo(() => {
+    const result: (Message | Message[])[] = [];
+    let systemMessageGroup: Message[] = [];
+    
+    messages.forEach(message => {
+      if (message.sender === 'system') {
+        // Add to current system message group
+        systemMessageGroup.push(message);
+      } else {
+        // If we have system messages stored, push them first
+        if (systemMessageGroup.length > 0) {
+          result.push([...systemMessageGroup]);
+          systemMessageGroup = [];
+        }
+        // Then push the current non-system message
+        result.push(message);
+      }
+    });
+    
+    // Don't forget any remaining system messages
+    if (systemMessageGroup.length > 0) {
+      result.push([...systemMessageGroup]);
+    }
+    
+    return result;
+  }, [messages]);
 
   // Function to open the JSON dialog
   const handleViewJson = async () => {
@@ -260,21 +291,48 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
               <p className="text-blue-700">You're the call center agent. Review customer messages and select appropriate responses.</p>
             </div>}
           
-          {/* Message transcript */}
-          {messages.map(message => {
-          // Convert any sensitive data to the correct SensitiveField type
-          const typedSensitiveData = message.sensitiveData ? message.sensitiveData.map(item => ({
-            ...item,
-            type: item.type as SensitiveDataType // Cast the type to SensitiveDataType
-          })) : undefined;
+          {/* Message transcript with grouped system messages */}
+          {groupedMessages.map((item, index) => {
+            if (Array.isArray(item)) {
+              // This is a group of system messages
+              return item.length === 1 ? (
+                // If only one system message, render it normally
+                <Message 
+                  key={item[0].id} 
+                  message={{...item[0], sensitiveData: item[0].sensitiveData as SensitiveField[] | undefined}}
+                  onAcceptSuggestion={handleAcceptSuggestion} 
+                  onRejectSuggestion={handleRejectSuggestion} 
+                  onSelectResponse={handleSelectResponse}
+                />
+              ) : (
+                // Otherwise, render as a group
+                <SystemMessageGroup key={`group-${index}`} messages={item} />
+              );
+            } else {
+              // Regular message
+              // Convert any sensitive data to the correct SensitiveField type
+              const typedSensitiveData = item.sensitiveData ? item.sensitiveData.map(dataItem => ({
+                ...dataItem,
+                type: dataItem.type as SensitiveDataType
+              })) : undefined;
 
-          // Create a properly typed message for the Message component
-          const typedMessage = {
-            ...message,
-            sensitiveData: typedSensitiveData
-          };
-          return <Message key={message.id} message={typedMessage} onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)} onRejectSuggestion={handleRejectSuggestion} onSelectResponse={handleSelectResponse} />;
-        })}
+              // Create a properly typed message for the Message component
+              const typedMessage = {
+                ...item,
+                sensitiveData: typedSensitiveData
+              };
+              
+              return (
+                <Message 
+                  key={item.id} 
+                  message={typedMessage}
+                  onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)} 
+                  onRejectSuggestion={handleRejectSuggestion} 
+                  onSelectResponse={handleSelectResponse}
+                />
+              );
+            }
+          })}
           <div ref={messagesEndRef} />
         </div>
         
