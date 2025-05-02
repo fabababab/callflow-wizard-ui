@@ -45,6 +45,9 @@ const TestScenario = () => {
     async function fetchStateMachine() {
       if (selectedStateMachine) {
         try {
+          // Clear messages immediately when a new state machine is selected
+          transcript.resetConversation();
+          
           const machine = await loadStateMachine(selectedStateMachine);
           setLoadedStateMachine(machine);
 

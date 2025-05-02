@@ -27,8 +27,11 @@ const StateMachineSelector = ({
   const availableStateMachines = Object.keys(stateMachines) as ScenarioType[];
 
   const handleStateMachineChange = (value: string) => {
-    // Call the parent's onSelectStateMachine function
-    onSelectStateMachine(value as ScenarioType);
+    // Only call the parent function if the value actually changed
+    if (value !== activeStateMachine) {
+      // Call the parent's onSelectStateMachine function
+      onSelectStateMachine(value as ScenarioType);
+    }
   };
 
   return (
@@ -39,10 +42,10 @@ const StateMachineSelector = ({
         onValueChange={handleStateMachineChange}
         disabled={disabled}
       >
-        <SelectTrigger id="stateMachine" className="w-full">
+        <SelectTrigger id="stateMachine" className="w-full bg-background">
           <SelectValue placeholder="Select state machine" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-background">
           <SelectGroup>
             {availableStateMachines.map((stateMachine) => (
               <SelectItem key={stateMachine} value={stateMachine}>
