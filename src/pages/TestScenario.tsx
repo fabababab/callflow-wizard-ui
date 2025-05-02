@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw, Check, AlertCircle, MessageSquare, FlowChart } from 'lucide-react';
+import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw, Check, AlertCircle, MessageSquare, Network } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
@@ -673,7 +673,7 @@ const TestScenario = () => {
                           State Data
                         </TabsTrigger>
                         <TabsTrigger value="visualization" className="flex items-center gap-1">
-                          <FlowChart size={16} />
+                          <Network size={16} />
                           Decision Tree
                         </TabsTrigger>
                       </TabsList>
