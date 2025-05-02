@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export type AISuggestion = {
-  id: number;
+  id: string;  // Changed from number to string
   text: string;
   type: 'info' | 'action' | 'response';
   accepted?: boolean;
@@ -14,9 +14,9 @@ export type AISuggestion = {
 
 interface AISuggestionsProps {
   suggestions: AISuggestion[];
-  messageId: number;
-  onAccept: (suggestionId: number, messageId: number) => void;
-  onReject: (suggestionId: number, messageId: number) => void;
+  messageId: string;  // Changed from number to string
+  onAccept: (suggestionId: string, messageId: string) => void;  // Changed parameter types
+  onReject: (suggestionId: string, messageId: string) => void;  // Changed parameter types
 }
 
 const AISuggestions: React.FC<AISuggestionsProps> = ({

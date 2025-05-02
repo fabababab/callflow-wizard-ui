@@ -1,23 +1,12 @@
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { nanoid } from 'nanoid';
-import { StateData } from '@/utils/stateMachineLoader';
+import { Message } from '@/components/transcript/Message';
+import { AISuggestion } from '@/components/transcript/AISuggestion';
 
-export type MessageType = {
-  id: string;
-  text: string;
-  sender: 'agent' | 'customer' | 'system';
-  timestamp: Date;
-  suggestions?: string[];
-  isAccepted?: boolean;
-  isRejected?: boolean;
-  systemType?: 'info' | 'warning' | 'error' | 'success';
-  responseOptions?: string[];
-};
-
-interface UseMessageHandlingProps {
-  stateData: StateData | null;
-  onProcessSelection: (selectedOption: string) => boolean;
+interface MessageHandlingProps {
+  stateData: any;
+  onProcessSelection: (selection: string) => boolean;
   onDefaultTransition: () => boolean;
   callActive: boolean;
 }
@@ -27,144 +16,93 @@ export function useMessageHandling({
   onProcessSelection,
   onDefaultTransition,
   callActive
-}: UseMessageHandlingProps) {
-  const [messages, setMessages] = useState<MessageType[]>([]);
+}: MessageHandlingProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to bottom of messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // Send a message from the user
+  const handleSendMessage = useCallback(() => {
+    if (!inputValue.trim() || !callActive) return;
 
-  // Add system message
-  const addSystemMessage = useCallback((text: string, systemType: 'info' | 'warning' | 'error' | 'success' = 'info') => {
-    setMessages(prev => [...prev, {
+    const newMessage: Message = {
       id: nanoid(),
-      text,
-      sender: 'system',
-      timestamp: new Date(),
-      systemType
-    }]);
-  }, []);
-
-  // Add agent message
-  const addAgentMessage = useCallback((text: string, suggestions: string[] = []) => {
-    setMessages(prev => [...prev, {
-      id: nanoid(),
-      text,
-      sender: 'agent',
-      timestamp: new Date(),
-      suggestions
-    }]);
-  }, []);
-
-  // Add customer message
-  const addCustomerMessage = useCallback((text: string) => {
-    setMessages(prev => [...prev, {
-      id: nanoid(),
-      text,
+      text: inputValue,
       sender: 'customer',
       timestamp: new Date()
-    }]);
-  }, []);
+    };
 
-  // Update messages based on state data
-  useEffect(() => {
-    if (!callActive || !stateData) return;
-
-    if (stateData.agent && stateData.agent.trim()) {
-      addAgentMessage(stateData.agent, stateData.suggestions || []);
-    }
-    
-    if (stateData.systemMessage && stateData.systemMessage.trim()) {
-      addSystemMessage(stateData.systemMessage);
-    }
-    
-    if (stateData.customer && stateData.customer.trim()) {
-      addCustomerMessage(stateData.customer);
-    }
-    
-    // Add response options if available
-    if (stateData.responseOptions && stateData.responseOptions.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.sender === 'agent') {
-        setMessages(prev => prev.map((msg, idx) => 
-          idx === prev.length - 1 
-            ? { ...msg, responseOptions: stateData.responseOptions }
-            : msg
-        ));
-      }
-    }
-  }, [stateData, callActive, addAgentMessage, addSystemMessage, addCustomerMessage, messages]);
-
-  // Handle sending message
-  const handleSendMessage = useCallback(() => {
-    if (!inputValue.trim()) return;
-    
-    addCustomerMessage(inputValue);
+    setMessages(prev => [...prev, newMessage]);
     setInputValue('');
     
-    // Process default transition after customer message
+    // Try to process the selection, if it doesn't match any transition
+    // we just let the message stand as free text
+    onProcessSelection(inputValue);
+    
+    // Scroll to bottom after message is sent
     setTimeout(() => {
-      onDefaultTransition();
-    }, 500);
-  }, [inputValue, addCustomerMessage, onDefaultTransition]);
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, [inputValue, callActive, onProcessSelection]);
 
   // Handle selecting a response option
   const handleSelectResponse = useCallback((response: string) => {
-    addCustomerMessage(response);
+    if (!callActive) return;
     
-    // Process selection after customer message
-    setTimeout(() => {
-      onProcessSelection(response);
-    }, 500);
-  }, [addCustomerMessage, onProcessSelection]);
+    const newMessage: Message = {
+      id: nanoid(),
+      text: response,
+      sender: 'customer',
+      timestamp: new Date()
+    };
 
-  // Handle accepting suggestion
-  const handleAcceptSuggestion = useCallback((messageId: string, suggestion: string) => {
-    setMessages(prev => prev.map(message => 
-      message.id === messageId
-        ? { ...message, isAccepted: true, isRejected: false }
-        : message
-    ));
+    setMessages(prev => [...prev, newMessage]);
     
-    addCustomerMessage(suggestion);
+    // Process the selection
+    onProcessSelection(response);
     
-    // Process selection after customer message
+    // Scroll to bottom after selection
     setTimeout(() => {
-      onProcessSelection(suggestion);
-    }, 500);
-  }, [addCustomerMessage, onProcessSelection]);
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }, [callActive, onProcessSelection]);
 
-  // Handle rejecting suggestion
-  const handleRejectSuggestion = useCallback((messageId: string) => {
-    setMessages(prev => prev.map(message => 
-      message.id === messageId
-        ? { ...message, isRejected: true, isAccepted: false }
-        : message
-    ));
+  // Handle accepting a suggestion
+  const handleAcceptSuggestion = useCallback((messageId: string, suggestionId: string) => {
+    setMessages(prev => 
+      prev.map(message => {
+        if (message.id === messageId && message.suggestions) {
+          return {
+            ...message,
+            suggestions: message.suggestions.map(suggestion => 
+              suggestion.id === suggestionId 
+                ? { ...suggestion, accepted: true, rejected: false }
+                : suggestion
+            )
+          };
+        }
+        return message;
+      })
+    );
   }, []);
 
-  // Toggle recording
+  // Handle rejecting a suggestion
+  const handleRejectSuggestion = useCallback((messageId: string) => {
+    setMessages(prev => 
+      prev.map(message => {
+        if (message.id === messageId) {
+          return { ...message, isRejected: true };
+        }
+        return message;
+      })
+    );
+  }, []);
+
+  // Toggle recording state
   const toggleRecording = useCallback(() => {
     setIsRecording(prev => !prev);
-    if (!isRecording) {
-      // Add simulated message after 2 seconds when recording starts
-      setTimeout(() => {
-        if (stateData?.customer) {
-          addCustomerMessage(stateData.customer);
-          setIsRecording(false);
-          
-          // Process default transition after simulated customer message
-          setTimeout(() => {
-            onDefaultTransition();
-          }, 500);
-        }
-      }, 2000);
-    }
-  }, [isRecording, stateData, addCustomerMessage, onDefaultTransition]);
+  }, []);
 
   return {
     messages,
@@ -176,9 +114,6 @@ export function useMessageHandling({
     handleSelectResponse,
     handleAcceptSuggestion,
     handleRejectSuggestion,
-    toggleRecording,
-    addAgentMessage,
-    addCustomerMessage,
-    addSystemMessage
+    toggleRecording
   };
 }

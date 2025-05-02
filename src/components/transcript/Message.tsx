@@ -8,7 +8,7 @@ import AISuggestions, { AISuggestion } from './AISuggestion';
 export type MessageSender = 'agent' | 'customer' | 'system';
 
 export type Message = {
-  id: string; // Using string type for ID
+  id: string;
   text: string;
   sender: MessageSender;
   timestamp: Date | string;

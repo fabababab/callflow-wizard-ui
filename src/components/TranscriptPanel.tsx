@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScenarioType } from './ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import Message, { Message as MessageType } from './transcript/Message';
+import Message from './transcript/Message';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls, preCalls } from '@/data/scenarioData';
@@ -201,9 +201,9 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           {messages.map((message) => (
             <Message 
               key={message.id} 
-              message={message as unknown as MessageType}
-              onAcceptSuggestion={(suggestionId: string, messageId: string) => handleAcceptSuggestion(messageId, suggestionId)}
-              onRejectSuggestion={(suggestionId: string, messageId: string) => handleRejectSuggestion(messageId)}
+              message={message}
+              onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)}
+              onRejectSuggestion={(suggestionId, messageId) => handleRejectSuggestion(messageId)}
               onSelectResponse={handleSelectResponse}
             />
           ))}
