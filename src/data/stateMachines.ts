@@ -238,7 +238,7 @@ export const verificationStateMachine: StateMachine = {
     customer: "Mein Name ist Emma Wagner.",
     nextState: "request_dob",
     stateType: "verification",
-    systemMessage: "Beginnen Sie mit der Identitätsprüfung. Fragen Sie nach grundlegenden Informationen."
+    systemMessage: "Beginnen Sie mit der Identit��tsprüfung. Fragen Sie nach grundlegenden Informationen."
   },
   request_dob: {
     agent: "Vielen Dank, Frau Wagner. Könnten Sie mir bitte auch Ihr Geburtsdatum nennen?",
@@ -612,4 +612,14 @@ export const insurancePackageStateMachine: StateMachine = {
     stateType: "info",
     systemMessage: "Gespräch beendet."
   }
+};
+
+// Export all state machines as a single object
+export const stateMachines = {
+  physioTherapy: physioStateMachine,
+  bankDetails: bankDetailsStateMachine,
+  verification: verificationStateMachine,
+  accountHistory: accountHistoryStateMachine,
+  paymentReminder: paymentReminderStateMachine,
+  insurancePackage: insurancePackageStateMachine
 };

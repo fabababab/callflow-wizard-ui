@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,6 +26,22 @@ export type Message = {
   };
   requiresVerification?: boolean;
   isVerified?: boolean;
+  productInfo?: {
+    name: string;
+    videoUrl: string;
+    description: string;
+    details: string[];
+  };
+  cancellation?: {
+    type: string;
+    contracts: Array<{
+      id: string;
+      name: string;
+      startDate: string;
+      monthly: string;
+    }>;
+    requiresVerification: boolean;
+  };
 };
 
 interface MessageProps {
