@@ -17,7 +17,7 @@ import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader
 
 // Define the PreCall type to match what PreCallInfo component expects
 export type PreCall = {
-  id: string;
+  id: string; // Updated to string to match PreCallInfo
   timestamp: string;
   agent: string;
   content: string;
@@ -26,7 +26,7 @@ export type PreCall = {
   callType: string;
 };
 
-// Convert PreCallInfo[] to PreCall[]
+// Convert PreCallInfo[] to Precall[]
 const convertPreCallsToPrecallFormat = (): PreCall[] => {
   return scenarioPreCalls.map((preCall) => ({
     id: preCall.id,
@@ -41,7 +41,7 @@ const convertPreCallsToPrecallFormat = (): PreCall[] => {
 
 // Convert IncomingCall to IncomingCallWithCustomFields
 type IncomingCallWithCustomFields = {
-  id: string;
+  id: string; // Updated to string to match IncomingCall
   customerName: string;
   phoneNumber: string;
   waitTime: string;

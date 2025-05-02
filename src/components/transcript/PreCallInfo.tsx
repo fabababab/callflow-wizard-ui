@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 export type PreCall = {
-  id: number;
+  id: string; // Changed from number to string to match data format
   timestamp: string;
   agent: string;
   content: string;

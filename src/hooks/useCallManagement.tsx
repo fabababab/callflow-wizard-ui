@@ -1,72 +1,62 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
-export function useCallManagement() {
+export const useCallManagement = () => {
   const [callActive, setCallActive] = useState(false);
-  const [callStartTime, setCallStartTime] = useState<Date | null>(null);
+  const [acceptedCallId, setAcceptedCallId] = useState<string | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00');
-  const [acceptedCallId, setAcceptedCallId] = useState<number | null>(null);
-  const { toast } = useToast();
-
-  // Timer for call duration
+  
+  const timerRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
+  
+  // Update timer when call is active
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    
-    if (callActive && callStartTime) {
-      interval = setInterval(() => {
-        const now = new Date();
-        const diff = now.getTime() - callStartTime.getTime();
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        setElapsedTime(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    if (callActive) {
+      startTimeRef.current = Date.now();
+      timerRef.current = window.setInterval(() => {
+        const seconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        setElapsedTime(
+          `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+        );
       }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-    
-    return () => clearInterval(interval);
-  }, [callActive, callStartTime]);
 
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [callActive]);
+  
   const startCall = useCallback(() => {
     setCallActive(true);
-    setCallStartTime(new Date());
-    toast({
-      title: "Call Started",
-      description: "You've started a new call",
-    });
-  }, [toast]);
-
+  }, []);
+  
   const endCall = useCallback(() => {
     setCallActive(false);
-    setCallStartTime(null);
-    setElapsedTime('00:00');
     setAcceptedCallId(null);
-    toast({
-      title: "Call Ended",
-      description: `Call duration: ${elapsedTime}`,
-    });
-  }, [elapsedTime, toast]);
-
-  const acceptCall = useCallback((callId: number) => {
+  }, []);
+  
+  const acceptCall = useCallback((callId: string) => {
     setAcceptedCallId(callId);
     setCallActive(true);
-    setCallStartTime(new Date());
-    toast({
-      title: "Call Accepted",
-      description: "You have accepted the incoming call",
-    });
-  }, [toast]);
-
+  }, []);
+  
   const handleCall = useCallback(() => {
-    if (!callActive) {
-      startCall();
-    } else {
+    if (callActive) {
       endCall();
+    } else {
+      startCall();
     }
-  }, [callActive, startCall, endCall]);
-
+  }, [callActive, endCall, startCall]);
+  
   return {
     callActive,
-    callStartTime,
     elapsedTime,
     acceptedCallId,
     startCall,
@@ -74,4 +64,6 @@ export function useCallManagement() {
     acceptCall,
     handleCall
   };
-}
+};
+
+export default useCallManagement;

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 export type IncomingCall = {
-  id: number;
+  id: string; // Changed from number to string to match data format
   customerName: string;
   phoneNumber: string;
   waitTime: string;
@@ -19,7 +19,7 @@ export type IncomingCall = {
 
 interface IncomingCallProps {
   call: IncomingCall;
-  onAcceptCall: (callId: number) => void;
+  onAcceptCall: (callId: string) => void; // Update parameter type to match id type
 }
 
 const IncomingCallCard: React.FC<IncomingCallProps> = ({ call, onAcceptCall }) => {
