@@ -553,12 +553,13 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
             const nextState = physioStateMachine[nextStateName];
             
             if (nextState && nextState.customer) {
-              const customerResponse = {
+              const customerResponse: Message = {
                 id: messages.length + 2,
                 text: nextState.customer,
                 sender: 'customer',
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               };
+              
               setMessages(prev => [...prev, customerResponse]);
               
               // Generate new suggestion based on the next state
