@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScenarioType } from './ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import Message from './transcript/Message';
+import MessageComponent, { Message as MessageType } from './transcript/Message';
 import SystemMessageGroup from './transcript/SystemMessageGroup';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
@@ -128,8 +128,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 
   // Group consecutive system messages
   const groupedMessages = React.useMemo(() => {
-    const result: (Message | Message[])[] = [];
-    let systemMessageGroup: Message[] = [];
+    const result: (MessageType | MessageType[])[] = [];
+    let systemMessageGroup: MessageType[] = [];
     
     messages.forEach(message => {
       if (message.sender === 'system') {
@@ -297,7 +297,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
               // This is a group of system messages
               return item.length === 1 ? (
                 // If only one system message, render it normally
-                <Message 
+                <MessageComponent 
                   key={item[0].id} 
                   message={{...item[0], sensitiveData: item[0].sensitiveData as SensitiveField[] | undefined}}
                   onAcceptSuggestion={handleAcceptSuggestion} 
@@ -323,7 +323,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
               };
               
               return (
-                <Message 
+                <MessageComponent 
                   key={item.id} 
                   message={typedMessage}
                   onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)} 
