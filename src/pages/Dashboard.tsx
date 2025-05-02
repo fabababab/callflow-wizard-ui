@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   HeadphonesIcon, 
   Phone, 
@@ -34,24 +34,24 @@ const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const [acceptedCallId, setAcceptedCallId] = React.useState<number | null>(null);
-  const [expandedPreCallId, setExpandedPreCallId] = React.useState<number | null>(null);
-  const [rightSidebarOpen, setRightSidebarOpen] = React.useState(true);
-  const [messages, setMessages] = React.useState<Array<{
+  const [acceptedCallId, setAcceptedCallId] = useState<number | null>(null);
+  const [expandedPreCallId, setExpandedPreCallId] = useState<number | null>(null);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+  const [messages, setMessages] = useState<Array<{
     id: number;
     text: string;
     sender: 'agent' | 'customer';
     timestamp: string;
   }>>([]);
-  const [inputValue, setInputValue] = React.useState('');
-  const [callActive, setCallActive] = React.useState(false);
-  const [callStartTime, setCallStartTime] = React.useState<Date | null>(null);
-  const [elapsedTime, setElapsedTime] = React.useState('00:00');
+  const [inputValue, setInputValue] = useState('');
+  const [callActive, setCallActive] = useState(false);
+  const [callStartTime, setCallStartTime] = useState<Date | null>(null);
+  const [elapsedTime, setElapsedTime] = useState('00:00');
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const [activeScenario, setActiveScenario] = React.useState<ScenarioType>(null);
+  const [activeScenario, setActiveScenario] = useState<ScenarioType>(null);
 
   // Check if a scenario was passed via navigation
-  React.useEffect(() => {
+  useEffect(() => {
     if (location.state?.scenario) {
       setActiveScenario(location.state.scenario);
     }
@@ -65,49 +65,26 @@ const Dashboard = () => {
   };
 
   // Get the appropriate incoming call based on the active scenario
-  const getIncomingCall = () => {
-    if (activeScenario && scenarioCallData[activeScenario]) {
-      return scenarioCallData[activeScenario];
-    }
-    
-    // Default call data if no scenario is selected
-    return {
-      id: 1,
-      customerName: 'Emma Wagner',
-      phoneNumber: '+49 123 987 6543',
-      waitTime: '3m 12s',
-      callType: 'Technical Support',
-      priority: 'high',
-      expertise: 'Network Issues',
-      matchScore: 95,
-      caseHistory: [
-        {
-          date: '2025-04-10',
-          type: 'Technical Support',
-          status: 'Resolved',
-          description: 'Router configuration issues'
-        },
-        {
-          date: '2025-03-15',
-          type: 'Billing Inquiry',
-          status: 'Resolved',
-          description: 'Monthly payment adjustment'
+  // This now always returns the correct call for the active scenario
+  const incomingCall = activeScenario && scenarioCallData[activeScenario] 
+    ? scenarioCallData[activeScenario] 
+    : {
+        id: 1,
+        customerName: 'Default Customer',
+        phoneNumber: '+49 123 987 6543',
+        waitTime: '1m 30s',
+        callType: 'Support Call',
+        priority: 'medium' as const,
+        expertise: 'General Inquiry',
+        matchScore: 80,
+        caseHistory: [],
+        roboCallSummary: {
+          duration: '0m 0s',
+          intents: [],
+          sentiment: 'Neutral',
+          keyPoints: []
         }
-      ],
-      roboCallSummary: {
-        duration: '2m 45s',
-        intents: ['Network Connectivity', 'Router Issues'],
-        sentiment: 'Frustrated',
-        keyPoints: [
-          'Internet connection drops frequently',
-          'Router has been restarted multiple times',
-          'Issues persist for the last 24 hours'
-        ]
-      }
-    };
-  };
-
-  const incomingCall = getIncomingCall();
+      };
 
   // Generate scenario-specific pre-call conversations
   const getPreCalls = () => {
@@ -287,47 +264,19 @@ const Dashboard = () => {
 
   const preCalls = getPreCalls();
 
-  // Customize incoming calls list based on the active scenario
-  const getIncomingCalls = () => {
-    const mainCall = getIncomingCall();
-    
-    // Return a list with the main call and some generic calls
-    return [
-      mainCall,
-      {
-        id: 2,
-        customerName: 'Max Hoffmann',
-        phoneNumber: '+49 234 876 5432',
-        waitTime: '2m 35s',
-        callType: 'Account Services',
-        priority: 'medium',
-        expertise: 'Billing',
-        matchScore: 72
-      },
-      {
-        id: 3,
-        customerName: 'Sophie Becker',
-        phoneNumber: '+49 345 765 4321',
-        waitTime: '1m 47s',
-        callType: 'Technical Support',
-        priority: 'high',
-        expertise: 'Software Setup',
-        matchScore: 88
-      }
-    ];
-  };
-
-  const incomingCalls = getIncomingCalls();
+  // We'll now use a single incoming call based on the active scenario
+  // instead of maintaining a separate list with duplicates
+  const incomingCalls = [incomingCall];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     
     if (callActive && callStartTime) {
@@ -347,11 +296,10 @@ const Dashboard = () => {
     setAcceptedCallId(callId);
     setCallActive(true);
     setCallStartTime(new Date());
-    const call = incomingCalls.find(call => call.id === callId);
     
     toast({
       title: "Call Accepted",
-      description: `You are now connected with ${call?.customerName}`,
+      description: `You are now connected with ${incomingCall.customerName}`,
     });
 
     // Generate initial messages based on the active scenario
@@ -378,25 +326,23 @@ const Dashboard = () => {
     }, 1000);
   };
 
-  // Get scenario-specific initial message
+  // Get scenario-specific initial message - simplified to use incomingCall directly
   const getScenarioInitialMessage = () => {
-    const call = incomingCalls.find(call => call.id === acceptedCallId);
-    
     switch(activeScenario) {
       case 'verification':
-        return `Hello ${call?.customerName}, thank you for calling about the security alert. I understand you're concerned about the login attempt from an unfamiliar location. Let me help you verify your identity and secure your account.`;
+        return `Hello ${incomingCall.customerName}, thank you for calling about the security alert. I understand you're concerned about the login attempt from an unfamiliar location. Let me help you verify your identity and secure your account.`;
       case 'bankDetails':
-        return `Hello ${call?.customerName}, thank you for calling about updating your bank details. I'll be happy to help you make this change securely. First, I'll need to verify some information with you.`;
+        return `Hello ${incomingCall.customerName}, thank you for calling about updating your bank details. I'll be happy to help you make this change securely. First, I'll need to verify some information with you.`;
       case 'accountHistory':
-        return `Hello ${call?.customerName}, thank you for calling about your account history. I understand you've noticed some unusual charges. I'll help you review your recent transactions and resolve any discrepancies.`;
+        return `Hello ${incomingCall.customerName}, thank you for calling about your account history. I understand you've noticed some unusual charges. I'll help you review your recent transactions and resolve any discrepancies.`;
       case 'physioTherapy':
-        return `Guten Tag ${call?.customerName}, danke für Ihren Anruf bezüglich der Physiotherapie-Abdeckung. Ich verstehe, dass Sie Fragen zu Ihrer Verschreibung haben. Ich werde Ihnen gerne alle Details zu Ihrer Versicherungsabdeckung erklären.`;
+        return `Guten Tag ${incomingCall.customerName}, danke für Ihren Anruf bezüglich der Physiotherapie-Abdeckung. Ich verstehe, dass Sie Fragen zu Ihrer Verschreibung haben. Ich werde Ihnen gerne alle Details zu Ihrer Versicherungsabdeckung erklären.`;
       case 'paymentReminder':
-        return `Guten Tag ${call?.customerName}, danke für Ihren Anruf bezüglich der Mahnung. Ich verstehe, dass Sie bereits eine Zahlung geleistet haben und trotzdem eine Mahnung erhalten haben. Ich werde das umgehend für Sie klären.`;
+        return `Guten Tag ${incomingCall.customerName}, danke für Ihren Anruf bezüglich der Mahnung. Ich verstehe, dass Sie bereits eine Zahlung geleistet haben und trotzdem eine Mahnung erhalten haben. Ich werde das umgehend für Sie klären.`;
       case 'insurancePackage':
-        return `Guten Tag ${call?.customerName}, herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung Ihrer Versicherung auf ein passendes Paket für Ihre neue Lebenssituation.`;
+        return `Guten Tag ${incomingCall.customerName}, herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung Ihrer Versicherung auf ein passendes Paket für Ihre neue Lebenssituation.`;
       default:
-        return `Hello ${call?.customerName}, thank you for calling customer support. How can I assist you today?`;
+        return `Hello ${incomingCall.customerName}, thank you for calling customer support. How can I assist you today?`;
     }
   };
 
@@ -528,18 +474,25 @@ const Dashboard = () => {
     setCallActive(false);
     setMessages([]);
     setElapsedTime('00:00');
+    
+    // Show a toast to indicate the scenario change
+    if (scenario) {
+      toast({
+        title: "Scenario Changed",
+        description: `Now working with ${scenario} scenario`,
+      });
+    }
   };
 
   const renderActiveCall = () => (
     <Card className="border-green-500 border-2">
       <CardHeader className="bg-green-50">
         <div className="flex justify-between items-center">
-          <CardTitle>Active Call - {incomingCalls.find(c => c.id === acceptedCallId)?.customerName}</CardTitle>
+          <CardTitle>Active Call - {incomingCall.customerName}</CardTitle>
           <Badge className="bg-green-500">Live</Badge>
         </div>
         <CardDescription>
-          {incomingCalls.find(c => c.id === acceptedCallId)?.callType} • 
-          {incomingCalls.find(c => c.id === acceptedCallId)?.phoneNumber}
+          {incomingCall.callType} • {incomingCall.phoneNumber}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
@@ -576,7 +529,7 @@ const Dashboard = () => {
               {message.sender === 'customer' && (
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary/10">
-                    {incomingCalls.find(c => c.id === acceptedCallId)?.customerName.charAt(0)}
+                    {incomingCall.customerName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               )}
@@ -711,7 +664,7 @@ const Dashboard = () => {
                 </p>
               </div>
 
-              {/* Main section - Changed grid to remove ActionPanel */}
+              {/* Main section */}
               <div className="grid gap-4">
                 {/* Active call section - now takes full width */}
                 <div className="col-span-1">
@@ -719,7 +672,9 @@ const Dashboard = () => {
                     <Card className="overflow-hidden">
                       <CardHeader>
                         <CardTitle>Priority Call</CardTitle>
-                        <CardDescription>Recommended based on your expertise and availability</CardDescription>
+                        <CardDescription>
+                          Recommended for {activeScenario ? `scenario: ${activeScenario}` : 'your expertise and availability'}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
                         <div className="flex items-start gap-6 p-4 bg-accent/5 rounded-lg">
@@ -744,7 +699,7 @@ const Dashboard = () => {
                                   Case History
                                 </h4>
                                 <div className="space-y-2">
-                                  {incomingCall.caseHistory.map((case_, index) => (
+                                  {incomingCall.caseHistory && incomingCall.caseHistory.map((case_, index) => (
                                     <div key={index} className="text-sm p-2 bg-background rounded-md">
                                       <div className="flex justify-between">
                                         <span className="font-medium">{case_.type}</span>
@@ -753,6 +708,11 @@ const Dashboard = () => {
                                       <p className="text-muted-foreground mt-1">{case_.description}</p>
                                     </div>
                                   ))}
+                                  {(!incomingCall.caseHistory || incomingCall.caseHistory.length === 0) && (
+                                    <div className="text-sm p-2 bg-background/50 text-center rounded-md">
+                                      No case history available
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
@@ -765,14 +725,19 @@ const Dashboard = () => {
                                   <div className="p-2 bg-background rounded-md">
                                     <div className="flex justify-between items-center mb-2">
                                       <span className="font-medium">Duration</span>
-                                      <span>{incomingCall.roboCallSummary.duration}</span>
+                                      <span>{incomingCall.roboCallSummary?.duration || "0m 0s"}</span>
                                     </div>
                                     <div className="space-y-1">
                                       <p className="font-medium">Key Points:</p>
                                       <ul className="list-disc list-inside text-muted-foreground">
-                                        {incomingCall.roboCallSummary.keyPoints.map((point, index) => (
-                                          <li key={index}>{point}</li>
-                                        ))}
+                                        {incomingCall.roboCallSummary?.keyPoints && 
+                                         incomingCall.roboCallSummary.keyPoints.length > 0 ? (
+                                          incomingCall.roboCallSummary.keyPoints.map((point, index) => (
+                                            <li key={index}>{point}</li>
+                                          ))
+                                        ) : (
+                                          <li>No key points available</li>
+                                        )}
                                       </ul>
                                     </div>
                                   </div>
@@ -796,7 +761,7 @@ const Dashboard = () => {
                               variant="outline" 
                               className="bg-destructive/10 text-destructive border-destructive/20"
                             >
-                              {incomingCall.priority === 'high' ? 'High' : 'Medium'} priority
+                              {incomingCall.priority === 'high' ? 'High' : incomingCall.priority === 'medium' ? 'Medium' : 'Low'} priority
                             </Badge>
                           </div>
                           <Button 
