@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink } from 'lucide-react';
+import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,8 @@ import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls, preCalls } from '@/data/scenarioData';
 import { stateMachines } from '@/data/stateMachines';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getStateMachineJson } from '@/utils/stateMachineLoader';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -19,6 +22,9 @@ interface TranscriptPanelProps {
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => {
   const [historyCollapsed, setHistoryCollapsed] = useState(true);
   const [showStateMachineInfo, setShowStateMachineInfo] = useState(false);
+  const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
+  const [jsonContent, setJsonContent] = useState<string>("");
+  const [isLoadingJson, setIsLoadingJson] = useState(false);
   
   const {
     messages,
@@ -41,6 +47,23 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
 
   // Check if this scenario has a state machine
   const hasStateMachine = activeScenario && stateMachines[activeScenario as string];
+  
+  // Function to open the JSON dialog
+  const handleViewJson = async () => {
+    if (!activeScenario) return;
+    
+    setIsLoadingJson(true);
+    try {
+      const json = await getStateMachineJson(activeScenario);
+      setJsonContent(json);
+      setIsJsonDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to load JSON:", error);
+      setJsonContent("Error loading state machine JSON");
+    } finally {
+      setIsLoadingJson(false);
+    }
+  };
 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
@@ -67,6 +90,18 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
+          {callActive && hasStateMachine && (
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-8 w-8"
+              title="View State Machine JSON"
+              onClick={handleViewJson}
+              disabled={isLoadingJson}
+            >
+              <FileJson size={16} />
+            </Button>
+          )}
           {callActive ? (
             <>
               <Badge variant="outline" className="flex items-center gap-1">
@@ -207,6 +242,20 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </div>
         )}
       </CardContent>
+      
+      {/* Dialog to display the JSON state machine */}
+      <Dialog open={isJsonDialogOpen} onOpenChange={setIsJsonDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>State Machine for {activeScenario}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[60vh]">
+            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+              {jsonContent}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

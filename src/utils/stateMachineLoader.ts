@@ -1,3 +1,4 @@
+
 import { ScenarioType } from '@/components/ScenarioSelector';
 
 export interface StateMachineState {
@@ -98,4 +99,17 @@ export function getStateData(
   }
   
   return machine.states[state];
+}
+
+// Get the raw JSON string for a state machine
+export async function getStateMachineJson(scenario: ScenarioType): Promise<string> {
+  if (!scenario) return "No scenario selected";
+  
+  try {
+    const machine = await loadStateMachine(scenario);
+    return JSON.stringify(machine, null, 2); // Pretty print with 2 spaces
+  } catch (error) {
+    console.error(`Failed to get state machine JSON for scenario ${scenario}:`, error);
+    return `Error loading state machine for ${scenario}`;
+  }
 }
