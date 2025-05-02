@@ -13,7 +13,8 @@ import {
   FileText,
   UserCircle,
   CornerDownLeft,
-  ChevronDown
+  ChevronDown,
+  FileJson
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,9 @@ import SidebarTrigger from '@/components/SidebarTrigger';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import ScenarioSelector, { ScenarioType, scenarioCallData } from '@/components/ScenarioSelector';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getStateMachineJson } from '@/utils/stateMachineLoader';
+import { stateMachines } from '@/data/stateMachines';
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -49,6 +53,9 @@ const Dashboard = () => {
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const [activeScenario, setActiveScenario] = useState<ScenarioType>(null);
+  const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
+  const [jsonContent, setJsonContent] = useState<string>("");
+  const [isLoadingJson, setIsLoadingJson] = useState(false);
 
   // Check if a scenario was passed via navigation
   useEffect(() => {
@@ -484,12 +491,49 @@ const Dashboard = () => {
     }
   };
 
+  // Function to open the JSON dialog
+  const handleViewJson = async () => {
+    if (!activeScenario) return;
+    
+    setIsLoadingJson(true);
+    try {
+      const json = await getStateMachineJson(activeScenario);
+      setJsonContent(json);
+      setIsJsonDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to load JSON:", error);
+      setJsonContent("Error loading state machine JSON");
+      toast({
+        title: "Error",
+        description: "Failed to load state machine JSON",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingJson(false);
+    }
+  };
+
   const renderActiveCall = () => (
     <Card className="border-green-500 border-2">
       <CardHeader className="bg-green-50">
         <div className="flex justify-between items-center">
           <CardTitle>Active Call - {incomingCall.customerName}</CardTitle>
-          <Badge className="bg-green-500">Live</Badge>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-green-500">Live</Badge>
+            {/* Add state machine JSON button only if this scenario has a state machine */}
+            {activeScenario && stateMachines[activeScenario as string] && (
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-8 w-8"
+                title="View State Machine JSON"
+                onClick={handleViewJson}
+                disabled={isLoadingJson}
+              >
+                <FileJson size={16} />
+              </Button>
+            )}
+          </div>
         </div>
         <CardDescription>
           {incomingCall.callType} • {incomingCall.phoneNumber}
@@ -891,6 +935,19 @@ const Dashboard = () => {
           </main>
         </div>
       </div>
+      {/* Dialog to display the JSON state machine */}
+      <Dialog open={isJsonDialogOpen} onOpenChange={setIsJsonDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>State Machine for {activeScenario}</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[60vh]">
+            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+              {jsonContent}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };
