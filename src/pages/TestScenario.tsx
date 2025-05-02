@@ -2,7 +2,7 @@
 import React from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { ScenarioType, ScenarioSelector } from '@/components/ScenarioSelector'; 
+import ScenarioSelector, { ScenarioType } from '@/components/ScenarioSelector'; 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,7 +56,7 @@ const TestScenario = () => {
     <div className="flex h-screen bg-background">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header title="Test Scenario" />
+        <Header />
         <div className="flex-1 overflow-auto p-4 md:p-6">
           <div className="grid gap-6">
             <div className="flex flex-col md:flex-row gap-4">
@@ -70,7 +70,7 @@ const TestScenario = () => {
                 <CardContent>
                   <ScenarioSelector 
                     activeScenario={activeScenario} 
-                    onChange={setActiveScenario}
+                    onSelectScenario={setActiveScenario}
                   />
                 </CardContent>
                 <CardFooter className="flex justify-between">

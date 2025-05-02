@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScenarioType } from './ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import Message from './transcript/Message';
+import Message, { Message as MessageType } from './transcript/Message';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls, preCalls } from '@/data/scenarioData';
@@ -151,20 +151,20 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </p>
           <p className="text-muted-foreground mt-1">
             Type: <span className="font-medium">
-              {stateMachines[activeScenario as string][currentState]?.stateType || "unknown"}
+              {stateMachines[activeScenario as string]?.[currentState]?.stateType || "unknown"}
             </span>
           </p>
-          {stateMachines[activeScenario as string][currentState]?.nextState && (
+          {stateMachines[activeScenario as string]?.[currentState]?.nextState && (
             <p className="text-muted-foreground mt-1">
               Next state: <span className="font-medium">
-                {stateMachines[activeScenario as string][currentState]?.nextState}
+                {stateMachines[activeScenario as string][currentState].nextState}
               </span>
             </p>
           )}
-          {stateMachines[activeScenario as string][currentState]?.action && (
+          {stateMachines[activeScenario as string]?.[currentState]?.action && (
             <p className="text-muted-foreground mt-1">
               Action: <span className="font-medium">
-                {stateMachines[activeScenario as string][currentState]?.action}
+                {stateMachines[activeScenario as string][currentState].action}
               </span>
             </p>
           )}
@@ -201,9 +201,9 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           {messages.map((message) => (
             <Message 
               key={message.id} 
-              message={message} 
-              onAcceptSuggestion={handleAcceptSuggestion}
-              onRejectSuggestion={handleRejectSuggestion}
+              message={message as unknown as MessageType}
+              onAcceptSuggestion={(suggestionId: string, messageId: string) => handleAcceptSuggestion(messageId, suggestionId)}
+              onRejectSuggestion={(suggestionId: string, messageId: string) => handleRejectSuggestion(messageId)}
               onSelectResponse={handleSelectResponse}
             />
           ))}

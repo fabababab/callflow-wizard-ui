@@ -19,7 +19,6 @@ import {
   Sidebar as ShadcnSidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupContent,
   SidebarGroupLabel,
   SidebarGroupContent,
   SidebarMenu,
