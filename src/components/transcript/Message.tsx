@@ -8,7 +8,7 @@ import AISuggestions, { AISuggestion } from './AISuggestion';
 export type MessageSender = 'agent' | 'customer' | 'system';
 
 export type Message = {
-  id: string; // Changed from number to string to match MessageType
+  id: string; // Using string type for ID
   text: string;
   sender: MessageSender;
   timestamp: Date | string;
@@ -21,8 +21,8 @@ export type Message = {
 
 interface MessageProps {
   message: Message;
-  onAcceptSuggestion: (suggestionId: string, messageId: string) => void; // Updated parameter types
-  onRejectSuggestion: (suggestionId: string, messageId: string) => void; // Updated parameter types
+  onAcceptSuggestion: (suggestionId: string, messageId: string) => void; // Updated to use string types
+  onRejectSuggestion: (suggestionId: string, messageId: string) => void; // Updated to use string types
   onSelectResponse?: (response: string) => void;
 }
 
