@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -20,7 +21,7 @@ import EmptyChat from '@/components/TestScenario/EmptyChat';
 import StateMachineSelector from '@/components/StateMachineSelector';
 import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { useToast } from '@/hooks/use-toast';
-import TranscriptPanel from '@/components/TranscriptPanel'; // Properly import TranscriptPanel
+import TranscriptPanel from '@/components/TranscriptPanel'; 
 
 const TestScenario = () => {
   const {
@@ -95,14 +96,15 @@ const TestScenario = () => {
               {/* Main content section with all controls integrated */}
               {loadedStateMachine && <Card className="flex-1 overflow-hidden">
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
+                    <div className="flex items-center gap-4 flex-wrap">
                       <CardTitle className="flex items-center gap-2">
                         Call Center Agent Simulator
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-4">
-                        
-                        <StateMachineSelector activeStateMachine={selectedStateMachine} onSelectStateMachine={setSelectedStateMachine} disabled={transcript.callActive} />
-                      </CardDescription>
+                      <StateMachineSelector 
+                        activeStateMachine={selectedStateMachine} 
+                        onSelectStateMachine={setSelectedStateMachine} 
+                        disabled={transcript.callActive} 
+                      />
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
