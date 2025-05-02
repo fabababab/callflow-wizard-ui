@@ -1,99 +1,91 @@
-
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { 
-  physioStateMachine,
-  bankDetailsStateMachine,
-  verificationStateMachine,
-  accountHistoryStateMachine,
-  paymentReminderStateMachine,
-  insurancePackageStateMachine,
-  State
-} from '@/data/stateMachines';
+import { stateMachines } from '@/data/stateMachines';
 
-// Export the StateMachine type
-export type StateMachine = Record<string, State>;
-
-// Define the StateData type that includes all possible properties
-export type StateMachineState = {
-  agent?: string;
-  customer?: string;
-  suggestions?: string[];
-  stateType?: 'info' | 'question' | 'decision' | 'verification';
-  action?: string;
-  systemMessage?: string;
-  responseOptions?: string[];
-  productOptions?: string[];
-  contractOptions?: string[];
-  requiresVerification?: boolean;
+// Define the state machine types
+export interface StateMachineState {
+  stateType?: string;
   nextState?: string;
-  // Add any other properties needed from the State type
-};
+  text?: string;
+  action?: string;
+  requiresVerification?: boolean;
+  suggestions?: string[];
+  responseOptions?: string[];
+}
 
-// Check if there's a state machine for the given scenario
+export interface StateMachine {
+  initialState: string;
+  states: {
+    [key: string]: StateMachineState;
+  };
+}
+
+// Check if a state machine exists for the given scenario
 export function hasStateMachine(scenario: ScenarioType): boolean {
-  return !!getStateMachine(scenario);
+  return stateMachines.hasOwnProperty(scenario);
 }
 
-// Load the state machine based on the scenario
+// Load the state machine for the given scenario
 export async function loadStateMachine(scenario: ScenarioType): Promise<StateMachine | null> {
-  // Just return the state machine directly instead of loading it asynchronously
-  return getStateMachine(scenario);
-}
+  if (!scenario || !hasStateMachine(scenario)) {
+    return null;
+  }
 
-// Helper function to get the state machine for a scenario
-function getStateMachine(scenario: ScenarioType): StateMachine | null {
-  switch(scenario) {
-    case 'physioTherapy':
-      return physioStateMachine;
-    case 'bankDetails':
-      return bankDetailsStateMachine;
-    case 'verification':
-      return verificationStateMachine;
-    case 'accountHistory':
-      return accountHistoryStateMachine;
-    case 'paymentReminder':
-      return paymentReminderStateMachine;
-    case 'insurancePackage':
-      return insurancePackageStateMachine;
-    default:
-      return null;
+  try {
+    // Use dynamic import instead of require
+    const module = await import(`../data/stateMachines/${scenario}.json`);
+    return module.default;
+  } catch (error) {
+    console.error(`Error loading state machine:`, error);
+    return null;
   }
 }
 
-// Get the initial state of the state machine
-export function getInitialState(stateMachine: StateMachine): string {
-  // Most state machines start with "start", but you might want to make this more flexible
-  return "start";
+// Get JSON representation of the state machine (for debugging)
+export async function getStateMachineJson(scenario: ScenarioType): Promise<string> {
+  try {
+    if (!scenario || !hasStateMachine(scenario)) {
+      return JSON.stringify({ error: 'No state machine found for this scenario' }, null, 2);
+    }
+    
+    // Use dynamic import instead of require
+    const module = await import(`../data/stateMachines/${scenario}.json`);
+    return JSON.stringify(module.default, null, 2);
+  } catch (error) {
+    console.error(`Error loading state machine JSON:`, error);
+    return JSON.stringify({ error: `Failed to load: ${error}` }, null, 2);
+  }
 }
 
-// Get data for a specific state
-export function getStateData(stateMachine: StateMachine, state: string): StateMachineState | null {
-  return stateMachine[state] || null;
+// Get the initial state of the machine
+export function getInitialState(machine: StateMachine): string {
+  return machine.initialState || 'start';
 }
 
-// Determine the next state based on input
-export function getNextState(stateMachine: StateMachine, currentState: string, selectedOption?: string): string | null {
-  const state = stateMachine[currentState];
+// Get state data for a specific state
+export function getStateData(machine: StateMachine, state: string): StateMachineState | null {
+  if (!machine || !machine.states || !machine.states[state]) {
+    return null;
+  }
+  return machine.states[state];
+}
+
+// Determine the next state based on user selection
+export function getNextState(
+  machine: StateMachine,
+  currentState: string,
+  selection?: string
+): string | null {
+  const stateData = getStateData(machine, currentState);
   
-  if (!state) {
+  if (!stateData) {
     return null;
   }
   
-  // If selectedOption is provided, check if it matches any transition
-  if (selectedOption) {
-    // In a real implementation, you would have a more sophisticated way to determine
-    // the next state based on the selection. This is just a simplified example.
-    
-    // For now, just return the default next state
-    return state.nextState || null;
+  // If selection matches a specific transition, use it
+  if (selection && machine.states[selection]) {
+    return selection;
   }
   
-  // Return the default next state if no selection
-  return state.nextState || null;
-}
-
-// Get the JSON representation of a state machine
-export async function getStateMachineJson(scenario: ScenarioType): Promise<string> {
-  const stateMachine = getStateMachine(scenario);
-  return stateMachine ? JSON.stringify(stateMachine, null, 2) : '{}';
+  // Otherwise return the default next state
+  return stateData.nextState || null;
 }
