@@ -9,6 +9,10 @@ export type State = {
   stateType?: StateType;
   action?: string;
   systemMessage?: string;
+  responseOptions?: string[];
+  productOptions?: string[];
+  contractOptions?: string[];
+  requiresVerification?: boolean;
 }
 
 export type StateMachine = Record<string, State>;
@@ -134,15 +138,33 @@ export const bankDetailsStateMachine: StateMachine = {
     systemMessage: "Überprüfen Sie die Kundendaten im System."
   },
   identity_confirmed: {
-    agent: "Vielen Dank, Herr Hoffmann. Ich habe Ihr Konto gefunden und Ihre Identität bestätigt. Welche neue Bankverbindung möchten Sie hinterlegen?",
-    customer: "Ich bin zur Commerzbank gewechselt. Meine neue IBAN ist DE89370400440532013000.",
-    nextState: "collect_bank_info",
+    agent: "Vielen Dank, Herr Hoffmann. Ich habe Ihr Konto gefunden und Ihre Identität bestätigt. Wie kann ich Ihnen heute helfen?",
+    responseOptions: [
+      "Bankverbindung ändern", 
+      "product_info:Premium Health Insurance", 
+      "product_info:Home Insurance Plus", 
+      "cancel_contract:Insurance",
+      "Über andere Produkte informieren"
+    ],
+    nextState: "determine_request",
     stateType: "info",
-    systemMessage: "Kunde wurde erfolgreich identifiziert. Sie können mit der Änderung der Bankdaten fortfahren."
+    systemMessage: "Kunde wurde erfolgreich identifiziert. Sie können verschiedene Services anbieten."
+  },
+  determine_request: {
+    agent: "Was möchten Sie heute tun?",
+    responseOptions: [
+      "Bankverbindung ändern", 
+      "product_info:Premium Health Insurance", 
+      "product_info:Home Insurance Plus", 
+      "cancel_contract:Insurance",
+      "Über andere Produkte informieren"
+    ],
+    stateType: "decision",
+    systemMessage: "Bieten Sie verschiedene Services an."
   },
   collect_bank_info: {
-    agent: "Ich habe folgende IBAN notiert: DE89370400440532013000. Ist das korrekt? Und können Sie mir bitte auch den Namen der Bank bestätigen?",
-    customer: "Ja, die IBAN ist korrekt. Die Bank ist die Commerzbank.",
+    agent: "Welche neue Bankverbindung möchten Sie hinterlegen?",
+    customer: "Ich bin zur Commerzbank gewechselt. Meine neue IBAN ist DE89370400440532013000.",
     nextState: "confirm_changes",
     stateType: "verification",
     action: "prüfeIBAN",
@@ -163,8 +185,35 @@ export const bankDetailsStateMachine: StateMachine = {
     action: "aktualisiereKontodaten",
     systemMessage: "Die Bankdaten wurden erfolgreich aktualisiert. Bieten Sie eine Bestätigung per E-Mail an."
   },
+  show_product_info: {
+    agent: "Hier sind die Informationen zu unserem gewählten Produkt. Sie finden alle Details in der Produktübersicht und im Video. Haben Sie dazu weitere Fragen?",
+    responseOptions: ["Ich hätte Fragen zur Deckung", "Wie hoch sind die monatlichen Kosten?", "Wie kann ich das Produkt bestellen?"],
+    stateType: "info",
+    systemMessage: "Zeigen Sie Produktinformationen und Video an."
+  },
+  show_contracts_for_cancellation: {
+    agent: "Um Ihren Vertrag zu kündigen, benötige ich zunächst weitere Details. Welchen Vertrag genau möchten Sie kündigen? Ich sehe mehrere aktive Verträge in Ihrem Konto.",
+    responseOptions: ["Health Insurance Basic", "Home Insurance Premium", "Car Insurance Full Coverage"],
+    stateType: "decision",
+    requiresVerification: true,
+    systemMessage: "Eine Vertragskündigung erfordert eine zusätzliche Verifizierung. Bitte verifizieren Sie die Kundenidentität bevor Sie fortfahren."
+  },
+  process_cancellation: {
+    agent: "Bevor ich die Kündigung einleiten kann, benötige ich eine Bestätigung Ihrer Identität. Können Sie mir bitte Ihre Versicherungsnummer und aktuelle Adresse nennen?",
+    nextState: "verify_for_cancellation",
+    stateType: "verification",
+    requiresVerification: true,
+    systemMessage: "Vertragskündigung erfordert eine zusätzliche Verifizierung der Versicherungsnummer und Adresse."
+  },
+  verify_for_cancellation: {
+    agent: "Vielen Dank für die Bestätigung. Ich habe die Kündigung Ihres Vertrages eingeleitet. Sie erhalten in Kürze eine schriftliche Bestätigung per E-Mail und Post. Ihr Vertrag endet zum nächstmöglichen Zeitpunkt gemäß den Vertragsbedingungen. Ist das in Ordnung?",
+    responseOptions: ["Ja, danke", "Wann genau endet der Vertrag?", "Fallen Stornogebühren an?"],
+    nextState: "finalize",
+    stateType: "verification",
+    systemMessage: "Die Kündigung wurde eingeleitet. Informieren Sie den Kunden über die nächsten Schritte."
+  },
   finalize: {
-    agent: "Perfekt, ich habe die Bestätigung an die bei uns hinterlegte E-Mail-Adresse gesendet. Die Änderung Ihrer Bankverbindung wurde erfolgreich durchgeführt. Gibt es noch etwas, wobei ich Ihnen helfen kann?",
+    agent: "Gibt es noch etwas, wobei ich Ihnen helfen kann?",
     nextState: "end",
     stateType: "question",
     systemMessage: "Der Vorgang ist abgeschlossen. Fragen Sie, ob der Kunde weitere Anliegen hat."
@@ -421,7 +470,7 @@ export const paymentReminderStateMachine: StateMachine = {
   }
 };
 
-// Insurance Package state machine
+// Insurance Package state machine with enhanced product options and cancellation flow
 export const insurancePackageStateMachine: StateMachine = {
   start: {
     agent: "Guten Tag, wie kann ich Ihnen helfen?",
@@ -434,22 +483,42 @@ export const insurancePackageStateMachine: StateMachine = {
     customer: "Mein Name ist Jonas Schwarz und meine Versicherungsnummer ist VS-67890123.",
     nextState: "verify_identity",
     stateType: "verification",
-    systemMessage: "Bitte verifizieren Sie die Identität des Kunden."
+    systemMessage: "Bitte verifizieren Sie die Identität des Kunden.",
+    requiresVerification: true
   },
   verify_identity: {
-    agent: "Vielen Dank, Herr Schwarz. Zur Sicherheit benötige ich noch Ihr Geburtsdatum.",
-    customer: "Ich wurde am 12. Juni 1997 geboren.",
+    agent: "Vielen Dank, Herr Schwarz. Zur Sicherheit benötige ich noch Ihr Geburtsdatum und Ihre Adresse.",
+    customer: "Ich wurde am 12. Juni 1997 geboren und wohne in der Hauptstraße 45, 10117 Berlin.",
     nextState: "identity_confirmed",
     stateType: "verification",
     action: "prüfeKundenidentität",
-    systemMessage: "Überprüfen Sie die Kundendaten im System."
+    systemMessage: "Überprüfen Sie die Kundendaten im System.",
+    requiresVerification: true
   },
   identity_confirmed: {
-    agent: "Danke für die Bestätigung. Ich sehe, dass Sie bisher in unserer Studentenversicherung waren. Ab wann beginnen Sie mit Ihrer Berufstätigkeit, und wie hoch wird ungefähr Ihr Jahresgehalt sein?",
-    customer: "Ich beginne am 1. Juni und mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
-    nextState: "collect_requirements",
+    agent: "Danke für die Bestätigung. Ich sehe, dass Sie bisher in unserer Studentenversicherung waren. Wie kann ich Ihnen heute helfen?",
+    responseOptions: [
+      "Neues Versicherungspaket abschließen", 
+      "product_info:Premium Health Insurance", 
+      "product_info:Home Insurance Plus", 
+      "cancel_contract:Student Insurance",
+      "Über andere Produkte informieren"
+    ],
+    nextState: "determine_request",
     stateType: "info",
     systemMessage: "Kunde wurde erfolgreich identifiziert. Sie können mit der Beratung fortfahren."
+  },
+  determine_request: {
+    agent: "Was möchten Sie heute tun?",
+    responseOptions: [
+      "Neues Versicherungspaket abschließen", 
+      "product_info:Premium Health Insurance", 
+      "product_info:Home Insurance Plus", 
+      "cancel_contract:Student Insurance",
+      "Über andere Produkte informieren"
+    ],
+    stateType: "decision",
+    systemMessage: "Bieten Sie verschiedene Services an."
   },
   collect_requirements: {
     agent: "Verstanden. Haben Sie besondere Bedürfnisse oder Wünsche für Ihre neue Krankenversicherung? Zum Beispiel zusätzliche Leistungen für Zahnbehandlung, Brille oder besondere Therapien?",
@@ -460,11 +529,37 @@ export const insurancePackageStateMachine: StateMachine = {
   },
   suggest_package: {
     agent: "Basierend auf Ihren Angaben würde ich Ihnen unser 'Premium Plus'-Paket empfehlen. Es enthält eine umfassende Grundversicherung sowie Zusatzleistungen für Zahnbehandlungen bis zu 80% und eine Brillenzuzahlung von bis zu 200€ alle zwei Jahre. Der monatliche Beitrag läge bei etwa 350€.",
-    suggestions: ["Günstigere Alternative", "Details zu Zahnleistungen", "Auslandsschutz erklären"],
-    customer: "Das klingt interessant. Gibt es spezielle Angebote für Berufseinsteiger?",
+    responseOptions: ["Mehr über Premium Plus erfahren", "Günstigere Alternative?", "Details zu Zahnleistungen", "Auslandsschutz erklären"],
     nextState: "explain_starter_offer",
     stateType: "decision",
     systemMessage: "Präsentieren Sie das empfohlene Versicherungspaket und bereiten Sie sich auf Folgefragen vor."
+  },
+  show_product_info: {
+    agent: "Hier sind die Informationen zu unserem gewählten Produkt. Sie finden alle Details in der Produktübersicht und im Video. Haben Sie dazu weitere Fragen?",
+    responseOptions: ["Ich hätte Fragen zur Deckung", "Wie hoch sind die monatlichen Kosten?", "Wie kann ich das Produkt bestellen?"],
+    stateType: "info",
+    systemMessage: "Zeigen Sie Produktinformationen und Video an."
+  },
+  show_contracts_for_cancellation: {
+    agent: "Um Ihren Vertrag zu kündigen, benötige ich zunächst weitere Details. Welchen Vertrag genau möchten Sie kündigen? Ich sehe mehrere aktive Verträge in Ihrem Konto.",
+    responseOptions: ["Student Health Insurance", "Dorm Insurance", "Travel Insurance Basic"],
+    stateType: "decision",
+    requiresVerification: true,
+    systemMessage: "Eine Vertragskündigung erfordert eine zusätzliche Verifizierung. Bitte verifizieren Sie die Kundenidentität bevor Sie fortfahren."
+  },
+  process_cancellation: {
+    agent: "Bevor ich die Kündigung einleiten kann, benötige ich eine Bestätigung Ihrer Identität. Können Sie mir bitte Ihre vollständige Versicherungsnummer und aktuelle Adresse nennen?",
+    nextState: "verify_for_cancellation",
+    stateType: "verification",
+    requiresVerification: true,
+    systemMessage: "Vertragskündigung erfordert eine zusätzliche Verifizierung der Versicherungsnummer und Adresse."
+  },
+  verify_for_cancellation: {
+    agent: "Vielen Dank für die Bestätigung. Ich habe die Kündigung Ihres Vertrages eingeleitet. Sie erhalten in Kürze eine schriftliche Bestätigung per E-Mail und Post. Ihr Vertrag endet zum nächstmöglichen Zeitpunkt gemäß den Vertragsbedingungen. Ist das in Ordnung?",
+    responseOptions: ["Ja, danke", "Wann genau endet der Vertrag?", "Fallen Stornogebühren an?"],
+    nextState: "finalize",
+    stateType: "verification",
+    systemMessage: "Die Kündigung wurde eingeleitet. Informieren Sie den Kunden über die nächsten Schritte."
   },
   explain_starter_offer: {
     agent: "In der Tat haben wir ein spezielles Angebot für Berufseinsteiger wie Sie. In den ersten 12 Monaten erhalten Sie 15% Rabatt auf den monatlichen Beitrag, was den Preis auf etwa 298€ pro Monat senkt. Zudem können Sie in den ersten 6 Monaten kostenlos zwischen verschiedenen Zusatzleistungen wechseln, um das für Sie passende Paket zu finden.",
@@ -476,56 +571,9 @@ export const insurancePackageStateMachine: StateMachine = {
   send_information: {
     agent: "Selbstverständlich. Ich werde Ihnen gerne alle Informationen zum 'Premium Plus'-Paket mit dem Berufseinsteiger-Rabatt per E-Mail zusenden. Möchten Sie auch einen persönlichen Beratungstermin vereinbaren, um alle Details zu besprechen?",
     suggestions: ["Ja, Termin vereinbaren", "Nur E-Mail-Info", "Telefonische Nachberatung"],
-    customer: "Ja, ein persönlicher Beratungstermin wäre hilfreich.",
     nextState: "schedule_appointment",
     stateType: "decision",
     action: "sendeInfomaterial",
     systemMessage: "Bereiten Sie den Versand der Informationsunterlagen vor."
   },
   schedule_appointment: {
-    agent: "Sehr gerne. Ich kann Ihnen einen Termin mit unserem Versicherungsberater, Herrn Müller, anbieten. Er ist spezialisiert auf Berufseinsteiger. Würde Ihnen nächste Woche Dienstag um 14:00 Uhr oder Donnerstag um 10:00 Uhr passen?",
-    customer: "Dienstag um 14:00 Uhr passt mir gut.",
-    nextState: "confirm_appointment",
-    stateType: "question",
-    systemMessage: "Vereinbaren Sie einen Beratungstermin mit dem Kunden."
-  },
-  confirm_appointment: {
-    agent: "Perfekt! Ich habe den Termin für Sie am nächsten Dienstag um 14:00 Uhr mit Herrn Müller eingetragen. Sie können wählen, ob der Termin in unserer Filiale in der Hauptstraße 45 stattfinden soll oder ob Sie eine Online-Beratung per Video bevorzugen.",
-    customer: "Eine Online-Beratung wäre mir lieber.",
-    nextState: "finalize",
-    stateType: "question",
-    action: "bucheBeratertermin",
-    systemMessage: "Bestätigen Sie die Termindetails und klären Sie das Format (vor Ort oder online)."
-  },
-  finalize: {
-    agent: "Alles klar. Ich habe notiert, dass Sie eine Online-Beratung bevorzugen. Sie werden morgen eine E-Mail mit den Informationsunterlagen und allen Details zum Online-Meeting am Dienstag erhalten. Haben Sie noch weitere Fragen?",
-    customer: "Nein, das war alles. Vielen Dank für Ihre Hilfe!",
-    nextState: "end",
-    stateType: "question",
-    systemMessage: "Alle Vereinbarungen wurden getroffen. Fassen Sie die nächsten Schritte zusammen."
-  },
-  end: {
-    agent: "Gerne geschehen, Herr Schwarz! Sie erhalten in Kürze die E-Mail mit allen Informationen. Falls Sie vorab noch Fragen haben, können Sie uns jederzeit kontaktieren. Vielen Dank für Ihren Anruf und einen schönen Tag noch!",
-    stateType: "info",
-    systemMessage: "Gespräch kann beendet werden. Kein weiterer Handlungsbedarf."
-  }
-};
-
-// Map from scenario type to state machine
-export const stateMachines: Record<string, StateMachine> = {
-  'physioTherapy': physioStateMachine,
-  'bankDetails': bankDetailsStateMachine,
-  'verification': verificationStateMachine,
-  'accountHistory': accountHistoryStateMachine,
-  'paymentReminder': paymentReminderStateMachine,
-  'insurancePackage': insurancePackageStateMachine
-};
-
-export const scenarioInitialStates: Record<string, string> = {
-  'physioTherapy': 'start',
-  'bankDetails': 'start',
-  'verification': 'start',
-  'accountHistory': 'start',
-  'paymentReminder': 'start',
-  'insurancePackage': 'start'
-};

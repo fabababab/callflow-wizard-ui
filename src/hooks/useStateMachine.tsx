@@ -18,6 +18,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
   const [stateData, setStateData] = useState<StateMachineState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verificationRequired, setVerificationRequired] = useState(false);
   const { toast } = useToast();
 
   // Load state machine when scenario changes
@@ -61,14 +62,54 @@ export function useStateMachine(activeScenario: ScenarioType) {
   useEffect(() => {
     if (stateMachine && currentState) {
       const data = getStateData(stateMachine, currentState);
+      
+      // Check if this state requires verification
+      if (data && data.requiresVerification) {
+        setVerificationRequired(true);
+        toast({
+          title: "Verification Required",
+          description: "This action requires additional verification of customer identity",
+          variant: "destructive",
+        });
+      } else {
+        setVerificationRequired(false);
+      }
+      
       setStateData(data);
     }
-  }, [currentState, stateMachine]);
+  }, [currentState, stateMachine, toast]);
+
+  // Listen for verification completed events
+  useEffect(() => {
+    const handleVerificationCompleted = () => {
+      setVerificationRequired(false);
+      toast({
+        title: "Verification Completed",
+        description: "Customer identity has been verified",
+      });
+    };
+    
+    window.addEventListener('verification-completed', handleVerificationCompleted);
+    
+    return () => {
+      window.removeEventListener('verification-completed', handleVerificationCompleted);
+    };
+  }, [toast]);
 
   // Transition to a new state
   const transitionToState = useCallback((newState: string) => {
     if (!stateMachine || !stateMachine.states[newState]) {
       console.error(`Cannot transition to invalid state: ${newState}`);
+      return false;
+    }
+
+    // Check if verification is required before state transition
+    if (verificationRequired) {
+      toast({
+        title: "Verification Required",
+        description: "Please complete verification before proceeding",
+        variant: "destructive",
+      });
       return false;
     }
 
@@ -79,12 +120,29 @@ export function useStateMachine(activeScenario: ScenarioType) {
 
     setCurrentState(newState);
     return true;
-  }, [currentState, stateMachine, toast]);
+  }, [currentState, stateMachine, toast, verificationRequired]);
 
   // Process option selection
   const processSelection = useCallback((selectedOption: string): boolean => {
     if (!stateMachine || !currentState) {
       return false;
+    }
+
+    // Handle special options for product info and cancellation
+    if (selectedOption === 'show_product_info') {
+      return transitionToState('show_product_info');
+    }
+    
+    if (selectedOption === 'show_contracts_for_cancellation') {
+      return transitionToState('show_contracts_for_cancellation');
+    }
+    
+    if (selectedOption === 'request_product_info') {
+      return transitionToState('show_product_info');
+    }
+    
+    if (selectedOption === 'request_cancellation') {
+      return transitionToState('show_contracts_for_cancellation');
     }
 
     const nextState = getNextState(stateMachine, currentState, selectedOption);
@@ -121,6 +179,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
       const initialState = getInitialState(stateMachine);
       setCurrentState(initialState);
       setStateData(getStateData(stateMachine, initialState));
+      setVerificationRequired(false);
       
       toast({
         title: "Scenario Reset",
@@ -132,15 +191,28 @@ export function useStateMachine(activeScenario: ScenarioType) {
     return false;
   }, [stateMachine, toast]);
 
+  // Check if current state is a final state (ending the conversation)
+  const isFinalState = useCallback(() => {
+    if (!stateMachine || !currentState) {
+      return false;
+    }
+    
+    // Consider a state final if it doesn't have a nextState defined
+    const state = stateMachine.states[currentState];
+    return state && !state.nextState;
+  }, [stateMachine, currentState]);
+
   return {
     currentState,
     stateData,
     stateMachine,
     isLoading,
     error,
+    verificationRequired,
     transitionToState,
     processSelection,
     processDefaultTransition,
-    resetStateMachine
+    resetStateMachine,
+    isFinalState
   };
 }

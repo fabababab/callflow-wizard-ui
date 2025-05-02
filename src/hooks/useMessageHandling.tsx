@@ -52,17 +52,62 @@ export function useMessageHandling({
   const handleSelectResponse = useCallback((response: string) => {
     if (!callActive) return;
     
-    const newMessage: Message = {
-      id: nanoid(),
-      text: response,
-      sender: isAgentMode ? 'agent' : 'customer',
-      timestamp: new Date()
-    };
+    // Special handling for product information and contract cancellation
+    if (response.includes('product_info:')) {
+      const productName = response.split('product_info:')[1].trim();
+      const newMessage: Message = {
+        id: nanoid(),
+        text: `I'd like more information about ${productName}`,
+        sender: isAgentMode ? 'agent' : 'customer',
+        timestamp: new Date(),
+        productInfo: {
+          name: productName,
+          videoUrl: `https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=0`, // Example video URL
+          description: `${productName} is our premium service that includes comprehensive coverage and 24/7 customer support.`,
+          details: ["Coverage in all EU countries", "No hidden fees", "Premium customer support", "Mobile app access"]
+        }
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      onProcessSelection('show_product_info');
+    } 
+    else if (response.includes('cancel_contract:')) {
+      const contractType = response.split('cancel_contract:')[1].trim();
+      const contracts = [
+        { id: "c-1001", name: "Health Insurance Basic", startDate: "2020-01-15", monthly: "€49.99" },
+        { id: "c-1002", name: "Home Insurance Premium", startDate: "2021-03-10", monthly: "€35.50" },
+        { id: "c-1003", name: "Car Insurance Full Coverage", startDate: "2019-11-22", monthly: "€89.99" }
+      ];
+      
+      const newMessage: Message = {
+        id: nanoid(),
+        text: `I'd like to cancel my ${contractType} contract.`,
+        sender: isAgentMode ? 'agent' : 'customer',
+        timestamp: new Date(),
+        cancellation: {
+          type: contractType,
+          contracts: contracts,
+          requiresVerification: true
+        }
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      onProcessSelection('show_contracts_for_cancellation');
+    }
+    else {
+      // Standard response handling
+      const newMessage: Message = {
+        id: nanoid(),
+        text: response,
+        sender: isAgentMode ? 'agent' : 'customer',
+        timestamp: new Date()
+      };
 
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Process the selection
-    onProcessSelection(response);
+      setMessages(prev => [...prev, newMessage]);
+      
+      // Process the selection
+      onProcessSelection(response);
+    }
     
     // Scroll to bottom after selection
     setTimeout(() => {
