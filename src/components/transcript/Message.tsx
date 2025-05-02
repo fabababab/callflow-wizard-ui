@@ -72,30 +72,31 @@ const Message: React.FC<MessageProps> = ({
         )}
         
         {/* Display response options based on who's speaking */}
-        {hasResponseOptions && (
-          (isAgentMode && message.sender === 'customer' || !isAgentMode && message.sender === 'agent') && 
+        {hasResponseOptions && 
+          ((isAgentMode && message.sender === 'customer') || (!isAgentMode && message.sender === 'agent')) && 
           onSelectResponse && (
-          <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
-            <div className="text-xs flex items-center gap-1">
-              <MessageSquare size={12} />
-              <span>Quick Responses</span>
+            <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
+              <div className="text-xs flex items-center gap-1">
+                <MessageSquare size={12} />
+                <span>Quick Responses</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {message.responseOptions.map((option, index) => (
+                  <Button
+                    key={index}
+                    size="sm"
+                    variant="outline"
+                    className="text-xs py-1 px-2 h-auto flex items-center gap-1 group"
+                    onClick={() => onSelectResponse(option)}
+                  >
+                    <span>{option.length > 50 ? `${option.substring(0, 50)}...` : option}</span>
+                    <ChevronRight size={12} className="opacity-50 group-hover:opacity-100" />
+                  </Button>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {message.responseOptions.map((option, index) => (
-                <Button
-                  key={index}
-                  size="sm"
-                  variant="outline"
-                  className="text-xs py-1 px-2 h-auto flex items-center gap-1 group"
-                  onClick={() => onSelectResponse(option)}
-                >
-                  <span>{option.length > 50 ? `${option.substring(0, 50)}...` : option}</span>
-                  <ChevronRight size={12} className="opacity-50 group-hover:opacity-100" />
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
+          )
+        }
       </div>
     </div>
   );
