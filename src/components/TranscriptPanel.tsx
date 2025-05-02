@@ -45,6 +45,16 @@ type PreCall = {
   callType: string;
 }
 
+// Type definition for PhysioState in the state machine
+type PhysioState = {
+  agent?: string;
+  customer?: string;
+  suggestions?: string[];
+  nextState?: string;
+  stateType?: 'question' | 'info' | 'decision' | 'verification';
+  action?: string;
+}
+
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
 }
@@ -59,8 +69,76 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const [acceptedCallId, setAcceptedCallId] = useState<number | null>(null);
   const [historyCollapsed, setHistoryCollapsed] = useState(true);
+  const [currentPhysioState, setCurrentPhysioState] = useState<string>('start');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  
+  // Physiotherapy scenario state machine
+  const physioStateMachine: Record<string, PhysioState> = {
+    start: {
+      agent: "Grüezi, mein Name ist Lisa Meier, wie darf ich Ihnen helfen?",
+      customer: "Ich möchte wissen, ob die Physiotherapie bei Knieproblemen gedeckt ist...",
+      nextState: "authentifizierung",
+      stateType: "info"
+    },
+    authentifizierung: {
+      agent: "Darf ich Sie kurz identifizieren? Nennen Sie mir bitte Ihr Geburtsdatum.",
+      customer: "14. Mai 1985.",
+      nextState: "authentifizierung_plz",
+      stateType: "verification",
+      action: "prüfeGeburtsdatum"
+    },
+    authentifizierung_plz: {
+      agent: "Danke. Ihre PLZ bei uns?",
+      customer: "8004 Zürich.",
+      nextState: "authentifizierung_erfolg",
+      stateType: "verification",
+      action: "prüfeKundenkonto"
+    },
+    authentifizierung_erfolg: {
+      agent: "Alles klar, Herr Keller, ich habe Ihr Profil gefunden. Haben Sie die Versichertennummer?",
+      customer: "756.1234.5678.90.",
+      nextState: "waehle_leistungserbringer",
+      stateType: "verification"
+    },
+    waehle_leistungserbringer: {
+      agent: "Welchen Physiotherapeuten möchten Sie?",
+      customer: "Jana Brunner, Praxis 8004 Zürich.",
+      nextState: "pruefe_therapeut",
+      stateType: "question"
+    },
+    pruefe_therapeut: {
+      agent: "Einen Augenblick bitte...",
+      nextState: "therapeut_anerkannt",
+      stateType: "info",
+      action: "prüfeLeistungserbringer"
+    },
+    therapeut_anerkannt: {
+      agent: "Frau Brunner ist anerkannte Leistungserbringerin.",
+      nextState: "verordnung_abfragen",
+      stateType: "info"
+    },
+    verordnung_abfragen: {
+      agent: "Für Kostendeckung brauchen Sie eine gültige ärztliche Verordnung. Möchten Sie Details?",
+      suggestions: ["Ja, bitte", "Nein, danke"],
+      stateType: "decision"
+    },
+    details_verordnung: {
+      agent: "Die Grundversicherung deckt 9 Sitzungen, Folge-Verordnung möglich. Therapie muss innerhalb 5 Wochen starten.",
+      nextState: "abschluss",
+      stateType: "info"
+    },
+    abschluss: {
+      agent: "Okay. Kann ich sonst noch etwas für Sie tun?",
+      customer: "Nein.",
+      nextState: "ende",
+      stateType: "question"
+    },
+    ende: {
+      agent: "Gute Besserung und auf Wiederhören!",
+      stateType: "info"
+    }
+  };
   
   // Sample incoming calls data
   const incomingCalls: IncomingCall[] = [
@@ -159,6 +237,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setMessages([]);
       setAiSuggestions([]);
       
+      // Reset physio state if we're in that scenario
+      if (activeScenario === 'physioTherapy') {
+        setCurrentPhysioState('start');
+      }
+      
       // Add initial agent greeting
       setTimeout(() => {
         const initialMessage: Message = {
@@ -185,7 +268,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
               customerResponse = "Hallo, ich möchte meine letzten Kontoaktivitäten überprüfen.";
               break;
             case 'physioTherapy':
-              customerResponse = "Guten Tag, ich habe eine Frage zur Kostenübernahme für meine Physiotherapie. Werden die Kosten von meiner Versicherung übernommen?";
+              if (physioStateMachine.start.customer) {
+                customerResponse = physioStateMachine.start.customer;
+              } else {
+                customerResponse = "Guten Tag, ich habe eine Frage zur Kostenübernahme für meine Physiotherapie bei Knieproblemen. Werden die Kosten von meiner Versicherung übernommen?";
+              }
               break;
             case 'paymentReminder':
               customerResponse = "Hallo, ich habe eine Mahnung erhalten, obwohl ich den Betrag bereits überwiesen habe. Das verstehe ich nicht.";
@@ -261,24 +348,79 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         }
         break;
       case 'physioTherapy':
-        if (afterMessageId === 2) {
-          suggestion = {
-            id: Date.now(),
-            text: "Tarif des Kunden: PremiumPlus mit 100% Erstattung für verschriebene Physiotherapie.",
-            type: 'info'
-          };
-        } else if (afterMessageId === 4) {
-          suggestion = {
-            id: Date.now(),
-            text: "Bitte prüfen Sie die Verschreibung und ob eine Vorabgenehmigung nötig ist.",
-            type: 'action'
-          };
-        } else if (afterMessageId > 5) {
-          suggestion = {
-            id: Date.now(),
-            text: "Ich kann bestätigen, dass Ihre Versicherung alle 10 Physiotherapie-Sitzungen zu 100% abdeckt, da sie ärztlich verschrieben wurden. Sie müssen keine Vorabgenehmigung einholen. Reichen Sie einfach die Rechnung zusammen mit der Verschreibung ein.",
-            type: 'response'
-          };
+        if (activeScenario === 'physioTherapy') {
+          // If we're in the physio scenario, use the state machine for suggestions
+          const currentState = physioStateMachine[currentPhysioState];
+          
+          if (currentState) {
+            if (currentState.stateType === 'verification') {
+              suggestion = {
+                id: Date.now(),
+                text: `Bitte verifizieren Sie: ${currentState.action || 'Kundendaten'}`,
+                type: 'action'
+              };
+            } else if (currentState.stateType === 'decision') {
+              suggestion = {
+                id: Date.now(),
+                text: currentState.agent || "Wie möchten Sie fortfahren?",
+                type: 'response'
+              };
+            } else if (currentState.stateType === 'info') {
+              suggestion = {
+                id: Date.now(),
+                text: `Info: ${currentState.agent || 'Keine Information verfügbar'}`,
+                type: 'info'
+              };
+            } else {
+              // Generate a context-appropriate response based on current state
+              suggestion = {
+                id: Date.now(),
+                text: currentState.agent || "Wie kann ich Ihnen weiterhelfen?",
+                type: 'response'
+              };
+            }
+            
+            // Add quick-reply suggestions if available
+            if (currentState.suggestions && currentState.suggestions.length > 0) {
+              // Create multiple suggestions for choice options
+              currentState.suggestions.forEach(option => {
+                const choiceSuggestion: AISuggestion = {
+                  id: Date.now() + Math.random(),
+                  text: option,
+                  type: 'response'
+                };
+                setAiSuggestions(prev => [...prev, choiceSuggestion]);
+              });
+            }
+          } else {
+            // Fallback if state not found
+            suggestion = {
+              id: Date.now(),
+              text: "Wie kann ich Ihnen mit Ihrer Physiotherapie-Anfrage helfen?",
+              type: 'response'
+            };
+          }
+        } else {
+          // Fallback for old physio treatment suggestions
+          if (afterMessageId === 2) {
+            suggestion = {
+              id: Date.now(),
+              text: "Tarif des Kunden: PremiumPlus mit 100% Erstattung für verschriebene Physiotherapie.",
+              type: 'info'
+            };
+          } else if (afterMessageId === 4) {
+            suggestion = {
+              id: Date.now(),
+              text: "Bitte prüfen Sie die Verschreibung und ob eine Vorabgenehmigung nötig ist.",
+              type: 'action'
+            };
+          } else if (afterMessageId > 5) {
+            suggestion = {
+              id: Date.now(),
+              text: "Ich kann bestätigen, dass Ihre Versicherung alle 10 Physiotherapie-Sitzungen zu 100% abdeckt, da sie ärztlich verschrieben wurden. Sie müssen keine Vorabgenehmigung einholen. Reichen Sie einfach die Rechnung zusammen mit der Verschreibung ein.",
+              type: 'response'
+            };
+          }
         }
         break;
       case 'paymentReminder':
@@ -386,79 +528,121 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setMessages([...messages, newMessage]);
       setInputValue('');
       
-      // Simulate customer response after a short delay
-      if (messages.length % 2 === 0 || messages.length === 0) {
-        setTimeout(() => {
-          let customerResponse = "";
+      // If in physio therapy scenario, progress through state machine
+      if (activeScenario === 'physioTherapy') {
+        const currentState = physioStateMachine[currentPhysioState];
+        
+        if (currentState && currentState.nextState) {
+          // Move to next state
+          const nextStateName = currentState.nextState;
+          setCurrentPhysioState(nextStateName);
           
-          // Scenario-specific responses
-          if (activeScenario === 'bankDetails') {
-            const bankResponses = [
-              "Ja, ich möchte meine Bank von Deutsche Bank zu Commerzbank ändern.",
-              "Meine neue IBAN ist DE89370400440532013001.",
-              "Ja, das ist richtig. Ich habe kürzlich die Bank gewechselt.",
-              "Vielen Dank für die Aktualisierung meiner Daten."
-            ];
-            customerResponse = bankResponses[Math.min(Math.floor(messages.length / 2), bankResponses.length - 1)];
-          } else if (activeScenario === 'verification') {
-            const verificationResponses = [
-              "Ja, das stimmt. Mein Name ist Michael Schmidt.",
-              "Ich wurde am 15. März 1985 geboren.",
-              "Meine Adresse ist Hauptstraße 123, Berlin.",
-              "Die letzten vier Ziffern meines Kontos sind 4321."
-            ];
-            customerResponse = verificationResponses[Math.min(Math.floor(messages.length / 2), verificationResponses.length - 1)];
-          } else if (activeScenario === 'physioTherapy') {
-            const physioResponses = [
-              "Mein Arzt hat mir 10 Sitzungen Physiotherapie verschrieben wegen Rückenschmerzen.",
-              "Ja, ich habe die ärztliche Überweisung hier vorliegen.",
-              "Die Behandlung kostet 45€ pro Sitzung.",
-              "Verstehe ich das richtig, dass ich 10% der Kosten selbst tragen muss?",
-              "Vielen Dank für die Information."
-            ];
-            customerResponse = physioResponses[Math.min(Math.floor(messages.length / 2), physioResponses.length - 1)];
-          } else if (activeScenario === 'paymentReminder') {
-            const reminderResponses = [
-              "Ich habe den Betrag von 250€ bereits am 15. April überwiesen.",
-              "Die Überweisung erfolgte von meinem Girokonto bei der Sparkasse.",
-              "Die Referenznummer auf der Rechnung war KD-789456.",
-              "Können Sie bitte prüfen, ob die Zahlung eingegangen ist?",
-              "Alles klar, ich warte auf Ihre Rückmeldung. Vielen Dank."
-            ];
-            customerResponse = reminderResponses[Math.min(Math.floor(messages.length / 2), reminderResponses.length - 1)];
-          } else if (activeScenario === 'insurancePackage') {
-            const insuranceResponses = [
-              "Ich war bisher in der studentischen Krankenversicherung, aber jetzt beginne ich meinen ersten Job.",
-              "Mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
-              "Ich interessiere mich für einen umfassenden Schutz mit Zusatzleistungen für Zahnbehandlung und Brille.",
-              "Gibt es spezielle Angebote für Berufseinsteiger?",
-              "Diese Option klingt interessant. Können Sie mir weitere Details zusenden?"
-            ];
-            customerResponse = insuranceResponses[Math.min(Math.floor(messages.length / 2), insuranceResponses.length - 1)];
-          } else {
-            // Default or account history responses
-            const defaultResponses = [
-              "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
-              "Ja, insbesondere die letzten drei Monate.",
-              "Ich erkenne eine Transaktion von letzter Woche nicht.",
-              "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
-              "Vielen Dank für Ihre Hilfe."
-            ];
-            customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
+          // Special handling for verordnung_abfragen decision point
+          if (currentPhysioState === 'verordnung_abfragen') {
+            // Check if the message contains an answer to the question
+            if (inputValue.toLowerCase().includes('ja') || 
+                inputValue.toLowerCase().includes('details')) {
+              setCurrentPhysioState('details_verordnung');
+            } else {
+              setCurrentPhysioState('abschluss');
+            }
           }
           
-          const customerMessage: Message = {
-            id: messages.length + 2,
-            text: customerResponse,
-            sender: 'customer',
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          };
-          
-          setMessages(prev => [...prev, customerMessage]);
-          
-          // Generate new AI suggestion based on the conversation
-          generateAiSuggestion(activeScenario, messages.length + 2);
-        }, 1500);
+          // Simulate customer response after a short delay
+          setTimeout(() => {
+            const nextState = physioStateMachine[nextStateName];
+            
+            if (nextState && nextState.customer) {
+              const customerResponse = {
+                id: messages.length + 2,
+                text: nextState.customer,
+                sender: 'customer',
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              };
+              setMessages(prev => [...prev, customerResponse]);
+              
+              // Generate new suggestion based on the next state
+              setTimeout(() => {
+                generateAiSuggestion(activeScenario, messages.length + 2);
+              }, 500);
+            }
+          }, 1500);
+        }
+      } else {
+        // Simulate customer response after a short delay (original logic)
+        if (messages.length % 2 === 0 || messages.length === 0) {
+          setTimeout(() => {
+            let customerResponse = "";
+            
+            // Scenario-specific responses
+            if (activeScenario === 'bankDetails') {
+              const bankResponses = [
+                "Ja, ich möchte meine Bank von Deutsche Bank zu Commerzbank ändern.",
+                "Meine neue IBAN ist DE89370400440532013001.",
+                "Ja, das ist richtig. Ich habe kürzlich die Bank gewechselt.",
+                "Vielen Dank für die Aktualisierung meiner Daten."
+              ];
+              customerResponse = bankResponses[Math.min(Math.floor(messages.length / 2), bankResponses.length - 1)];
+            } else if (activeScenario === 'verification') {
+              const verificationResponses = [
+                "Ja, das stimmt. Mein Name ist Michael Schmidt.",
+                "Ich wurde am 15. März 1985 geboren.",
+                "Meine Adresse ist Hauptstraße 123, Berlin.",
+                "Die letzten vier Ziffern meines Kontos sind 4321."
+              ];
+              customerResponse = verificationResponses[Math.min(Math.floor(messages.length / 2), verificationResponses.length - 1)];
+            } else if (activeScenario === 'physioTherapy') {
+              const physioResponses = [
+                "Mein Arzt hat mir 10 Sitzungen Physiotherapie verschrieben wegen Rückenschmerzen.",
+                "Ja, ich habe die ärztliche Überweisung hier vorliegen.",
+                "Die Behandlung kostet 45€ pro Sitzung.",
+                "Verstehe ich das richtig, dass ich 10% der Kosten selbst tragen muss?",
+                "Vielen Dank für die Information."
+              ];
+              customerResponse = physioResponses[Math.min(Math.floor(messages.length / 2), physioResponses.length - 1)];
+            } else if (activeScenario === 'paymentReminder') {
+              const reminderResponses = [
+                "Ich habe den Betrag von 250€ bereits am 15. April überwiesen.",
+                "Die Überweisung erfolgte von meinem Girokonto bei der Sparkasse.",
+                "Die Referenznummer auf der Rechnung war KD-789456.",
+                "Können Sie bitte prüfen, ob die Zahlung eingegangen ist?",
+                "Alles klar, ich warte auf Ihre Rückmeldung. Vielen Dank."
+              ];
+              customerResponse = reminderResponses[Math.min(Math.floor(messages.length / 2), reminderResponses.length - 1)];
+            } else if (activeScenario === 'insurancePackage') {
+              const insuranceResponses = [
+                "Ich war bisher in der studentischen Krankenversicherung, aber jetzt beginne ich meinen ersten Job.",
+                "Mein Gehalt wird etwa 48.000€ brutto im Jahr sein.",
+                "Ich interessiere mich für einen umfassenden Schutz mit Zusatzleistungen für Zahnbehandlung und Brille.",
+                "Gibt es spezielle Angebote für Berufseinsteiger?",
+                "Diese Option klingt interessant. Können Sie mir weitere Details zusenden?"
+              ];
+              customerResponse = insuranceResponses[Math.min(Math.floor(messages.length / 2), insuranceResponses.length - 1)];
+            } else {
+              // Default or account history responses
+              const defaultResponses = [
+                "Ich möchte gerne wissen, was meine letzten Transaktionen waren.",
+                "Ja, insbesondere die letzten drei Monate.",
+                "Ich erkenne eine Transaktion von letzter Woche nicht.",
+                "Es war eine Zahlung an Online Shop GmbH für 79,99 €.",
+                "Vielen Dank für Ihre Hilfe."
+              ];
+              customerResponse = defaultResponses[Math.min(Math.floor(messages.length / 2), defaultResponses.length - 1)];
+            }
+            
+            const customerMessage: Message = {
+              id: messages.length + 2,
+              text: customerResponse,
+              sender: 'customer',
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            
+            setMessages(prev => [...prev, customerMessage]);
+            
+            // Generate new AI suggestion based on the conversation
+            generateAiSuggestion(activeScenario, messages.length + 2);
+          }, 1500);
+        }
       }
     }
   };
@@ -476,6 +660,16 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     const suggestion = aiSuggestions.find(s => s.id === suggestionId);
     if (suggestion && suggestion.type === 'response') {
       setInputValue(suggestion.text);
+    }
+    
+    // If this is a decision in the physio scenario and we're at the decision point
+    if (activeScenario === 'physioTherapy' && currentPhysioState === 'verordnung_abfragen' && suggestion) {
+      // Set next state based on the suggestion text
+      if (suggestion.text === 'Ja, bitte') {
+        setCurrentPhysioState('details_verordnung');
+      } else if (suggestion.text === 'Nein, danke') {
+        setCurrentPhysioState('abschluss');
+      }
     }
     
     toast({
@@ -508,6 +702,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         description: "Call from +49 123 456 7890",
       });
       
+      // Reset physio state if applicable
+      if (activeScenario === 'physioTherapy') {
+        setCurrentPhysioState('start');
+      }
+      
       // Add initial agent greeting after a brief delay
       setTimeout(() => {
         const initialMessage: Message = {
@@ -526,6 +725,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setAcceptedCallId(null);
       setHistoryCollapsed(true);
       setAiSuggestions([]);
+      setCurrentPhysioState('start');
       toast({
         title: "Call Ended",
         description: `Call duration: ${elapsedTime}`,
@@ -538,6 +738,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     setCallActive(true);
     setCallStartTime(new Date());
     setHistoryCollapsed(true);
+    
+    // Reset physio state if applicable
+    if (activeScenario === 'physioTherapy') {
+      setCurrentPhysioState('start');
+    }
     
     const call = incomingCalls.find(call => call.id === callId);
     
