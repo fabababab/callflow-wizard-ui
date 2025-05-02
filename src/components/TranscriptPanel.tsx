@@ -33,7 +33,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     handleRejectSuggestion,
     toggleRecording,
     handleCall,
-    handleAcceptCall
+    handleAcceptCall,
+    currentPhysioState
   } = useTranscript(activeScenario);
 
   return (
@@ -41,7 +42,14 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       <CardHeader className="px-4 py-3 flex flex-row items-center justify-between space-y-0">
         <div>
           <CardTitle className="text-lg">Transcript</CardTitle>
-          <CardDescription>Call transcript and suggestions</CardDescription>
+          <CardDescription>
+            {activeScenario === 'physioTherapy' && currentPhysioState && (
+              <Badge variant="outline" className="mr-2">
+                State: {currentPhysioState}
+              </Badge>
+            )}
+            Call transcript and suggestions
+          </CardDescription>
         </div>
         <div className="flex items-center gap-2">
           {callActive ? (

@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Check, X, Star } from 'lucide-react';
+import { Check, X, Star, Info, ActivitySquare, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export type AISuggestion = {
   id: number;
@@ -25,6 +26,32 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
   onReject
 }) => {
   if (!suggestions || suggestions.length === 0) return null;
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'info':
+        return <Info size={12} />;
+      case 'action':
+        return <ActivitySquare size={12} />;
+      case 'response':
+        return <MessageSquare size={12} />;
+      default:
+        return <Star size={12} />;
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'info':
+        return 'Information';
+      case 'action':
+        return 'Action';
+      case 'response':
+        return 'Response';
+      default:
+        return 'Suggestion';
+    }
+  };
 
   return (
     <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
@@ -57,28 +84,39 @@ const AISuggestions: React.FC<AISuggestionsProps> = ({
               <X size={14} className="text-red-500" />
             </div>
           )}
-          <div className="flex justify-between">
-            <p>{suggestion.text}</p>
-            {!suggestion.accepted && !suggestion.rejected && (
-              <div className="flex gap-1 ml-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-4 w-4 rounded-full p-0"
-                  onClick={() => onAccept(suggestion.id, messageId)}
-                >
-                  <Check size={10} className="text-green-500" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-4 w-4 rounded-full p-0"
-                  onClick={() => onReject(suggestion.id, messageId)}
-                >
-                  <X size={10} className="text-red-500" />
-                </Button>
-              </div>
-            )}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1 mb-1">
+              {getTypeIcon(suggestion.type)}
+              <Badge variant="outline" className="text-[10px] py-0 h-4">
+                {getTypeLabel(suggestion.type)}
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-start">
+              <p className="pr-2">{suggestion.text}</p>
+              {!suggestion.accepted && !suggestion.rejected && (
+                <div className="flex gap-1 ml-2 shrink-0">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-5 w-5 rounded-full p-0"
+                    onClick={() => onAccept(suggestion.id, messageId)}
+                    title="Accept"
+                  >
+                    <Check size={12} className="text-green-500" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-5 w-5 rounded-full p-0"
+                    onClick={() => onReject(suggestion.id, messageId)}
+                    title="Reject"
+                  >
+                    <X size={12} className="text-red-500" />
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       ))}

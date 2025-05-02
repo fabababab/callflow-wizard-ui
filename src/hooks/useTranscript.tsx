@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Message, MessageSender } from '@/components/transcript/Message';
@@ -146,11 +145,20 @@ export const useTranscript = (activeScenario: ScenarioType) => {
           });
         }
         
+        // Add an action suggestion if there's an action defined
+        if (currentState.action) {
+          suggestions.push({
+            id: Date.now() + 2,
+            text: `Aktion ausführen: ${currentState.action}`,
+            type: 'action'
+          });
+        }
+        
         // Add quick-reply suggestions if available
         if (currentState.suggestions && currentState.suggestions.length > 0) {
           currentState.suggestions.forEach((option, index) => {
             suggestions.push({
-              id: Date.now() + 2 + index,
+              id: Date.now() + 3 + index,
               text: option,
               type: 'response'
             });
@@ -160,6 +168,21 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     } else {
       // For other scenarios, use the predefined suggestions
       suggestions = generateAiSuggestion(scenario, afterMessageId);
+      
+      // Add some action suggestions for other scenarios too
+      if (scenario === 'bankDetails') {
+        suggestions.push({
+          id: Date.now() + 100,
+          text: "Bankdatenformular öffnen",
+          type: 'action'
+        });
+      } else if (scenario === 'verification') {
+        suggestions.push({
+          id: Date.now() + 100,
+          text: "Identitätsprüfung starten",
+          type: 'action'
+        });
+      }
     }
     
     if (suggestions.length > 0) {
@@ -237,6 +260,12 @@ export const useTranscript = (activeScenario: ScenarioType) => {
           if (currentPhysioState === 'authentifizierung_plz' && Math.random() < 0.2) {
             nextStateName = 'authentifizierung_failed';
           }
+          
+          // Show toast to indicate state transition
+          toast({
+            title: "State changed",
+            description: `Moved from ${currentPhysioState} to ${nextStateName}`,
+          });
           
           setCurrentPhysioState(nextStateName);
           
@@ -340,7 +369,7 @@ export const useTranscript = (activeScenario: ScenarioType) => {
         }
       }
     }
-  }, [inputValue, messages, currentPhysioState, activeScenario, generateAiSuggestionForMessage]);
+  }, [inputValue, messages, currentPhysioState, activeScenario, generateAiSuggestionForMessage, toast]);
   
   const handleAcceptSuggestion = useCallback((suggestionId: number, parentMessageId: number) => {
     // Find the suggestion
@@ -370,6 +399,23 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     // If it's a response suggestion, fill the input field
     if (suggestion.type === 'response') {
       setInputValue(suggestion.text);
+    }
+    
+    // If it's an action suggestion, show a toast
+    if (suggestion.type === 'action') {
+      toast({
+        title: "Action triggered",
+        description: `Executing: ${suggestion.text}`,
+      });
+      
+      // Simulate performing the action
+      if (suggestion.text.includes("Bankdatenformular")) {
+        // Simulate opening a bank details form
+        window.dispatchEvent(new CustomEvent('open-bank-form'));
+      } else if (suggestion.text.includes("Identitätsprüfung")) {
+        // Simulate starting identity verification
+        window.dispatchEvent(new CustomEvent('start-identity-verification'));
+      }
     }
     
     toast({
@@ -471,6 +517,7 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     handleRejectSuggestion,
     toggleRecording,
     handleCall,
-    handleAcceptCall
+    handleAcceptCall,
+    currentPhysioState
   };
 };
