@@ -21,6 +21,7 @@ import EmptyChat from '@/components/TestScenario/EmptyChat';
 import StateMachineSelector from '@/components/StateMachineSelector';
 import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { useToast } from '@/hooks/use-toast';
+import TranscriptPanel from '@/components/TranscriptPanel'; // Properly import TranscriptPanel
 
 const TestScenario = () => {
   const { toast } = useToast();
@@ -133,11 +134,9 @@ const TestScenario = () => {
                         </TabsTrigger>
                       </TabsList>
                       <TabsContent value="chat" className="p-0">
-                        {/* We're now embedding the transcript panel instead of ChatMessages directly */}
+                        {/* We're now properly embedding the TranscriptPanel component directly */}
                         <div className="h-[70vh]">
-                          {React.createElement(require('@/components/TranscriptPanel').default, {
-                            activeScenario: selectedStateMachine
-                          })}
+                          <TranscriptPanel activeScenario={selectedStateMachine} />
                         </div>
                       </TabsContent>
                       <TabsContent value="state" className="p-4 max-h-[60vh] overflow-y-auto">
@@ -213,3 +212,4 @@ const TestScenario = () => {
 };
 
 export default TestScenario;
+
