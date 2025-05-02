@@ -1,46 +1,49 @@
+
+// This file defines the ScenarioType that's used across the application
+export type ScenarioType = 'physioCoverage' | 'customerPhysioCoverage' | 'physioTherapy' | 'bankDetails' | 'verification' | 'accountHistory' | 'insurancePackage' | 'paymentReminder';
+
 import React from 'react';
-import { ScenarioType } from '@/components/ScenarioSelector';
-import { stateMachines } from '@/data/stateMachines';
-import { 
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
-interface StateMachineSelectorProps {
-  activeStateMachine: ScenarioType;
-  onSelectStateMachine: (stateMachine: ScenarioType) => void;
+interface ScenarioSelectorProps {
+  activeScenario: ScenarioType;
+  onSelectScenario: (scenario: ScenarioType) => void;
   disabled?: boolean;
 }
 
-const StateMachineSelector = ({ 
-  activeStateMachine, 
-  onSelectStateMachine, 
-  disabled = false 
-}: StateMachineSelectorProps) => {
-  // Get all available state machines from the stateMachines object
-  const availableStateMachines = Object.keys(stateMachines) as ScenarioType[];
+const ScenarioSelector = ({
+  activeScenario,
+  onSelectScenario,
+  disabled = false
+}: ScenarioSelectorProps) => {
+  const scenarios: ScenarioType[] = [
+    'physioCoverage',
+    'customerPhysioCoverage',
+    'physioTherapy',
+    'bankDetails',
+    'verification',
+    'accountHistory',
+    'insurancePackage',
+    'paymentReminder'
+  ];
 
   return (
     <div className="flex flex-col space-y-1.5">
-      <Label htmlFor="stateMachine">State Machine</Label>
+      <Label htmlFor="scenario">Scenario</Label>
       <Select
-        value={activeStateMachine}
-        onValueChange={(value) => onSelectStateMachine(value as ScenarioType)}
+        value={activeScenario}
+        onValueChange={(value) => onSelectScenario(value as ScenarioType)}
         disabled={disabled}
       >
-        <SelectTrigger id="stateMachine" className="w-full">
-          <SelectValue placeholder="Select state machine" />
+        <SelectTrigger id="scenario" className="w-full">
+          <SelectValue placeholder="Select scenario" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {availableStateMachines.map((stateMachine) => (
-              <SelectItem key={stateMachine} value={stateMachine}>
-                {stateMachine.charAt(0).toUpperCase() + stateMachine.slice(1)}
+            {scenarios.map((scenario) => (
+              <SelectItem key={scenario} value={scenario}>
+                {scenario.charAt(0).toUpperCase() + scenario.slice(1)}
               </SelectItem>
             ))}
           </SelectGroup>
@@ -50,4 +53,4 @@ const StateMachineSelector = ({
   );
 };
 
-export default StateMachineSelector;
+export default ScenarioSelector;

@@ -463,6 +463,46 @@ const TestScenario = () => {
     });
   };
 
+  // Add this new function to handle state selection from the visualizer
+  const handleStateSelect = (state: string) => {
+    if (!callActive) {
+      // If no call is active, just update the UI to show the selected state
+      setPreviousState('');
+      toast({
+        title: "State Selected",
+        description: `Selected state: ${state}`,
+      });
+      return;
+    }
+    
+    // Check if the selected state is valid in the current state machine
+    if (loadedStateMachine && loadedStateMachine.states[state]) {
+      // Force transition to the selected state
+      if (isAgentMode) {
+        customerScenario.setCurrentState(state);
+      } else {
+        physioCoverage.setCurrentState(state);
+      }
+      
+      // Update the previous state to avoid duplicate messages
+      setPreviousState(state);
+      
+      toast({
+        title: "State Changed",
+        description: `Jumped to state: ${state}`,
+      });
+      
+      // Add a system message about the state change
+      addSystemMessage(`State manually changed to: ${state}`);
+    } else {
+      toast({
+        title: "Invalid State",
+        description: "Cannot navigate to that state in the current scenario",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <SidebarProvider>
@@ -773,6 +813,7 @@ const TestScenario = () => {
                         <DecisionTreeVisualizer 
                           stateMachine={loadedStateMachine}
                           currentState={currentState}
+                          onStateClick={handleStateSelect}
                         />
                       </TabsContent>
                     </Tabs>
@@ -790,7 +831,10 @@ const TestScenario = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <DecisionTreeVisualizer stateMachine={loadedStateMachine} />
+                    <DecisionTreeVisualizer 
+                      stateMachine={loadedStateMachine} 
+                      onStateClick={handleStateSelect}
+                    />
                   </CardContent>
                 </Card>
               )}
