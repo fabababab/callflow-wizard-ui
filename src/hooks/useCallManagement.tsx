@@ -55,6 +55,12 @@ export const useCallManagement = () => {
     }
   }, [callActive, endCall, startCall]);
   
+  // Reset the timer without ending the call
+  const resetTimer = useCallback(() => {
+    startTimeRef.current = Date.now();
+    setElapsedTime('00:00');
+  }, []);
+  
   return {
     callActive,
     elapsedTime,
@@ -62,7 +68,8 @@ export const useCallManagement = () => {
     startCall,
     endCall,
     acceptCall,
-    handleCall
+    handleCall,
+    resetTimer
   };
 };
 

@@ -12,9 +12,9 @@ import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PhoneCall, PhoneOff, Clock, FileJson, Shield } from 'lucide-react';
+import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge'; // Add missing Badge import
+import { Badge } from '@/components/ui/badge';
 import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
 import { useToast } from '@/hooks/use-toast';
 

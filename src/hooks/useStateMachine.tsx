@@ -121,8 +121,16 @@ export function useStateMachine(activeScenario: ScenarioType) {
       const initialState = getInitialState(stateMachine);
       setCurrentState(initialState);
       setStateData(getStateData(stateMachine, initialState));
+      
+      toast({
+        title: "Scenario Reset",
+        description: "Test scenario has been reset to the beginning",
+      });
+      
+      return true;
     }
-  }, [stateMachine]);
+    return false;
+  }, [stateMachine, toast]);
 
   return {
     currentState,
