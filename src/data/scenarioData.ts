@@ -1,449 +1,440 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { SidebarProvider } from '@/components/ui/sidebar';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
+import { useCustomerScenario } from '@/hooks/useCustomerScenario';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { nanoid } from 'nanoid';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { PhoneCall, PhoneOff, Clock, FileJson } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-import { ScenarioType } from '@/components/ScenarioSelector';
-import { IncomingCall } from '@/components/transcript/IncomingCall';
-import { PreCall } from '@/components/transcript/PreCallInfo';
-import { AISuggestion } from '@/components/transcript/AISuggestion';
-import { scenarioInitialStates } from './stateMachines';
-
-// Define initial messages for each scenario
-export const scenarioInitialMessages: Record<string, string> = {
-  verification: "Guten Tag, ich habe eine E-Mail über einen verdächtigen Login-Versuch auf meinem Konto erhalten und muss meine Identität bestätigen.",
-  bankDetails: "Hallo, ich möchte meine Bankverbindung ändern, da ich zu einer neuen Bank gewechselt bin.",
-  accountHistory: "Ich möchte meine Kontohistorie prüfen. Ich glaube, da stimmt etwas nicht mit den letzten Transaktionen.",
-  physioTherapy: "Guten Tag, ich habe eine Verordnung für Physiotherapie und möchte wissen, ob die Behandlungen von meiner Versicherung übernommen werden.",
-  paymentReminder: "Ich habe eine Mahnung erhalten, obwohl ich die Rechnung bereits letzte Woche bezahlt habe.",
-  insurancePackage: "Hallo, ich schließe bald mein Studium ab und benötige ein neues Versicherungspaket. Können Sie mir dabei helfen?"
-};
-
-// Define the scenario data for each call type
-export const scenarioCallData: Record<string, {
+type Message = {
   id: string;
-  customerName: string;
-  phoneNumber: string;
-  waitTime: string;
-  callType: string;
-  priority: 'high' | 'medium' | 'low';
-  expertise: string;
-  matchScore: number;
-  caseHistory: Array<{
-    date: string;
-    type: string;
-    status: string;
-    description: string;
-  }>;
-  roboCallSummary: {
-    duration: string;
-    intents: string[];
-    sentiment: string;
-    keyPoints: string[];
-  };
-}> = {
-  verification: {
-    id: "1",
-    customerName: 'Emma Wagner',
-    phoneNumber: '+49 123 987 6543',
-    waitTime: '3m 12s',
-    callType: 'Identity Verification',
-    priority: 'high',
-    expertise: 'Account Security',
-    matchScore: 95,
-    caseHistory: [
-      {
-        date: '2025-04-10',
-        type: 'Account Access',
-        status: 'Resolved',
-        description: 'Password reset request'
-      },
-      {
-        date: '2025-03-15',
-        type: 'Login Issue',
-        status: 'Resolved',
-        description: 'Two-factor authentication setup'
-      }
-    ],
-    roboCallSummary: {
-      duration: '2m 45s',
-      intents: ['Identity Verification', 'Account Access'],
-      sentiment: 'Concerned',
-      keyPoints: [
-        'Customer needs to verify identity after suspicious login attempt',
-        'Customer wants to ensure account is secure',
-        'Last login was from an unknown location'
-      ]
-    }
-  },
-  bankDetails: {
-    id: "1",
-    customerName: 'Max Hoffman',
-    phoneNumber: '+49 176 2345 6789',
-    waitTime: '2m 35s',
-    callType: 'Bank Details Update',
-    priority: 'medium',
-    expertise: 'Account Management',
-    matchScore: 88,
-    caseHistory: [
-      {
-        date: '2025-03-20',
-        type: 'Billing Update',
-        status: 'Resolved',
-        description: 'Address change request'
-      },
-      {
-        date: '2024-12-05',
-        type: 'Payment Issue',
-        status: 'Resolved',
-        description: 'Direct debit setup'
-      }
-    ],
-    roboCallSummary: {
-      duration: '1m 55s',
-      intents: ['Bank Details Change', 'Payment Method Update'],
-      sentiment: 'Neutral',
-      keyPoints: [
-        'Customer recently changed banks',
-        'Needs to update direct debit information',
-        'Wants confirmation that payments will transfer correctly'
-      ]
-    }
-  },
-  accountHistory: {
-    id: "1",
-    customerName: 'Laura Becker',
-    phoneNumber: '+49 157 8765 4321',
-    waitTime: '1m 47s',
-    callType: 'Account History Review',
-    priority: 'medium',
-    expertise: 'Account Audit',
-    matchScore: 82,
-    caseHistory: [
-      {
-        date: '2025-01-15',
-        type: 'Statement Request',
-        status: 'Resolved',
-        description: 'Annual statement requested'
-      },
-      {
-        date: '2024-11-22',
-        type: 'Payment Discrepancy',
-        status: 'Resolved',
-        description: 'Payment amount correction'
-      }
-    ],
-    roboCallSummary: {
-      duration: '2m 10s',
-      intents: ['Account History', 'Payment Verification'],
-      sentiment: 'Confused',
-      keyPoints: [
-        'Customer concerned about unexpected charges',
-        'Needs clarification on recent transactions',
-        'Wants to review payment history from last quarter'
-      ]
-    }
-  },
-  physioTherapy: {
-    id: "1",
-    customerName: 'Thomas Müller',
-    phoneNumber: '+49 160 9876 5432',
-    waitTime: '4m 08s',
-    callType: 'Leistungsabdeckung Physiobehandlung',
-    priority: 'high',
-    expertise: 'Health Insurance Benefits',
-    matchScore: 94,
-    caseHistory: [
-      {
-        date: '2025-04-02',
-        type: 'Claim Submission',
-        status: 'Pending',
-        description: 'Physiotherapy invoice submitted'
-      },
-      {
-        date: '2024-12-10',
-        type: 'Coverage Inquiry',
-        status: 'Resolved',
-        description: 'Health insurance benefits explanation'
-      }
-    ],
-    roboCallSummary: {
-      duration: '3m 25s',
-      intents: ['Coverage Verification', 'Claim Status'],
-      sentiment: 'Concerned',
-      keyPoints: [
-        'Received prescription for 10 physiotherapy sessions',
-        'Unsure if all treatments are covered by insurance',
-        'Wants to know maximum reimbursement amount',
-        'Previous claim was partially rejected'
-      ]
-    }
-  },
-  paymentReminder: {
-    id: "1",
-    customerName: 'Sophia Klein',
-    phoneNumber: '+49 151 2345 6789',
-    waitTime: '2m 52s',
-    callType: 'Mahnung trotz Zahlung',
-    priority: 'high',
-    expertise: 'Billing Disputes',
-    matchScore: 91,
-    caseHistory: [
-      {
-        date: '2025-03-30',
-        type: 'Payment Confirmation',
-        status: 'Pending',
-        description: 'Payment receipt submitted'
-      },
-      {
-        date: '2025-03-15',
-        type: 'Invoice Inquiry',
-        status: 'Resolved',
-        description: 'Quarterly billing statement explanation'
-      }
-    ],
-    roboCallSummary: {
-      duration: '2m 18s',
-      intents: ['Payment Dispute', 'Billing Error'],
-      sentiment: 'Frustrated',
-      keyPoints: [
-        'Received payment reminder despite making payment on time',
-        'Has bank transfer confirmation from last week',
-        'Second notice received yesterday with late fees',
-        'Concerned about credit rating impact'
-      ]
-    }
-  },
-  insurancePackage: {
-    id: "1",
-    customerName: 'Jonas Schwarz',
-    phoneNumber: '+49 172 8765 4321',
-    waitTime: '1m 35s',
-    callType: 'Neues Versicherungspacket (Studiumsabschluss)',
-    priority: 'medium',
-    expertise: 'Insurance Packages',
-    matchScore: 87,
-    caseHistory: [
-      {
-        date: '2025-04-15',
-        type: 'Coverage Update',
-        status: 'In Progress',
-        description: 'Student insurance expiration'
-      },
-      {
-        date: '2024-08-22',
-        type: 'Plan Change',
-        status: 'Resolved',
-        description: 'Student health insurance enrollment'
-      }
-    ],
-    roboCallSummary: {
-      duration: '3m 05s',
-      intents: ['Insurance Update', 'New Package Information'],
-      sentiment: 'Neutral',
-      keyPoints: [
-        'Graduating from university next month',
-        'Current student insurance package expiring',
-        'Looking for appropriate coverage for full-time employment',
-        'Interested in additional dental and vision coverage options'
-      ]
-    }
-  }
+  text: string;
+  sender: 'agent' | 'customer' | 'system';
+  timestamp: Date;
+  responseOptions?: string[];
 };
 
-// Sample incoming calls data
-export const incomingCalls: IncomingCall[] = [
-  {
-    id: "1",
-    customerName: 'Emma Wagner',
-    phoneNumber: '+49 123 987 6543',
-    waitTime: '3m 12s',
-    callType: 'Technical Support',
-    priority: 'high',
-    expertise: 'Network Issues',
-    matchScore: 95
-  },
-  {
-    id: "2",
-    customerName: 'Max Hoffmann',
-    phoneNumber: '+49 234 876 5432',
-    waitTime: '2m 35s',
-    callType: 'Account Services',
-    priority: 'medium',
-    expertise: 'Billing',
-    matchScore: 72
-  },
-  {
-    id: "3",
-    customerName: 'Sophie Becker',
-    phoneNumber: '+49 345 765 4321',
-    waitTime: '1m 47s',
-    callType: 'Technical Support',
-    priority: 'high',
-    expertise: 'Software Setup',
-    matchScore: 88
-  }
-];
-
-// Sample pre-calls data
-export const preCalls: PreCall[] = [
-  {
-    id: "1",
-    timestamp: '14:32:15',
-    agent: 'RoboVoice',
-    content: "Hello, I'm having trouble with my internet connection. It keeps dropping every few minutes.",
-    response: "I understand that's frustrating. Can you tell me when this issue started and if you've already tried restarting your router?",
-    customerName: 'Emma Wagner',
-    callType: 'Technical Support'
-  },
-  {
-    id: "2",
-    timestamp: '14:33:20',
-    agent: 'RoboVoice',
-    content: "It started yesterday evening. Yes, I've tried restarting the router multiple times but it doesn't help.",
-    response: "Thank you for that information. Have you noticed if any specific activities cause the connection to drop more frequently?",
-    customerName: 'Emma Wagner',
-    callType: 'Technical Support'
-  },
-  {
-    id: "3",
-    timestamp: '14:34:45',
-    agent: 'Technical Agent Maria',
-    content: "It seems to happen more when I'm on video calls or streaming videos.",
-    response: "That suggests it might be related to bandwidth usage. I'll make a note of this and transfer you to one of our network specialists who can help diagnose the issue further.",
-    customerName: 'Emma Wagner',
-    callType: 'Technical Support'
-  }
-];
-
-// Helper function to get suggestion based on scenario and message
-export const generateAiSuggestion = (scenario: ScenarioType, afterMessageId: number): AISuggestion[] => {
-  if (!scenario) return [];
-
-  // If there's no state machine for this scenario, use these static suggestions
-  switch(scenario) {
-    case 'verification':
-      if (afterMessageId === 2) {
-        return [{
-          id: String(Date.now()),
-          text: "Bitte fragen Sie nach Kundennummer und Geburtsdatum für die Verifizierung.",
-          type: 'action'
-        }];
-      } else if (afterMessageId === 4) {
-        return [{
-          id: String(Date.now()),
-          text: "Kunde verifiziert - Sie können zusätzlich Two-Factor Authentication anbieten.",
-          type: 'info'
-        }];
-      } else if (afterMessageId > 5) {
-        return [{
-          id: String(Date.now()),
-          text: "Ich habe Ihr Konto gesichert und ein neues Passwort eingerichtet. Sie erhalten in Kürze eine E-Mail mit einem Link zur Passwortänderung. Bitte aktivieren Sie auch die Zwei-Faktor-Authentifizierung für zusätzliche Sicherheit.",
-          type: 'response'
-        }];
-      }
-      break;
-    case 'bankDetails':
-      if (afterMessageId === 2) {
-        return [{
-          id: String(Date.now()),
-          text: "Bitte verifizieren Sie den Kunden bevor Sie Bankdaten ändern.",
-          type: 'action'
-        }];
-      } else if (afterMessageId === 4) {
-        return [{
-          id: String(Date.now()),
-          text: "Kunde verwendet seit 5 Jahren Lastschriftverfahren.",
-          type: 'info'
-        }];
-      } else if (afterMessageId > 5) {
-        return [{
-          id: String(Date.now()),
-          text: "Vielen Dank für die Bestätigung. Ich habe Ihre Bankverbindung aktualisiert. Die Änderung wird ab dem nächsten Abrechnungszyklus wirksam. Sie erhalten eine Bestätigungs-E-Mail mit allen Details.",
-          type: 'response'
-        }];
-      }
-      break;
-    case 'accountHistory':
-      if (afterMessageId === 2) {
-        return [{
-          id: String(Date.now()),
-          text: "Fragen Sie nach dem Zeitraum und den betroffenen Transaktionen.",
-          type: 'action'
-        }];
-      } else if (afterMessageId === 4) {
-        return [{
-          id: String(Date.now()),
-          text: "Kunde hat in den letzten 6 Monaten keine verdächtigen Aktivitäten gemeldet.",
-          type: 'info'
-        }];
-      } else if (afterMessageId > 5) {
-        return [{
-          id: String(Date.now()),
-          text: "Ich habe die verdächtigen Transaktionen markiert und eine Untersuchung eingeleitet. Sie erhalten innerhalb von 48 Stunden eine Rückmeldung von unserem Sicherheitsteam. Als Vorsichtsmaßnahme habe ich Ihre Karte gesperrt und eine neue Karte bestellt.",
-          type: 'response'
-        }];
-      }
-      break;
-    case 'paymentReminder':
-      if (afterMessageId === 2) {
-        return [{
-          id: String(Date.now()),
-          text: "Zahlungseingang vom 25. April wurde im System vermerkt, aber noch nicht verarbeitet.",
-          type: 'info'
-        }];
-      } else if (afterMessageId === 4) {
-        return [{
-          id: String(Date.now()),
-          text: "Bitte prüfen Sie die Zahlungsreferenz und stornieren Sie die Mahngebühren.",
-          type: 'action'
-        }];
-      } else if (afterMessageId > 5) {
-        return [{
-          id: String(Date.now()),
-          text: "Ich habe den Zahlungseingang bestätigt und die Mahnung sowie alle Mahngebühren storniert. Sie erhalten innerhalb der nächsten 24 Stunden eine Bestätigung per E-Mail. Ich entschuldige mich für die Unannehmlichkeiten.",
-          type: 'response'
-        }];
-      }
-      break;
-    case 'insurancePackage':
-      if (afterMessageId === 2) {
-        return [{
-          id: String(Date.now()),
-          text: "Empfohlenes Paket: StartPlus mit erweitertem Zahnschutz und Sehhilfen-Option.",
-          type: 'info'
-        }];
-      } else if (afterMessageId === 4) {
-        return [{
-          id: String(Date.now()),
-          text: "Informieren Sie über 15% Neukundenrabatt für Berufseinsteiger im ersten Jahr.",
-          type: 'action'
-        }];
-      } else if (afterMessageId > 5) {
-        return [{
-          id: String(Date.now()),
-          text: "Unser StartPlus-Paket mit erweitertem Zahnschutz und Brillenoption kostet 89€ monatlich. Als Berufseinsteiger erhalten Sie im ersten Jahr einen Rabatt von 15%. Ich kann Ihnen detaillierte Informationen per E-Mail zusenden und einen persönlichen Beratungstermin anbieten.",
-          type: 'response'
-        }];
-      }
-      break;
-    default:
-      if (afterMessageId === 2) {
-        return [{
-          id: String(Date.now()),
-          text: "Kundenhistorie zeigt mehrere technische Probleme in den letzten 30 Tagen.",
-          type: 'info'
-        }];
-      } else if (afterMessageId === 4) {
-        return [{
-          id: String(Date.now()),
-          text: "Empfehlung: Router-Firmware aktualisieren und Bandbreiten-Test durchführen.",
-          type: 'action'
-        }];
-      } else if (afterMessageId > 5) {
-        return [{
-          id: String(Date.now()),
-          text: "Basierend auf unserer Diagnose scheint das Problem mit Ihrer Netzwerkausrüstung zusammenzuhängen. Ich empfehle ein Firmware-Update für Ihren Router und die Durchführung eines Bandbreiten-Tests. Ich kann Ihnen einen Techniker schicken, der das Problem weiter untersuchen kann.",
-          type: 'response'
-        }];
-      }
-  }
+const TestScenario = () => {
+  const [callActive, setCallActive] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [elapsedTime, setElapsedTime] = useState('00:00');
+  const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
+  const [previousState, setPreviousState] = useState<string>('');
+  const [showJsonDialog, setShowJsonDialog] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
   
-  return [];
+  // Choose the appropriate state machine based on the mode
+  const customerScenario = useCustomerScenario();
+  const physioCoverage = usePhysioCoverageStateMachine();
+  
+  // Use the appropriate scenario based on the mode
+  const activeScenario = isAgentMode ? customerScenario : physioCoverage;
+  const {
+    currentState,
+    isLoading,
+    error,
+    getSystemMessage,
+    startConversation,
+    resetConversation,
+    isFinalState,
+  } = activeScenario;
+  
+  // Use type narrowing to safely access mode-specific properties
+  const processAgentResponse = isAgentMode 
+    ? customerScenario.processAgentResponse 
+    : physioCoverage.processEvent;
+    
+  const getCustomerText = isAgentMode 
+    ? customerScenario.getCustomerText 
+    : (() => '');
+    
+  const getAgentOptions = isAgentMode 
+    ? customerScenario.getAgentOptions 
+    : (() => []);
+
+  // Scroll to bottom whenever messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Update timer when call is active
+  useEffect(() => {
+    if (callActive) {
+      startTimeRef.current = Date.now();
+      timerRef.current = window.setInterval(() => {
+        const seconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        setElapsedTime(
+          `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+        );
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [callActive]);
+
+  // Add a system message
+  const addSystemMessage = (text: string) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: nanoid(),
+        text,
+        sender: 'system',
+        timestamp: new Date()
+      }
+    ]);
+  };
+
+  // Add an agent message
+  const addAgentMessage = (text: string, responseOptions: string[] = []) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: nanoid(),
+        text,
+        sender: 'agent',
+        timestamp: new Date(),
+        responseOptions
+      }
+    ]);
+  };
+
+  // Add a customer message
+  const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: nanoid(),
+        text,
+        sender: 'customer',
+        timestamp: new Date(),
+        responseOptions
+      }
+    ]);
+  };
+
+  // Update messages based on state changes
+  useEffect(() => {
+    if (!callActive || isLoading || currentState === previousState) return;
+
+    // Update the previous state to avoid duplicate messages
+    setPreviousState(currentState);
+    
+    // Handle system message if present
+    const systemMessage = getSystemMessage();
+    if (systemMessage) {
+      addSystemMessage(systemMessage);
+    }
+
+    if (isAgentMode) {
+      // In agent mode, we show customer messages and agent response options
+      const customerText = getCustomerText();
+      
+      if (customerText) {
+        addCustomerMessage(customerText);
+        
+        // After adding customer message, get agent options and add empty agent message with options
+        const agentOptions = getAgentOptions();
+        if (agentOptions && agentOptions.length > 0) {
+          addAgentMessage("", agentOptions);
+        }
+      }
+    } else {
+      // In customer mode (original behavior)
+      const agentText = physioCoverage.getAgentText();
+      if (agentText) {
+        const suggestions = physioCoverage.getSuggestions();
+        addAgentMessage(agentText, suggestions);
+      }
+    }
+
+    // Auto-end call when reaching final state
+    if (isFinalState()) {
+      setTimeout(() => setCallActive(false), 3000);
+    }
+  }, [callActive, currentState, isLoading, getSystemMessage, isAgentMode, getCustomerText, getAgentOptions, physioCoverage, previousState, isFinalState]);
+
+  // Handle starting a call
+  const handleStartCall = () => {
+    setMessages([]);
+    setCallActive(true);
+    setPreviousState('');
+    resetConversation();
+    addSystemMessage('Call started');
+    startConversation();
+  };
+
+  // Handle ending a call
+  const handleEndCall = () => {
+    setCallActive(false);
+    addSystemMessage('Call ended');
+  };
+
+  // Handle selecting a response option
+  const handleSelectResponse = (response: string) => {
+    if (isAgentMode) {
+      addAgentMessage(response);
+      processAgentResponse(response);
+    } else {
+      addCustomerMessage(response);
+      physioCoverage.processEvent(response);
+    }
+  };
+
+  // Handle sending a custom message
+  const handleSendMessage = () => {
+    if (!inputValue.trim()) return;
+    
+    if (isAgentMode) {
+      addAgentMessage(inputValue);
+    } else {
+      addCustomerMessage(inputValue);
+    }
+    
+    setInputValue('');
+    // Not processing any event, just for free text input
+  };
+
+  // Handle toggling the agent mode
+  const handleToggleAgentMode = () => {
+    if (callActive) {
+      addSystemMessage("Can't change roles during an active call");
+      return;
+    }
+    setIsAgentMode(!isAgentMode);
+  };
+
+  // Get JSON data for the active scenario
+  const getScenarioJson = () => {
+    if (isAgentMode) {
+      return JSON.stringify(customerScenario, null, 2);
+    } else {
+      return JSON.stringify(require('../data/stateMachines/physioCoverage.json'), null, 2);
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-background">
+      <SidebarProvider>
+        <Sidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <Header />
+          <div className="flex-1 overflow-auto p-4 md:p-6">
+            <div className="grid gap-6">
+              <Card className="flex-1">
+                <CardHeader>
+                  <CardTitle>
+                    {isAgentMode ? "Agent Mode: You help the customer" : "Customer Mode: AI helps you"}
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch id="agent-mode" checked={isAgentMode} onCheckedChange={handleToggleAgentMode} disabled={callActive} />
+                      <Label htmlFor="agent-mode">You are the agent</Label>
+                    </div>
+                    {!isAgentMode && "Using physio coverage conversation flow"}
+                    {isAgentMode && "Using customer scenario flow"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4">
+                    {!callActive ? (
+                      <Button 
+                        onClick={handleStartCall} 
+                        className="flex items-center gap-1"
+                      >
+                        <PhoneCall size={16} />
+                        Start Test Call
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium flex items-center gap-1">
+                          <Clock size={14} className="text-red-500" />
+                          {elapsedTime}
+                        </span>
+                        <Button 
+                          onClick={handleEndCall} 
+                          variant="destructive"
+                          className="flex items-center gap-1"
+                        >
+                          <PhoneOff size={16} />
+                          End Test Call
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {isLoading && (
+                <Card>
+                  <CardContent className="py-4">
+                    <p className="text-center">Loading state machine...</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {error && (
+                <Card>
+                  <CardContent className="py-4">
+                    <p className="text-red-500">{error}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {callActive && !isLoading && !error && (
+                <Card className="flex-1 overflow-hidden">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>Test Conversation</CardTitle>
+                      <CardDescription>
+                        Current state: {currentState}
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => setShowJsonDialog(true)}
+                    >
+                      <FileJson size={16} />
+                      View JSON
+                    </Button>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Tabs defaultValue="chat" className="w-full">
+                      <TabsList className="grid grid-cols-2 mx-4 mt-4">
+                        <TabsTrigger value="chat">Chat View</TabsTrigger>
+                        <TabsTrigger value="state">State Machine</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="chat" className="p-4 max-h-[60vh] overflow-y-auto">
+                        <div className="space-y-4 mb-4">
+                          {messages.map((message) => (
+                            <div 
+                              key={message.id}
+                              className={`p-3 rounded-lg ${
+                                message.sender === 'agent' 
+                                  ? 'bg-primary/10 ml-4' 
+                                  : message.sender === 'customer' 
+                                  ? 'bg-secondary/20 mr-4' 
+                                  : 'bg-muted text-center italic text-sm'
+                              }`}
+                            >
+                              <p className="text-xs font-semibold mb-1">
+                                {message.sender === 'agent' ? 'Agent' : 
+                                 message.sender === 'customer' ? 'Customer' : 'System'}
+                                {isAgentMode && message.sender === 'agent' && " (You)"}
+                                {!isAgentMode && message.sender === 'customer' && " (You)"}
+                              </p>
+                              <p>{message.text}</p>
+
+                              {message.responseOptions && message.responseOptions.length > 0 && (
+                                (isAgentMode && message.sender === 'agent' && !message.text || 
+                                 !isAgentMode && message.sender === 'agent') && (
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {message.responseOptions.map((option) => (
+                                      <Button 
+                                        key={option} 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleSelectResponse(option)}
+                                      >
+                                        {option}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          ))}
+                          <div ref={messagesEndRef} />
+                        </div>
+
+                        <div className="py-2 border-t">
+                          <div className="flex gap-2">
+                            <Input 
+                              placeholder={`Type your own ${isAgentMode ? 'agent' : 'customer'} response...`} 
+                              value={inputValue} 
+                              onChange={(e) => setInputValue(e.target.value)} 
+                              className="flex-1"
+                              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                            />
+                            <Button 
+                              type="submit" 
+                              onClick={handleSendMessage}
+                              disabled={!inputValue.trim()}
+                            >
+                              Send
+                            </Button>
+                          </div>
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="state" className="p-4 max-h-[60vh] overflow-y-auto">
+                        <div className="space-y-4">
+                          <div className="bg-muted p-3 rounded-lg">
+                            <h3 className="font-medium">Current State</h3>
+                            <p className="text-sm mt-1">{currentState}</p>
+                          </div>
+                          <div className="bg-muted p-3 rounded-lg">
+                            <h3 className="font-medium">Available Options</h3>
+                            <div className="mt-2 space-y-1">
+                              {isAgentMode ? 
+                                getAgentOptions().map((option) => (
+                                  <p key={option} className="text-sm">{option}</p>
+                                )) :
+                                physioCoverage.getSuggestions().map((suggestion) => (
+                                  <p key={suggestion} className="text-sm">{suggestion}</p>
+                                ))
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
+      </SidebarProvider>
+
+      {/* Dialog to display the JSON file */}
+      <Dialog open={showJsonDialog} onOpenChange={setShowJsonDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {isAgentMode ? "Customer Scenario JSON" : "Physio Coverage JSON"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[60vh]">
+            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+              {getScenarioJson()}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 };
+
+export default TestScenario;

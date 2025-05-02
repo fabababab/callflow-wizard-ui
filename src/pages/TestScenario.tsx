@@ -12,7 +12,8 @@ import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PhoneCall, PhoneOff, Clock } from 'lucide-react';
+import { PhoneCall, PhoneOff, Clock, FileJson } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type Message = {
   id: string;
@@ -29,6 +30,7 @@ const TestScenario = () => {
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
   const [previousState, setPreviousState] = useState<string>('');
+  const [showJsonDialog, setShowJsonDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -223,6 +225,15 @@ const TestScenario = () => {
     setIsAgentMode(!isAgentMode);
   };
 
+  // Get JSON data for the active scenario
+  const getScenarioJson = () => {
+    if (isAgentMode) {
+      return JSON.stringify(customerScenario, null, 2);
+    } else {
+      return JSON.stringify(require('../data/stateMachines/physioCoverage.json'), null, 2);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background">
       <SidebarProvider>
@@ -293,11 +304,22 @@ const TestScenario = () => {
 
               {callActive && !isLoading && !error && (
                 <Card className="flex-1 overflow-hidden">
-                  <CardHeader>
-                    <CardTitle>Test Conversation</CardTitle>
-                    <CardDescription>
-                      Current state: {currentState}
-                    </CardDescription>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle>Test Conversation</CardTitle>
+                      <CardDescription>
+                        Current state: {currentState}
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => setShowJsonDialog(true)}
+                    >
+                      <FileJson size={16} />
+                      View JSON
+                    </Button>
                   </CardHeader>
                   <CardContent className="p-0">
                     <Tabs defaultValue="chat" className="w-full">
@@ -396,6 +418,22 @@ const TestScenario = () => {
           </div>
         </div>
       </SidebarProvider>
+
+      {/* Dialog to display the JSON file */}
+      <Dialog open={showJsonDialog} onOpenChange={setShowJsonDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {isAgentMode ? "Customer Scenario JSON" : "Physio Coverage JSON"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[60vh]">
+            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+              {getScenarioJson()}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
