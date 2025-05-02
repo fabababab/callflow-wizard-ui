@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   HeadphonesIcon, 
@@ -22,17 +23,19 @@ import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import SidebarTrigger from '@/components/SidebarTrigger';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import ActionPanel from '@/components/ActionPanel';
+import ScenarioSelector, { ScenarioType, scenarioCallData } from '@/components/ScenarioSelector';
 
 const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [acceptedCallId, setAcceptedCallId] = React.useState<number | null>(null);
   const [expandedPreCallId, setExpandedPreCallId] = React.useState<number | null>(null);
   const [rightSidebarOpen, setRightSidebarOpen] = React.useState(true);
@@ -47,6 +50,14 @@ const Dashboard = () => {
   const [callStartTime, setCallStartTime] = React.useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = React.useState('00:00');
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const [activeScenario, setActiveScenario] = React.useState<ScenarioType>(null);
+
+  // Check if a scenario was passed via navigation
+  React.useEffect(() => {
+    if (location.state?.scenario) {
+      setActiveScenario(location.state.scenario);
+    }
+  }, [location.state]);
 
   const queueStats = {
     activeAgents: 12,
@@ -55,43 +66,14 @@ const Dashboard = () => {
     serviceLevelToday: 82
   };
 
-  const incomingCall = {
-    id: 1,
-    customerName: 'Emma Wagner',
-    phoneNumber: '+49 123 987 6543',
-    waitTime: '3m 12s',
-    callType: 'Technical Support',
-    priority: 'high',
-    expertise: 'Network Issues',
-    matchScore: 95,
-    caseHistory: [
-      {
-        date: '2025-04-10',
-        type: 'Technical Support',
-        status: 'Resolved',
-        description: 'Router configuration issues'
-      },
-      {
-        date: '2025-03-15',
-        type: 'Billing Inquiry',
-        status: 'Resolved',
-        description: 'Monthly payment adjustment'
-      }
-    ],
-    roboCallSummary: {
-      duration: '2m 45s',
-      intents: ['Network Connectivity', 'Router Issues'],
-      sentiment: 'Frustrated',
-      keyPoints: [
-        'Internet connection drops frequently',
-        'Router has been restarted multiple times',
-        'Issues persist for the last 24 hours'
-      ]
+  // Get the appropriate incoming call based on the active scenario
+  const getIncomingCall = () => {
+    if (activeScenario && scenarioCallData[activeScenario]) {
+      return scenarioCallData[activeScenario];
     }
-  };
-
-  const incomingCalls = [
-    {
+    
+    // Default call data if no scenario is selected
+    return {
       id: 1,
       customerName: 'Emma Wagner',
       phoneNumber: '+49 123 987 6543',
@@ -99,59 +81,245 @@ const Dashboard = () => {
       callType: 'Technical Support',
       priority: 'high',
       expertise: 'Network Issues',
-      matchScore: 95
-    },
-    {
-      id: 2,
-      customerName: 'Max Hoffmann',
-      phoneNumber: '+49 234 876 5432',
-      waitTime: '2m 35s',
-      callType: 'Account Services',
-      priority: 'medium',
-      expertise: 'Billing',
-      matchScore: 72
-    },
-    {
-      id: 3,
-      customerName: 'Sophie Becker',
-      phoneNumber: '+49 345 765 4321',
-      waitTime: '1m 47s',
-      callType: 'Technical Support',
-      priority: 'high',
-      expertise: 'Software Setup',
-      matchScore: 88
-    }
-  ];
+      matchScore: 95,
+      caseHistory: [
+        {
+          date: '2025-04-10',
+          type: 'Technical Support',
+          status: 'Resolved',
+          description: 'Router configuration issues'
+        },
+        {
+          date: '2025-03-15',
+          type: 'Billing Inquiry',
+          status: 'Resolved',
+          description: 'Monthly payment adjustment'
+        }
+      ],
+      roboCallSummary: {
+        duration: '2m 45s',
+        intents: ['Network Connectivity', 'Router Issues'],
+        sentiment: 'Frustrated',
+        keyPoints: [
+          'Internet connection drops frequently',
+          'Router has been restarted multiple times',
+          'Issues persist for the last 24 hours'
+        ]
+      }
+    };
+  };
 
-  const preCalls = [
-    {
-      id: 1,
-      timestamp: '14:32:15',
-      agent: 'RoboVoice',
-      content: "Hello, I'm having trouble with my internet connection. It keeps dropping every few minutes.",
-      response: "I understand that's frustrating. Can you tell me when this issue started and if you've already tried restarting your router?",
-      customerName: 'Emma Wagner',
-      callType: 'Technical Support'
-    },
-    {
-      id: 2,
-      timestamp: '14:33:20',
-      agent: 'RoboVoice',
-      content: "It started yesterday evening. Yes, I've tried restarting the router multiple times but it doesn't help.",
-      response: "Thank you for that information. Have you noticed if any specific activities cause the connection to drop more frequently?",
-      customerName: 'Emma Wagner',
-      callType: 'Technical Support'
-    },
-    {
-      id: 3,
-      timestamp: '14:34:45',
-      agent: 'Technical Agent Maria',
-      content: "It seems to happen more when I'm on video calls or streaming videos.",
-      response: "That suggests it might be related to bandwidth usage. I'll make a note of this and transfer you to one of our network specialists who can help diagnose the issue further.",
-      customerName: 'Emma Wagner',
-      callType: 'Technical Support'
+  const incomingCall = getIncomingCall();
+
+  // Generate scenario-specific pre-call conversations
+  const getPreCalls = () => {
+    if (!activeScenario) {
+      return [
+        {
+          id: 1,
+          timestamp: '14:32:15',
+          agent: 'RoboVoice',
+          content: "Hello, I'm having trouble with my internet connection. It keeps dropping every few minutes.",
+          response: "I understand that's frustrating. Can you tell me when this issue started and if you've already tried restarting your router?",
+          customerName: 'Emma Wagner',
+          callType: 'Technical Support'
+        },
+        {
+          id: 2,
+          timestamp: '14:33:20',
+          agent: 'RoboVoice',
+          content: "It started yesterday evening. Yes, I've tried restarting the router multiple times but it doesn't help.",
+          response: "Thank you for that information. Have you noticed if any specific activities cause the connection to drop more frequently?",
+          customerName: 'Emma Wagner',
+          callType: 'Technical Support'
+        },
+        {
+          id: 3,
+          timestamp: '14:34:45',
+          agent: 'Technical Agent Maria',
+          content: "It seems to happen more when I'm on video calls or streaming videos.",
+          response: "That suggests it might be related to bandwidth usage. I'll make a note of this and transfer you to one of our network specialists who can help diagnose the issue further.",
+          customerName: 'Emma Wagner',
+          callType: 'Technical Support'
+        }
+      ];
     }
-  ];
+
+    switch (activeScenario) {
+      case 'verification':
+        return [
+          {
+            id: 1,
+            timestamp: '14:32:15',
+            agent: 'RoboVoice',
+            content: "Hello, I need to verify my identity. I received an email saying someone tried to log into my account from a different country.",
+            response: "I understand your concern. For security purposes, I'll need to verify your identity. Could you confirm when you last logged into your account?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          },
+          {
+            id: 2,
+            timestamp: '14:33:20',
+            agent: 'RoboVoice',
+            content: "I logged in yesterday evening from my home computer, but I definitely wasn't abroad.",
+            response: "Thank you for confirming. To proceed with verification, I'll need some additional information. Can you confirm your date of birth and the last four digits of your account number?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          }
+        ];
+      case 'bankDetails':
+        return [
+          {
+            id: 1,
+            timestamp: '14:32:15',
+            agent: 'RoboVoice',
+            content: "Hi there, I need to update my bank details as I've switched to a new bank.",
+            response: "I'd be happy to help you update your bank information. For security purposes, I'll need to verify your identity first before making any changes.",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          },
+          {
+            id: 2,
+            timestamp: '14:33:20',
+            agent: 'RoboVoice',
+            content: "I understand. What information do you need from me for verification?",
+            response: "I'll need your full name, date of birth, and the current account information we have on file. After verification, I can help you update to your new bank details.",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          }
+        ];
+      case 'accountHistory':
+        return [
+          {
+            id: 1,
+            timestamp: '14:32:15',
+            agent: 'RoboVoice',
+            content: "Hello, I'm calling because I noticed some unusual charges on my account statement and I'd like to review my account history.",
+            response: "I understand your concern about the unusual charges. I'd be happy to help you review your account history. Could you specify which time period you're interested in?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          },
+          {
+            id: 2,
+            timestamp: '14:33:20',
+            agent: 'RoboVoice',
+            content: "I'd like to look at the past three months, specifically any transactions over €50.",
+            response: "Thank you for that information. Before I provide your account history, I need to verify your identity for security purposes. Can you please confirm your full name and date of birth?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          }
+        ];
+      case 'physioTherapy':
+        return [
+          {
+            id: 1,
+            timestamp: '14:32:15',
+            agent: 'RoboVoice',
+            content: "Guten Tag, ich habe eine Frage zur Leistungsabdeckung für Physiotherapie. Mein Arzt hat mir 10 Behandlungen verschrieben.",
+            response: "Guten Tag. Ich helfe Ihnen gerne bei Ihrer Frage zur Physiotherapie-Abdeckung. Können Sie mir bitte Ihre Versicherungsnummer und die genaue Verschreibung mitteilen?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          },
+          {
+            id: 2,
+            timestamp: '14:33:20',
+            agent: 'RoboVoice',
+            content: "Meine Versicherungsnummer ist DE12345678 und die Verschreibung ist für Physiotherapie wegen Rückenschmerzen, 10 Einheiten.",
+            response: "Vielen Dank für diese Informationen. Bei Ihrem Tarif sind grundsätzlich physiotherapeutische Behandlungen abgedeckt, aber ich muss die genauen Details zu Ihrem speziellen Fall prüfen.",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          }
+        ];
+      case 'paymentReminder':
+        return [
+          {
+            id: 1,
+            timestamp: '14:32:15',
+            agent: 'RoboVoice',
+            content: "Hallo, ich habe heute eine Mahnung erhalten, obwohl ich die Rechnung bereits letzte Woche bezahlt habe.",
+            response: "Das tut mir leid zu hören. Ich verstehe Ihre Bedenken. Können Sie mir bitte Ihre Kundennummer und das Datum Ihrer Zahlung mitteilen?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          },
+          {
+            id: 2,
+            timestamp: '14:33:20',
+            agent: 'RoboVoice',
+            content: "Meine Kundennummer ist 987654321 und ich habe am 25. April überwiesen. Ich habe sogar einen Zahlungsbeleg.",
+            response: "Vielen Dank für diese Information. Es kann manchmal zu Verzögerungen bei der Verarbeitung von Zahlungen kommen. Ich werde das für Sie überprüfen und klären.",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          }
+        ];
+      case 'insurancePackage':
+        return [
+          {
+            id: 1,
+            timestamp: '14:32:15',
+            agent: 'RoboVoice',
+            content: "Guten Tag, ich schließe nächsten Monat mein Studium ab und muss meine Studentenversicherung auf ein reguläres Paket umstellen.",
+            response: "Herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung Ihrer Versicherung. Können Sie mir Ihre aktuelle Versicherungsnummer mitteilen?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          },
+          {
+            id: 2,
+            timestamp: '14:33:20',
+            agent: 'RoboVoice',
+            content: "Danke! Meine Versicherungsnummer ist ST-7654321. Ich suche nach einem Paket mit guter Zahnversicherung und bin bald Vollzeit beschäftigt.",
+            response: "Vielen Dank für diese Informationen. Wir bieten verschiedene Pakete für Berufseinsteiger an, die auf Ihre Bedürfnisse zugeschnitten sind. Ich werde Ihnen gerne die Optionen erklären.",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          }
+        ];
+      default:
+        return [
+          {
+            id: 1,
+            timestamp: '14:32:15',
+            agent: 'RoboVoice',
+            content: "Hello, I'm having an issue with my account.",
+            response: "I understand. Could you please provide more details about the issue you're experiencing?",
+            customerName: incomingCall.customerName,
+            callType: incomingCall.callType
+          }
+        ];
+    }
+  };
+
+  const preCalls = getPreCalls();
+
+  // Customize incoming calls list based on the active scenario
+  const getIncomingCalls = () => {
+    const mainCall = getIncomingCall();
+    
+    // Return a list with the main call and some generic calls
+    return [
+      mainCall,
+      {
+        id: 2,
+        customerName: 'Max Hoffmann',
+        phoneNumber: '+49 234 876 5432',
+        waitTime: '2m 35s',
+        callType: 'Account Services',
+        priority: 'medium',
+        expertise: 'Billing',
+        matchScore: 72
+      },
+      {
+        id: 3,
+        customerName: 'Sophie Becker',
+        phoneNumber: '+49 345 765 4321',
+        waitTime: '1m 47s',
+        callType: 'Technical Support',
+        priority: 'high',
+        expertise: 'Software Setup',
+        matchScore: 88
+      }
+    ];
+  };
+
+  const incomingCalls = getIncomingCalls();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -188,10 +356,13 @@ const Dashboard = () => {
       description: `You are now connected with ${call?.customerName}`,
     });
 
+    // Generate initial messages based on the active scenario
     setTimeout(() => {
+      const initialGreeting = getScenarioInitialMessage();
+      
       const initialMessage = {
         id: 1,
-        text: `Hello ${call?.customerName}, thank you for calling technical support. I understand you're experiencing issues with your internet connection. How can I assist you today?`,
+        text: initialGreeting,
         sender: 'agent' as const,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
@@ -200,13 +371,55 @@ const Dashboard = () => {
       setTimeout(() => {
         const customerResponse = {
           id: 2,
-          text: "Yes, my internet keeps dropping every few minutes. It's really frustrating, especially during video calls.",
+          text: getScenarioCustomerResponse(),
           sender: 'customer' as const,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setMessages(prev => [...prev, customerResponse]);
       }, 2000);
     }, 1000);
+  };
+
+  // Get scenario-specific initial message
+  const getScenarioInitialMessage = () => {
+    const call = incomingCalls.find(call => call.id === acceptedCallId);
+    
+    switch(activeScenario) {
+      case 'verification':
+        return `Hello ${call?.customerName}, thank you for calling about the security alert. I understand you're concerned about the login attempt from an unfamiliar location. Let me help you verify your identity and secure your account.`;
+      case 'bankDetails':
+        return `Hello ${call?.customerName}, thank you for calling about updating your bank details. I'll be happy to help you make this change securely. First, I'll need to verify some information with you.`;
+      case 'accountHistory':
+        return `Hello ${call?.customerName}, thank you for calling about your account history. I understand you've noticed some unusual charges. I'll help you review your recent transactions and resolve any discrepancies.`;
+      case 'physioTherapy':
+        return `Guten Tag ${call?.customerName}, danke für Ihren Anruf bezüglich der Physiotherapie-Abdeckung. Ich verstehe, dass Sie Fragen zu Ihrer Verschreibung haben. Ich werde Ihnen gerne alle Details zu Ihrer Versicherungsabdeckung erklären.`;
+      case 'paymentReminder':
+        return `Guten Tag ${call?.customerName}, danke für Ihren Anruf bezüglich der Mahnung. Ich verstehe, dass Sie bereits eine Zahlung geleistet haben und trotzdem eine Mahnung erhalten haben. Ich werde das umgehend für Sie klären.`;
+      case 'insurancePackage':
+        return `Guten Tag ${call?.customerName}, herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung Ihrer Versicherung auf ein passendes Paket für Ihre neue Lebenssituation.`;
+      default:
+        return `Hello ${call?.customerName}, thank you for calling customer support. How can I assist you today?`;
+    }
+  };
+
+  // Get scenario-specific customer response
+  const getScenarioCustomerResponse = () => {
+    switch(activeScenario) {
+      case 'verification':
+        return "Yes, I'm very concerned. I received an email alert about a login attempt from another country. I want to make sure my account is secure and no one has accessed my personal information.";
+      case 'bankDetails':
+        return "Thank you. I recently changed banks and need to update my direct debit information for my monthly payments. I have all my new bank details ready.";
+      case 'accountHistory':
+        return "Thanks for your help. There are three transactions from last month that I don't recognize. They're all small amounts, but I want to make sure no one has unauthorized access to my account.";
+      case 'physioTherapy':
+        return "Danke. Mein Hauptanliegen ist, ob alle 10 verschriebenen Behandlungen von meiner Versicherung übernommen werden. Mein Physiotherapeut sagte mir, dass manche Versicherungen nur 6 Behandlungen abdecken.";
+      case 'paymentReminder':
+        return "Ich habe definitiv am 25. April bezahlt und habe sogar eine Bestätigung von meiner Bank. Trotzdem habe ich gestern eine Mahnung mit Mahngebühren erhalten. Das ist sehr ärgerlich.";
+      case 'insurancePackage':
+        return "Danke. Ich beginne am 1. Juli meinen neuen Job und brauche bis dahin ein neues Versicherungspaket. Besonders wichtig ist mir eine gute Zahnversicherung und eventuell eine Zusatzversicherung für Brillen.";
+      default:
+        return "I've been having issues with my service recently and need some help resolving them.";
+    }
   };
 
   const handleEndCall = () => {
@@ -232,24 +445,91 @@ const Dashboard = () => {
       setMessages(prev => [...prev, newMessage]);
       setInputValue('');
 
+      // Generate scenario-specific responses
       setTimeout(() => {
-        const responses = [
-          "I've already tried restarting the router multiple times.",
-          "Yes, it happens more frequently during video calls.",
-          "The issue started yesterday evening.",
-          "No other devices are having this problem.",
-          "Thank you for your help with this."
-        ];
+        const responses = getScenarioResponses();
+        const responseIndex = Math.min(Math.floor(messages.length / 2), responses.length - 1);
         
         const customerResponse = {
           id: messages.length + 2,
-          text: responses[Math.min(Math.floor(messages.length / 2), responses.length - 1)],
+          text: responses[responseIndex],
           sender: 'customer' as const,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
         setMessages(prev => [...prev, customerResponse]);
       }, 2000);
     }
+  };
+
+  // Get scenario-specific customer responses
+  const getScenarioResponses = () => {
+    switch(activeScenario) {
+      case 'verification':
+        return [
+          "Yes, I can confirm my date of birth is May 12, 1985.",
+          "The last four digits of my account are 7890.",
+          "I have received no other suspicious emails or notifications.",
+          "Should I change my password as a precaution?",
+          "Thank you for your help with this."
+        ];
+      case 'bankDetails':
+        return [
+          "My name is Max Hoffman, born June 3, 1982.",
+          "My current bank is Commerzbank, account ending in 4321.",
+          "My new bank is Deutsche Bank, and I have the IBAN ready.",
+          "When will the change take effect for my next payment?",
+          "Thank you for updating my information."
+        ];
+      case 'accountHistory':
+        return [
+          "The transactions were on March 15, 18, and 22.",
+          "They were all between €15-25 from an online merchant called 'DigiStore'.",
+          "I've never shopped at this store before.",
+          "Should I request a new card as a precaution?",
+          "Thank you for flagging these as suspicious."
+        ];
+      case 'physioTherapy':
+        return [
+          "Meine Versicherungsnummer ist DE12345678.",
+          "Die Behandlungen sind für chronische Rückenschmerzen nach einem Bandscheibenvorfall.",
+          "Mein Arzt sagt, dass alle 10 Behandlungen medizinisch notwendig sind.",
+          "Muss ich eine Vorabgenehmigung einholen?",
+          "Vielen Dank für die Informationen."
+        ];
+      case 'paymentReminder':
+        return [
+          "Die Rechnungsnummer ist INV-29384.",
+          "Ich habe per Überweisung bezahlt, nicht per Lastschrift.",
+          "Werden die Mahngebühren storniert, wenn es sich um einen Fehler handelt?",
+          "Kann ich Ihnen den Zahlungsbeleg zusenden?",
+          "Danke für Ihre Hilfe in dieser Angelegenheit."
+        ];
+      case 'insurancePackage':
+        return [
+          "Ich werde als Softwareentwickler arbeiten, hauptsächlich im Büro.",
+          "Ich brauche definitiv eine gute Zahnversicherung und Brillenversicherung.",
+          "Wie viel würde ein umfassendes Paket kosten?",
+          "Gibt es Rabatte für Neukunden oder Berufseinsteiger?",
+          "Vielen Dank für die ausführliche Beratung."
+        ];
+      default:
+        return [
+          "I've already tried restarting the router multiple times.",
+          "Yes, it happens more frequently during video calls.",
+          "The issue started yesterday evening.",
+          "No other devices are having this problem.",
+          "Thank you for your help with this."
+        ];
+    }
+  };
+
+  const handleSelectScenario = (scenario: ScenarioType) => {
+    setActiveScenario(scenario);
+    // Reset call state when scenario changes
+    setAcceptedCallId(null);
+    setCallActive(false);
+    setMessages([]);
+    setElapsedTime('00:00');
   };
 
   const renderActiveCall = () => (
@@ -359,6 +639,11 @@ const Dashboard = () => {
                   Manage incoming calls and call queue
                 </p>
               </div>
+
+              <ScenarioSelector 
+                activeScenario={activeScenario} 
+                onSelectScenario={handleSelectScenario} 
+              />
 
               <div className="grid gap-4 md:grid-cols-4">
                 <Card>
@@ -507,7 +792,7 @@ const Dashboard = () => {
                               variant="outline" 
                               className="bg-destructive/10 text-destructive border-destructive/20"
                             >
-                              High priority
+                              {incomingCall.priority === 'high' ? 'High' : 'Medium'} priority
                             </Badge>
                           </div>
                           <Button 
