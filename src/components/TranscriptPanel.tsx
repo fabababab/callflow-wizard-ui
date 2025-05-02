@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, User, Clock, ArrowRight, Star, UserCircle, MessageSquare, ChevronDown, ChevronUp, CheckCircle as Check, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -819,3 +820,271 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     toast({
       title: "Call Accepted",
       description: `You are now connected with ${call?.customerName}`,
+    });
+  };
+
+  return (
+    <Card className="flex flex-col h-full border-none shadow-none">
+      <CardHeader className="px-4 py-3 flex flex-row items-center justify-between space-y-0">
+        <div>
+          <CardTitle className="text-lg">Transcript</CardTitle>
+          <CardDescription>Call transcript and suggestions</CardDescription>
+        </div>
+        <div className="flex items-center gap-2">
+          {callActive ? (
+            <>
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Clock size={14} className="text-red-500" />
+                <span>{elapsedTime}</span>
+              </Badge>
+              <Button 
+                size="icon" 
+                variant="destructive" 
+                onClick={handleCall}
+                title="End Call"
+                className="h-8 w-8"
+              >
+                <PhoneOff size={16} />
+              </Button>
+            </>
+          ) : (
+            <Button 
+              size="sm" 
+              variant="default" 
+              onClick={handleCall}
+              className="h-8"
+            >
+              <PhoneCall size={16} className="mr-1" />
+              Start Call
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+        <div className="p-4 flex-1 overflow-y-auto space-y-4">
+          {!callActive && !acceptedCallId && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium mb-2">Incoming Calls</h3>
+              {incomingCalls.map((call) => (
+                <Card key={call.id} className="border border-gray-200 shadow-sm">
+                  <CardHeader className="p-3 pb-0">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8 bg-primary text-primary-foreground">
+                          <AvatarFallback>{call.customerName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <CardTitle className="text-base">{call.customerName}</CardTitle>
+                          <CardDescription className="text-xs">{call.phoneNumber}</CardDescription>
+                        </div>
+                      </div>
+                      <Badge variant={call.priority === 'high' ? "destructive" : call.priority === 'medium' ? "default" : "secondary"}>
+                        {call.priority}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-3">
+                    <div className="grid grid-cols-2 gap-1 text-sm">
+                      <div className="flex items-center gap-1">
+                        <Clock size={12} className="text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Wait: {call.waitTime}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <User size={12} className="text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">{call.expertise}</span>
+                      </div>
+                    </div>
+                    <div className="mt-1 text-xs">
+                      <span>{call.callType}</span>
+                      <div className="mt-1 flex items-center">
+                        <span className="text-xs text-muted-foreground">Match Score:</span>
+                        <div className="ml-1 h-2 w-20 bg-gray-200 rounded-full">
+                          <div 
+                            className="h-full bg-primary rounded-full" 
+                            style={{ width: `${call.matchScore}%` }}
+                          />
+                        </div>
+                        <span className="ml-1 text-xs font-medium">{call.matchScore}%</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <div className="p-3 pt-0 flex justify-end">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleAcceptCall(call.id)}
+                      className="h-8"
+                    >
+                      Accept Call
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+              
+              {/* Pre-call information section */}
+              <Collapsible 
+                open={!historyCollapsed} 
+                onOpenChange={setHistoryCollapsed}
+                className="bg-gray-50 rounded-md p-2"
+              >
+                <CollapsibleTrigger asChild>
+                  <div className="flex items-center justify-between cursor-pointer p-2">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare size={16} className="text-primary" />
+                      <span className="font-medium">Pre-Call Information</span>
+                    </div>
+                    {historyCollapsed ? (
+                      <ChevronDown size={16} className="text-muted-foreground" />
+                    ) : (
+                      <ChevronUp size={16} className="text-muted-foreground" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-3">
+                  {preCalls.map((preCall) => (
+                    <div key={preCall.id} className="bg-white p-3 rounded-md shadow-sm border border-gray-100">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-muted-foreground">{preCall.timestamp} - {preCall.agent}</span>
+                        <Badge variant="outline" className="text-xs">{preCall.callType}</Badge>
+                      </div>
+                      <p className="text-sm mb-1 pl-2 border-l-2 border-gray-300">
+                        {preCall.content}
+                      </p>
+                      <p className="text-sm mb-1 pl-2 mt-2 border-l-2 border-primary text-primary">
+                        {preCall.response}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                        <UserCircle size={12} />
+                        <span>{preCall.customerName}</span>
+                      </div>
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          )}
+          
+          {/* Message transcript */}
+          {messages.map((message) => (
+            <div 
+              key={message.id} 
+              className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div 
+                className={`rounded-lg max-w-[80%] p-3 shadow-sm 
+                  ${message.sender === 'agent' 
+                    ? 'bg-primary text-primary-foreground ml-auto' 
+                    : 'bg-secondary text-secondary-foreground mr-auto'}`}
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs ${message.sender === 'agent' ? 'bg-primary/20' : 'bg-secondary/20'}`}
+                  >
+                    {message.sender === 'agent' ? 'You' : 'Customer'}
+                  </Badge>
+                  <span className="text-xs opacity-70">{message.timestamp}</span>
+                </div>
+                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                
+                {/* AI Suggestions */}
+                {message.suggestions && message.suggestions.length > 0 && (
+                  <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
+                    <div className="text-xs flex items-center gap-1">
+                      <Star size={12} /> 
+                      <span>AI Suggestions</span>
+                    </div>
+                    {message.suggestions.map((suggestion) => (
+                      <div 
+                        key={suggestion.id}
+                        className={`p-2 rounded ${
+                          suggestion.type === 'info' 
+                            ? 'bg-blue-100/20 text-blue-700' 
+                            : suggestion.type === 'action' 
+                              ? 'bg-yellow-100/20 text-yellow-700'
+                              : 'bg-green-100/20 text-green-700'
+                        } text-xs relative ${
+                          suggestion.accepted ? 'opacity-70' : ''
+                        } ${
+                          suggestion.rejected ? 'opacity-40' : ''
+                        }`}
+                      >
+                        {suggestion.accepted && (
+                          <div className="absolute -top-1 -right-1">
+                            <Check size={14} className="text-green-500" />
+                          </div>
+                        )}
+                        {suggestion.rejected && (
+                          <div className="absolute -top-1 -right-1">
+                            <X size={14} className="text-red-500" />
+                          </div>
+                        )}
+                        <div className="flex justify-between">
+                          <p>{suggestion.text}</p>
+                          {!suggestion.accepted && !suggestion.rejected && (
+                            <div className="flex gap-1 ml-2">
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-4 w-4 rounded-full p-0" 
+                                onClick={() => handleAcceptSuggestion(suggestion.id, message.id)}
+                              >
+                                <Check size={10} className="text-green-500" />
+                              </Button>
+                              <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-4 w-4 rounded-full p-0" 
+                                onClick={() => handleRejectSuggestion(suggestion.id, message.id)}
+                              >
+                                <X size={10} className="text-red-500" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+        
+        {callActive && (
+          <div className="p-4 border-t">
+            <div className="flex gap-2">
+              <Button 
+                size="icon" 
+                variant="outline" 
+                className={`${isRecording ? 'bg-red-100 text-red-500' : ''} h-9`}
+                onClick={toggleRecording}
+              >
+                <Mic size={16} />
+              </Button>
+              <Input 
+                placeholder="Type your response here..." 
+                value={inputValue} 
+                onChange={(e) => setInputValue(e.target.value)} 
+                className="flex-1"
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
+              <Button 
+                type="submit" 
+                size="icon" 
+                onClick={handleSendMessage}
+                disabled={!inputValue.trim()}
+                className="h-9"
+              >
+                <CornerDownLeft size={16} />
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default TranscriptPanel;
