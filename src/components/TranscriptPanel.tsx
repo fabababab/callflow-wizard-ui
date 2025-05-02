@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, ArrowLeftRight } from 'lucide-react';
+import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,11 +42,12 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     toggleRecording,
     handleCall,
     handleAcceptCall,
-    currentState
+    currentState,
+    stateData
   } = useTranscript(activeScenario);
 
   // Check if this scenario has a state machine
-  const hasStateMachineAvailable = activeScenario && stateMachines[activeScenario as string];
+  const hasStateMachineAvailable = activeScenario && hasStateMachine(activeScenario);
   
   // Function to open the JSON dialog
   const handleViewJson = async () => {
@@ -89,7 +91,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          {callActive && activeScenario && (
+          {activeScenario && (
             <Button
               size="icon"
               variant="outline"
@@ -208,7 +210,26 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           <div ref={messagesEndRef} />
         </div>
         
-        {callActive && (
+        {callActive && stateData && stateData.responseOptions && stateData.responseOptions.length > 0 ? (
+          <div className="p-4 border-t">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare size={16} className="text-primary" />
+              <span className="text-sm font-medium">Available Responses:</span>
+            </div>
+            <div className="grid gap-2">
+              {stateData.responseOptions.map((option, index) => (
+                <Button 
+                  key={index} 
+                  variant="outline" 
+                  className="justify-start text-left h-auto py-2"
+                  onClick={() => handleSelectResponse(option)}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ) : callActive && (
           <div className="p-4 border-t">
             <div className="flex gap-2">
               <Button 

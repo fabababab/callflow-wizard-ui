@@ -8,7 +8,8 @@ import {
   getNextState, 
   getStateData, 
   StateMachine, 
-  StateMachineState 
+  StateMachineState,
+  StateData
 } from '@/utils/stateMachineLoader';
 
 export function useStateMachine(activeScenario: ScenarioType) {

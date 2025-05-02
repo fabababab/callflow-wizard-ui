@@ -13,32 +13,101 @@
     "identity_check": {
       "type": "verification",
       "agent": "Aus Sicherheitsgründen müsste ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum mitteilen?",
-      "customer": "Mein Name ist Michael Schmidt und ich wurde am 15. März 1985 geboren.",
+      "responseOptions": [
+        "Mein Name ist Michael Schmidt und ich wurde am 15. März 1985 geboren.",
+        "Ich möchte meine persönlichen Daten nicht am Telefon nennen.",
+        "Können Sie mir zuerst beweisen, dass Sie wirklich von meiner Bank sind?"
+      ],
       "action": "Identitätsprüfung starten",
       "transitions": {
+        "Mein Name ist Michael Schmidt und ich wurde am 15. März 1985 geboren.": "confirm_identity",
+        "Ich möchte meine persönlichen Daten nicht am Telefon nennen.": "explain_verification",
+        "Können Sie mir zuerst beweisen, dass Sie wirklich von meiner Bank sind?": "prove_identity",
         "default": "confirm_identity"
+      }
+    },
+    "explain_verification": {
+      "type": "info",
+      "agent": "Ich verstehe Ihre Bedenken. Zur Verifizierung können Sie auch unser Online-Banking nutzen oder persönlich in eine Filiale kommen. Alternativ kann ich Ihnen auch nur die letzten vier Stellen Ihrer Kontonummer bestätigen, wenn Sie diese nennen möchten.",
+      "customer": "In Ordnung, die letzten vier Stellen meiner Kontonummer sind 4321.",
+      "transitions": {
+        "default": "confirm_identity"
+      }
+    },
+    "prove_identity": {
+      "type": "verification",
+      "agent": "Das ist eine berechtigte Frage. Ich kann Ihnen die letzten vier Stellen Ihrer Kontonummer nennen, wenn Sie mir Ihren vollständigen Namen mitteilen.",
+      "customer": "Mein Name ist Michael Schmidt.",
+      "transitions": {
+        "default": "bank_provides_proof"
+      }
+    },
+    "bank_provides_proof": {
+      "type": "verification",
+      "agent": "Vielen Dank, Herr Schmidt. Die letzten vier Stellen Ihrer Kontonummer lauten 4321. Ist das korrekt?",
+      "responseOptions": [
+        "Ja, das ist korrekt.",
+        "Nein, das ist nicht korrekt."
+      ],
+      "transitions": {
+        "Ja, das ist korrekt.": "confirm_identity",
+        "Nein, das ist nicht korrekt.": "verification_failed",
+        "default": "confirm_identity"
+      }
+    },
+    "verification_failed": {
+      "type": "info",
+      "agent": "Es tut mir leid, es scheint ein Problem mit der Identitätsüberprüfung zu geben. Ich empfehle Ihnen, unsere Hotline unter der offiziellen Nummer auf Ihrer Bankkarte anzurufen oder persönlich in eine Filiale zu kommen.",
+      "transitions": {
+        "default": "end"
       }
     },
     "confirm_identity": {
       "type": "verification",
       "agent": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte auch die letzten vier Ziffern Ihrer Kontonummer nennen?",
+      "responseOptions": [
+        "Ja, das ist 4321.",
+        "Ich bin mir nicht sicher.",
+        "Ich habe meine Kontonummer nicht zur Hand."
+      ],
       "customer": "Ja, das ist 4321.",
       "systemMessage": "Identität bestätigt mit 89% Konfidenz.",
       "transitions": {
-        "default": "explain_issue"
+        "Ja, das ist 4321.": "explain_issue",
+        "default": "verification_incomplete"
+      }
+    },
+    "verification_incomplete": {
+      "type": "info",
+      "agent": "Ich verstehe. Zur Sicherheit empfehle ich Ihnen, sich mit Ihren Kontodetails bei uns zu melden. Sie können entweder später zurückrufen oder unsere Online-Banking-Plattform für sichere Kommunikation nutzen.",
+      "transitions": {
+        "default": "end"
       }
     },
     "explain_issue": {
       "type": "info",
       "agent": "Danke für die Bestätigung. Ich sehe hier den versuchten Login aus dem Ausland. Können Sie mir sagen, ob Sie kürzlich im Ausland waren oder Ihren Account von einem anderen Standort aus genutzt haben?",
+      "responseOptions": [
+        "Nein, ich war nicht im Ausland und habe meinen Account nur von zu Hause aus genutzt.",
+        "Ja, ich war kürzlich auf Geschäftsreise.",
+        "Mein Familienmitglied könnte auf mein Konto zugegriffen haben."
+      ],
       "customer": "Nein, ich war nicht im Ausland und habe meinen Account nur von zu Hause aus genutzt.",
       "transitions": {
+        "Nein, ich war nicht im Ausland und habe meinen Account nur von zu Hause aus genutzt.": "secure_account",
+        "Ja, ich war kürzlich auf Geschäftsreise.": "confirm_legitimate_access",
+        "Mein Familienmitglied könnte auf mein Konto zugegriffen haben.": "explain_sharing_risks",
         "default": "secure_account"
       }
     },
     "secure_account": {
       "type": "decision",
       "agent": "In diesem Fall empfehle ich, Ihr Passwort sofort zu ändern und die Zwei-Faktor-Authentifizierung zu aktivieren. Was möchten Sie tun?",
+      "responseOptions": [
+        "Ich möchte mein Passwort ändern.",
+        "Ich möchte die Zwei-Faktor-Authentifizierung aktivieren.",
+        "Ich möchte beides machen."
+      ],
       "customer": "Ich möchte beides machen. Wie kann ich die Zwei-Faktor-Authentifizierung aktivieren?",
       "suggestions": [
         "Ich helfe Ihnen, Ihr Passwort zu ändern.",
@@ -46,9 +115,9 @@
         "Ich kann beide Sicherheitsmaßnahmen für Sie einrichten."
       ],
       "transitions": {
-        "Ich helfe Ihnen, Ihr Passwort zu ändern.": "password_change",
-        "Lassen Sie mich Ihnen erklären, wie die Zwei-Faktor-Authentifizierung funktioniert.": "explain_2fa",
-        "Ich kann beide Sicherheitsmaßnahmen für Sie einrichten.": "setup_security",
+        "Ich möchte mein Passwort ändern.": "password_change",
+        "Ich möchte die Zwei-Faktor-Authentifizierung aktivieren.": "explain_2fa",
+        "Ich möchte beides machen.": "setup_security",
         "default": "setup_security"
       }
     },
