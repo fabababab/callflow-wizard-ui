@@ -1,175 +1,175 @@
 
 {
+  "id": "account-history",
+  "initial": "start",
   "states": {
     "start": {
-      "type": "info",
-      "agent": "Guten Tag, ich bin Ihr Kundenbetreuer. Wie kann ich Ihnen heute helfen?",
-      "customer": "Guten Tag, ich habe einige ungewöhnliche Abbuchungen auf meinem Kontoauszug bemerkt und möchte meine Kontohistorie überprüfen.",
-      "systemMessage": "Kunde meldet ungewöhnliche Abbuchungen. Identitätsprüfung erforderlich.",
-      "transitions": {
-        "default": "identity_verification"
+      "meta": {
+        "agentText": "Guten Tag, ich bin Ihr Kundenbetreuer. Wie kann ich Ihnen heute helfen?",
+        "systemMessage": "Kunde meldet ungewöhnliche Abbuchungen. Identitätsprüfung erforderlich."
+      },
+      "on": {
+        "DEFAULT": "identity_verification"
       }
     },
     "identity_verification": {
-      "type": "verification",
-      "agent": "Das tut mir leid zu hören. Ich helfe Ihnen gerne bei der Überprüfung. Aus Sicherheitsgründen müsste ich zunächst Ihre Identität bestätigen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum nennen?",
-      "customer": "Mein Name ist Michael Schmidt, geboren am 15. März 1985.",
-      "action": "Identitätsprüfung starten",
-      "transitions": {
-        "default": "account_confirmation"
+      "meta": {
+        "agentText": "Das tut mir leid zu hören. Ich helfe Ihnen gerne bei der Überprüfung. Aus Sicherheitsgründen müsste ich zunächst Ihre Identität bestätigen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum nennen?",
+        "action": "Identitätsprüfung starten"
+      },
+      "on": {
+        "DEFAULT": "account_confirmation"
       }
     },
     "account_confirmation": {
-      "type": "verification",
-      "agent": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte zur Sicherheit auch Ihre Adresse bestätigen?",
-      "customer": "Ja, meine Adresse ist Hauptstraße 123 in 10115 Berlin.",
-      "systemMessage": "Identität bestätigt mit hoher Konfidenz.",
-      "transitions": {
-        "default": "specify_timeframe"
+      "meta": {
+        "agentText": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte zur Sicherheit auch Ihre Adresse bestätigen?",
+        "systemMessage": "Identität bestätigt mit hoher Konfidenz."
+      },
+      "on": {
+        "DEFAULT": "specify_timeframe"
       }
     },
     "specify_timeframe": {
-      "type": "decision",
-      "agent": "Danke für die Bestätigung. Für welchen Zeitraum möchten Sie die Kontohistorie überprüfen?",
-      "customer": "Ich möchte die letzten drei Monate überprüfen, besonders Transaktionen über 50 Euro.",
-      "suggestions": [
-        "Ich zeige Ihnen die Transaktionen der letzten drei Monate.",
-        "Sollen wir uns auf bestimmte Transaktionstypen konzentrieren?",
-        "Möchten Sie die Details zu einer bestimmten Transaktion wissen?"
-      ],
-      "transitions": {
+      "meta": {
+        "agentText": "Danke für die Bestätigung. Für welchen Zeitraum möchten Sie die Kontohistorie überprüfen?",
+        "suggestions": [
+          "Ich zeige Ihnen die Transaktionen der letzten drei Monate.",
+          "Sollen wir uns auf bestimmte Transaktionstypen konzentrieren?",
+          "Möchten Sie die Details zu einer bestimmten Transaktion wissen?"
+        ]
+      },
+      "on": {
         "Ich zeige Ihnen die Transaktionen der letzten drei Monate.": "show_transactions",
         "Sollen wir uns auf bestimmte Transaktionstypen konzentrieren?": "transaction_types",
         "Möchten Sie die Details zu einer bestimmten Transaktion wissen?": "specific_transaction",
-        "default": "show_transactions"
+        "DEFAULT": "show_transactions"
       }
     },
     "transaction_types": {
-      "type": "decision",
-      "agent": "Welche Arten von Transaktionen interessieren Sie besonders? Abbuchungen, Überweisungen, Kartenzahlungen oder etwas anderes?",
-      "customer": "Ich bin besonders an den Kartenzahlungen interessiert.",
-      "transitions": {
-        "default": "show_transactions"
+      "meta": {
+        "agentText": "Welche Arten von Transaktionen interessieren Sie besonders? Abbuchungen, Überweisungen, Kartenzahlungen oder etwas anderes?"
+      },
+      "on": {
+        "DEFAULT": "show_transactions"
       }
     },
     "show_transactions": {
-      "type": "action",
-      "agent": "Ich rufe jetzt Ihre Kontohistorie für die letzten drei Monate ab, mit Fokus auf Transaktionen über 50 Euro. Einen Moment bitte.",
-      "customer": "Danke, ich warte.",
-      "action": "Kontohistorie abrufen",
-      "systemMessage": "Kontohistorie wird abgerufen...",
-      "transitions": {
-        "default": "transaction_results"
+      "meta": {
+        "agentText": "Ich rufe jetzt Ihre Kontohistorie für die letzten drei Monate ab, mit Fokus auf Transaktionen über 50 Euro. Einen Moment bitte.",
+        "action": "Kontohistorie abrufen",
+        "systemMessage": "Kontohistorie wird abgerufen..."
+      },
+      "on": {
+        "DEFAULT": "transaction_results"
       }
     },
     "transaction_results": {
-      "type": "info",
-      "agent": "Ich habe Ihre Kontohistorie überprüft. In den letzten drei Monaten gab es 12 Transaktionen über 50 Euro. Darunter sind drei Zahlungen an einen Online-Shop namens 'DigiStore' am 15., 18. und 22. März, jeweils zwischen 15 und 25 Euro. Sind diese Transaktionen Ihnen bekannt?",
-      "customer": "Nein, diese DigiStore-Transaktionen sind mir nicht bekannt. Ich habe dort nie eingekauft.",
-      "transitions": {
-        "default": "suspicious_transactions"
+      "meta": {
+        "agentText": "Ich habe Ihre Kontohistorie überprüft. In den letzten drei Monaten gab es 12 Transaktionen über 50 Euro. Darunter sind drei Zahlungen an einen Online-Shop namens 'DigiStore' am 15., 18. und 22. März, jeweils zwischen 15 und 25 Euro. Sind diese Transaktionen Ihnen bekannt?"
+      },
+      "on": {
+        "DEFAULT": "suspicious_transactions"
       }
     },
     "specific_transaction": {
-      "type": "info",
-      "agent": "Welche spezifische Transaktion möchten Sie überprüfen?",
-      "customer": "Ich sehe hier eine Zahlung an DigiStore vom 15. März über 19,99 Euro, die ich nicht getätigt habe.",
-      "transitions": {
-        "default": "suspicious_transactions"
+      "meta": {
+        "agentText": "Welche spezifische Transaktion möchten Sie überprüfen?"
+      },
+      "on": {
+        "DEFAULT": "suspicious_transactions"
       }
     },
     "suspicious_transactions": {
-      "type": "decision",
-      "agent": "Diese Transaktionen scheinen tatsächlich verdächtig zu sein. Ich empfehle, diese Zahlungen zu reklamieren und Ihre Karte aus Sicherheitsgründen zu sperren. Möchten Sie, dass wir diese Schritte einleiten?",
-      "customer": "Ja, bitte reklamieren Sie die Zahlungen und sperren Sie meine Karte.",
-      "suggestions": [
-        "Ich werde die Zahlungen reklamieren und Ihre Karte sperren.",
-        "Möchten Sie nur die Zahlungen reklamieren, aber die Karte behalten?",
-        "Sollen wir zuerst weitere Informationen zu den Transaktionen einholen?"
-      ],
-      "transitions": {
+      "meta": {
+        "agentText": "Diese Transaktionen scheinen tatsächlich verdächtig zu sein. Ich empfehle, diese Zahlungen zu reklamieren und Ihre Karte aus Sicherheitsgründen zu sperren. Möchten Sie, dass wir diese Schritte einleiten?",
+        "suggestions": [
+          "Ich werde die Zahlungen reklamieren und Ihre Karte sperren.",
+          "Möchten Sie nur die Zahlungen reklamieren, aber die Karte behalten?",
+          "Sollen wir zuerst weitere Informationen zu den Transaktionen einholen?"
+        ]
+      },
+      "on": {
         "Ich werde die Zahlungen reklamieren und Ihre Karte sperren.": "block_card",
         "Möchten Sie nur die Zahlungen reklamieren, aber die Karte behalten?": "dispute_only",
         "Sollen wir zuerst weitere Informationen zu den Transaktionen einholen?": "gather_info",
-        "default": "block_card"
+        "DEFAULT": "block_card"
       }
     },
     "block_card": {
-      "type": "action",
-      "agent": "Ich werde jetzt Ihre Karte sperren und die fraglichen Transaktionen zur Reklamation markieren. Dies schützt Ihr Konto vor weiteren unberechtigten Zugriffen.",
-      "customer": "Vielen Dank. Wann bekomme ich eine neue Karte?",
-      "action": "Karte sperren und Transaktionen reklamieren",
-      "transitions": {
-        "default": "new_card"
+      "meta": {
+        "agentText": "Ich werde jetzt Ihre Karte sperren und die fraglichen Transaktionen zur Reklamation markieren. Dies schützt Ihr Konto vor weiteren unberechtigten Zugriffen.",
+        "action": "Karte sperren und Transaktionen reklamieren"
+      },
+      "on": {
+        "DEFAULT": "new_card"
       }
     },
     "dispute_only": {
-      "type": "action",
-      "agent": "Ich werde die Zahlungen an DigiStore reklamieren, aber Ihre Karte bleibt aktiv. Bitte beachten Sie, dass dies ein Sicherheitsrisiko darstellen könnte, wenn Ihre Kartendaten kompromittiert wurden.",
-      "customer": "Ich verstehe das Risiko, aber ich brauche die Karte in den nächsten Tagen noch.",
-      "action": "Transaktionen reklamieren",
-      "transitions": {
-        "default": "monitoring"
+      "meta": {
+        "agentText": "Ich werde die Zahlungen an DigiStore reklamieren, aber Ihre Karte bleibt aktiv. Bitte beachten Sie, dass dies ein Sicherheitsrisiko darstellen könnte, wenn Ihre Kartendaten kompromittiert wurden.",
+        "action": "Transaktionen reklamieren"
+      },
+      "on": {
+        "DEFAULT": "monitoring"
       }
     },
     "gather_info": {
-      "type": "action",
-      "agent": "Ich werde weitere Informationen zu diesen Transaktionen einholen. Dies kann uns helfen zu verstehen, wie es zu den unbefugten Abbuchungen kam und ob weitere Maßnahmen erforderlich sind.",
-      "customer": "Das klingt gut. Wie lange wird das dauern?",
-      "action": "Transaktionsdetails recherchieren",
-      "transitions": {
-        "default": "recommend_action"
+      "meta": {
+        "agentText": "Ich werde weitere Informationen zu diesen Transaktionen einholen. Dies kann uns helfen zu verstehen, wie es zu den unbefugten Abbuchungen kam und ob weitere Maßnahmen erforderlich sind.",
+        "action": "Transaktionsdetails recherchieren"
+      },
+      "on": {
+        "DEFAULT": "recommend_action"
       }
     },
     "recommend_action": {
-      "type": "decision",
-      "agent": "Nach meiner Recherche scheint DigiStore ein digitaler Marktplatz für Software und Spiele zu sein. Die Zahlungsmuster deuten auf unbefugte Nutzung Ihrer Kartendaten hin. Ich empfehle dringend, die Karte zu sperren. Sind Sie damit einverstanden?",
-      "customer": "Ja, bitte sperren Sie die Karte.",
-      "transitions": {
-        "default": "block_card"
+      "meta": {
+        "agentText": "Nach meiner Recherche scheint DigiStore ein digitaler Marktplatz für Software und Spiele zu sein. Die Zahlungsmuster deuten auf unbefugte Nutzung Ihrer Kartendaten hin. Ich empfehle dringend, die Karte zu sperren. Sind Sie damit einverstanden?"
+      },
+      "on": {
+        "DEFAULT": "block_card"
       }
     },
     "new_card": {
-      "type": "info",
-      "agent": "Ihre neue Karte wird innerhalb von 3-5 Werktagen per Post zugestellt. In der Zwischenzeit können Sie unsere Mobile-Banking-App für Überweisungen und andere Bankgeschäfte nutzen. Möchten Sie einen vorübergehenden Notfallzugang einrichten?",
-      "customer": "Nein, die App reicht mir für die nächsten Tage. Vielen Dank.",
-      "transitions": {
-        "default": "refund_process"
+      "meta": {
+        "agentText": "Ihre neue Karte wird innerhalb von 3-5 Werktagen per Post zugestellt. In der Zwischenzeit können Sie unsere Mobile-Banking-App für Überweisungen und andere Bankgeschäfte nutzen. Möchten Sie einen vorübergehenden Notfallzugang einrichten?"
+      },
+      "on": {
+        "DEFAULT": "refund_process"
       }
     },
     "monitoring": {
-      "type": "info",
-      "agent": "Wir werden Ihr Konto in den nächsten Tagen besonders genau überwachen und Sie bei verdächtigen Aktivitäten sofort benachrichtigen. Bitte überprüfen Sie Ihre Kontoauszüge regelmäßig und melden Sie uns ungewöhnliche Transaktionen umgehend.",
-      "customer": "Das werde ich machen. Vielen Dank für Ihre Unterstützung.",
-      "transitions": {
-        "default": "refund_process"
+      "meta": {
+        "agentText": "Wir werden Ihr Konto in den nächsten Tagen besonders genau überwachen und Sie bei verdächtigen Aktivitäten sofort benachrichtigen. Bitte überprüfen Sie Ihre Kontoauszüge regelmäßig und melden Sie uns ungewöhnliche Transaktionen umgehend."
+      },
+      "on": {
+        "DEFAULT": "refund_process"
       }
     },
     "refund_process": {
-      "type": "info",
-      "agent": "Die Reklamation der DigiStore-Transaktionen wurde eingeleitet. Die Bearbeitung kann bis zu 14 Tage dauern. Sobald die Prüfung abgeschlossen ist, werden die Beträge Ihrem Konto gutgeschrieben. Sie erhalten eine Bestätigung per E-Mail.",
-      "customer": "Verstanden. Ich werde auf die E-Mail warten.",
-      "systemMessage": "Reklamation erfolgreich eingeleitet.",
-      "transitions": {
-        "default": "conclusion"
+      "meta": {
+        "agentText": "Die Reklamation der DigiStore-Transaktionen wurde eingeleitet. Die Bearbeitung kann bis zu 14 Tage dauern. Sobald die Prüfung abgeschlossen ist, werden die Beträge Ihrem Konto gutgeschrieben. Sie erhalten eine Bestätigung per E-Mail.",
+        "systemMessage": "Reklamation erfolgreich eingeleitet."
+      },
+      "on": {
+        "DEFAULT": "conclusion"
       }
     },
     "conclusion": {
-      "type": "info",
-      "agent": "Gibt es noch etwas anderes, womit ich Ihnen heute helfen kann, Herr Schmidt?",
-      "customer": "Nein, das war alles. Vielen Dank für Ihre Hilfe.",
-      "systemMessage": "Alle Kundenanliegen wurden bearbeitet.",
-      "transitions": {
-        "default": "end"
+      "meta": {
+        "agentText": "Gibt es noch etwas anderes, womit ich Ihnen heute helfen kann, Herr Schmidt?",
+        "systemMessage": "Alle Kundenanliegen wurden bearbeitet."
+      },
+      "on": {
+        "DEFAULT": "end"
       }
     },
     "end": {
-      "type": "info",
-      "agent": "Gerne geschehen. Falls Sie weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Wir wünschen Ihnen einen schönen Tag und entschuldigen uns für die Unannehmlichkeiten.",
-      "customer": "Vielen Dank. Auf Wiederhören!",
-      "systemMessage": "Gespräch erfolgreich abgeschlossen.",
-      "transitions": {}
+      "meta": {
+        "agentText": "Gerne geschehen. Falls Sie weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Wir wünschen Ihnen einen schönen Tag und entschuldigen uns für die Unannehmlichkeiten.",
+        "systemMessage": "Gespräch erfolgreich abgeschlossen."
+      }
     }
-  },
-  "initialState": "start"
+  }
 }

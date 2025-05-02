@@ -31,18 +31,35 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     // Create a map of states to their children
     const stateToChildren = new Map<string, string[]>();
     states.forEach(state => {
-      const nextState = stateMachine.states[state].nextState;
-      if (nextState) {
+      const stateData = stateMachine.states[state];
+      
+      // Handle both formats (on and nextState)
+      if (stateData.on) {
+        const transitions = Object.values(stateData.on);
+        transitions.forEach(nextState => {
+          if (!stateToChildren.has(state)) {
+            stateToChildren.set(state, []);
+          }
+          if (nextState && states.includes(nextState) && !stateToChildren.get(state)?.includes(nextState)) {
+            stateToChildren.get(state)?.push(nextState);
+          }
+        });
+      } else if (stateData.nextState) {
         if (!stateToChildren.has(state)) {
           stateToChildren.set(state, []);
         }
-        stateToChildren.get(state)?.push(nextState);
+        if (stateData.nextState && states.includes(stateData.nextState)) {
+          stateToChildren.get(state)?.push(stateData.nextState);
+        }
       }
     });
     
+    // Calculate initial state
+    const initialState = stateMachine.initialState || stateMachine.initial || 'start';
+    
     // Calculate levels for each state (BFS)
     const levels = new Map<string, number>();
-    const queue: [string, number][] = [[stateMachine.initialState, 0]];
+    const queue: [string, number][] = [[initialState, 0]];
     const visited = new Set<string>();
     
     while (queue.length > 0) {
@@ -86,26 +103,37 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     
     // Draw edges first (so they're behind nodes)
     states.forEach(state => {
-      const nextState = stateMachine.states[state].nextState;
-      if (nextState && positions.has(state) && positions.has(nextState)) {
-        const startPos = positions.get(state)!;
-        const endPos = positions.get(nextState)!;
-        
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        
-        // Create a curved path
-        const path = `M ${startPos.x + nodeSize/2} ${startPos.y + nodeHeight}
-                     C ${startPos.x + nodeSize/2} ${(startPos.y + endPos.y) / 2},
-                       ${endPos.x + nodeSize/2} ${(startPos.y + endPos.y) / 2},
-                       ${endPos.x + nodeSize/2} ${endPos.y}`;
-        
-        line.setAttribute('d', path);
-        line.setAttribute('stroke', '#888');
-        line.setAttribute('stroke-width', '2');
-        line.setAttribute('fill', 'none');
-        line.setAttribute('marker-end', 'url(#arrowhead)');
-        svg.appendChild(line);
+      const stateData = stateMachine.states[state];
+      let nextStates: string[] = [];
+      
+      // Handle both formats (on and nextState)
+      if (stateData.on) {
+        nextStates = Object.values(stateData.on).filter(s => s && states.includes(s));
+      } else if (stateData.nextState) {
+        nextStates = [stateData.nextState];
       }
+      
+      nextStates.forEach(nextState => {
+        if (positions.has(state) && positions.has(nextState)) {
+          const startPos = positions.get(state)!;
+          const endPos = positions.get(nextState)!;
+          
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          
+          // Create a curved path
+          const path = `M ${startPos.x + nodeSize/2} ${startPos.y + nodeHeight}
+                       C ${startPos.x + nodeSize/2} ${(startPos.y + endPos.y) / 2},
+                         ${endPos.x + nodeSize/2} ${(startPos.y + endPos.y) / 2},
+                         ${endPos.x + nodeSize/2} ${endPos.y}`;
+          
+          line.setAttribute('d', path);
+          line.setAttribute('stroke', '#888');
+          line.setAttribute('stroke-width', '2');
+          line.setAttribute('fill', 'none');
+          line.setAttribute('marker-end', 'url(#arrowhead)');
+          svg.appendChild(line);
+        }
+      });
     });
     
     // Create arrowhead marker
@@ -148,7 +176,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
           rect.setAttribute('fill', '#d1fae5'); // Light green for current state
           rect.setAttribute('stroke', '#10b981'); // Green border
           rect.setAttribute('stroke-width', '2');
-        } else if (state === stateMachine.initialState) {
+        } else if (state === initialState) {
           rect.setAttribute('fill', '#e0f2fe'); // Light blue for initial state
           rect.setAttribute('stroke', '#60a5fa'); // Blue border
           rect.setAttribute('stroke-width', '2');

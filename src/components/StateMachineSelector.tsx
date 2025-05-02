@@ -29,7 +29,7 @@ const StateMachineSelector = ({
     <div className="flex flex-col space-y-1.5">
       <Label htmlFor="stateMachine">State Machine</Label>
       <Select
-        value={activeStateMachine || ''}
+        value={activeStateMachine}
         onValueChange={(value) => onSelectStateMachine(value as ScenarioType)}
         disabled={disabled}
       >

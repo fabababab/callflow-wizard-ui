@@ -1,140 +1,140 @@
 
 {
+  "id": "bank-details",
+  "initial": "start",
   "states": {
     "start": {
-      "type": "info",
-      "agent": "Guten Tag, ich bin Ihr Kundenbetreuer. Wie kann ich Ihnen heute helfen?",
-      "customer": "Guten Tag, ich möchte meine Bankdaten aktualisieren, da ich zu einer neuen Bank gewechselt bin.",
-      "systemMessage": "Kunde möchte Bankdaten aktualisieren. Identitätsprüfung erforderlich.",
-      "transitions": {
-        "default": "identity_verification"
+      "meta": {
+        "agentText": "Guten Tag, ich bin Ihr Kundenbetreuer. Wie kann ich Ihnen heute helfen?",
+        "systemMessage": "Kunde möchte Bankdaten aktualisieren. Identitätsprüfung erforderlich."
+      },
+      "on": {
+        "START_CALL": "identity_verification"
       }
     },
     "identity_verification": {
-      "type": "verification",
-      "agent": "Gerne helfe ich Ihnen bei der Aktualisierung Ihrer Bankdaten. Aus Sicherheitsgründen müsste ich zunächst Ihre Identität überprüfen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum nennen?",
-      "customer": "Mein Name ist Michael Schmidt, geboren am 15. März 1985.",
-      "action": "Identitätsprüfung starten",
-      "transitions": {
-        "default": "account_confirmation"
+      "meta": {
+        "agentText": "Gerne helfe ich Ihnen bei der Aktualisierung Ihrer Bankdaten. Aus Sicherheitsgründen müsste ich zunächst Ihre Identität überprüfen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum nennen?",
+        "action": "Identitätsprüfung starten"
+      },
+      "on": {
+        "DEFAULT": "account_confirmation"
       }
     },
     "account_confirmation": {
-      "type": "verification",
-      "agent": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte auch die letzten vier Ziffern Ihrer aktuellen Kontonummer nennen?",
-      "customer": "Die letzten vier Ziffern sind 4321.",
-      "systemMessage": "Identität bestätigt mit hoher Konfidenz.",
-      "transitions": {
-        "default": "bank_form"
+      "meta": {
+        "agentText": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte auch die letzten vier Ziffern Ihrer aktuellen Kontonummer nennen?",
+        "systemMessage": "Identität bestätigt mit hoher Konfidenz."
+      },
+      "on": {
+        "DEFAULT": "bank_form"
       }
     },
     "bank_form": {
-      "type": "action",
-      "agent": "Danke für die Bestätigung. Ich öffne jetzt das Formular zur Aktualisierung Ihrer Bankdaten. Bitte halten Sie Ihre neue IBAN bereit.",
-      "customer": "Ja, ich habe meine neue IBAN hier.",
-      "action": "Bankdatenformular öffnen",
-      "transitions": {
-        "default": "collect_new_data"
+      "meta": {
+        "agentText": "Danke für die Bestätigung. Ich öffne jetzt das Formular zur Aktualisierung Ihrer Bankdaten. Bitte halten Sie Ihre neue IBAN bereit.",
+        "action": "Bankdatenformular öffnen"
+      },
+      "on": {
+        "DEFAULT": "collect_new_data"
       }
     },
     "collect_new_data": {
-      "type": "info",
-      "agent": "Könnten Sie mir bitte Ihre neue Bankverbindung mitteilen? Ich benötige den Namen der Bank und die IBAN.",
-      "customer": "Meine neue Bank ist die Commerzbank und die IBAN lautet DE89 3704 0044 0532 0130 01.",
-      "transitions": {
-        "default": "confirm_data"
+      "meta": {
+        "agentText": "Könnten Sie mir bitte Ihre neue Bankverbindung mitteilen? Ich benötige den Namen der Bank und die IBAN."
+      },
+      "on": {
+        "DEFAULT": "confirm_data"
       }
     },
     "confirm_data": {
-      "type": "decision",
-      "agent": "Vielen Dank. Ich habe folgende Daten erfasst: Bank: Commerzbank, IBAN: DE89 3704 0044 0532 0130 01. Ist das korrekt?",
-      "customer": "Ja, das ist korrekt.",
-      "suggestions": [
-        "Ja, diese Daten sind korrekt. Ich werde sie jetzt aktualisieren.",
-        "Nein, es gibt einen Fehler. Lassen Sie uns die Daten korrigieren.",
-        "Möchten Sie auch den Zahlungsrhythmus oder andere Details ändern?"
-      ],
-      "transitions": {
+      "meta": {
+        "agentText": "Vielen Dank. Ich habe folgende Daten erfasst: Bank: Commerzbank, IBAN: DE89 3704 0044 0532 0130 01. Ist das korrekt?",
+        "suggestions": [
+          "Ja, diese Daten sind korrekt. Ich werde sie jetzt aktualisieren.",
+          "Nein, es gibt einen Fehler. Lassen Sie uns die Daten korrigieren.",
+          "Möchten Sie auch den Zahlungsrhythmus oder andere Details ändern?"
+        ]
+      },
+      "on": {
         "Ja, diese Daten sind korrekt. Ich werde sie jetzt aktualisieren.": "process_update",
         "Nein, es gibt einen Fehler. Lassen Sie uns die Daten korrigieren.": "collect_new_data",
         "Möchten Sie auch den Zahlungsrhythmus oder andere Details ändern?": "additional_changes",
-        "default": "process_update"
+        "DEFAULT": "process_update"
       }
     },
     "additional_changes": {
-      "type": "decision",
-      "agent": "Welche weiteren Änderungen möchten Sie vornehmen? Sie können den Zahlungsrhythmus, den Abbuchungstag oder den Verwendungszweck ändern.",
-      "customer": "Ich möchte den Abbuchungstag auf den 15. des Monats ändern.",
-      "suggestions": [
-        "Ich werde den Abbuchungstag auf den 15. ändern.",
-        "Möchten Sie auch den Zahlungsrhythmus anpassen?",
-        "Möchten Sie den Verwendungszweck anpassen?"
-      ],
-      "transitions": {
+      "meta": {
+        "agentText": "Welche weiteren Änderungen möchten Sie vornehmen? Sie können den Zahlungsrhythmus, den Abbuchungstag oder den Verwendungszweck ändern.",
+        "suggestions": [
+          "Ich werde den Abbuchungstag auf den 15. ändern.",
+          "Möchten Sie auch den Zahlungsrhythmus anpassen?",
+          "Möchten Sie den Verwendungszweck anpassen?"
+        ]
+      },
+      "on": {
         "Ich werde den Abbuchungstag auf den 15. ändern.": "update_withdrawal_day",
         "Möchten Sie auch den Zahlungsrhythmus anpassen?": "update_payment_frequency",
         "Möchten Sie den Verwendungszweck anpassen?": "update_reference",
-        "default": "process_update"
+        "DEFAULT": "process_update"
       }
     },
     "update_withdrawal_day": {
-      "type": "info",
-      "agent": "Ich habe den Abbuchungstag auf den 15. des Monats geändert. Gibt es weitere Änderungen, die Sie vornehmen möchten?",
-      "customer": "Nein, das war alles. Vielen Dank.",
-      "transitions": {
-        "default": "process_update"
+      "meta": {
+        "agentText": "Ich habe den Abbuchungstag auf den 15. des Monats geändert. Gibt es weitere Änderungen, die Sie vornehmen möchten?"
+      },
+      "on": {
+        "DEFAULT": "process_update"
       }
     },
     "update_payment_frequency": {
-      "type": "info",
-      "agent": "Aktuell ist Ihr Zahlungsrhythmus monatlich. Welchen Rhythmus würden Sie bevorzugen? Wir bieten monatlich, vierteljährlich oder jährlich an.",
-      "customer": "Ich möchte es bei monatlich belassen.",
-      "transitions": {
-        "default": "process_update"
+      "meta": {
+        "agentText": "Aktuell ist Ihr Zahlungsrhythmus monatlich. Welchen Rhythmus würden Sie bevorzugen? Wir bieten monatlich, vierteljährlich oder jährlich an."
+      },
+      "on": {
+        "DEFAULT": "process_update"
       }
     },
     "update_reference": {
-      "type": "info",
-      "agent": "Welchen Verwendungszweck möchten Sie für die Abbuchungen festlegen?",
-      "customer": "Bitte verwenden Sie 'Versicherungsbeitrag Michael Schmidt'.",
-      "transitions": {
-        "default": "process_update"
+      "meta": {
+        "agentText": "Welchen Verwendungszweck möchten Sie für die Abbuchungen festlegen?"
+      },
+      "on": {
+        "DEFAULT": "process_update"
       }
     },
     "process_update": {
-      "type": "action",
-      "agent": "Vielen Dank für Ihre Angaben. Ich werde die Änderungen jetzt in unserem System veranlassen. Dies kann einen Moment dauern.",
-      "customer": "In Ordnung, ich warte.",
-      "action": "Bankdaten aktualisieren",
-      "systemMessage": "Bankdaten werden aktualisiert...",
-      "transitions": {
-        "default": "confirmation"
+      "meta": {
+        "agentText": "Vielen Dank für Ihre Angaben. Ich werde die Änderungen jetzt in unserem System veranlassen. Dies kann einen Moment dauern.",
+        "action": "Bankdaten aktualisieren",
+        "systemMessage": "Bankdaten werden aktualisiert..."
+      },
+      "on": {
+        "DEFAULT": "confirmation"
       }
     },
     "confirmation": {
-      "type": "info",
-      "agent": "Die Aktualisierung Ihrer Bankdaten wurde erfolgreich durchgeführt. Die neue Bankverbindung wird ab dem nächsten Zahlungstermin verwendet. Sie erhalten in Kürze eine Bestätigungsmail.",
-      "customer": "Vielen Dank für Ihre Hilfe.",
-      "systemMessage": "Aktualisierung erfolgreich abgeschlossen.",
-      "transitions": {
-        "default": "conclusion"
+      "meta": {
+        "agentText": "Die Aktualisierung Ihrer Bankdaten wurde erfolgreich durchgeführt. Die neue Bankverbindung wird ab dem nächsten Zahlungstermin verwendet. Sie erhalten in Kürze eine Bestätigungsmail.",
+        "systemMessage": "Aktualisierung erfolgreich abgeschlossen."
+      },
+      "on": {
+        "DEFAULT": "conclusion"
       }
     },
     "conclusion": {
-      "type": "info",
-      "agent": "Gerne geschehen. Haben Sie noch weitere Fragen oder wünschen Sie Hilfe zu einem anderen Thema?",
-      "customer": "Nein, das war alles. Vielen Dank und einen schönen Tag noch.",
-      "transitions": {
-        "default": "end"
+      "meta": {
+        "agentText": "Gerne geschehen. Haben Sie noch weitere Fragen oder wünschen Sie Hilfe zu einem anderen Thema?"
+      },
+      "on": {
+        "DEFAULT": "end"
       }
     },
     "end": {
-      "type": "info",
-      "agent": "Ich danke Ihnen für Ihren Anruf. Ich wünsche Ihnen ebenfalls einen schönen Tag. Auf Wiederhören!",
-      "customer": "Auf Wiederhören!",
-      "systemMessage": "Gespräch erfolgreich abgeschlossen.",
-      "transitions": {}
+      "meta": {
+        "agentText": "Ich danke Ihnen für Ihren Anruf. Ich wünsche Ihnen ebenfalls einen schönen Tag. Auf Wiederhören!",
+        "systemMessage": "Gespräch erfolgreich abgeschlossen."
+      }
     }
-  },
-  "initialState": "start"
+  }
 }

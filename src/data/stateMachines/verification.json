@@ -1,177 +1,181 @@
 
 {
+  "id": "verification",
+  "initial": "start",
   "states": {
     "start": {
-      "type": "info",
-      "agent": "Guten Tag, ich bin Ihr Kundenbetreuer. Sie haben uns wegen einer Sicherheitsbenachrichtigung kontaktiert. Wie kann ich Ihnen helfen?",
-      "customer": "Hallo, ich habe eine E-Mail bekommen, dass jemand versucht hat, sich von einem anderen Land aus in meinen Account einzuloggen.",
-      "systemMessage": "Der Kunde hat eine Verdachtsmeldung erhalten. Überprüfen Sie die Identität.",
-      "transitions": {
-        "default": "identity_check"
+      "meta": {
+        "agentText": "Guten Tag, ich bin Ihr Kundenbetreuer. Sie haben uns wegen einer Sicherheitsbenachrichtigung kontaktiert. Wie kann ich Ihnen helfen?",
+        "systemMessage": "Der Kunde hat eine Verdachtsmeldung erhalten. Überprüfen Sie die Identität."
+      },
+      "on": {
+        "DEFAULT": "identity_check"
       }
     },
     "identity_check": {
-      "type": "verification",
-      "agent": "Aus Sicherheitsgründen müsste ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum mitteilen?",
-      "responseOptions": [
-        "Mein Name ist Michael Schmidt und ich wurde am 15. März 1985 geboren.",
-        "Ich möchte meine persönlichen Daten nicht am Telefon nennen.",
-        "Können Sie mir zuerst beweisen, dass Sie wirklich von meiner Bank sind?"
-      ],
-      "action": "Identitätsprüfung starten",
-      "transitions": {
+      "meta": {
+        "agentText": "Aus Sicherheitsgründen müsste ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum mitteilen?",
+        "responseOptions": [
+          "Mein Name ist Michael Schmidt und ich wurde am 15. März 1985 geboren.",
+          "Ich möchte meine persönlichen Daten nicht am Telefon nennen.",
+          "Können Sie mir zuerst beweisen, dass Sie wirklich von meiner Bank sind?"
+        ],
+        "action": "Identitätsprüfung starten"
+      },
+      "on": {
         "Mein Name ist Michael Schmidt und ich wurde am 15. März 1985 geboren.": "confirm_identity",
         "Ich möchte meine persönlichen Daten nicht am Telefon nennen.": "explain_verification",
         "Können Sie mir zuerst beweisen, dass Sie wirklich von meiner Bank sind?": "prove_identity",
-        "default": "confirm_identity"
+        "DEFAULT": "confirm_identity"
       }
     },
     "explain_verification": {
-      "type": "info",
-      "agent": "Ich verstehe Ihre Bedenken. Zur Verifizierung können Sie auch unser Online-Banking nutzen oder persönlich in eine Filiale kommen. Alternativ kann ich Ihnen auch nur die letzten vier Stellen Ihrer Kontonummer bestätigen, wenn Sie diese nennen möchten.",
-      "customer": "In Ordnung, die letzten vier Stellen meiner Kontonummer sind 4321.",
-      "transitions": {
-        "default": "confirm_identity"
+      "meta": {
+        "agentText": "Ich verstehe Ihre Bedenken. Zur Verifizierung können Sie auch unser Online-Banking nutzen oder persönlich in eine Filiale kommen. Alternativ kann ich Ihnen auch nur die letzten vier Stellen Ihrer Kontonummer bestätigen, wenn Sie diese nennen möchten."
+      },
+      "on": {
+        "DEFAULT": "confirm_identity"
       }
     },
     "prove_identity": {
-      "type": "verification",
-      "agent": "Das ist eine berechtigte Frage. Ich kann Ihnen die letzten vier Stellen Ihrer Kontonummer nennen, wenn Sie mir Ihren vollständigen Namen mitteilen.",
-      "customer": "Mein Name ist Michael Schmidt.",
-      "transitions": {
-        "default": "bank_provides_proof"
+      "meta": {
+        "agentText": "Das ist eine berechtigte Frage. Ich kann Ihnen die letzten vier Stellen Ihrer Kontonummer nennen, wenn Sie mir Ihren vollständigen Namen mitteilen."
+      },
+      "on": {
+        "DEFAULT": "bank_provides_proof"
       }
     },
     "bank_provides_proof": {
-      "type": "verification",
-      "agent": "Vielen Dank, Herr Schmidt. Die letzten vier Stellen Ihrer Kontonummer lauten 4321. Ist das korrekt?",
-      "responseOptions": [
-        "Ja, das ist korrekt.",
-        "Nein, das ist nicht korrekt."
-      ],
-      "transitions": {
+      "meta": {
+        "agentText": "Vielen Dank, Herr Schmidt. Die letzten vier Stellen Ihrer Kontonummer lauten 4321. Ist das korrekt?",
+        "responseOptions": [
+          "Ja, das ist korrekt.",
+          "Nein, das ist nicht korrekt."
+        ]
+      },
+      "on": {
         "Ja, das ist korrekt.": "confirm_identity",
         "Nein, das ist nicht korrekt.": "verification_failed",
-        "default": "confirm_identity"
+        "DEFAULT": "confirm_identity"
       }
     },
     "verification_failed": {
-      "type": "info",
-      "agent": "Es tut mir leid, es scheint ein Problem mit der Identitätsüberprüfung zu geben. Ich empfehle Ihnen, unsere Hotline unter der offiziellen Nummer auf Ihrer Bankkarte anzurufen oder persönlich in eine Filiale zu kommen.",
-      "transitions": {
-        "default": "end"
+      "meta": {
+        "agentText": "Es tut mir leid, es scheint ein Problem mit der Identitätsüberprüfung zu geben. Ich empfehle Ihnen, unsere Hotline unter der offiziellen Nummer auf Ihrer Bankkarte anzurufen oder persönlich in eine Filiale zu kommen."
+      },
+      "on": {
+        "DEFAULT": "end"
       }
     },
     "confirm_identity": {
-      "type": "verification",
-      "agent": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte auch die letzten vier Ziffern Ihrer Kontonummer nennen?",
-      "responseOptions": [
-        "Ja, das ist 4321.",
-        "Ich bin mir nicht sicher.",
-        "Ich habe meine Kontonummer nicht zur Hand."
-      ],
-      "customer": "Ja, das ist 4321.",
-      "systemMessage": "Identität bestätigt mit 89% Konfidenz.",
-      "transitions": {
+      "meta": {
+        "agentText": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte auch die letzten vier Ziffern Ihrer Kontonummer nennen?",
+        "responseOptions": [
+          "Ja, das ist 4321.",
+          "Ich bin mir nicht sicher.",
+          "Ich habe meine Kontonummer nicht zur Hand."
+        ],
+        "systemMessage": "Identität bestätigt mit 89% Konfidenz."
+      },
+      "on": {
         "Ja, das ist 4321.": "explain_issue",
-        "default": "verification_incomplete"
+        "DEFAULT": "verification_incomplete"
       }
     },
     "verification_incomplete": {
-      "type": "info",
-      "agent": "Ich verstehe. Zur Sicherheit empfehle ich Ihnen, sich mit Ihren Kontodetails bei uns zu melden. Sie können entweder später zurückrufen oder unsere Online-Banking-Plattform für sichere Kommunikation nutzen.",
-      "transitions": {
-        "default": "end"
+      "meta": {
+        "agentText": "Ich verstehe. Zur Sicherheit empfehle ich Ihnen, sich mit Ihren Kontodetails bei uns zu melden. Sie können entweder später zurückrufen oder unsere Online-Banking-Plattform für sichere Kommunikation nutzen."
+      },
+      "on": {
+        "DEFAULT": "end"
       }
     },
     "explain_issue": {
-      "type": "info",
-      "agent": "Danke für die Bestätigung. Ich sehe hier den versuchten Login aus dem Ausland. Können Sie mir sagen, ob Sie kürzlich im Ausland waren oder Ihren Account von einem anderen Standort aus genutzt haben?",
-      "responseOptions": [
-        "Nein, ich war nicht im Ausland und habe meinen Account nur von zu Hause aus genutzt.",
-        "Ja, ich war kürzlich auf Geschäftsreise.",
-        "Mein Familienmitglied könnte auf mein Konto zugegriffen haben."
-      ],
-      "customer": "Nein, ich war nicht im Ausland und habe meinen Account nur von zu Hause aus genutzt.",
-      "transitions": {
+      "meta": {
+        "agentText": "Danke für die Bestätigung. Ich sehe hier den versuchten Login aus dem Ausland. Können Sie mir sagen, ob Sie kürzlich im Ausland waren oder Ihren Account von einem anderen Standort aus genutzt haben?",
+        "responseOptions": [
+          "Nein, ich war nicht im Ausland und habe meinen Account nur von zu Hause aus genutzt.",
+          "Ja, ich war kürzlich auf Geschäftsreise.",
+          "Mein Familienmitglied könnte auf mein Konto zugegriffen haben."
+        ]
+      },
+      "on": {
         "Nein, ich war nicht im Ausland und habe meinen Account nur von zu Hause aus genutzt.": "secure_account",
         "Ja, ich war kürzlich auf Geschäftsreise.": "confirm_legitimate_access",
         "Mein Familienmitglied könnte auf mein Konto zugegriffen haben.": "explain_sharing_risks",
-        "default": "secure_account"
+        "DEFAULT": "secure_account"
       }
     },
     "secure_account": {
-      "type": "decision",
-      "agent": "In diesem Fall empfehle ich, Ihr Passwort sofort zu ändern und die Zwei-Faktor-Authentifizierung zu aktivieren. Was möchten Sie tun?",
-      "responseOptions": [
-        "Ich möchte mein Passwort ändern.",
-        "Ich möchte die Zwei-Faktor-Authentifizierung aktivieren.",
-        "Ich möchte beides machen."
-      ],
-      "customer": "Ich möchte beides machen. Wie kann ich die Zwei-Faktor-Authentifizierung aktivieren?",
-      "suggestions": [
-        "Ich helfe Ihnen, Ihr Passwort zu ändern.",
-        "Lassen Sie mich Ihnen erklären, wie die Zwei-Faktor-Authentifizierung funktioniert.",
-        "Ich kann beide Sicherheitsmaßnahmen für Sie einrichten."
-      ],
-      "transitions": {
+      "meta": {
+        "agentText": "In diesem Fall empfehle ich, Ihr Passwort sofort zu ändern und die Zwei-Faktor-Authentifizierung zu aktivieren. Was möchten Sie tun?",
+        "responseOptions": [
+          "Ich möchte mein Passwort ändern.",
+          "Ich möchte die Zwei-Faktor-Authentifizierung aktivieren.",
+          "Ich möchte beides machen."
+        ],
+        "suggestions": [
+          "Ich helfe Ihnen, Ihr Passwort zu ändern.",
+          "Lassen Sie mich Ihnen erklären, wie die Zwei-Faktor-Authentifizierung funktioniert.",
+          "Ich kann beide Sicherheitsmaßnahmen für Sie einrichten."
+        ]
+      },
+      "on": {
         "Ich möchte mein Passwort ändern.": "password_change",
         "Ich möchte die Zwei-Faktor-Authentifizierung aktivieren.": "explain_2fa",
         "Ich möchte beides machen.": "setup_security",
-        "default": "setup_security"
+        "DEFAULT": "setup_security"
       }
     },
     "password_change": {
-      "type": "action",
-      "agent": "Um Ihr Passwort zu ändern, sende ich Ihnen einen Link per E-Mail. Bitte klicken Sie auf den Link und folgen Sie den Anweisungen. Ist das in Ordnung?",
-      "customer": "Ja, das ist in Ordnung. Danke.",
-      "action": "Passwort-Reset-Link senden",
-      "transitions": {
-        "default": "explain_2fa"
+      "meta": {
+        "agentText": "Um Ihr Passwort zu ändern, sende ich Ihnen einen Link per E-Mail. Bitte klicken Sie auf den Link und folgen Sie den Anweisungen. Ist das in Ordnung?",
+        "action": "Passwort-Reset-Link senden"
+      },
+      "on": {
+        "DEFAULT": "explain_2fa"
       }
     },
     "explain_2fa": {
-      "type": "info",
-      "agent": "Die Zwei-Faktor-Authentifizierung erhöht die Sicherheit Ihres Kontos, indem sie bei jedem Login einen zusätzlichen Bestätigungscode verlangt. Diesen erhalten Sie per SMS oder über eine Authenticator-App auf Ihrem Smartphone.",
-      "customer": "Das klingt gut. Ich möchte das einrichten.",
-      "transitions": {
-        "default": "setup_2fa"
+      "meta": {
+        "agentText": "Die Zwei-Faktor-Authentifizierung erhöht die Sicherheit Ihres Kontos, indem sie bei jedem Login einen zusätzlichen Bestätigungscode verlangt. Diesen erhalten Sie per SMS oder über eine Authenticator-App auf Ihrem Smartphone."
+      },
+      "on": {
+        "DEFAULT": "setup_2fa"
       }
     },
     "setup_2fa": {
-      "type": "action",
-      "agent": "Ich schicke Ihnen eine Anleitung zur Einrichtung der Zwei-Faktor-Authentifizierung per E-Mail. Möchten Sie lieber SMS-Codes oder eine Authenticator-App verwenden?",
-      "customer": "Ich würde gerne die Authenticator-App verwenden.",
-      "action": "2FA-Einrichtungsanleitung senden",
-      "transitions": {
-        "default": "conclusion"
+      "meta": {
+        "agentText": "Ich schicke Ihnen eine Anleitung zur Einrichtung der Zwei-Faktor-Authentifizierung per E-Mail. Möchten Sie lieber SMS-Codes oder eine Authenticator-App verwenden?",
+        "action": "2FA-Einrichtungsanleitung senden"
+      },
+      "on": {
+        "DEFAULT": "conclusion"
       }
     },
     "setup_security": {
-      "type": "action",
-      "agent": "Ich werde jetzt beide Sicherheitsmaßnahmen für Sie einrichten. Zunächst sende ich Ihnen einen Link zum Zurücksetzen Ihres Passworts. Anschließend erhalten Sie eine Anleitung zur Einrichtung der Zwei-Faktor-Authentifizierung.",
-      "customer": "Perfekt, vielen Dank für Ihre Hilfe.",
-      "action": "Sicherheitseinrichtung initiieren",
-      "transitions": {
-        "default": "conclusion"
+      "meta": {
+        "agentText": "Ich werde jetzt beide Sicherheitsmaßnahmen für Sie einrichten. Zunächst sende ich Ihnen einen Link zum Zurücksetzen Ihres Passworts. Anschließend erhalten Sie eine Anleitung zur Einrichtung der Zwei-Faktor-Authentifizierung.",
+        "action": "Sicherheitseinrichtung initiieren"
+      },
+      "on": {
+        "DEFAULT": "conclusion"
       }
     },
     "conclusion": {
-      "type": "info",
-      "agent": "Gerne geschehen. Sobald Sie diese Sicherheitsmaßnahmen eingerichtet haben, sollte Ihr Konto gut geschützt sein. Haben Sie noch weitere Fragen zur Sicherheit Ihres Kontos?",
-      "customer": "Nein, das war alles. Vielen Dank für Ihre Hilfe!",
-      "systemMessage": "Sicherheitsproblem erfolgreich behoben.",
-      "transitions": {
-        "default": "end"
+      "meta": {
+        "agentText": "Gerne geschehen. Sobald Sie diese Sicherheitsmaßnahmen eingerichtet haben, sollte Ihr Konto gut geschützt sein. Haben Sie noch weitere Fragen zur Sicherheit Ihres Kontos?",
+        "systemMessage": "Sicherheitsproblem erfolgreich behoben."
+      },
+      "on": {
+        "DEFAULT": "end"
       }
     },
     "end": {
-      "type": "info",
-      "agent": "Es freut mich, dass ich Ihnen helfen konnte. Sollten Sie in Zukunft weitere Fragen haben, zögern Sie nicht, sich wieder an uns zu wenden. Einen schönen Tag noch!",
-      "customer": "Danke, Ihnen auch einen schönen Tag!",
-      "systemMessage": "Gespräch erfolgreich abgeschlossen.",
-      "transitions": {}
+      "meta": {
+        "agentText": "Es freut mich, dass ich Ihnen helfen konnte. Sollten Sie in Zukunft weitere Fragen haben, zögern Sie nicht, sich wieder an uns zu wenden. Einen schönen Tag noch!",
+        "systemMessage": "Gespräch erfolgreich abgeschlossen."
+      }
     }
-  },
-  "initialState": "start"
+  }
 }

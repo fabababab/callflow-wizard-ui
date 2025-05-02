@@ -1,9 +1,18 @@
+
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { stateMachines } from '@/data/stateMachines';
 
 // Define the state machine types
 export interface StateMachineState {
   stateType?: string;
+  meta?: {
+    agentText?: string;
+    suggestions?: string[];
+    systemMessage?: string;
+    action?: string;
+    responseOptions?: string[];
+  };
+  on?: Record<string, string>;
   nextState?: string;
   text?: string;
   action?: string;
@@ -13,7 +22,9 @@ export interface StateMachineState {
 }
 
 export interface StateMachine {
-  initialState: string;
+  id?: string;
+  initialState?: string;
+  initial?: string;
   states: {
     [key: string]: StateMachineState;
   };
@@ -58,7 +69,7 @@ export async function getStateMachineJson(scenario: ScenarioType): Promise<strin
 
 // Get the initial state of the machine
 export function getInitialState(machine: StateMachine): string {
-  return machine.initialState || 'start';
+  return machine.initialState || machine.initial || 'start';
 }
 
 // Get state data for a specific state
@@ -81,11 +92,19 @@ export function getNextState(
     return null;
   }
   
-  // If selection matches a specific transition, use it
-  if (selection && machine.states[selection]) {
-    return selection;
+  // Check if we have on transitions
+  if (stateData.on) {
+    // If selection matches a specific transition, use it
+    if (selection && stateData.on[selection]) {
+      return stateData.on[selection];
+    }
+    
+    // Try DEFAULT transition
+    if (stateData.on['DEFAULT']) {
+      return stateData.on['DEFAULT'];
+    }
   }
   
-  // Otherwise return the default next state
+  // Fallback to nextState for older format
   return stateData.nextState || null;
 }
