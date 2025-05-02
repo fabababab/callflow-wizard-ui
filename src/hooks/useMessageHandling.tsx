@@ -85,7 +85,19 @@ export function useMessageHandling({
     if (stateData.customer && stateData.customer.trim()) {
       addCustomerMessage(stateData.customer);
     }
-  }, [stateData, callActive, addAgentMessage, addSystemMessage, addCustomerMessage]);
+    
+    // Add response options if available
+    if (stateData.responseOptions && stateData.responseOptions.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.sender === 'agent') {
+        setMessages(prev => prev.map((msg, idx) => 
+          idx === prev.length - 1 
+            ? { ...msg, responseOptions: stateData.responseOptions }
+            : msg
+        ));
+      }
+    }
+  }, [stateData, callActive, addAgentMessage, addSystemMessage, addCustomerMessage, messages]);
 
   // Handle sending message
   const handleSendMessage = useCallback(() => {

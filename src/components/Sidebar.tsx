@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Home, 
@@ -10,7 +11,8 @@ import {
   HeadphonesIcon,
   FileText,
   AlertCircle,
-  User
+  User,
+  Beaker
 } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import {
@@ -19,6 +21,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -41,6 +44,14 @@ const Sidebar = () => {
                   <Link to="/dashboard">
                     <Home size={20} />
                     <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton tooltip="Test Scenario" isActive={isActive('/test-scenario')} asChild>
+                  <Link to="/test-scenario">
+                    <Beaker size={20} />
+                    <span>Test Scenario</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
