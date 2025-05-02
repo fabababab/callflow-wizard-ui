@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, ChevronRight, Shield } from 'lucide-react';
+import { MessageSquare, ChevronRight, Shield, Check } from 'lucide-react';
 import AISuggestions, { AISuggestion } from './AISuggestion';
 import ValidationField from './ValidationField';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
@@ -20,6 +20,13 @@ export type Message = {
   isAccepted?: boolean;
   isRejected?: boolean;
   systemType?: 'info' | 'warning' | 'error' | 'success';
+  numberInput?: {
+    userValue: string | number;
+    systemValue: string | number;
+    matched: boolean;
+  };
+  requiresVerification?: boolean;
+  isVerified?: boolean;
 };
 
 interface MessageProps {
@@ -28,6 +35,7 @@ interface MessageProps {
   onRejectSuggestion: (suggestionId: string, messageId: string) => void;
   onSelectResponse?: (response: string) => void;
   onValidateSensitiveData?: (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => void;
+  onVerifySystemCheck?: (messageId: string) => void;
   isAgentMode?: boolean;
 }
 
@@ -37,16 +45,26 @@ const Message: React.FC<MessageProps> = ({
   onRejectSuggestion,
   onSelectResponse,
   onValidateSensitiveData,
+  onVerifySystemCheck,
   isAgentMode = false
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   const hasSensitiveData = message.sensitiveData && message.sensitiveData.length > 0;
+  const hasNumberInput = message.numberInput !== undefined;
+  const requiresVerification = message.requiresVerification && !message.isVerified;
   
   // Handler for validating sensitive data
   const handleValidate = (fieldId: string, status: ValidationStatus, notes?: string) => {
     if (onValidateSensitiveData) {
       onValidateSensitiveData(message.id, fieldId, status, notes);
+    }
+  };
+
+  // Handler for verifying system check
+  const handleVerify = () => {
+    if (onVerifySystemCheck) {
+      onVerifySystemCheck(message.id);
     }
   };
   
@@ -74,6 +92,45 @@ const Message: React.FC<MessageProps> = ({
         </div>
         
         <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+        
+        {/* Display number matching visualization */}
+        {hasNumberInput && (
+          <div className="mt-2 p-2 rounded bg-secondary/10 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-xs font-medium">Input: <strong>{message.numberInput.userValue}</strong></span>
+              <span className="text-xs font-medium">System: <strong>{message.numberInput.systemValue}</strong></span>
+            </div>
+            {message.numberInput.matched ? (
+              <div className="bg-green-100 text-green-700 p-1 rounded-full">
+                <Check className="h-4 w-4" />
+              </div>
+            ) : (
+              <span className="text-yellow-500 text-xs font-medium">No match</span>
+            )}
+          </div>
+        )}
+
+        {/* Display verification button if needed */}
+        {requiresVerification && (
+          <div className="mt-2 p-2 rounded bg-yellow-50 border border-yellow-200">
+            <p className="text-sm text-yellow-700 mb-1">This requires manual verification to continue</p>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleVerify}
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+            >
+              Verify and Continue
+            </Button>
+          </div>
+        )}
+
+        {message.isVerified && (
+          <div className="mt-2 flex items-center gap-1 text-green-700">
+            <Check className="h-4 w-4" />
+            <span className="text-xs">Verified</span>
+          </div>
+        )}
         
         {/* Display sensitive data validation fields if present */}
         {hasSensitiveData && message.sender === 'customer' && (

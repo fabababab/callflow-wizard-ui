@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { nanoid } from 'nanoid';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw } from 'lucide-react';
+import { PhoneCall, PhoneOff, Clock, FileJson, Shield, RefreshCcw, Check } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
@@ -31,6 +31,13 @@ type Message = {
     status: ValidationStatus;
     notes?: string;
   }>;
+  numberInput?: {
+    userValue: string | number;
+    systemValue: string | number;
+    matched: boolean;
+  };
+  requiresVerification?: boolean;
+  isVerified?: boolean;
 };
 
 const TestScenario = () => {
@@ -47,6 +54,9 @@ const TestScenario = () => {
     pending: number;
     invalid: number;
   }>({ validated: 0, pending: 0, invalid: 0 });
+  const [numberInputMode, setNumberInputMode] = useState(false);
+  const [systemValue, setSystemValue] = useState('');
+  const [verificationBlocking, setVerificationBlocking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -110,16 +120,22 @@ const TestScenario = () => {
   }, [callActive]);
 
   // Add a system message
-  const addSystemMessage = (text: string) => {
+  const addSystemMessage = (text: string, requiresVerification: boolean = false) => {
     setMessages(prev => [
       ...prev,
       {
         id: nanoid(),
         text,
         sender: 'system',
-        timestamp: new Date()
+        timestamp: new Date(),
+        requiresVerification,
+        isVerified: !requiresVerification
       }
     ]);
+    
+    if (requiresVerification) {
+      setVerificationBlocking(true);
+    }
   };
 
   // Add an agent message
@@ -140,6 +156,34 @@ const TestScenario = () => {
   const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
     // Detect sensitive data in the message
     const sensitiveData = detectSensitiveData(text);
+    
+    // Check if the message appears to be a number
+    const isNumberInput = numberInputMode && /^\d+(\.\d+)?$/.test(text.trim());
+    let numberInputData = undefined;
+    
+    // If in number input mode and the input is a number
+    if (isNumberInput) {
+      const userValue = text.trim();
+      const sysValue = systemValue || (Math.random() * 100).toFixed(0); // Random if not set
+      const matched = userValue === sysValue;
+      
+      numberInputData = {
+        userValue,
+        systemValue: sysValue,
+        matched
+      };
+      
+      // Provide feedback based on the match
+      toast({
+        title: matched ? "Match Found!" : "No Match",
+        description: matched ? "The input matches the system value" : "The input does not match the system value",
+        variant: matched ? "default" : "destructive"
+      });
+      
+      // Turn off number input mode after processing
+      setNumberInputMode(false);
+      setSystemValue('');
+    }
     
     // If sensitive data is found, show a toast notification
     if (sensitiveData.length > 0) {
@@ -164,7 +208,8 @@ const TestScenario = () => {
         sender: 'customer',
         timestamp: new Date(),
         responseOptions,
-        sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined
+        sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined,
+        numberInput: numberInputData
       }
     ]);
   };
@@ -211,9 +256,28 @@ const TestScenario = () => {
     });
   };
 
+  // Handle verifying system check
+  const handleVerifySystemCheck = (messageId: string) => {
+    setMessages(prev => prev.map(message => {
+      if (message.id === messageId && message.requiresVerification) {
+        return { ...message, isVerified: true };
+      }
+      return message;
+    }));
+    
+    // Unblock the scenario progress
+    setVerificationBlocking(false);
+    
+    toast({
+      title: "Verification Complete",
+      description: "The system check has been verified and the scenario can continue",
+      variant: "default"
+    });
+  };
+
   // Update messages based on state changes
   useEffect(() => {
-    if (!callActive || isLoading || currentState === previousState) return;
+    if (!callActive || isLoading || currentState === previousState || verificationBlocking) return;
 
     // Update the previous state to avoid duplicate messages
     setPreviousState(currentState);
@@ -221,7 +285,12 @@ const TestScenario = () => {
     // Handle system message if present
     const systemMessage = getSystemMessage();
     if (systemMessage) {
-      addSystemMessage(systemMessage);
+      // Randomly determine if this system message requires verification (20% chance)
+      const requiresVerification = Math.random() < 0.2;
+      addSystemMessage(systemMessage, requiresVerification);
+      
+      // If verification is required, don't proceed with rest of the updates
+      if (requiresVerification) return;
     }
 
     if (isAgentMode) {
@@ -250,7 +319,7 @@ const TestScenario = () => {
     if (isFinalState()) {
       setTimeout(() => setCallActive(false), 3000);
     }
-  }, [callActive, currentState, isLoading, getSystemMessage, isAgentMode, getCustomerText, getAgentOptions, physioCoverage, previousState, isFinalState]);
+  }, [callActive, currentState, isLoading, getSystemMessage, isAgentMode, getCustomerText, getAgentOptions, physioCoverage, previousState, isFinalState, verificationBlocking]);
 
   // Handle starting a call
   const handleStartCall = () => {
@@ -259,6 +328,9 @@ const TestScenario = () => {
     setPreviousState('');
     resetConversation();
     setSensitiveDataStats({ validated: 0, pending: 0, invalid: 0 });
+    setNumberInputMode(false);
+    setSystemValue('');
+    setVerificationBlocking(false);
     addSystemMessage('Call started');
     startConversation();
   };
@@ -303,6 +375,51 @@ const TestScenario = () => {
     setIsAgentMode(!isAgentMode);
   };
 
+  // Handle toggling number input mode
+  const handleToggleNumberInputMode = () => {
+    setNumberInputMode(!numberInputMode);
+    if (!numberInputMode) {
+      setSystemValue((Math.random() * 100).toFixed(0)); // Generate a random number from 0-100
+    } else {
+      setSystemValue('');
+    }
+  };
+
+  // Handle setting a specific system value for comparison
+  const handleSetSystemValue = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSystemValue(e.target.value);
+  };
+
+  // Handle resetting the scenario
+  const handleResetScenario = () => {
+    // Only allow reset if call is active
+    if (!callActive) return;
+    
+    // Reset the state machine
+    resetConversation();
+    
+    // Reset all local state
+    setMessages([]);
+    setPreviousState('');
+    setSensitiveDataStats({ validated: 0, pending: 0, invalid: 0 });
+    setNumberInputMode(false);
+    setSystemValue('');
+    setVerificationBlocking(false);
+    
+    // Add the initial system message and start the conversation again
+    addSystemMessage('Scenario reset');
+    startConversation();
+    
+    // Reset the timer
+    startTimeRef.current = Date.now();
+    setElapsedTime('00:00');
+    
+    toast({
+      title: "Scenario Reset",
+      description: "The conversation has been reset to its initial state",
+    });
+  };
+
   // Get JSON data for the active scenario
   const getScenarioJson = () => {
     if (isAgentMode) {
@@ -335,7 +452,7 @@ const TestScenario = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-wrap">
                     {!callActive ? (
                       <Button 
                         onClick={handleStartCall} 
@@ -345,7 +462,7 @@ const TestScenario = () => {
                         Start Test Call
                       </Button>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium flex items-center gap-1">
                           <Clock size={14} className="text-red-500" />
                           {elapsedTime}
@@ -358,6 +475,39 @@ const TestScenario = () => {
                           <PhoneOff size={16} />
                           End Test Call
                         </Button>
+                        <Button 
+                          onClick={handleResetScenario}
+                          variant="outline" 
+                          className="flex items-center gap-1"
+                        >
+                          <RefreshCcw size={16} />
+                          Reset Scenario
+                        </Button>
+                        
+                        {/* Number Input Mode Controls */}
+                        <div className="flex items-center ml-4 gap-2 bg-secondary/10 px-2 py-1 rounded-md">
+                          <div className="flex items-center gap-2">
+                            <Switch 
+                              id="number-input-mode" 
+                              checked={numberInputMode} 
+                              onCheckedChange={handleToggleNumberInputMode} 
+                            />
+                            <Label htmlFor="number-input-mode" className="text-sm">Number Input Mode</Label>
+                          </div>
+                          {numberInputMode && (
+                            <div className="flex items-center gap-1">
+                              <Label htmlFor="system-value" className="text-xs">System value:</Label>
+                              <Input
+                                id="system-value"
+                                type="text"
+                                value={systemValue}
+                                onChange={handleSetSystemValue}
+                                className="h-7 w-[80px]"
+                                placeholder="System #"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -387,6 +537,11 @@ const TestScenario = () => {
                       <CardTitle>Test Conversation</CardTitle>
                       <CardDescription>
                         Current state: {currentState}
+                        {verificationBlocking && (
+                          <Badge variant="outline" className="ml-2 bg-yellow-100 text-yellow-700">
+                            Waiting for verification
+                          </Badge>
+                        )}
                       </CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
@@ -448,6 +603,45 @@ const TestScenario = () => {
                                 {!isAgentMode && message.sender === 'customer' && " (You)"}
                               </p>
                               <p>{message.text}</p>
+
+                              {/* Show number input visualization if present */}
+                              {message.numberInput && (
+                                <div className="mt-2 p-2 rounded bg-secondary/10 flex items-center justify-between">
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-medium">Input: <strong>{message.numberInput.userValue}</strong></span>
+                                    <span className="text-xs font-medium">System: <strong>{message.numberInput.systemValue}</strong></span>
+                                  </div>
+                                  {message.numberInput.matched ? (
+                                    <div className="bg-green-100 text-green-700 p-1 rounded-full">
+                                      <Check size={14} className="h-4 w-4" />
+                                    </div>
+                                  ) : (
+                                    <span className="text-yellow-500 text-xs font-medium">No match</span>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Show verification button if needed */}
+                              {message.requiresVerification && !message.isVerified && (
+                                <div className="mt-2 p-2 rounded bg-yellow-50 border border-yellow-200">
+                                  <p className="text-sm text-yellow-700 mb-1">This requires manual verification to continue</p>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    onClick={() => handleVerifySystemCheck(message.id)}
+                                    className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+                                  >
+                                    Verify and Continue
+                                  </Button>
+                                </div>
+                              )}
+
+                              {message.isVerified && message.requiresVerification && (
+                                <div className="mt-2 flex items-center gap-1 text-green-700">
+                                  <Check size={14} />
+                                  <span className="text-xs">Verified</span>
+                                </div>
+                              )}
 
                               {/* Show sensitive data validation UI */}
                               {message.sensitiveData && message.sensitiveData.length > 0 && message.sender === 'customer' && (
@@ -525,16 +719,16 @@ const TestScenario = () => {
                         <div className="py-2 border-t">
                           <div className="flex gap-2">
                             <Input 
-                              placeholder={`Type your own ${isAgentMode ? 'agent' : 'customer'} response...`} 
+                              placeholder={`Type your own ${isAgentMode ? 'agent' : 'customer'} response...${numberInputMode ? ' (Number expected)' : ''}`} 
                               value={inputValue} 
                               onChange={(e) => setInputValue(e.target.value)} 
-                              className="flex-1"
+                              className={`flex-1 ${numberInputMode ? 'border-yellow-300 focus:border-yellow-500' : ''}`}
                               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                             />
                             <Button 
                               type="submit" 
                               onClick={handleSendMessage}
-                              disabled={!inputValue.trim()}
+                              disabled={!inputValue.trim() || verificationBlocking}
                             >
                               Send
                             </Button>
