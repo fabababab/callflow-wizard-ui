@@ -41,7 +41,16 @@ export function useStateMachine(activeScenario: ScenarioType) {
         if (machine) {
           const initialState = getInitialState(machine);
           setCurrentState(initialState);
-          setStateData(getStateData(machine, initialState));
+          // Set the initial state data
+          const initialStateData = getStateData(machine, initialState);
+          setStateData(initialStateData);
+          
+          // Set an initial state change to trigger UI update
+          setLastStateChange({
+            from: 'initial',
+            to: initialState
+          });
+          
           console.log(`Loaded state machine for scenario: ${activeScenario}`, machine);
         } else {
           console.log(`No state machine found for scenario: ${activeScenario}`);
@@ -174,6 +183,23 @@ export function useStateMachine(activeScenario: ScenarioType) {
     return transitionToState(nextState);
   }, [stateMachine, currentState, transitionToState]);
 
+  // Process START_CALL event to move from start to first active state
+  const processStartCall = useCallback((): boolean => {
+    if (!stateMachine || currentState !== 'start') {
+      return false;
+    }
+    
+    // Try to find a START_CALL transition
+    const nextState = getNextState(stateMachine, currentState, 'START_CALL');
+    
+    if (nextState) {
+      return transitionToState(nextState);
+    }
+    
+    // If no START_CALL transition, try default
+    return processDefaultTransition();
+  }, [stateMachine, currentState, transitionToState, processDefaultTransition]);
+
   // Reset the state machine to initial state
   const resetStateMachine = useCallback(() => {
     if (stateMachine) {
@@ -214,6 +240,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
     transitionToState,
     processSelection,
     processDefaultTransition,
+    processStartCall,
     resetStateMachine,
     isFinalState
   };

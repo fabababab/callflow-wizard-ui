@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -133,6 +134,20 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
       setIsLoadingJson(false);
     }
   };
+
+  // Trigger initial agent greeting after the system message appears
+  useEffect(() => {
+    // Find if there's a system "Call started" message
+    const hasCallStarted = messages.some(message => 
+      message.sender === 'system' && message.text === 'Call started'
+    );
+    
+    // If call is active and we have a "Call started" message but no agent messages yet,
+    // we might need to manually trigger the agent greeting
+    if (callActive && hasCallStarted && !messages.some(m => m.sender === 'agent')) {
+      console.log('Call started but no agent messages, checking state data:', stateData);
+    }
+  }, [messages, callActive, stateData]);
 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
@@ -285,6 +300,16 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
             <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 mb-3">
               <AlertCircle size={16} />
               <span>No state machine available for the current scenario. Using fallback conversation flow.</span>
+            </div>
+          )}
+          
+          {/* Debug information during call */}
+          {callActive && (process.env.NODE_ENV === 'development' || true) && (
+            <div className="text-xs p-2 bg-gray-50 border border-gray-100 rounded mb-2">
+              <p><strong>Current state:</strong> {currentState}</p>
+              {stateData && (
+                <p><strong>Has response options:</strong> {stateData.responseOptions?.length > 0 ? 'Yes' : 'No'}</p>
+              )}
             </div>
           )}
           

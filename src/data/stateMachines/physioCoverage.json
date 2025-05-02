@@ -15,7 +15,8 @@
           "Ich möchte meine Physiotherapie prüfen.",
           "Ich habe eine allgemeine Frage.",
           "Nichts, nur Test."
-        ]
+        ],
+        "systemMessage": "Customer connected, starting conversation"
       },
       "on": {
         "Ich möchte meine Physiotherapie prüfen.": "agent_ask_issue",
@@ -119,7 +120,8 @@
       },
       "on": {
         "PROVIDER_FOUND": "provider_found",
-        "PROVIDER_NOT_FOUND": "provider_not_found"
+        "PROVIDER_NOT_FOUND": "provider_not_found",
+        "DEFAULT": "provider_found"
       }
     },
     "provider_found": {

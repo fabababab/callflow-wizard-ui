@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +47,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     currentState,
     stateData,
     processSelection,
+    processStartCall,
     lastStateChange
   } = useStateMachine(activeScenario);
   
@@ -312,16 +312,11 @@ export function useTranscript(activeScenario: ScenarioType) {
     if (!callActive) {
       addSystemMessage('Call started');
       
-      // If we have initial state data, display it
-      if (stateData) {
-        if (stateData.meta?.systemMessage) {
-          addSystemMessage(stateData.meta.systemMessage);
-        }
-        
-        if (stateData.meta?.agentText) {
-          addAgentMessage(stateData.meta.agentText, stateData.meta.suggestions || []);
-        }
-      }
+      // Trigger initial state with START_CALL event
+      setTimeout(() => {
+        const success = processStartCall();
+        console.log('Process start call result:', success);
+      }, 100);
     } else {
       addSystemMessage('Call ended');
     }
@@ -334,16 +329,11 @@ export function useTranscript(activeScenario: ScenarioType) {
     setLastTranscriptUpdate(new Date());
     addSystemMessage(`Call accepted from ${callId}`);
     
-    // If we have initial state data, display it
-    if (stateData) {
-      if (stateData.meta?.systemMessage) {
-        addSystemMessage(stateData.meta.systemMessage);
-      }
-      
-      if (stateData.meta?.agentText) {
-        addAgentMessage(stateData.meta.agentText, stateData.meta.suggestions || []);
-      }
-    }
+    // Trigger initial state with START_CALL event
+    setTimeout(() => {
+      const success = processStartCall();
+      console.log('Process start call result:', success);
+    }, 100);
   };
 
   // Hang up call
