@@ -108,6 +108,27 @@ export function useTranscript(activeScenario: ScenarioType) {
     processSelection(inputValue);
   };
 
+  // Handle accepting a suggestion
+  const handleAcceptSuggestion = (messageId: string, suggestionId: string) => {
+    // Find the suggestion text by ID
+    const suggestionText = stateData?.meta?.suggestions?.find((_, index) => index.toString() === suggestionId);
+    
+    if (suggestionText) {
+      console.log('Accepting suggestion:', suggestionId, suggestionText);
+      // Add the accepted suggestion as a new agent message
+      addAgentMessage(suggestionText);
+      
+      // Process the selected option in the state machine
+      processSelection(suggestionText);
+    }
+  };
+
+  // Handle rejecting a suggestion
+  const handleRejectSuggestion = (suggestionId: string, messageId: string) => {
+    // For now, just log the rejection
+    console.log(`Suggestion ${suggestionId} rejected for message ${messageId}`);
+  };
+
   // Handle selecting a response
   const handleSelectResponse = (response: string) => {
     console.log('Selecting response:', response);
@@ -198,6 +219,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     lastTranscriptUpdate,
     messagesEndRef,
     handleSendMessage,
+    handleAcceptSuggestion,
+    handleRejectSuggestion,
     handleSelectResponse,
     toggleRecording,
     handleCall,
@@ -216,4 +239,3 @@ export function useTranscript(activeScenario: ScenarioType) {
     verificationBlocking
   };
 }
-
