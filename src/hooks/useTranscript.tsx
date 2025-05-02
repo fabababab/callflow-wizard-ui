@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Message, MessageSender } from '@/components/transcript/Message';
@@ -874,3 +875,82 @@ export const useTranscript = (activeScenario: ScenarioType) => {
     
     // Reset state if we have a state machine for the current scenario
     if (activeScenario && stateMachines[activeScenario as string]) {
+      const initialState = scenarioInitialStates[activeScenario as string] || 'start';
+      setCurrentState(initialState);
+      setCurrentStateMachine(stateMachines[activeScenario as string]);
+    }
+    
+    toast({
+      title: "Call Accepted",
+      description: "You have accepted the incoming call",
+    });
+    
+    // Add initial agent greeting after a brief delay
+    setTimeout(() => {
+      let initialAgentMessage = "Hallo, vielen Dank für Ihren Anruf bei unserem Kundenservice. Wie kann ich Ihnen heute helfen?";
+      
+      // If we have a state machine, use its initial agent message
+      if (currentStateMachine && currentState) {
+        const stateData = currentStateMachine[currentState];
+        if (stateData && stateData.agent) {
+          initialAgentMessage = stateData.agent;
+        }
+      }
+      
+      const initialMessage: Message = {
+        id: 1,
+        text: initialAgentMessage,
+        sender: 'agent',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      
+      setMessages([initialMessage]);
+      
+      // Add customer first response
+      setTimeout(() => {
+        let customerResponse = "Hallo, ich habe eine Frage zu...";
+        
+        if (currentStateMachine && currentState) {
+          const stateData = currentStateMachine[currentState];
+          if (stateData && stateData.customer) {
+            customerResponse = stateData.customer;
+          }
+        }
+        
+        // Generate suggestions based on the current state
+        const customerMessage: Message = {
+          id: 2,
+          text: customerResponse,
+          sender: 'customer',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        
+        setMessages(prev => [...prev, customerMessage]);
+        
+        // Generate new suggestions for the customer message
+        setTimeout(() => {
+          generateAiSuggestionForMessage(2);
+        }, 500);
+      }, 1500);
+    }, 1000);
+  }, [activeScenario, currentStateMachine, currentState, generateAiSuggestionForMessage, toast]);
+
+  return {
+    messages,
+    inputValue,
+    setInputValue,
+    isRecording,
+    callActive,
+    elapsedTime,
+    acceptedCallId,
+    messagesEndRef,
+    handleSendMessage,
+    handleAcceptSuggestion,
+    handleRejectSuggestion,
+    handleSelectResponse,
+    toggleRecording,
+    handleCall,
+    handleAcceptCall,
+    currentState
+  };
+};
