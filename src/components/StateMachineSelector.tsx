@@ -18,7 +18,7 @@ interface StateMachineSelectorProps {
   disabled?: boolean;
 }
 
-const StateMachineSelector = ({ 
+const StateMachineSelector = React.memo(({ 
   activeStateMachine, 
   onSelectStateMachine, 
   disabled = false 
@@ -45,7 +45,11 @@ const StateMachineSelector = ({
         <SelectTrigger id="stateMachine" className="w-full bg-background">
           <SelectValue placeholder="Select state machine" />
         </SelectTrigger>
-        <SelectContent className="bg-background">
+        <SelectContent 
+          className="bg-background shadow-lg z-50"
+          position="popper"
+          sideOffset={4}
+        >
           <SelectGroup>
             {availableStateMachines.map((stateMachine) => (
               <SelectItem key={stateMachine} value={stateMachine}>
@@ -57,6 +61,13 @@ const StateMachineSelector = ({
       </Select>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison function to prevent unnecessary rerenders
+  return prevProps.activeStateMachine === nextProps.activeStateMachine && 
+         prevProps.disabled === nextProps.disabled;
+});
+
+// Display name for debugging
+StateMachineSelector.displayName = 'StateMachineSelector';
 
 export default StateMachineSelector;
