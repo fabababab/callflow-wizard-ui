@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -23,6 +23,7 @@ const TestScenario = () => {
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("bankDetails");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
+  const transcriptRef = useRef<HTMLDivElement>(null);
 
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(selectedStateMachine);
@@ -56,6 +57,20 @@ const TestScenario = () => {
           if (transcript.callActive) {
             transcript.handleHangUpCall();
           }
+          
+          // Automatically start a new call after selecting a new state machine
+          setTimeout(() => {
+            // Start a new call with the selected state machine
+            transcript.handleCall();
+            
+            // Scroll to the transcript panel to show the new conversation
+            scrollToTranscript();
+          }, 300); // Short delay to ensure UI is updated
+          
+          toast({
+            title: "State Machine Changed",
+            description: `Switched to ${selectedStateMachine} scenario`,
+          });
         } catch (error) {
           console.error("Failed to load state machine:", error);
           toast({
@@ -68,6 +83,18 @@ const TestScenario = () => {
     }
     fetchStateMachine();
   }, [selectedStateMachine, toast, transcript]);
+  
+  // Function to scroll to the transcript panel
+  const scrollToTranscript = () => {
+    if (transcriptRef.current) {
+      transcriptRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  
+  // Handle state machine selection
+  const handleSelectStateMachine = (stateMachine: ScenarioType) => {
+    setSelectedStateMachine(stateMachine);
+  };
 
   return <div className="flex h-screen bg-background">
       <SidebarProvider>
@@ -85,14 +112,14 @@ const TestScenario = () => {
                       </CardTitle>
                       <StateMachineSelector 
                         activeStateMachine={selectedStateMachine} 
-                        onSelectStateMachine={setSelectedStateMachine} 
+                        onSelectStateMachine={handleSelectStateMachine} 
                         disabled={transcript.callActive} 
                       />
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
                     {/* Directly embed the transcript panel without tabs */}
-                    <div className="h-[75vh]">
+                    <div className="h-[75vh]" ref={transcriptRef}>
                       <TranscriptPanel activeScenario={selectedStateMachine} />
                     </div>
                   </CardContent>

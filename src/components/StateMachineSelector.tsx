@@ -26,12 +26,17 @@ const StateMachineSelector = ({
   // Get all available state machines from the stateMachines object
   const availableStateMachines = Object.keys(stateMachines) as ScenarioType[];
 
+  const handleStateMachineChange = (value: string) => {
+    // Call the parent's onSelectStateMachine function
+    onSelectStateMachine(value as ScenarioType);
+  };
+
   return (
     <div className="flex flex-col space-y-1.5">
       <Label htmlFor="stateMachine">State Machine</Label>
       <Select
         value={activeStateMachine}
-        onValueChange={(value) => onSelectStateMachine(value as ScenarioType)}
+        onValueChange={handleStateMachineChange}
         disabled={disabled}
       >
         <SelectTrigger id="stateMachine" className="w-full">
