@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare } from 'lucide-react';
+import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +11,9 @@ import Message from './transcript/Message';
 import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls } from '@/data/scenarioData';
-import { stateMachines } from '@/data/stateMachines';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Define the PreCall type to match what PreCallInfo component expects
 export type PreCall = {
@@ -111,7 +111,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     handleCall,
     handleAcceptCall,
     currentState,
-    stateData
+    stateData,
+    lastStateChange
   } = useTranscript(activeScenario);
 
   // Check if this scenario has a state machine
@@ -137,26 +138,49 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
       <CardHeader className="px-4 py-3 flex flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle className="text-lg">Transcript</CardTitle>
-          <CardDescription className="flex items-center gap-2 flex-wrap">
-            {activeScenario && (
-              <Badge variant="outline" className="capitalize">
-                {activeScenario}
-              </Badge>
-            )}
-            {hasStateMachineAvailable && currentState && (
-              <Badge 
-                variant="secondary" 
-                className="cursor-help flex items-center gap-1"
-                onClick={() => setShowStateMachineInfo(!showStateMachineInfo)}
-              >
-                <span>State: {currentState}</span>
-                <ExternalLink size={10} />
-              </Badge>
-            )}
-            Call transcript and suggestions
-          </CardDescription>
+        <div className="flex items-center gap-2">
+          <div>
+            <CardTitle className="text-lg">Transcript</CardTitle>
+            <CardDescription className="flex items-center gap-2 flex-wrap">
+              {activeScenario && (
+                <Badge variant="outline" className="capitalize">
+                  {activeScenario}
+                </Badge>
+              )}
+              {hasStateMachineAvailable && currentState && (
+                <Badge 
+                  variant="secondary" 
+                  className="cursor-help flex items-center gap-1"
+                  onClick={() => setShowStateMachineInfo(!showStateMachineInfo)}
+                >
+                  <span>State: {currentState}</span>
+                  <ExternalLink size={10} />
+                </Badge>
+              )}
+              
+              {/* State change notification with update icon */}
+              {lastStateChange && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge 
+                        variant="outline" 
+                        className="animate-pulse bg-primary/10 text-primary flex items-center gap-1 cursor-help"
+                      >
+                        <RefreshCw size={12} className="animate-spin-slow" />
+                        <span>Updated</span>
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <p className="text-xs">State changed from {lastStateChange.from} to {lastStateChange.to}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              
+              Call transcript and suggestions
+            </CardDescription>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {activeScenario && (
@@ -219,20 +243,20 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           </p>
           <p className="text-muted-foreground mt-1">
             Type: <span className="font-medium">
-              {stateMachines[activeScenario as string]?.[currentState]?.stateType || "unknown"}
+              {stateData?.stateType || "unknown"}
             </span>
           </p>
-          {stateMachines[activeScenario as string]?.[currentState]?.nextState && (
+          {stateData?.nextState && (
             <p className="text-muted-foreground mt-1">
               Next state: <span className="font-medium">
-                {stateMachines[activeScenario as string][currentState].nextState}
+                {stateData.nextState}
               </span>
             </p>
           )}
-          {stateMachines[activeScenario as string]?.[currentState]?.action && (
+          {stateData?.action && (
             <p className="text-muted-foreground mt-1">
               Action: <span className="font-medium">
-                {stateMachines[activeScenario as string][currentState].action}
+                {stateData.action}
               </span>
             </p>
           )}
@@ -331,14 +355,14 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
         )}
       </CardContent>
       
-      {/* Dialog to display the JSON state machine */}
+      {/* Dialog to display the full JSON state machine */}
       <Dialog open={isJsonDialogOpen} onOpenChange={setIsJsonDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>State Machine for {activeScenario}</DialogTitle>
           </DialogHeader>
           <div className="overflow-auto max-h-[60vh]">
-            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
               {jsonContent}
             </pre>
           </div>

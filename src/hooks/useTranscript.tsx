@@ -1,231 +1,341 @@
-
-import { useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { useCallManagement } from './useCallManagement';
-import { useStateMachine } from './useStateMachine';
-import { useMessageHandling } from './useMessageHandling';
+import { detectSensitiveData, ValidationStatus } from '@/data/scenarioData';
+import { useStateMachine } from '@/hooks/useStateMachine';
 
-export const useTranscript = (activeScenario: ScenarioType) => {
+type Message = {
+  id: string;
+  text: string;
+  sender: 'agent' | 'customer' | 'system';
+  timestamp: Date;
+  responseOptions?: string[];
+  sensitiveData?: Array<{
+    id: string;
+    type: string;
+    value: string;
+    status: ValidationStatus;
+    notes?: string;
+    requiresVerification?: boolean;
+  }>;
+  requiresVerification?: boolean;
+  isVerified?: boolean;
+};
+
+// Update the return type to include lastStateChange
+export function useTranscript(activeScenario: ScenarioType) {
   const { toast } = useToast();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [callActive, setCallActive] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState('00:00');
+  const [acceptedCallId, setAcceptedCallId] = useState<string | null>(null);
+  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sensitiveDataStats, setSensitiveDataStats] = useState<{
+    validated: number;
+    pending: number;
+    invalid: number;
+  }>({ validated: 0, pending: 0, invalid: 0 });
+  const [verificationBlocking, setVerificationBlocking] = useState(false);
+  const timerRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number>(0);
   
-  // Set up call management
-  const {
-    callActive,
-    elapsedTime,
-    acceptedCallId,
-    startCall,
-    endCall,
-    acceptCall,
-    handleCall
-  } = useCallManagement();
-  
-  // Set up state machine
+  // Get the state machine data
   const {
     currentState,
     stateData,
-    isLoading,
-    error,
     processSelection,
-    processDefaultTransition,
-    resetStateMachine
+    lastStateChange
   } = useStateMachine(activeScenario);
   
-  // Set up message handling
-  const {
+  // Scroll to bottom whenever messages update
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Update timer when call is active
+  useEffect(() => {
+    if (callActive) {
+      startTimeRef.current = Date.now();
+      timerRef.current = window.setInterval(() => {
+        const seconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        setElapsedTime(
+          `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+        );
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [callActive]);
+
+  // Add a system message
+  const addSystemMessage = (text: string, requiresVerification: boolean = false) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: nanoid(),
+        text,
+        sender: 'system',
+        timestamp: new Date(),
+        requiresVerification,
+        isVerified: !requiresVerification
+      }
+    ]);
+    
+    if (requiresVerification) {
+      setVerificationBlocking(true);
+    }
+  };
+
+  // Add an agent message
+  const addAgentMessage = (text: string, responseOptions: string[] = []) => {
+    setMessages(prev => [
+      ...prev,
+      {
+        id: nanoid(),
+        text,
+        sender: 'agent',
+        timestamp: new Date(),
+        responseOptions
+      }
+    ]);
+  };
+
+  // Add a customer message with sensitive data detection
+  const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
+    // Detect sensitive data in the message
+    const sensitiveData = detectSensitiveData(text);
+    
+    // Check if any sensitive data requires verification
+    const hasVerificationRequired = sensitiveData.some(data => data.requiresVerification);
+    
+    // If sensitive data is found, show a toast notification
+    if (sensitiveData.length > 0) {
+      toast({
+        title: "Sensitive Data Detected",
+        description: hasVerificationRequired 
+          ? `${sensitiveData.length} sensitive data fields found that require verification` 
+          : `${sensitiveData.length} sensitive data fields found in message`,
+        variant: hasVerificationRequired ? "destructive" : "default"
+      });
+      
+      // Update sensitive data stats
+      setSensitiveDataStats(prev => ({
+        ...prev,
+        pending: prev.pending + sensitiveData.length
+      }));
+      
+      // Block progress if verification is required
+      if (hasVerificationRequired) {
+        setVerificationBlocking(true);
+      }
+    }
+    
+    setMessages(prev => [
+      ...prev,
+      {
+        id: nanoid(),
+        text,
+        sender: 'customer',
+        timestamp: new Date(),
+        responseOptions,
+        sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined,
+      }
+    ]);
+  };
+
+  // Handle validating sensitive data
+  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
+    setMessages(prev => prev.map(message => {
+      if (message.id === messageId && message.sensitiveData) {
+        const updatedFields = message.sensitiveData.map(field => {
+          if (field.id === fieldId) {
+            const previousStatus = field.status;
+            
+            // Update stats based on status change
+            if (previousStatus !== status) {
+              setSensitiveDataStats(stats => {
+                const newStats = { ...stats };
+                if (previousStatus === 'pending') newStats.pending--;
+                else if (previousStatus === 'valid') newStats.validated--;
+                else if (previousStatus === 'invalid') newStats.invalid--;
+                
+                if (status === 'pending') newStats.pending++;
+                else if (status === 'valid') newStats.validated++;
+                else if (status === 'invalid') newStats.invalid++;
+                
+                return newStats;
+              });
+            }
+            
+            // If this is a required verification field being marked as valid or invalid
+            // check if we can unblock the conversation
+            if (field.requiresVerification && (status === 'valid' || status === 'invalid')) {
+              checkIfVerificationComplete();
+            }
+            
+            return { ...field, status, notes };
+          }
+          return field;
+        });
+        
+        return { ...message, sensitiveData: updatedFields };
+      }
+      return message;
+    }));
+    
+    // Show validation toast
+    toast({
+      title: status === 'valid' ? "Validated" : "Validation Failed",
+      description: `Customer data marked as ${status}`,
+      variant: status === 'valid' ? "default" : "destructive"
+    });
+  };
+  
+  // Check if all required verifications are completed
+  const checkIfVerificationComplete = () => {
+    // Check all messages with sensitive data that require verification
+    const allVerified = messages.every(message => {
+      if (!message.sensitiveData) return true;
+      
+      // Check if any sensitive data field requires verification but is still pending
+      return !message.sensitiveData.some(field => 
+        field.requiresVerification && field.status === 'pending'
+      );
+    });
+    
+    if (allVerified) {
+      setVerificationBlocking(false);
+      toast({
+        title: "All Required Verifications Completed",
+        description: "The conversation can now continue",
+        variant: "default"
+      });
+    }
+  };
+
+  // Handle verifying system check
+  const handleVerifySystemCheck = (messageId: string) => {
+    setMessages(prev => prev.map(message => {
+      if (message.id === messageId && message.requiresVerification) {
+        return { ...message, isVerified: true };
+      }
+      return message;
+    }));
+    
+    // Unblock the scenario progress
+    setVerificationBlocking(false);
+    
+    toast({
+      title: "Verification Complete",
+      description: "The system check has been verified and the scenario can continue",
+      variant: "default"
+    });
+  };
+
+  // Handle sending a message
+  const handleSendMessage = () => {
+    if (!inputValue.trim()) return;
+
+    // Add message based on who is sending it
+    addAgentMessage(inputValue);
+    setInputValue('');
+
+    // Process the selected option in the state machine
+    processSelection(inputValue);
+  };
+
+  // Handle accepting a suggestion
+  const handleAcceptSuggestion = (messageId: string, suggestionId: string) => {
+    // Find the suggestion text by ID
+    const suggestionText = stateData?.suggestions?.find((_, index) => index.toString() === suggestionId);
+    
+    if (suggestionText) {
+      // Add the accepted suggestion as a new agent message
+      addAgentMessage(suggestionText);
+      
+      // Process the selected option in the state machine
+      processSelection(suggestionText);
+    }
+  };
+
+  // Handle rejecting a suggestion
+  const handleRejectSuggestion = (suggestionId: string, messageId: string) => {
+    // For now, just log the rejection
+    console.log(`Suggestion ${suggestionId} rejected for message ${messageId}`);
+  };
+
+  // Handle selecting a response
+  const handleSelectResponse = (response: string) => {
+    addAgentMessage(response);
+    processSelection(response);
+  };
+
+  // Toggle recording state
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
+  };
+
+  // Start a call
+  const handleCall = () => {
+    setCallActive(!callActive);
+    setLastTranscriptUpdate(new Date());
+    
+    if (!callActive) {
+      addSystemMessage('Call started');
+    } else {
+      addSystemMessage('Call ended');
+    }
+  };
+
+  // Accept incoming call
+  const handleAcceptCall = (callId: string) => {
+    setAcceptedCallId(callId);
+    setCallActive(true);
+    setLastTranscriptUpdate(new Date());
+    addSystemMessage(`Call accepted from ${callId}`);
+  };
+
+  // Hang up call
+  const handleHangUpCall = () => {
+    setCallActive(false);
+    setAcceptedCallId(null);
+    setLastTranscriptUpdate(new Date());
+    addSystemMessage('Call ended');
+  };
+  
+  return {
     messages,
     inputValue,
     setInputValue,
     isRecording,
-    messagesEndRef,
-    handleSendMessage,
-    handleSelectResponse,
-    handleAcceptSuggestion,
-    handleRejectSuggestion,
-    toggleRecording
-  } = useMessageHandling({
-    stateData,
-    onProcessSelection: processSelection,
-    onDefaultTransition: processDefaultTransition,
-    callActive
-  });
-  
-  // Reset state machine when scenario changes and call is active
-  useEffect(() => {
-    if (callActive) {
-      resetStateMachine();
-    }
-  }, [activeScenario, callActive, resetStateMachine]);
-  
-  // Trigger contact identification based on keywords in the transcript
-  useEffect(() => {
-    if (callActive && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.sender === 'customer') {
-        const keywords = ['my name is', 'this is', 'speaking', 'michael', 'schmidt', 'mein name ist'];
-        const text = lastMessage.text.toLowerCase();
-        const hasKeyword = keywords.some(keyword => text.includes(keyword.toLowerCase()));
-        
-        if (hasKeyword && !document.getElementById('contact-identified')) {
-          // Simulate that system identified the contact
-          const event = new CustomEvent('contact-identified', {
-            detail: { name: 'Michael Schmidt', confidence: 0.89 }
-          });
-          window.dispatchEvent(event);
-          
-          toast({
-            title: "Contact Identified",
-            description: "Michael Schmidt identified with 89% confidence",
-          });
-        }
-      }
-    }
-  }, [messages, callActive, toast]);
-  
-  // Detect insurance numbers and addresses that require verification
-  useEffect(() => {
-    if (callActive && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.sender === 'customer') {
-        // Insurance number patterns (Swiss format)
-        const insurancePatterns = [
-          /(\d{3}\.\d{4}\.\d{4}\.\d{2})/i,
-          /versicherungsnummer\s*:?\s*([\w\d-\.]+)/i,
-          /insurance\s+number\s*:?\s*([\w\d-\.]+)/i
-        ];
-        
-        // Address patterns
-        const addressPatterns = [
-          /(\w+[straße|strasse|weg|platz|gasse]\s+\d+,?\s+\d{4,5}\s+\w+)/i,
-          /address\s*:?\s*([^,]+,\s*\d{4,5}\s*\w+)/i,
-          /adresse\s*:?\s*([^,]+,\s*\d{4,5}\s*\w+)/i
-        ];
-        
-        const text = lastMessage.text;
-        
-        // Check for insurance numbers
-        for (const pattern of insurancePatterns) {
-          const match = text.match(pattern);
-          if (match && match[1]) {
-            toast({
-              title: "Insurance Number Requires Verification",
-              description: `Insurance number detected: ${match[1]}`,
-              variant: "destructive"
-            });
-            
-            // Trigger verification required event
-            const event = new CustomEvent('verification-required', {
-              detail: { type: 'insurance', value: match[1] }
-            });
-            window.dispatchEvent(event);
-            break;
-          }
-        }
-        
-        // Check for addresses
-        for (const pattern of addressPatterns) {
-          const match = text.match(pattern);
-          if (match && match[1]) {
-            toast({
-              title: "Address Requires Verification",
-              description: `Address detected: ${match[1]}`,
-              variant: "destructive"
-            });
-            
-            // Trigger verification required event
-            const event = new CustomEvent('verification-required', {
-              detail: { type: 'address', value: match[1] }
-            });
-            window.dispatchEvent(event);
-            break;
-          }
-        }
-      }
-    }
-  }, [messages, callActive, toast]);
-  
-  // Detect product information requests
-  useEffect(() => {
-    if (callActive && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.sender === 'customer') {
-        const productKeywords = ['product info', 'tell me about', 'more information', 'details about', 'learn more'];
-        const text = lastMessage.text.toLowerCase();
-        const hasProductRequest = productKeywords.some(keyword => text.includes(keyword.toLowerCase()));
-        
-        if (hasProductRequest) {
-          // Process product information request
-          processSelection('request_product_info');
-          
-          toast({
-            title: "Product Information Request",
-            description: "Customer has requested product information",
-          });
-        }
-        
-        // Detect contract cancellation requests
-        const cancellationKeywords = ['cancel', 'terminate', 'end contract', 'stop service'];
-        const hasCancellationRequest = cancellationKeywords.some(keyword => text.includes(keyword.toLowerCase()));
-        
-        if (hasCancellationRequest) {
-          // Process cancellation request
-          processSelection('request_cancellation');
-          
-          toast({
-            title: "Contract Cancellation Request",
-            description: "Customer has requested to cancel a contract",
-            variant: "destructive"
-          });
-        }
-      }
-    }
-  }, [messages, callActive, toast, processSelection]);
-  
-  // Handle starting a call with reset state
-  const handleStartCall = useCallback(() => {
-    startCall();
-    resetStateMachine();
-  }, [startCall, resetStateMachine]);
-
-  // Log errors from state machine loading
-  useEffect(() => {
-    if (error) {
-      console.error('State machine error:', error);
-      toast({
-        title: "Error loading scenario",
-        description: error,
-        variant: "destructive"
-      });
-    }
-  }, [error, toast]);
-
-  return {
-    // Call state
     callActive,
     elapsedTime,
     acceptedCallId,
-    
-    // Message state
-    messages,
-    inputValue,
-    setInputValue,
-    isRecording,
+    lastTranscriptUpdate,
     messagesEndRef,
-    
-    // State machine state
-    currentState,
-    stateData,
-    isLoading,
-    
-    // Message handlers
     handleSendMessage,
     handleAcceptSuggestion,
     handleRejectSuggestion,
     handleSelectResponse,
     toggleRecording,
-    
-    // Call handlers
     handleCall,
-    handleAcceptCall: acceptCall
+    handleAcceptCall,
+    handleHangUpCall,
+    currentState,
+    stateData,
+    lastStateChange // Add this to the return object
   };
-};
+}

@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -17,6 +18,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verificationRequired, setVerificationRequired] = useState(false);
+  const [lastStateChange, setLastStateChange] = useState<{from: string, to: string} | null>(null);
   const { toast } = useToast();
 
   // Load state machine when scenario changes
@@ -111,9 +113,10 @@ export function useStateMachine(activeScenario: ScenarioType) {
       return false;
     }
 
-    toast({
-      title: "State changed",
-      description: `Moved from ${currentState} to ${newState}`,
+    // Store the state change information for UI display
+    setLastStateChange({
+      from: currentState,
+      to: newState
     });
 
     setCurrentState(newState);
@@ -207,6 +210,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
     isLoading,
     error,
     verificationRequired,
+    lastStateChange,
     transitionToState,
     processSelection,
     processDefaultTransition,
