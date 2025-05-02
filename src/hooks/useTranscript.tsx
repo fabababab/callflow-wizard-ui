@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
@@ -23,7 +24,6 @@ type Message = {
   isVerified?: boolean;
 };
 
-// Update the return type to include lastStateChange
 export function useTranscript(activeScenario: ScenarioType) {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -50,6 +50,22 @@ export function useTranscript(activeScenario: ScenarioType) {
     processSelection,
     lastStateChange
   } = useStateMachine(activeScenario);
+  
+  // Update to properly update UI when state changes
+  useEffect(() => {
+    if (stateData && callActive && lastStateChange) {
+      // When state changes, check for messages to display
+      if (stateData.meta?.systemMessage) {
+        addSystemMessage(stateData.meta.systemMessage, stateData.requiresVerification);
+      }
+      
+      if (stateData.meta?.agentText) {
+        addAgentMessage(stateData.meta.agentText, stateData.meta.suggestions || []);
+      }
+      
+      setLastTranscriptUpdate(new Date());
+    }
+  }, [stateData, lastStateChange, callActive]);
   
   // Scroll to bottom whenever messages update
   useEffect(() => {
@@ -295,6 +311,17 @@ export function useTranscript(activeScenario: ScenarioType) {
     
     if (!callActive) {
       addSystemMessage('Call started');
+      
+      // If we have initial state data, display it
+      if (stateData) {
+        if (stateData.meta?.systemMessage) {
+          addSystemMessage(stateData.meta.systemMessage);
+        }
+        
+        if (stateData.meta?.agentText) {
+          addAgentMessage(stateData.meta.agentText, stateData.meta.suggestions || []);
+        }
+      }
     } else {
       addSystemMessage('Call ended');
     }
@@ -306,6 +333,17 @@ export function useTranscript(activeScenario: ScenarioType) {
     setCallActive(true);
     setLastTranscriptUpdate(new Date());
     addSystemMessage(`Call accepted from ${callId}`);
+    
+    // If we have initial state data, display it
+    if (stateData) {
+      if (stateData.meta?.systemMessage) {
+        addSystemMessage(stateData.meta.systemMessage);
+      }
+      
+      if (stateData.meta?.agentText) {
+        addAgentMessage(stateData.meta.agentText, stateData.meta.suggestions || []);
+      }
+    }
   };
 
   // Hang up call
@@ -336,6 +374,9 @@ export function useTranscript(activeScenario: ScenarioType) {
     handleHangUpCall,
     currentState,
     stateData,
-    lastStateChange // Add this to the return object
+    lastStateChange,
+    addAgentMessage,
+    addCustomerMessage,
+    addSystemMessage
   };
 }
