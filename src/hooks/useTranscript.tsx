@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { nanoid } from 'nanoid';
 import { useToast } from '@/hooks/use-toast';
@@ -54,13 +55,15 @@ export function useTranscript(activeScenario: ScenarioType) {
   // Update to properly update UI when state changes
   useEffect(() => {
     if (stateData && callActive && lastStateChange) {
+      console.log('State changed, updating transcript with new state data:', stateData);
+      
       // When state changes, check for messages to display
       if (stateData.meta?.systemMessage) {
         addSystemMessage(stateData.meta.systemMessage, stateData.requiresVerification);
       }
       
       if (stateData.meta?.agentText) {
-        addAgentMessage(stateData.meta.agentText, stateData.meta.suggestions || []);
+        addAgentMessage(stateData.meta.agentText, stateData.meta?.suggestions || []);
       }
       
       setLastTranscriptUpdate(new Date());
@@ -98,6 +101,7 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Add a system message
   const addSystemMessage = (text: string, requiresVerification: boolean = false) => {
+    console.log('Adding system message:', text);
     setMessages(prev => [
       ...prev,
       {
@@ -117,6 +121,7 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Add an agent message
   const addAgentMessage = (text: string, responseOptions: string[] = []) => {
+    console.log('Adding agent message:', text, 'with options:', responseOptions);
     setMessages(prev => [
       ...prev,
       {
@@ -131,6 +136,7 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Add a customer message with sensitive data detection
   const addCustomerMessage = (text: string, responseOptions: string[] = []) => {
+    console.log('Adding customer message:', text);
     // Detect sensitive data in the message
     const sensitiveData = detectSensitiveData(text);
     
@@ -279,6 +285,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     const suggestionText = stateData?.suggestions?.find((_, index) => index.toString() === suggestionId);
     
     if (suggestionText) {
+      console.log('Accepting suggestion:', suggestionId, suggestionText);
       // Add the accepted suggestion as a new agent message
       addAgentMessage(suggestionText);
       
@@ -295,7 +302,8 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Handle selecting a response
   const handleSelectResponse = (response: string) => {
-    addAgentMessage(response);
+    console.log('Selecting response:', response);
+    addCustomerMessage(response);
     processSelection(response);
   };
 
@@ -306,24 +314,29 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Start a call
   const handleCall = () => {
-    setCallActive(!callActive);
-    setLastTranscriptUpdate(new Date());
-    
     if (!callActive) {
+      console.log('Starting call for scenario:', activeScenario);
+      setCallActive(true);
+      setLastTranscriptUpdate(new Date());
+      
       addSystemMessage('Call started');
       
-      // Trigger initial state with START_CALL event
+      // Important: Wait a moment to ensure state is updated before triggering the initial state
       setTimeout(() => {
+        console.log('Triggering processStartCall');
         const success = processStartCall();
         console.log('Process start call result:', success);
       }, 100);
     } else {
+      console.log('Ending call');
+      setCallActive(false);
       addSystemMessage('Call ended');
     }
   };
 
   // Accept incoming call
   const handleAcceptCall = (callId: string) => {
+    console.log('Accepting call:', callId);
     setAcceptedCallId(callId);
     setCallActive(true);
     setLastTranscriptUpdate(new Date());
@@ -331,6 +344,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     
     // Trigger initial state with START_CALL event
     setTimeout(() => {
+      console.log('Triggering processStartCall from accept call');
       const success = processStartCall();
       console.log('Process start call result:', success);
     }, 100);

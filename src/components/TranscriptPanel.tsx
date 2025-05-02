@@ -90,6 +90,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
   const [jsonContent, setJsonContent] = useState<string>("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
   
+  console.log("TranscriptPanel rendering with scenario:", activeScenario);
+  
   // Convert the scenario data to the expected format
   const preCalls = convertPreCallsToPrecallFormat();
   const incomingCalls = convertIncomingCallsToCustomFormat();
@@ -135,19 +137,17 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
     }
   };
 
-  // Trigger initial agent greeting after the system message appears
+  // Debug state changes
   useEffect(() => {
-    // Find if there's a system "Call started" message
-    const hasCallStarted = messages.some(message => 
-      message.sender === 'system' && message.text === 'Call started'
-    );
-    
-    // If call is active and we have a "Call started" message but no agent messages yet,
-    // we might need to manually trigger the agent greeting
-    if (callActive && hasCallStarted && !messages.some(m => m.sender === 'agent')) {
-      console.log('Call started but no agent messages, checking state data:', stateData);
-    }
-  }, [messages, callActive, stateData]);
+    console.log("Current state:", currentState);
+    console.log("Current stateData:", stateData);
+    console.log("Last state change:", lastStateChange);
+  }, [currentState, stateData, lastStateChange]);
+
+  // Debug messages
+  useEffect(() => {
+    console.log("Current messages:", messages);
+  }, [messages]);
 
   return (
     <Card className="flex flex-col h-full border-none shadow-none">
@@ -308,7 +308,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
             <div className="text-xs p-2 bg-gray-50 border border-gray-100 rounded mb-2">
               <p><strong>Current state:</strong> {currentState}</p>
               {stateData && (
-                <p><strong>Has response options:</strong> {stateData.responseOptions?.length > 0 ? 'Yes' : 'No'}</p>
+                <p><strong>Has response options:</strong> {stateData.meta?.suggestions?.length > 0 ? 'Yes' : 'No'}</p>
               )}
             </div>
           )}
@@ -341,14 +341,14 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario }) => 
           <div ref={messagesEndRef} />
         </div>
         
-        {callActive && stateData && stateData.responseOptions && stateData.responseOptions.length > 0 ? (
+        {callActive && stateData && stateData.meta?.suggestions && stateData.meta.suggestions.length > 0 ? (
           <div className="p-4 border-t">
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare size={16} className="text-primary" />
               <span className="text-sm font-medium">Available Responses:</span>
             </div>
             <div className="grid gap-2">
-              {stateData.responseOptions.map((option, index) => (
+              {stateData.meta.suggestions.map((option, index) => (
                 <Button 
                   key={index} 
                   variant="outline" 

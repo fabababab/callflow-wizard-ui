@@ -5,8 +5,7 @@
   "states": {
     "start": {
       "meta": {
-        "agentText": "Guten Tag, ich bin Ihr Kundenbetreuer. Wie kann ich Ihnen heute helfen?",
-        "systemMessage": "Kunde möchte Bankdaten aktualisieren. Identitätsprüfung erforderlich."
+        "systemMessage": "Customer connected, starting conversation"
       },
       "on": {
         "START_CALL": "identity_verification"
@@ -15,25 +14,169 @@
     "identity_verification": {
       "meta": {
         "agentText": "Gerne helfe ich Ihnen bei der Aktualisierung Ihrer Bankdaten. Aus Sicherheitsgründen müsste ich zunächst Ihre Identität überprüfen. Könnten Sie mir bitte Ihren vollständigen Namen und Ihr Geburtsdatum nennen?",
-        "action": "Identitätsprüfung starten"
+        "action": "Identitätsprüfung starten",
+        "suggestions": [
+          "Ja, mein Name ist Hans Schmidt, geboren am 15.03.1972",
+          "Warum benötigen Sie diese Daten?",
+          "Ich möchte lieber etwas anderes besprechen"
+        ],
+        "systemMessage": "Identitätsprüfung erforderlich. Bitte Name und Geburtsdatum erfassen."
       },
       "on": {
+        "DEFAULT": "account_confirmation",
+        "Warum benötigen Sie diese Daten?": "explain_data_need",
+        "Ich möchte lieber etwas anderes besprechen": "redirect_topic"
+      }
+    },
+    "explain_data_need": {
+      "meta": {
+        "agentText": "Wir benötigen diese Daten zum Schutz Ihrer persönlichen Informationen. Bankdaten sind sensibel und wir müssen sicherstellen, dass wir mit dem rechtmäßigen Kontoinhaber sprechen. Ihre Daten werden vertraulich behandelt.",
+        "suggestions": [
+          "Verstanden, mein Name ist Hans Schmidt, geboren am 15.03.1972",
+          "Ich möchte dennoch lieber etwas anderes besprechen"
+        ]
+      },
+      "on": {
+        "Verstanden, mein Name ist Hans Schmidt, geboren am 15.03.1972": "account_confirmation",
+        "Ich möchte dennoch lieber etwas anderes besprechen": "redirect_topic",
         "DEFAULT": "account_confirmation"
+      }
+    },
+    "redirect_topic": {
+      "meta": {
+        "agentText": "Natürlich, wie kann ich Ihnen stattdessen helfen?",
+        "suggestions": [
+          "Ich möchte Informationen zu meiner Versicherung",
+          "Ich habe eine Frage zur Rechnung",
+          "Doch zurück zu den Bankdaten"
+        ]
+      },
+      "on": {
+        "Doch zurück zu den Bankdaten": "identity_verification",
+        "DEFAULT": "conclusion"
       }
     },
     "account_confirmation": {
       "meta": {
         "agentText": "Vielen Dank, Herr Schmidt. Könnten Sie mir bitte auch die letzten vier Ziffern Ihrer aktuellen Kontonummer nennen?",
-        "systemMessage": "Identität bestätigt mit hoher Konfidenz."
+        "systemMessage": "Identität bestätigt mit hoher Konfidenz.",
+        "suggestions": [
+          "Die letzten Ziffern sind 4567",
+          "Ich kenne meine Kontonummer nicht",
+          "Ist das wirklich notwendig?"
+        ]
       },
       "on": {
+        "DEFAULT": "bank_form",
+        "Ich kenne meine Kontonummer nicht": "account_lookup",
+        "Ist das wirklich notwendig?": "explain_verification"
+      }
+    },
+    "account_lookup": {
+      "meta": {
+        "agentText": "Kein Problem. Ich kann die Kontonummer auch anhand Ihrer Kundennummer nachschlagen. Haben Sie Ihre Kundennummer zur Hand?",
+        "suggestions": [
+          "Ja, meine Kundennummer ist 1234567",
+          "Nein, ich habe keine Kundennummer zur Hand"
+        ]
+      },
+      "on": {
+        "DEFAULT": "bank_form",
+        "Nein, ich habe keine Kundennummer zur Hand": "alternative_verification"
+      }
+    },
+    "explain_verification": {
+      "meta": {
+        "agentText": "Die Überprüfung ist notwendig, um Ihre Daten zu schützen. Wir müssen sicherstellen, dass nur Sie Zugriff auf Ihre Bankdetails haben. Diese zusätzliche Sicherheitsmaßnahme schützt vor unbefugten Änderungen.",
+        "suggestions": [
+          "Verstanden, die letzten Ziffern sind 4567",
+          "Ich möchte eine andere Methode zur Verifizierung"
+        ]
+      },
+      "on": {
+        "DEFAULT": "bank_form",
+        "Ich möchte eine andere Methode zur Verifizierung": "alternative_verification"
+      }
+    },
+    "alternative_verification": {
+      "meta": {
+        "agentText": "Als Alternative kann ich Ihnen einen Bestätigungscode per SMS an Ihre hinterlegte Mobilnummer senden. Wäre das für Sie in Ordnung?",
+        "suggestions": [
+          "Ja, bitte senden Sie den Code per SMS",
+          "Nein, ich möchte es auf andere Weise versuchen"
+        ]
+      },
+      "on": {
+        "Ja, bitte senden Sie den Code per SMS": "sms_verification",
+        "Nein, ich möchte es auf andere Weise versuchen": "manual_verification",
+        "DEFAULT": "manual_verification"
+      }
+    },
+    "sms_verification": {
+      "meta": {
+        "agentText": "Ich habe soeben einen Code an Ihre Mobilnummer gesendet. Bitte nennen Sie mir den Code, sobald Sie ihn erhalten haben.",
+        "systemMessage": "SMS-Code gesendet: 123456",
+        "suggestions": [
+          "Der Code lautet 123456",
+          "Ich habe keinen Code erhalten"
+        ]
+      },
+      "on": {
+        "Der Code lautet 123456": "bank_form",
+        "Ich habe keinen Code erhalten": "manual_verification",
         "DEFAULT": "bank_form"
+      }
+    },
+    "manual_verification": {
+      "meta": {
+        "agentText": "In diesem Fall möchte ich Sie bitten, uns zu einem späteren Zeitpunkt anzurufen, wenn Sie Ihre Kundenkarte oder Vertragsunterlagen zur Hand haben. Alternativ können Sie die Änderung auch schriftlich einreichen.",
+        "suggestions": [
+          "Ich habe meine Unterlagen jetzt gefunden",
+          "Ich rufe später noch einmal an",
+          "Wie kann ich die Änderung schriftlich einreichen?"
+        ]
+      },
+      "on": {
+        "Ich habe meine Unterlagen jetzt gefunden": "identity_verification",
+        "Ich rufe später noch einmal an": "conclusion",
+        "Wie kann ich die Änderung schriftlich einreichen?": "written_request_info",
+        "DEFAULT": "conclusion"
+      }
+    },
+    "written_request_info": {
+      "meta": {
+        "agentText": "Sie können uns Ihre neue Bankverbindung schriftlich mitteilen. Senden Sie dazu bitte ein unterschriebenes Schreiben mit Ihrer neuen IBAN, Ihrer Kundennummer und einer Kopie Ihres Ausweises an unsere Postadresse oder als Scan per E-Mail.",
+        "suggestions": [
+          "Danke für die Information",
+          "Ich möchte es doch telefonisch versuchen"
+        ]
+      },
+      "on": {
+        "Ich möchte es doch telefonisch versuchen": "identity_verification",
+        "DEFAULT": "conclusion"
       }
     },
     "bank_form": {
       "meta": {
         "agentText": "Danke für die Bestätigung. Ich öffne jetzt das Formular zur Aktualisierung Ihrer Bankdaten. Bitte halten Sie Ihre neue IBAN bereit.",
-        "action": "Bankdatenformular öffnen"
+        "action": "Bankdatenformular öffnen",
+        "suggestions": [
+          "Meine neue IBAN lautet DE89 3704 0044 0532 0130 01",
+          "Ich benötige Hilfe beim Ablesen der IBAN"
+        ]
+      },
+      "on": {
+        "DEFAULT": "collect_new_data",
+        "Ich benötige Hilfe beim Ablesen der IBAN": "iban_help"
+      }
+    },
+    "iban_help": {
+      "meta": {
+        "agentText": "Die IBAN finden Sie auf Ihrer Bankkarte oder in Ihrem Online-Banking. Bei deutschen Konten beginnt sie mit DE und besteht aus 22 Zeichen. Sie können auch Ihre Kontonummer und Bankleitzahl nennen, dann errechne ich die IBAN für Sie.",
+        "suggestions": [
+          "Meine Kontonummer ist 0532013001, BLZ 37040044",
+          "Ich habe die IBAN jetzt: DE89 3704 0044 0532 0130 01"
+        ]
       },
       "on": {
         "DEFAULT": "collect_new_data"
@@ -41,7 +184,12 @@
     },
     "collect_new_data": {
       "meta": {
-        "agentText": "Könnten Sie mir bitte Ihre neue Bankverbindung mitteilen? Ich benötige den Namen der Bank und die IBAN."
+        "agentText": "Könnten Sie mir bitte Ihre neue Bankverbindung mitteilen? Ich benötige den Namen der Bank und die IBAN.",
+        "suggestions": [
+          "Bank: Commerzbank, IBAN: DE89 3704 0044 0532 0130 01",
+          "Bank: Sparkasse, IBAN: DE27 3704 0044 0532 0130 00", 
+          "Bank: Deutsche Bank, IBAN: DE42 5001 0517 5407 3249 31"
+        ]
       },
       "on": {
         "DEFAULT": "confirm_data"
@@ -81,15 +229,25 @@
     },
     "update_withdrawal_day": {
       "meta": {
-        "agentText": "Ich habe den Abbuchungstag auf den 15. des Monats geändert. Gibt es weitere Änderungen, die Sie vornehmen möchten?"
+        "agentText": "Ich habe den Abbuchungstag auf den 15. des Monats geändert. Gibt es weitere Änderungen, die Sie vornehmen möchten?",
+        "suggestions": [
+          "Nein, das war alles", 
+          "Ja, ich möchte auch den Zahlungsrhythmus ändern"
+        ]
       },
       "on": {
+        "Ja, ich möchte auch den Zahlungsrhythmus ändern": "update_payment_frequency",
         "DEFAULT": "process_update"
       }
     },
     "update_payment_frequency": {
       "meta": {
-        "agentText": "Aktuell ist Ihr Zahlungsrhythmus monatlich. Welchen Rhythmus würden Sie bevorzugen? Wir bieten monatlich, vierteljährlich oder jährlich an."
+        "agentText": "Aktuell ist Ihr Zahlungsrhythmus monatlich. Welchen Rhythmus würden Sie bevorzugen? Wir bieten monatlich, vierteljährlich oder jährlich an.",
+        "suggestions": [
+          "Ich möchte vierteljährlich zahlen",
+          "Ich möchte jährlich zahlen", 
+          "Ich bleibe bei monatlicher Zahlung"
+        ]
       },
       "on": {
         "DEFAULT": "process_update"
@@ -97,7 +255,12 @@
     },
     "update_reference": {
       "meta": {
-        "agentText": "Welchen Verwendungszweck möchten Sie für die Abbuchungen festlegen?"
+        "agentText": "Welchen Verwendungszweck möchten Sie für die Abbuchungen festlegen?",
+        "suggestions": [
+          "Versicherungsbeitrag Vertrag 123456",
+          "Monatlicher Beitrag KFZ-Versicherung", 
+          "Ich benötige keinen speziellen Verwendungszweck"
+        ]
       },
       "on": {
         "DEFAULT": "process_update"
@@ -124,7 +287,41 @@
     },
     "conclusion": {
       "meta": {
-        "agentText": "Gerne geschehen. Haben Sie noch weitere Fragen oder wünschen Sie Hilfe zu einem anderen Thema?"
+        "agentText": "Gerne geschehen. Haben Sie noch weitere Fragen oder wünschen Sie Hilfe zu einem anderen Thema?",
+        "suggestions": [
+          "Nein, vielen Dank für Ihre Hilfe!",
+          "Ja, ich habe noch eine andere Frage",
+          "Wann erhalte ich die Bestätigung per E-Mail?"
+        ]
+      },
+      "on": {
+        "Nein, vielen Dank für Ihre Hilfe!": "end",
+        "Ja, ich habe noch eine andere Frage": "new_topic",
+        "Wann erhalte ich die Bestätigung per E-Mail?": "email_confirmation_info",
+        "DEFAULT": "end"
+      }
+    },
+    "email_confirmation_info": {
+      "meta": {
+        "agentText": "Die Bestätigungs-E-Mail wird automatisch innerhalb der nächsten 24 Stunden an Ihre bei uns hinterlegte E-Mail-Adresse versendet. Sie enthält alle Details zur Änderung Ihrer Bankverbindung.",
+        "suggestions": [
+          "Vielen Dank für die Information",
+          "Ich habe noch eine andere Frage"
+        ]
+      },
+      "on": {
+        "Ich habe noch eine andere Frage": "new_topic",
+        "DEFAULT": "end"
+      }
+    },
+    "new_topic": {
+      "meta": {
+        "agentText": "Natürlich, wie kann ich Ihnen weiterhelfen?",
+        "suggestions": [
+          "Ich habe eine Frage zu meinen Verträgen",
+          "Ich möchte eine Adressänderung melden",
+          "Ich möchte einen Schaden melden"
+        ]
       },
       "on": {
         "DEFAULT": "end"

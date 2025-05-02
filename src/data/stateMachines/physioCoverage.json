@@ -4,6 +4,9 @@
   "initial": "start",
   "states": {
     "start": {
+      "meta": {
+        "systemMessage": "System bereit für Anrufbeginn"
+      },
       "on": {
         "START_CALL": "agent_greet"
       }
@@ -21,7 +24,8 @@
       "on": {
         "Ich möchte meine Physiotherapie prüfen.": "agent_ask_issue",
         "Ich habe eine allgemeine Frage.": "agent_general_help",
-        "Nichts, nur Test.": "abschluss"
+        "Nichts, nur Test.": "abschluss",
+        "DEFAULT": "agent_ask_issue"
       }
     },
     "agent_general_help": {
@@ -36,7 +40,22 @@
       "on": {
         "Deckungsfragen": "agent_ask_issue",
         "Vertragsdetails": "agent_contract_info",
-        "Zurück": "agent_greet"
+        "Zurück": "agent_greet",
+        "DEFAULT": "agent_contract_info"
+      }
+    },
+    "agent_contract_info": {
+      "meta": {
+        "agentText": "Welche Vertragsdetails benötigen Sie?",
+        "suggestions": [
+          "Versicherungsumfang",
+          "Prämien",
+          "Zurück zur Physiotherapiefrage"
+        ]
+      },
+      "on": {
+        "Zurück zur Physiotherapiefrage": "agent_ask_issue",
+        "DEFAULT": "auth_birthdate"
       }
     },
     "agent_ask_issue": {
@@ -51,7 +70,8 @@
       "on": {
         "Ich habe Knieprobleme.": "auth_birthdate",
         "Ich habe Rückenprobleme.": "auth_birthdate",
-        "Anderes.": "auth_birthdate"
+        "Anderes.": "auth_birthdate",
+        "DEFAULT": "auth_birthdate"
       }
     },
     "auth_birthdate": {
@@ -66,7 +86,8 @@
       "on": {
         "14.05.1985": "auth_plz",
         "01.01.1990": "auth_plz",
-        "Anderes Datum": "auth_plz"
+        "Anderes Datum": "auth_plz",
+        "DEFAULT": "auth_plz"
       }
     },
     "auth_plz": {
@@ -81,7 +102,8 @@
       "on": {
         "8004 Zürich": "auth_vs",
         "3000 Bern": "auth_vs",
-        "Anders": "auth_vs"
+        "Anders": "auth_vs",
+        "DEFAULT": "auth_vs"
       }
     },
     "auth_vs": {
@@ -96,7 +118,8 @@
       "on": {
         "756.1234.5678.90": "lookup_provider",
         "xxx.yyyy.zzzz": "lookup_provider",
-        "Keine Nummer": "auth_failed"
+        "Keine Nummer": "auth_failed",
+        "DEFAULT": "lookup_provider"
       }
     },
     "auth_failed": {
@@ -111,12 +134,14 @@
       "on": {
         "Ja, bitte": "auth_birthdate",
         "Nein, danke": "abschluss",
-        "Abbrechen": "abschluss"
+        "Abbrechen": "abschluss",
+        "DEFAULT": "abschluss"
       }
     },
     "lookup_provider": {
       "meta": {
-        "systemMessage": "Suche nach Leistungserbringer..."
+        "systemMessage": "Suche nach Leistungserbringer...",
+        "agentText": "Ich suche nach Ihren Leistungserbringern in unserem System."
       },
       "on": {
         "PROVIDER_FOUND": "provider_found",
@@ -136,7 +161,8 @@
       "on": {
         "Ja, bitte": "details_verordnung",
         "Nein, danke": "abschluss",
-        "Noch Fragen": "agent_general_help"
+        "Noch Fragen": "agent_general_help",
+        "DEFAULT": "details_verordnung"
       }
     },
     "provider_not_found": {
@@ -151,7 +177,8 @@
       "on": {
         "Ja": "agent_ask_issue",
         "Nein": "abschluss",
-        "Abbrechen": "abschluss"
+        "Abbrechen": "abschluss",
+        "DEFAULT": "abschluss"
       }
     },
     "details_verordnung": {
@@ -166,7 +193,8 @@
       "on": {
         "Verstanden": "abschluss",
         "Mehr Infos": "agent_general_help",
-        "Abbrechen": "abschluss"
+        "Abbrechen": "abschluss",
+        "DEFAULT": "abschluss"
       }
     },
     "abschluss": {

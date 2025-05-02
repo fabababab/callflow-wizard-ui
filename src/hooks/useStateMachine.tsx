@@ -85,6 +85,9 @@ export function useStateMachine(activeScenario: ScenarioType) {
       }
       
       setStateData(data);
+      
+      // Log state data for debugging
+      console.log(`State data for ${currentState}:`, data);
     }
   }, [currentState, stateMachine, toast]);
 
@@ -128,6 +131,9 @@ export function useStateMachine(activeScenario: ScenarioType) {
       to: newState
     });
 
+    // Log the state transition
+    console.log(`Transitioning from ${currentState} to ${newState}`);
+
     setCurrentState(newState);
     return true;
   }, [currentState, stateMachine, toast, verificationRequired]);
@@ -155,6 +161,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
       return transitionToState('show_contracts_for_cancellation');
     }
 
+    console.log(`Processing selection: ${selectedOption} from state: ${currentState}`);
     const nextState = getNextState(stateMachine, currentState, selectedOption);
     
     if (!nextState) {
@@ -163,6 +170,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
       return false;
     }
 
+    console.log(`Found next state: ${nextState} for option: ${selectedOption}`);
     return transitionToState(nextState);
   }, [stateMachine, currentState, transitionToState]);
 
@@ -185,18 +193,23 @@ export function useStateMachine(activeScenario: ScenarioType) {
 
   // Process START_CALL event to move from start to first active state
   const processStartCall = useCallback((): boolean => {
-    if (!stateMachine || currentState !== 'start') {
+    if (!stateMachine) {
+      console.error('Cannot process START_CALL: No state machine loaded');
       return false;
     }
+    
+    console.log(`Processing START_CALL event from state: ${currentState}`);
     
     // Try to find a START_CALL transition
     const nextState = getNextState(stateMachine, currentState, 'START_CALL');
     
     if (nextState) {
+      console.log(`Found START_CALL transition to: ${nextState}`);
       return transitionToState(nextState);
     }
     
     // If no START_CALL transition, try default
+    console.log('No START_CALL transition found, trying default transition');
     return processDefaultTransition();
   }, [stateMachine, currentState, transitionToState, processDefaultTransition]);
 
@@ -224,9 +237,9 @@ export function useStateMachine(activeScenario: ScenarioType) {
       return false;
     }
     
-    // Consider a state final if it doesn't have a nextState defined
+    // Consider a state final if it doesn't have any transitions defined
     const state = stateMachine.states[currentState];
-    return state && !state.nextState;
+    return state && (!state.on || Object.keys(state.on).length === 0);
   }, [stateMachine, currentState]);
 
   return {
