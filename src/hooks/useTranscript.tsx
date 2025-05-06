@@ -3,22 +3,10 @@ import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
+import { StateMachineState } from '@/utils/stateMachineLoader';
 
-// Add the missing customerText property to the stateData meta type
-type StateDataMeta = {
-  agentText?: string;
-  suggestions?: string[];
-  systemMessage?: string;
-  action?: string;
-  responseOptions?: string[];
-  customerText?: string; // Add the missing property
-};
-
-// Update the StateData type to include the enhanced meta
-type StateData = {
-  meta?: StateDataMeta;
-  requiresVerification?: boolean;
-};
+// We'll use the StateMachineState type from stateMachineLoader.ts instead of defining our own
+// This ensures consistency between the state machine definition and usage
 
 export function useTranscript(activeScenario: ScenarioType) {
   const { toast } = useToast();

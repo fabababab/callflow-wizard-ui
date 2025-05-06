@@ -11,6 +11,7 @@ export interface StateMachineState {
     systemMessage?: string;
     action?: string;
     responseOptions?: string[];
+    customerText?: string; // Add the missing customerText property
   };
   on?: Record<string, string>;
   nextState?: string;
