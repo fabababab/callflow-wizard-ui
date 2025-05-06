@@ -1,6 +1,5 @@
-
 // This file defines the ScenarioType that's used across the application
-export type ScenarioType = 'testscenario' | 'verification' | 'bankDetails' | 'accountHistory' | 'physioTherapy' | 'paymentReminder' | 'insurancePackage';
+export type ScenarioType = 'testscenario' | 'scenario2' | 'verification' | 'bankDetails' | 'accountHistory' | 'physioTherapy' | 'paymentReminder' | 'insurancePackage';
 
 import React from 'react';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -195,14 +194,10 @@ const ScenarioSelector = ({
   onSelectScenario,
   disabled = false
 }: ScenarioSelectorProps) => {
+  // Modify the scenarios array to only include testscenario and scenario2
   const scenarios: ScenarioType[] = [
     'testscenario',
-    'verification',
-    'bankDetails',
-    'accountHistory',
-    'physioTherapy',
-    'paymentReminder',
-    'insurancePackage'
+    'scenario2'
   ];
 
   return (

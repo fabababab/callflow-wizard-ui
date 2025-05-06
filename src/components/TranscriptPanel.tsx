@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare, RefreshCw, LayoutDashboard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -132,8 +131,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   // Load available state machines
   useEffect(() => {
     const loadScenarios = async () => {
+      // Filter to only include testscenario and scenario2
       const machines = await getAvailableStateMachines();
-      setAvailableScenarios(machines);
+      const filteredMachines = machines.filter(machine => 
+        machine === 'testscenario' || machine === 'scenario2');
+      setAvailableScenarios(filteredMachines);
     };
     loadScenarios();
   }, []);
