@@ -8,16 +8,7 @@
         "systemMessage": "Call initiated with customer."
       },
       "on": {
-        "START_CALL": "agent_greeting",
-        "DEFAULT": "agent_greeting"
-      }
-    },
-    "agent_greeting": {
-      "meta": {
-        "agentText": "Thank you for calling customer support. My name is Alex. How can I help you today?",
-        "systemMessage": "Greet the customer and ask how you can help."
-      },
-      "on": {
+        "START_CALL": "customer_issue",
         "DEFAULT": "customer_issue"
       }
     },
