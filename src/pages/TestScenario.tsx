@@ -20,7 +20,7 @@ const TestScenario = () => {
   } = useToast();
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
   const [showJsonDialog, setShowJsonDialog] = useState(false);
-  const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("bankDetails");
+  const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("testscenario");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const transcriptRef = useRef<HTMLDivElement>(null);
