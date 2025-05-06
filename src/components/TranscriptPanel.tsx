@@ -104,14 +104,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   const incomingCalls = convertIncomingCallsToCustomFormat();
   const {
     messages,
-    inputValue,
-    setInputValue,
     isRecording,
     callActive,
     elapsedTime,
     acceptedCallId,
     messagesEndRef,
-    handleSendMessage,
     handleAcceptSuggestion,
     handleRejectSuggestion,
     handleSelectResponse,
