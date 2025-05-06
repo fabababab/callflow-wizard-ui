@@ -52,6 +52,11 @@ export function useTranscript(activeScenario: ScenarioType) {
         addSystemMessage(stateData.meta.systemMessage, stateData.requiresVerification);
       }
       
+      if (stateData.meta?.customerText) {
+        // Add customer text directly as a customer message
+        addCustomerMessage(stateData.meta.customerText);
+      }
+      
       if (stateData.meta?.agentText) {
         addAgentMessage(stateData.meta.agentText, stateData.meta?.suggestions || []);
       }
@@ -61,9 +66,24 @@ export function useTranscript(activeScenario: ScenarioType) {
         console.log('Adding suggestions to the latest message:', stateData.meta.suggestions);
       }
       
+      // Add response options if available
+      if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
+        // Find the most recent message
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage) {
+          // Update the last message with response options
+          const updatedMessages = [...messages];
+          updatedMessages[updatedMessages.length - 1] = {
+            ...lastMessage,
+            responseOptions: stateData.meta.responseOptions
+          };
+          // We don't use the setMessages directly because we're using the messageHandling hook
+        }
+      }
+      
       setLastTranscriptUpdate(new Date());
     }
-  }, [stateData, lastStateChange, callActive]);
+  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, messages]);
   
   // Update when messages update
   useEffect(() => {
@@ -132,7 +152,7 @@ export function useTranscript(activeScenario: ScenarioType) {
   // Handle selecting a response
   const handleSelectResponse = (response: string) => {
     console.log('Selecting response:', response);
-    addCustomerMessage(response);
+    addAgentMessage(response);
     processSelection(response);
   };
 

@@ -11,8 +11,13 @@ interface SystemMessageGroupProps {
 const SystemMessageGroup: React.FC<SystemMessageGroupProps> = ({ messages }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // Filter out messages that contain customer text - these should be shown separately
+  const systemOnlyMessages = messages.filter(message => 
+    !message.text.includes("The customer explains their problem")
+  );
+  
   // Only show the first message text in the collapsed view
-  const summaryText = `${messages.length} system messages: ${messages[0].text}${messages.length > 1 ? '...' : ''}`;
+  const summaryText = `${systemOnlyMessages.length} system messages: ${systemOnlyMessages[0]?.text || ''}${systemOnlyMessages.length > 1 ? '...' : ''}`;
   
   return (
     <div className="rounded-lg bg-muted p-3 text-sm mb-4">
@@ -32,7 +37,7 @@ const SystemMessageGroup: React.FC<SystemMessageGroupProps> = ({ messages }) => 
           ) : (
             <>
               <ChevronRight size={14} />
-              Show all {messages.length} messages
+              Show all {systemOnlyMessages.length} messages
             </>
           )}
         </button>
@@ -42,7 +47,7 @@ const SystemMessageGroup: React.FC<SystemMessageGroupProps> = ({ messages }) => 
         <p className="italic">{summaryText}</p>
       ) : (
         <div className="space-y-2 pt-2">
-          {messages.map((message, index) => (
+          {systemOnlyMessages.map((message, index) => (
             <div key={message.id} className="pl-2 border-l-2 border-muted-foreground/20">
               <p className="text-xs font-medium">System message {index + 1}</p>
               <p className="italic">{message.text}</p>
