@@ -36,13 +36,7 @@ The application follows a component-based architecture:
 
 ## Available Scenarios
 
-The simulator includes several training scenarios:
-- Customer verification flows
-- Insurance coverage inquiries
-- Payment processing
-- Account history review
-- Physiotherapy coverage questions
-- Bank details management
+The simulator includes at the moment 2 test scenarios but will be extended:
 
 ## Running the Application
 
