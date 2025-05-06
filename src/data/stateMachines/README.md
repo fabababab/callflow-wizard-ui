@@ -1,51 +1,14 @@
 
-# Call Center Agent Scenario Documentation
+# Call Center Simulator - State Machine Documentation
 
 ## Overview
 
-This folder contains JSON state machine definitions that power the agent-customer interactions in the call center simulator. As a call center agent (you), you'll receive messages from customers and need to select appropriate responses.
+This directory contains the state machine definitions that power the call center simulation scenarios. Each JSON file defines a different customer interaction scenario that call center agents can practice.
 
-## How Scenarios Work
+## State Machine Structure
 
-1. **Agent Perspective**: All scenarios are written from the perspective of a call center agent (you). The customer's messages will be shown, and you'll need to select or type appropriate responses.
+Each state machine follows this basic structure:
 
-2. **State Machine Flow**: Each scenario follows a state machine pattern with:
-   - States: Represent different points in the conversation
-   - Transitions: Define how to move between states
-   - Customer text: What the customer says at each state
-   - Agent options: Your available responses 
-
-3. **Sensitive Data Handling**: Some scenarios require verification of sensitive customer data. As an agent, you'll need to validate this information before proceeding.
-
-## Available Scenarios
-
-- **bankDetails**: Customer inquiring about bank account information
-- **physioCoverage**: Customer asking about physiotherapy coverage
-- **verification**: Identity verification flow
-- **accountHistory**: Customer checking account history
-- **insurancePackage**: Questions about insurance packages
-- **paymentReminder**: Payment reminder conversations
-- **physioTherapy**: Physiotherapy appointment and coverage questions
-- **customerPhysioCoverage**: Customer physio coverage inquiries
-
-## Using the Simulator
-
-1. Select a scenario from the dropdown
-2. Start a test call
-3. Review customer messages (shown in the customer bubble)
-4. Choose from the suggested agent responses or type your own
-5. End the call when the conversation is complete
-
-## Best Practices for Agents
-
-- Always verify customer identity before sharing sensitive information
-- Use a professional, helpful tone
-- Follow company protocols for data validation
-- End calls courteously with a summary and next steps
-
-## Technical Notes
-
-The state machine JSON files follow this basic structure:
 ```json
 {
   "id": "scenario-name",
@@ -53,14 +16,66 @@ The state machine JSON files follow this basic structure:
   "states": {
     "start": {
       "meta": {
-        "customerText": "Hello, I need some help with...",
-        "agentOptions": ["How can I help you today?", "Let me verify your account first"]
+        "customerText": "Customer's initial message",
+        "agentOptions": ["Option 1", "Option 2"]
       },
       "on": {
         "RESPONSE_1": "next_state_1",
         "RESPONSE_2": "next_state_2"
       }
+    },
+    "next_state_1": {
+      // State definition
     }
   }
 }
 ```
+
+## Key Components
+
+### State Machine Properties
+
+- **id**: Unique identifier for the scenario
+- **initial**: The starting state of the conversation
+- **states**: Object containing all possible states in the conversation
+
+### State Properties
+
+- **meta**: Contains display information for the state
+  - **customerText**: What the customer says in this state
+  - **agentOptions**: Available responses for the agent
+  - **validation**: (Optional) Customer information that needs verification
+- **on**: Defines transitions to other states based on agent responses
+
+## Creating New Scenarios
+
+To create a new scenario:
+
+1. Create a new JSON file in this directory
+2. Define the state machine structure following the format above
+3. Register the scenario in `src/data/stateMachines.ts`
+
+## Best Practices
+
+- Use descriptive state names that reflect the conversation context
+- Provide multiple response options with varying outcomes
+- Create branches that reflect realistic customer interactions
+- Include validation states where appropriate for sensitive information
+- Add appropriate customer context to help agents respond correctly
+
+## Available Scenarios
+
+- **testscenario**: Basic test scenario for development
+- **scenario2**: Alternative test scenario with different flow
+- **physioCoverage**: Customer inquiring about physiotherapy coverage
+- **customerPhysioCoverage**: Similar coverage questions from a different perspective
+- **verification**: Identity verification process
+- **bankDetails**: Banking information management
+- **paymentReminder**: Payment follow-up conversations
+- **insurancePackage**: Insurance plan inquiries
+- **accountHistory**: Account history review
+- **physioTherapy**: Physiotherapy appointment scheduling
+
+## Visualization
+
+The application includes a visualization tool that renders state machines as interactive diagrams, helping to understand the conversation flow and decision points.

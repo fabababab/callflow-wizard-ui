@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
 
-## Project info
+# Call Center Agent Simulator
 
-**URL**: https://lovable.dev/projects/c1cb3751-63b9-4826-906c-3aa581a49151
+## Application Overview
 
-## How can I edit this code?
+This application is a call center agent simulator designed to train customer service representatives through interactive scenarios. Agents can practice handling different customer situations in a risk-free environment while receiving immediate feedback on their performance.
 
-There are several ways of editing your application.
+## Key Features
 
-**Use Lovable**
+- **Interactive Conversation Scenarios**: Multiple predefined customer interaction flows
+- **Dynamic Response Options**: Realistic agent-customer dialogue options
+- **Real-time Feedback**: Immediate evaluation of agent responses
+- **Scenario Visualization**: Visual representation of conversation decision trees
+- **Comprehensive Documentation**: Help center with FAQs and support resources
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c1cb3751-63b9-4826-906c-3aa581a49151) and start prompting.
+## Technology Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+This application is built with:
 
-**Use your preferred IDE**
+- **React**: Frontend library for building the user interface
+- **TypeScript**: Type-safe JavaScript for improved code reliability
+- **Tailwind CSS**: Utility-first CSS framework for responsive design
+- **shadcn/ui**: Component library for consistent UI elements
+- **State Machines**: JSON-based state machines define conversation flows
+- **Vite**: Fast build tool for modern web development
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Application Architecture
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The application follows a component-based architecture:
 
-Follow these steps:
+1. **State Machines**: JSON files that define the conversation flows
+2. **Agent Interface**: Transcript panel for interacting with simulated customers
+3. **Scenario System**: Logic for managing conversation states and transitions
+4. **Visualization Tools**: Visual representation of decision trees and conversation flows
+5. **Help & Documentation**: Support resources for users
+
+## Available Scenarios
+
+The simulator includes several training scenarios:
+- Customer verification flows
+- Insurance coverage inquiries
+- Payment processing
+- Account history review
+- Physiotherapy coverage questions
+- Bank details management
+
+## Running the Application
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Install dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+To create new scenarios, add JSON state machine files to the `src/data/stateMachines` directory and register them in `src/data/stateMachines.ts`.
 
-**Use GitHub Codespaces**
+Each state machine should follow the standard format defined in the documentation found in `src/data/stateMachines/README.md`.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment
 
-## What technologies are used for this project?
+The application can be deployed to any static site hosting service. Build the production version with:
 
-This project is built with:
+```sh
+npm run build
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## License
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c1cb3751-63b9-4826-906c-3aa581a49151) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is proprietary software. All rights reserved.
