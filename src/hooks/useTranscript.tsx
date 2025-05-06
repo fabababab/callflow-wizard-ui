@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -16,9 +17,12 @@ export function useTranscript(activeScenario: ScenarioType) {
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const [acceptedCallId, setAcceptedCallId] = useState<string | null>(null);
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
+  const [processedStates, setProcessedStates] = useState<Set<string>>(new Set());
+  const [isInitialStateProcessed, setIsInitialStateProcessed] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  const debounceTimerRef = useRef<number | null>(null);
   
   // Get the message handling functionality
   const {
@@ -45,48 +49,75 @@ export function useTranscript(activeScenario: ScenarioType) {
     resetStateMachine
   } = useStateMachine(activeScenario);
   
-  // Update to properly update UI when state changes
+  // Function to check if we've already processed this state to avoid duplicate messages
+  const hasProcessedState = (state: string): boolean => {
+    return processedStates.has(state);
+  };
+  
+  // Mark a state as processed
+  const markStateAsProcessed = (state: string) => {
+    setProcessedStates(prev => {
+      const newSet = new Set(prev);
+      newSet.add(state);
+      return newSet;
+    });
+  };
+
+  // Reset processed states when the scenario changes
   useEffect(() => {
-    if (stateData && callActive && lastStateChange) {
-      console.log('State changed, updating transcript with new state data:', stateData);
+    setProcessedStates(new Set());
+    setIsInitialStateProcessed(false);
+  }, [activeScenario]);
+  
+  // Update to properly update UI when state changes, with debouncing and duplicate prevention
+  useEffect(() => {
+    if (!stateData || !callActive || !lastStateChange) {
+      return;
+    }
+    
+    // Prevent duplicate processing of the same state
+    if (hasProcessedState(currentState)) {
+      console.log(`State ${currentState} already processed, skipping message updates`);
+      return;
+    }
+    
+    // Clear any existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Debounce the state processing to prevent rapid fire updates
+    debounceTimerRef.current = window.setTimeout(() => {
+      console.log('Processing state change with data:', stateData);
       
       // When state changes, check for messages to display
       if (stateData.meta?.systemMessage) {
+        console.log(`Adding system message: ${stateData.meta.systemMessage}`);
         addSystemMessage(stateData.meta.systemMessage, stateData.requiresVerification);
       }
       
       if (stateData.meta?.customerText) {
         // Add customer text directly as a customer message
+        console.log(`Adding customer message: ${stateData.meta.customerText}`);
         addCustomerMessage(stateData.meta.customerText, stateData.meta?.suggestions || []);
       }
       
       if (stateData.meta?.agentText) {
+        console.log(`Adding agent message: ${stateData.meta.agentText}`);
         addAgentMessage(stateData.meta.agentText, stateData.meta?.suggestions || []);
       }
-
-      // Make sure suggestions/options are added to messages
-      if (stateData.meta?.suggestions && stateData.meta.suggestions.length > 0) {
-        console.log('Adding suggestions to the latest message:', stateData.meta.suggestions);
-      }
       
-      // Add response options if available
-      if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
-        // Find the most recent message
-        const lastMessage = messages[messages.length - 1];
-        if (lastMessage) {
-          // Update the last message with response options
-          const updatedMessages = [...messages];
-          updatedMessages[updatedMessages.length - 1] = {
-            ...lastMessage,
-            responseOptions: stateData.meta.responseOptions
-          };
-          // We don't use the setMessages directly because we're using the messageHandling hook
-        }
-      }
-      
+      // Mark this state as processed to prevent duplicate messages
+      markStateAsProcessed(currentState);
       setLastTranscriptUpdate(new Date());
-    }
-  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, messages]);
+    }, 300); // 300ms debounce
+    
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates]);
   
   // Update when messages update
   useEffect(() => {
@@ -169,31 +200,37 @@ export function useTranscript(activeScenario: ScenarioType) {
     console.log('Resetting conversation');
     clearMessages();
     resetStateMachine();
+    setProcessedStates(new Set());
+    setIsInitialStateProcessed(false);
     setLastTranscriptUpdate(new Date());
   };
 
-  // Start a call
+  // Improved call start function to properly initialize state
   const handleCall = () => {
     if (!callActive) {
       console.log('Starting call for scenario:', activeScenario);
       setCallActive(true);
       clearMessages();
+      setProcessedStates(new Set());
+      setIsInitialStateProcessed(false);
       setLastTranscriptUpdate(new Date());
       
       addSystemMessage('Call started');
       
-      // Important: Wait a moment to ensure state is updated before triggering the initial state
+      // Important: Use a proper delay to ensure UI state is updated
       setTimeout(() => {
         console.log('Triggering processStartCall');
         const success = processStartCall();
         console.log('Process start call result:', success);
         
-        // If start call wasn't successful, try sending the START_CALL event directly
         if (!success) {
           console.log('Trying to process START_CALL event manually');
           processSelection('START_CALL');
         }
-      }, 100);
+        
+        // Mark initial state as processed after starting the call
+        setIsInitialStateProcessed(true);
+      }, 500); // Slightly longer delay to ensure proper initialization
     } else {
       console.log('Ending call');
       setCallActive(false);
@@ -201,12 +238,15 @@ export function useTranscript(activeScenario: ScenarioType) {
     }
   };
 
-  // Accept incoming call
+  // Accept incoming call with improved state handling
   const handleAcceptCall = (callId: string) => {
     console.log('Accepting call:', callId);
     setAcceptedCallId(callId);
     setCallActive(true);
+    setProcessedStates(new Set());
+    setIsInitialStateProcessed(false);
     setLastTranscriptUpdate(new Date());
+    
     addSystemMessage(`Call accepted from ${callId}`);
     
     // Trigger initial state with START_CALL event
@@ -215,18 +255,22 @@ export function useTranscript(activeScenario: ScenarioType) {
       const success = processStartCall();
       console.log('Process start call result:', success);
       
-      // If start call wasn't successful, try sending the START_CALL event directly
       if (!success) {
         console.log('Trying to process START_CALL event manually');
         processSelection('START_CALL');
       }
-    }, 100);
+      
+      // Mark initial state as processed
+      setIsInitialStateProcessed(true);
+    }, 500);
   };
 
-  // Hang up call
+  // Hang up call with cleanup
   const handleHangUpCall = () => {
     setCallActive(false);
     setAcceptedCallId(null);
+    setProcessedStates(new Set());
+    setIsInitialStateProcessed(false);
     setLastTranscriptUpdate(new Date());
     addSystemMessage('Call ended');
   };

@@ -14,7 +14,6 @@
     },
     "customer_issue": {
       "meta": {
-        "systemMessage": "The customer explains their problem.",
         "customerText": "Hi there. I recently purchased your premium subscription package, but I'm being charged the standard rate. I checked my account online and it shows I'm on the premium plan, but the features are limited to the standard plan and my last invoice shows the standard rate."
       },
       "on": {
@@ -41,8 +40,7 @@
     "account_verification_path": {
       "meta": {
         "agentText": "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
-        "customerText": "Yes, my email is customer@example.com and my account number is ACC123456.",
-        "systemMessage": "Customer provides their account information."
+        "customerText": "Yes, my email is customer@example.com and my account number is ACC123456."
       },
       "on": {
         "DEFAULT": "account_check"
@@ -50,8 +48,7 @@
     },
     "account_check": {
       "meta": {
-        "agentText": "Thank you for providing that information. I can see that you upgraded to the premium plan last week. Looking at your account, I notice that there's a system flag that hasn't properly updated your billing tier. Let me fix that for you right away.",
-        "systemMessage": "Agent investigating and finding the issue in the system."
+        "agentText": "Thank you for providing that information. I can see that you upgraded to the premium plan last week. Looking at your account, I notice that there's a system flag that hasn't properly updated your billing tier. Let me fix that for you right away."
       },
       "on": {
         "DEFAULT": "account_resolution"
@@ -60,8 +57,7 @@
     "account_resolution": {
       "meta": {
         "agentText": "I've updated your account status in our system. You should now have full access to all premium features. I've also processed a refund for the difference between the standard and premium rates for this period. It will appear in your account within 3-5 business days. Is there anything else I can help you with today?",
-        "customerText": "That was quick! Thank you for fixing it so efficiently. I think that's all I needed help with today.",
-        "systemMessage": "Agent resolves the issue and confirms with the customer."
+        "customerText": "That was quick! Thank you for fixing it so efficiently. I think that's all I needed help with today."
       },
       "on": {
         "DEFAULT": "conclusion"
@@ -71,8 +67,7 @@
     "technical_escalation_path": {
       "meta": {
         "agentText": "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
-        "customerText": "How long will that take? I need this resolved soon as I'm trying to use the premium features for an important project.",
-        "systemMessage": "Customer expresses urgency about their issue."
+        "customerText": "How long will that take? I need this resolved soon as I'm trying to use the premium features for an important project."
       },
       "on": {
         "DEFAULT": "escalation_process"
@@ -81,8 +76,7 @@
     "escalation_process": {
       "meta": {
         "agentText": "I understand the urgency. Let me create a priority ticket for our technical team. They typically respond within 4 hours for urgent matters. In the meantime, I can manually activate the premium features on your account as a temporary solution. Would that work for you?",
-        "customerText": "Yes, that would be very helpful. Thank you.",
-        "systemMessage": "Agent offers a temporary solution while escalating the issue."
+        "customerText": "Yes, that would be very helpful. Thank you."
       },
       "on": {
         "DEFAULT": "temp_access_granted"
@@ -91,8 +85,7 @@
     "temp_access_granted": {
       "meta": {
         "agentText": "I've activated all premium features on your account. This will remain active while our technical team investigates the billing issue. I've created ticket #TK-45678 for you. You'll receive an email confirmation shortly, and our team will contact you once the billing issue is permanently resolved. Is there anything else you need assistance with today?",
-        "customerText": "No, that's perfect. I appreciate your help with this.",
-        "systemMessage": "Agent provides a temporary solution and creates an escalation ticket."
+        "customerText": "No, that's perfect. I appreciate your help with this."
       },
       "on": {
         "DEFAULT": "conclusion"
@@ -102,8 +95,7 @@
     "billing_explanation_path": {
       "meta": {
         "agentText": "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied.",
-        "customerText": "I upgraded over two weeks ago though, so I don't think it's just a delay. Something seems wrong.",
-        "systemMessage": "Customer clarifies the timeline, indicating this isn't a normal billing delay."
+        "customerText": "I upgraded over two weeks ago though, so I don't think it's just a delay. Something seems wrong."
       },
       "on": {
         "DEFAULT": "billing_investigation"
@@ -112,8 +104,7 @@
     "billing_investigation": {
       "meta": {
         "agentText": "You're right, two weeks is longer than our typical processing time. Let me investigate this further. Could you tell me when exactly you upgraded and if you received any confirmation email?",
-        "customerText": "I upgraded on the 15th of last month and yes, I received a confirmation email saying my account was upgraded to premium.",
-        "systemMessage": "Agent investigates deeper and customer provides more details."
+        "customerText": "I upgraded on the 15th of last month and yes, I received a confirmation email saying my account was upgraded to premium."
       },
       "on": {
         "DEFAULT": "billing_resolution"
@@ -122,8 +113,7 @@
     "billing_resolution": {
       "meta": {
         "agentText": "Thank you for that information. I've reviewed your account history and I can see the issue now. Your account was correctly upgraded, but there was an error in our billing system that didn't apply the correct rate. I've fixed this discrepancy and applied a credit to your account for the difference. You'll see this reflected in your next statement. You should now have full access to all premium features as well.",
-        "customerText": "That's great news! Thank you for sorting that out for me.",
-        "systemMessage": "Agent identifies and resolves the billing system error."
+        "customerText": "That's great news! Thank you for sorting that out for me."
       },
       "on": {
         "DEFAULT": "conclusion"
@@ -133,8 +123,7 @@
     "conclusion": {
       "meta": {
         "agentText": "It was my pleasure helping you today. Is there anything else I can assist you with?",
-        "customerText": "No, that's all. Thanks again for your help.",
-        "systemMessage": "Wrapping up the conversation."
+        "customerText": "No, that's all. Thanks again for your help."
       },
       "on": {
         "DEFAULT": "end_call"
@@ -142,8 +131,7 @@
     },
     "end_call": {
       "meta": {
-        "agentText": "Thank you for calling customer support. Have a wonderful day!",
-        "systemMessage": "Call completed successfully."
+        "agentText": "Thank you for calling customer support. Have a wonderful day!"
       }
     }
   }
