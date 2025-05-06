@@ -12,10 +12,11 @@ import IncomingCallCard from './transcript/IncomingCall';
 import PreCallInfo from './transcript/PreCallInfo';
 import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls, SensitiveField, ValidationStatus, SensitiveDataType } from '@/data/scenarioData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { getStateMachineJson, hasStateMachine } from '@/utils/stateMachineLoader';
+import { getStateMachineJson, hasStateMachine, getAvailableStateMachines } from '@/utils/stateMachineLoader';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import CallControl from './TestScenario/CallControl';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Define the PreCall type to match what PreCallInfo component expects
 export type PreCall = {
@@ -95,6 +96,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
   const [jsonContent, setJsonContent] = useState<string>("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
+  const [availableScenarios, setAvailableScenarios] = useState<ScenarioType[]>([]);
   console.log("TranscriptPanel rendering with scenario:", activeScenario);
 
   // Convert the scenario data to the expected format
@@ -125,6 +127,15 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 
   // Check if this scenario has a state machine
   const hasStateMachineAvailable = activeScenario && hasStateMachine(activeScenario);
+
+  // Load available state machines
+  useEffect(() => {
+    const loadScenarios = async () => {
+      const machines = await getAvailableStateMachines();
+      setAvailableScenarios(machines);
+    };
+    loadScenarios();
+  }, []);
 
   // Group consecutive system messages
   const groupedMessages = React.useMemo(() => {
@@ -184,6 +195,20 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     } finally {
       setIsLoadingJson(false);
     }
+  };
+
+  // Handle changing the scenario from the selector
+  const handleScenarioChange = (value: string) => {
+    if (callActive) {
+      handleHangUpCall();
+    }
+    const scenarioValue = value as ScenarioType;
+    
+    // Use our parent component's way to update the scenario
+    const event = new CustomEvent('scenario-change', { 
+      detail: { scenario: scenarioValue }
+    });
+    window.dispatchEvent(event);
   };
 
   // Debug state changes
@@ -263,6 +288,29 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           </DropdownMenu>
         </div>
       </CardHeader>
+
+      {/* Add scenario selector below the header */}
+      <div className="px-4 mb-2 flex">
+        <Select onValueChange={handleScenarioChange} value={activeScenario}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select scenario" />
+          </SelectTrigger>
+          <SelectContent align="center" className="bg-white">
+            <SelectGroup>
+              {availableScenarios.map((scenario) => (
+                <SelectItem 
+                  key={scenario} 
+                  value={scenario}
+                  className="capitalize"
+                  disabled={callActive}
+                >
+                  {scenario}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
       
       {showStateMachineInfo && hasStateMachineAvailable && <div className="mx-4 mb-2 p-2 bg-muted/50 rounded-md border border-border text-xs">
           <div className="flex justify-between items-center">

@@ -30,6 +30,20 @@ export interface StateMachine {
   };
 }
 
+// Get list of all available state machines
+export async function getAvailableStateMachines(): Promise<ScenarioType[]> {
+  const availableScenarios: ScenarioType[] = [];
+  
+  // Filter state machines that are available (true in the stateMachines object)
+  for (const [key, value] of Object.entries(stateMachines)) {
+    if (value === true) {
+      availableScenarios.push(key as ScenarioType);
+    }
+  }
+  
+  return availableScenarios;
+}
+
 // Check if a state machine exists for the given scenario
 export function hasStateMachine(scenario: ScenarioType): boolean {
   return stateMachines.hasOwnProperty(scenario);

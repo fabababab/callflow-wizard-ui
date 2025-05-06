@@ -39,6 +39,22 @@ const TestScenario = () => {
     error
   } = activeScenario;
 
+  // Listen for scenario change events from the TranscriptPanel
+  useEffect(() => {
+    const handleScenarioChange = (event: CustomEvent) => {
+      const newScenario = event.detail.scenario as ScenarioType;
+      if (newScenario && newScenario !== selectedStateMachine) {
+        setSelectedStateMachine(newScenario);
+      }
+    };
+
+    window.addEventListener('scenario-change', handleScenarioChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('scenario-change', handleScenarioChange as EventListener);
+    };
+  }, [selectedStateMachine]);
+
   // Load state machine when selected scenario changes
   useEffect(() => {
     async function fetchStateMachine() {
