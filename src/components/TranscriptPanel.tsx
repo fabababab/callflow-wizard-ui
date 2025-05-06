@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare, RefreshCw } from 'lucide-react';
+import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare, RefreshCw, LayoutDashboard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +18,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import CallControl from './TestScenario/CallControl';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DecisionTreeVisualizer from './DecisionTreeVisualizer';
 
 // Define the PreCall type to match what PreCallInfo component expects
 export type PreCall = {
@@ -97,6 +100,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   const [jsonContent, setJsonContent] = useState<string>("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
   const [availableScenarios, setAvailableScenarios] = useState<ScenarioType[]>([]);
+  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
   console.log("TranscriptPanel rendering with scenario:", activeScenario);
 
   // Convert the scenario data to the expected format
@@ -219,6 +223,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   useEffect(() => {
     console.log("Current messages:", messages);
   }, [messages]);
+
   return <Card className="flex flex-col h-full border-none shadow-none">
       <CardHeader className="px-4 py-3 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2">
@@ -410,20 +415,45 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         )}
       </CardContent>
       
-      {/* Dialog to display the full JSON state machine */}
+      {/* Dialog to display the full JSON state machine with visualization option */}
       <Dialog open={isJsonDialogOpen} onOpenChange={setIsJsonDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>State Machine for {activeScenario}</DialogTitle>
             <DialogDescription>
-              Full state machine configuration
+              {dialogViewMode === "json" 
+                ? "Full state machine configuration" 
+                : "Visual representation of the state machine"}
             </DialogDescription>
           </DialogHeader>
-          <div className="overflow-auto max-h-[60vh]">
-            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
-              {jsonContent}
-            </pre>
-          </div>
+          
+          <Tabs value={dialogViewMode} onValueChange={(value) => setDialogViewMode(value as "json" | "visualization")}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="json" className="flex items-center gap-2">
+                <FileJson size={16} />
+                JSON View
+              </TabsTrigger>
+              <TabsTrigger value="visualization" className="flex items-center gap-2">
+                <LayoutDashboard size={16} />
+                Visualization
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="json" className="mt-2 overflow-auto max-h-[60vh]">
+              <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
+                {jsonContent}
+              </pre>
+            </TabsContent>
+            
+            <TabsContent value="visualization" className="mt-2 overflow-auto max-h-[60vh]">
+              <div className="bg-white p-4 rounded-md border">
+                <DecisionTreeVisualizer 
+                  stateMachine={JSON.parse(jsonContent || "{}")} 
+                  currentState={currentState}
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
     </Card>;

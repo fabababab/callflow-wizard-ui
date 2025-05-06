@@ -6,11 +6,15 @@ import Header from '@/components/Header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
 import { useCustomerScenario } from '@/hooks/useCustomerScenario';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
 import TranscriptPanel from '@/components/TranscriptPanel'; 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileJson, LayoutDashboard } from 'lucide-react';
+import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
+import { Button } from '@/components/ui/button';
 
 const TestScenario = () => {
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
@@ -20,6 +24,7 @@ const TestScenario = () => {
   const [jsonContent, setJsonContent] = useState<string>("");
   const transcriptRef = useRef<HTMLDivElement>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Initialize sidebar as collapsed
+  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
 
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(selectedStateMachine);
@@ -102,6 +107,11 @@ const TestScenario = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
+  // Toggle view mode between JSON and visualization
+  const handleViewModeToggle = (mode: "json" | "visualization") => {
+    setDialogViewMode(mode);
+  };
+
   return <div className="flex h-screen bg-background">
       <SidebarProvider defaultOpen={false}>
         <Sidebar collapsed={sidebarCollapsed} />
@@ -149,7 +159,7 @@ const TestScenario = () => {
         </div>
       </SidebarProvider>
 
-      {/* Dialog to display the JSON file - using Portal to ensure proper rendering */}
+      {/* Dialog to display the JSON file and visualization - using Portal to ensure proper rendering */}
       <Dialog open={showJsonDialog} onOpenChange={setShowJsonDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-background">
           <DialogHeader>
@@ -157,13 +167,46 @@ const TestScenario = () => {
               {selectedStateMachine} State Machine
             </DialogTitle>
             <DialogDescription>
-              Complete JSON representation of the state machine flow
+              {dialogViewMode === "json" 
+                ? "Complete JSON representation of the state machine flow" 
+                : "Visual representation of the state machine flow"}
             </DialogDescription>
           </DialogHeader>
+          
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Button 
+              variant={dialogViewMode === "json" ? "secondary" : "outline"} 
+              size="sm"
+              onClick={() => handleViewModeToggle("json")}
+              className="flex items-center gap-2"
+            >
+              <FileJson size={16} />
+              JSON View
+            </Button>
+            <Button 
+              variant={dialogViewMode === "visualization" ? "secondary" : "outline"} 
+              size="sm"
+              onClick={() => handleViewModeToggle("visualization")}
+              className="flex items-center gap-2"
+            >
+              <LayoutDashboard size={16} />
+              Visualization
+            </Button>
+          </div>
+          
           <div className="overflow-auto max-h-[60vh]">
-            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
-              {jsonContent}
-            </pre>
+            {dialogViewMode === "json" ? (
+              <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+                {jsonContent}
+              </pre>
+            ) : (
+              <div className="bg-white p-4 rounded-md">
+                <DecisionTreeVisualizer 
+                  stateMachine={loadedStateMachine} 
+                  currentState={currentState}
+                />
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
