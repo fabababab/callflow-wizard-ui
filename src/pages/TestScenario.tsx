@@ -10,7 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import StateMachineSelector from '@/components/StateMachineSelector';
 import { useToast } from '@/hooks/use-toast';
 import TranscriptPanel from '@/components/TranscriptPanel'; 
 
@@ -93,11 +92,6 @@ const TestScenario = () => {
       transcriptRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
-  
-  // Handle state machine selection
-  const handleSelectStateMachine = (stateMachine: ScenarioType) => {
-    setSelectedStateMachine(stateMachine);
-  };
 
   return <div className="flex h-screen bg-background">
       <SidebarProvider>
@@ -113,11 +107,6 @@ const TestScenario = () => {
                       <CardTitle className="flex items-center gap-2">
                         Call Center Agent Simulator
                       </CardTitle>
-                      <StateMachineSelector 
-                        activeStateMachine={selectedStateMachine} 
-                        onSelectStateMachine={handleSelectStateMachine} 
-                        disabled={transcript.callActive} 
-                      />
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -143,7 +132,7 @@ const TestScenario = () => {
               
               {!loadedStateMachine && !isLoading && !error && <Card>
                   <CardContent className="py-8 text-center">
-                    <p>Please select a state machine to start testing</p>
+                    <p>State machine is loading...</p>
                   </CardContent>
                 </Card>}
             </div>
