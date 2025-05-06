@@ -350,10 +350,12 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             </div>}
           
           {/* Agent guidance - new section */}
-          {callActive && <div className="text-xs p-2 mb-2 bg-blue-50 border border-blue-100 rounded">
+          {callActive && (
+            <div className="text-xs p-2 mb-2 bg-blue-50 border border-blue-100 rounded">
               <p className="font-medium text-blue-800">Agent Instructions:</p>
-              <p className="text-blue-700">You're the call center agent. Review customer messages and select appropriate responses.</p>
-            </div>}
+              <p className="text-blue-700">You're the call center agent. Select one of the available response options below to respond to the customer.</p>
+            </div>
+          )}
           
           {/* Message transcript with grouped system messages */}
           {groupedMessages.map((item, index) => {
@@ -363,7 +365,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                 // If only one system message, render it normally
                 <MessageComponent 
                   key={item[0].id} 
-                  message={item[0]} // Already converted in groupedMessages
+                  message={item[0]} 
                   onAcceptSuggestion={handleAcceptSuggestion} 
                   onRejectSuggestion={handleRejectSuggestion} 
                   onSelectResponse={handleSelectResponse}
@@ -373,7 +375,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                 <SystemMessageGroup key={`group-${index}`} messages={item} />
               );
             } else {
-              // Regular message - already converted in groupedMessages
+              // Regular message
               return (
                 <MessageComponent 
                   key={item.id} 
@@ -388,27 +390,27 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           <div ref={messagesEndRef} />
         </div>
         
-        {callActive && stateData && stateData.meta?.suggestions && stateData.meta.suggestions.length > 0 ? <div className="p-4 border-t">
+        {/* Response options section - always display if available */}
+        {callActive && stateData && stateData.meta?.suggestions && stateData.meta.suggestions.length > 0 && (
+          <div className="p-4 border-t">
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare size={16} className="text-primary" />
-              <span className="text-sm font-medium">Available Agent Responses:</span>
+              <span className="text-sm font-medium">Choose Your Response:</span>
             </div>
             <div className="grid gap-2">
-              {stateData.meta.suggestions.map((option, index) => <Button key={index} variant="outline" className="justify-start text-left h-auto py-2" onClick={() => handleSelectResponse(option)}>
+              {stateData.meta.suggestions.map((option, index) => (
+                <Button 
+                  key={index} 
+                  variant="outline" 
+                  className="justify-start text-left h-auto py-2" 
+                  onClick={() => handleSelectResponse(option)}
+                >
                   {option}
-                </Button>)}
+                </Button>
+              ))}
             </div>
-          </div> : callActive && <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <Button size="icon" variant="outline" className={`${isRecording ? 'bg-red-100 text-red-500' : ''} h-9`} onClick={toggleRecording} aria-label="Toggle microphone">
-                <Mic size={16} />
-              </Button>
-              <Input placeholder="Type your agent response here..." value={inputValue} onChange={e => setInputValue(e.target.value)} className="flex-1" onKeyDown={e => e.key === 'Enter' && handleSendMessage()} />
-              <Button type="submit" size="icon" onClick={handleSendMessage} disabled={!inputValue.trim()} className="h-9" aria-label="Send message">
-                <CornerDownLeft size={16} />
-              </Button>
-            </div>
-          </div>}
+          </div>
+        )}
       </CardContent>
       
       {/* Dialog to display the full JSON state machine */}

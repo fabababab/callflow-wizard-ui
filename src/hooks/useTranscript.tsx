@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -100,7 +99,6 @@ export function useTranscript(activeScenario: ScenarioType) {
         // Add response options to the system message if they exist
         if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
           console.log('Adding system message with response options:', stateData.meta.responseOptions);
-          // FIX: Changed from 3 args to 2 args, passing responseOptions as second arg
           addSystemMessage(stateData.meta.systemMessage, {
             responseOptions: stateData.meta.responseOptions
           });
@@ -110,9 +108,11 @@ export function useTranscript(activeScenario: ScenarioType) {
       }
       
       if (stateData.meta?.customerText) {
-        // Add customer text directly as a customer message
+        // Important change: If we have customer text, add the suggestions as well to show
+        // response options immediately after customer messages
         console.log(`Adding customer message: ${stateData.meta.customerText}`);
-        addCustomerMessage(stateData.meta.customerText, stateData.meta?.suggestions || []);
+        const suggestions = stateData.meta?.suggestions || [];
+        addCustomerMessage(stateData.meta.customerText, suggestions);
       }
       
       if (stateData.meta?.agentText) {
@@ -166,47 +166,41 @@ export function useTranscript(activeScenario: ScenarioType) {
     };
   }, [callActive]);
 
-  // Handle sending a message
+  // Handle sending a message - remove or simplify since we're not using text input
   const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-
-    // Set the user action flag
-    setIsUserAction(true);
-    
-    // Add message based on who is sending it
-    addAgentMessage(inputValue);
-    setInputValue('');
-
-    // Process the selected option in the state machine
-    processSelection(inputValue);
+    // Keep this empty or remove references - we're not using text input anymore
+    console.log("Text input disabled - using response options only");
   };
 
-  // Handle accepting a suggestion
-  const handleAcceptSuggestion = (suggestionId: string, messageId: string) => {
+  // Handle accepting a suggestion - simplified to focus on responsiveness
+  const handleAcceptSuggestion = (messageId: string, suggestionId: string) => {
     // Set the user action flag
     setIsUserAction(true);
     
-    // Find the suggestion text by ID and convert suggestionId to number for index
-    const index = parseInt(suggestionId);
-    const suggestionText = stateData?.meta?.suggestions?.[index];
+    // Find the message and suggestion
+    const message = messages.find(m => m.id === messageId);
+    if (!message || !message.suggestions) return;
     
-    if (suggestionText) {
-      console.log('Accepting suggestion:', suggestionId, suggestionText);
+    // Find the suggestion text by ID
+    const suggestion = message.suggestions.find(s => s.id === suggestionId);
+    
+    if (suggestion) {
+      console.log('Accepting suggestion:', suggestionId, suggestion.text);
       // Add the accepted suggestion as a new agent message
-      addAgentMessage(suggestionText);
+      addAgentMessage(suggestion.text);
       
       // Process the selected option in the state machine
-      processSelection(suggestionText);
+      processSelection(suggestion.text);
     }
   };
 
-  // Handle rejecting a suggestion
+  // Handle rejecting a suggestion - likely won't be used much with the new flow
   const handleRejectSuggestion = (suggestionId: string, messageId: string) => {
     // For now, just log the rejection
     console.log(`Suggestion ${suggestionId} rejected for message ${messageId}`);
   };
 
-  // Handle selecting a response - UPDATED to properly handle state transitions
+  // This is now our primary interaction method
   const handleSelectResponse = (response: string) => {
     console.log('Selecting response:', response);
     
@@ -329,10 +323,10 @@ export function useTranscript(activeScenario: ScenarioType) {
     acceptedCallId,
     lastTranscriptUpdate,
     messagesEndRef,
-    handleSendMessage,
+    handleSendMessage, // Keep for interface compatibility but it's not used
     handleAcceptSuggestion,
     handleRejectSuggestion,
-    handleSelectResponse,
+    handleSelectResponse, // This is now our primary interaction method
     toggleRecording,
     handleCall,
     handleAcceptCall,
