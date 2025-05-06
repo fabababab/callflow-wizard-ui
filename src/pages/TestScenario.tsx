@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
 import { useCustomerScenario } from '@/hooks/useCustomerScenario';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
