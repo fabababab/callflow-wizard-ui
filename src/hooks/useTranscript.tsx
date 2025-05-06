@@ -1,9 +1,24 @@
-
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
+
+// Add the missing customerText property to the stateData meta type
+type StateDataMeta = {
+  agentText?: string;
+  suggestions?: string[];
+  systemMessage?: string;
+  action?: string;
+  responseOptions?: string[];
+  customerText?: string; // Add the missing property
+};
+
+// Update the StateData type to include the enhanced meta
+type StateData = {
+  meta?: StateDataMeta;
+  requiresVerification?: boolean;
+};
 
 export function useTranscript(activeScenario: ScenarioType) {
   const { toast } = useToast();
@@ -54,7 +69,7 @@ export function useTranscript(activeScenario: ScenarioType) {
       
       if (stateData.meta?.customerText) {
         // Add customer text directly as a customer message
-        addCustomerMessage(stateData.meta.customerText);
+        addCustomerMessage(stateData.meta.customerText, stateData.meta?.suggestions || []);
       }
       
       if (stateData.meta?.agentText) {

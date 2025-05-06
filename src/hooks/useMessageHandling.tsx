@@ -3,6 +3,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Message } from '@/components/transcript/Message';
 import { ValidationStatus } from '@/data/scenarioData';
 import { v4 as uuidv4 } from 'uuid';
+import { AISuggestion } from '@/components/transcript/AISuggestion';
 
 // Define types for sensitive data stats
 interface SensitiveDataStats {
@@ -88,12 +89,19 @@ export function useMessageHandling() {
 
   // Add a customer message
   const addCustomerMessage = useCallback((text: string, suggestions: string[] = []) => {
+    // Convert string suggestions to AISuggestion objects if provided
+    const aiSuggestions: AISuggestion[] = suggestions.map((suggestion, index) => ({
+      id: index.toString(),
+      text: suggestion,
+      type: 'response'
+    }));
+    
     const newMessage: Message = {
       id: messageIdCounter.current.toString(),
       text,
       sender: 'customer',
       timestamp: new Date(),
-      suggestions,
+      suggestions: aiSuggestions,
     };
     
     messageIdCounter.current += 1;
@@ -105,12 +113,19 @@ export function useMessageHandling() {
 
   // Add an agent message
   const addAgentMessage = useCallback((text: string, suggestions: string[] = []) => {
+    // Convert string suggestions to AISuggestion objects if provided
+    const aiSuggestions: AISuggestion[] = suggestions.map((suggestion, index) => ({
+      id: index.toString(),
+      text: suggestion,
+      type: 'response'
+    }));
+    
     const newMessage: Message = {
       id: messageIdCounter.current.toString(),
       text,
       sender: 'agent',
       timestamp: new Date(),
-      suggestions,
+      suggestions: aiSuggestions,
     };
     
     messageIdCounter.current += 1;
