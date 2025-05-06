@@ -46,9 +46,11 @@ const StateMachineSelector = React.memo(({
           <SelectValue placeholder="Select state machine" />
         </SelectTrigger>
         <SelectContent 
-          className="bg-background shadow-lg z-50"
+          className="bg-background border shadow-md z-50 w-[var(--radix-select-trigger-width)]"
           position="popper"
           sideOffset={4}
+          align="start"
+          avoidCollisions={true}
         >
           <SelectGroup>
             {availableStateMachines.map((stateMachine) => (
