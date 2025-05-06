@@ -19,6 +19,7 @@ const TestScenario = () => {
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Initialize sidebar as collapsed
 
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(selectedStateMachine);
@@ -96,9 +97,14 @@ const TestScenario = () => {
     }
   };
 
+  // Sidebar collapse toggle handler
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
   return <div className="flex h-screen bg-background">
-      <SidebarProvider>
-        <Sidebar />
+      <SidebarProvider defaultOpen={false}>
+        <Sidebar collapsed={sidebarCollapsed} />
         <div className="flex flex-col flex-1 overflow-hidden">
           <Header />
           <div className="flex-1 overflow-auto p-4 md:p-6">

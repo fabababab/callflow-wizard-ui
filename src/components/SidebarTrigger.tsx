@@ -19,7 +19,7 @@ const SidebarTrigger = ({ className }: SidebarTriggerProps) => {
     toggleSidebar = sidebarContext.toggleSidebar;
   } catch (error) {
     // Fallback if not in SidebarProvider
-    sidebarState = "expanded";
+    sidebarState = "collapsed";
     toggleSidebar = () => console.warn("SidebarTrigger used outside of SidebarProvider");
   }
   
