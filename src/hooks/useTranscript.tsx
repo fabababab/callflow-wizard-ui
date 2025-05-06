@@ -100,7 +100,10 @@ export function useTranscript(activeScenario: ScenarioType) {
         // Add response options to the system message if they exist
         if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
           console.log('Adding system message with response options:', stateData.meta.responseOptions);
-          addSystemMessage(stateData.meta.systemMessage, false, stateData.meta.responseOptions);
+          // FIX: Changed from 3 args to 2 args, passing responseOptions as second arg
+          addSystemMessage(stateData.meta.systemMessage, {
+            responseOptions: stateData.meta.responseOptions
+          });
         } else {
           addSystemMessage(stateData.meta.systemMessage);
         }

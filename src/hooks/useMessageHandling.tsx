@@ -13,6 +13,12 @@ interface SensitiveDataStats {
   total: number;
 }
 
+// New interface for system message options
+interface SystemMessageOptions {
+  requiresVerification?: boolean;
+  responseOptions?: string[];
+}
+
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [verificationBlocking, setVerificationBlocking] = useState(false);
@@ -55,8 +61,8 @@ export function useMessageHandling() {
     setLastMessageUpdate(new Date());
   }, []);
 
-  // Add a system message
-  const addSystemMessage = useCallback((text: string, requiresVerification?: boolean) => {
+  // Add a system message - Updated to accept options object instead of multiple args
+  const addSystemMessage = useCallback((text: string, options?: SystemMessageOptions) => {
     // Special case for "customer explains their problem" messages
     if (text === "The customer explains their problem." && 
         messages.length > 0 && 
@@ -72,8 +78,9 @@ export function useMessageHandling() {
       text,
       sender: 'system',
       timestamp: new Date(),
-      requiresVerification,
+      requiresVerification: options?.requiresVerification,
       isVerified: false,
+      responseOptions: options?.responseOptions,
     };
     
     messageIdCounter.current += 1;
@@ -82,7 +89,7 @@ export function useMessageHandling() {
     
     console.log("Adding system message:", text);
     
-    if (requiresVerification) {
+    if (options?.requiresVerification) {
       setVerificationBlocking(true);
     }
   }, [messages]);
