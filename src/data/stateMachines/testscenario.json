@@ -14,17 +14,17 @@
     },
     "agent_greeting": {
       "meta": {
-        "agentText": "Hello, thank you for calling our service center. How can I help you today?",
-        "systemMessage": "Greeting the customer."
+        "agentText": "Thank you for calling customer support. My name is Alex. How can I help you today?",
+        "systemMessage": "Greet the customer and ask how you can help."
       },
       "on": {
-        "DEFAULT": "customer_query"
+        "DEFAULT": "customer_issue"
       }
     },
-    "customer_query": {
+    "customer_issue": {
       "meta": {
-        "systemMessage": "Customer is explaining their query.",
-        "customerText": "Hi, I'm having trouble with my account settings. I can't seem to update my personal information."
+        "systemMessage": "The customer explains their problem.",
+        "customerText": "Hi there. I recently purchased your premium subscription package, but I'm being charged the standard rate. I checked my account online and it shows I'm on the premium plan, but the features are limited to the standard plan and my last invoice shows the standard rate."
       },
       "on": {
         "DEFAULT": "agent_response_options"
@@ -32,292 +32,118 @@
     },
     "agent_response_options": {
       "meta": {
-        "systemMessage": "Choose your response to the customer.",
+        "systemMessage": "Choose your approach to handle the customer's billing issue:",
         "responseOptions": [
-          "I understand you're having trouble with your account settings. Could you please provide your account number so I can look into this for you?",
-          "I'm sorry to hear that. Let me guide you through the steps to update your personal information. First, could you tell me what specific information you're trying to update?",
-          "Thank you for bringing this to our attention. There might be a temporary issue with our system. When did you first notice this problem?"
+          "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
+          "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
+          "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied."
         ]
       },
       "on": {
-        "I understand you're having trouble with your account settings. Could you please provide your account number so I can look into this for you?": "request_account_number",
-        "I'm sorry to hear that. Let me guide you through the steps to update your personal information. First, could you tell me what specific information you're trying to update?": "guide_update_steps",
-        "Thank you for bringing this to our attention. There might be a temporary issue with our system. When did you first notice this problem?": "troubleshoot_timing",
-        "DEFAULT": "guide_update_steps"
+        "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?": "account_verification_path",
+        "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.": "technical_escalation_path",
+        "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied.": "billing_explanation_path",
+        "DEFAULT": "account_verification_path"
       }
     },
-    "request_account_number": {
+    
+    "account_verification_path": {
       "meta": {
-        "agentText": "I understand you're having trouble with your account settings. Could you please provide your account number so I can look into this for you?",
-        "customerText": "Sure, my account number is AC-12345678.",
-        "systemMessage": "Customer provided account information."
+        "agentText": "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
+        "customerText": "Yes, my email is customer@example.com and my account number is ACC123456.",
+        "systemMessage": "Customer provides their account information."
       },
       "on": {
-        "DEFAULT": "account_verification"
+        "DEFAULT": "account_check"
       }
     },
-    "account_verification": {
+    "account_check": {
       "meta": {
-        "agentText": "Thank you for providing your account number. For security purposes, could you also confirm your date of birth?",
-        "customerText": "It's May 15, 1980.",
-        "systemMessage": "Verifying customer identity."
+        "agentText": "Thank you for providing that information. I can see that you upgraded to the premium plan last week. Looking at your account, I notice that there's a system flag that hasn't properly updated your billing tier. Let me fix that for you right away.",
+        "systemMessage": "Agent investigating and finding the issue in the system."
       },
       "on": {
-        "DEFAULT": "account_issue_resolution_options"
+        "DEFAULT": "account_resolution"
       }
     },
-    "account_issue_resolution_options": {
+    "account_resolution": {
       "meta": {
-        "systemMessage": "Choose how to resolve the customer's account issue.",
-        "responseOptions": [
-          "I've verified your account and I can see there's a system lock on your profile settings. Let me remove that for you right away.",
-          "Thank you for confirming. I notice that your account requires a password reset before you can update your information. Would you like me to help you with that now?",
-          "I can see your account details now. It appears you're trying to update information in a restricted field. This requires approval from our security department. Would you like me to put in a request for you?"
-        ]
-      },
-      "on": {
-        "I've verified your account and I can see there's a system lock on your profile settings. Let me remove that for you right away.": "remove_system_lock",
-        "Thank you for confirming. I notice that your account requires a password reset before you can update your information. Would you like me to help you with that now?": "offer_password_reset",
-        "I can see your account details now. It appears you're trying to update information in a restricted field. This requires approval from our security department. Would you like me to put in a request for you?": "security_approval",
-        "DEFAULT": "remove_system_lock"
-      }
-    },
-    "guide_update_steps": {
-      "meta": {
-        "agentText": "I'm sorry to hear that. Let me guide you through the steps to update your personal information. First, could you tell me what specific information you're trying to update?",
-        "customerText": "I'm trying to update my home address and phone number.",
-        "systemMessage": "Customer explains specific update needs."
-      },
-      "on": {
-        "DEFAULT": "provide_update_instructions_options"
-      }
-    },
-    "provide_update_instructions_options": {
-      "meta": {
-        "systemMessage": "Choose how to instruct the customer.",
-        "responseOptions": [
-          "To update your address and phone number, you'll need to login to your online account, go to 'Personal Settings', then 'Contact Information'. If you're having trouble accessing this section, I can help you troubleshoot.",
-          "I can update your address and phone number directly in our system. Would you mind providing your new address and phone number?",
-          "For security reasons, address and phone number changes require verification. I can send a verification code to your email on file. Would that work for you?"
-        ]
-      },
-      "on": {
-        "To update your address and phone number, you'll need to login to your online account, go to 'Personal Settings', then 'Contact Information'. If you're having trouble accessing this section, I can help you troubleshoot.": "online_update_instructions",
-        "I can update your address and phone number directly in our system. Would you mind providing your new address and phone number?": "direct_update_offer",
-        "For security reasons, address and phone number changes require verification. I can send a verification code to your email on file. Would that work for you?": "verification_process",
-        "DEFAULT": "online_update_instructions"
-      }
-    },
-    "troubleshoot_timing": {
-      "meta": {
-        "agentText": "Thank you for bringing this to our attention. There might be a temporary issue with our system. When did you first notice this problem?",
-        "customerText": "I've been trying since yesterday evening.",
-        "systemMessage": "Customer provides timing information."
-      },
-      "on": {
-        "DEFAULT": "system_issue_resolution_options"
-      }
-    },
-    "system_issue_resolution_options": {
-      "meta": {
-        "systemMessage": "Choose how to address the system issue.",
-        "responseOptions": [
-          "Thank you for that information. We did have some scheduled maintenance yesterday evening which might have caused this issue. Our systems should be fully functional now. Could you try again while I stay on the line?",
-          "I apologize for the inconvenience. Let me check if there are any ongoing system issues affecting your account specifically. May I put you on a brief hold while I check with our technical team?",
-          "I understand how frustrating this can be. Since you've been experiencing this issue since yesterday, I'd like to escalate this to our technical support team who can investigate further. They'll contact you within 24 hours. Is that acceptable?"
-        ]
-      },
-      "on": {
-        "Thank you for that information. We did have some scheduled maintenance yesterday evening which might have caused this issue. Our systems should be fully functional now. Could you try again while I stay on the line?": "maintenance_explanation",
-        "I apologize for the inconvenience. Let me check if there are any ongoing system issues affecting your account specifically. May I put you on a brief hold while I check with our technical team?": "technical_check",
-        "I understand how frustrating this can be. Since you've been experiencing this issue since yesterday, I'd like to escalate this to our technical support team who can investigate further. They'll contact you within 24 hours. Is that acceptable?": "escalation_offer",
-        "DEFAULT": "maintenance_explanation"
-      }
-    },
-    "remove_system_lock": {
-      "meta": {
-        "agentText": "I've verified your account and I can see there's a system lock on your profile settings. Let me remove that for you right away.",
-        "systemMessage": "Agent is resolving the system lock."
-      },
-      "on": {
-        "DEFAULT": "issue_resolved"
-      }
-    },
-    "offer_password_reset": {
-      "meta": {
-        "agentText": "Thank you for confirming. I notice that your account requires a password reset before you can update your information. Would you like me to help you with that now?",
-        "customerText": "Yes, please help me reset my password.",
-        "systemMessage": "Customer agrees to password reset."
-      },
-      "on": {
-        "DEFAULT": "password_reset_process"
-      }
-    },
-    "security_approval": {
-      "meta": {
-        "agentText": "I can see your account details now. It appears you're trying to update information in a restricted field. This requires approval from our security department. Would you like me to put in a request for you?",
-        "customerText": "Yes, please submit that request.",
-        "systemMessage": "Customer agrees to security approval request."
-      },
-      "on": {
-        "DEFAULT": "submit_security_request"
-      }
-    },
-    "online_update_instructions": {
-      "meta": {
-        "agentText": "To update your address and phone number, you'll need to login to your online account, go to 'Personal Settings', then 'Contact Information'. If you're having trouble accessing this section, I can help you troubleshoot.",
-        "customerText": "I'll try that right now. One moment please...",
-        "systemMessage": "Customer following online instructions."
-      },
-      "on": {
-        "DEFAULT": "customer_follows_instructions"
-      }
-    },
-    "direct_update_offer": {
-      "meta": {
-        "agentText": "I can update your address and phone number directly in our system. Would you mind providing your new address and phone number?",
-        "customerText": "My new address is 123 Main Street, Anytown, and my new phone number is 555-123-4567.",
-        "systemMessage": "Customer provides new contact information."
-      },
-      "on": {
-        "DEFAULT": "update_information"
-      }
-    },
-    "verification_process": {
-      "meta": {
-        "agentText": "For security reasons, address and phone number changes require verification. I can send a verification code to your email on file. Would that work for you?",
-        "customerText": "Yes, that works for me.",
-        "systemMessage": "Customer agrees to verification process."
-      },
-      "on": {
-        "DEFAULT": "send_verification"
-      }
-    },
-    "issue_resolved": {
-      "meta": {
-        "agentText": "I've successfully removed the system lock. You should now be able to update your personal information. Is there anything else you'd like help with today?",
-        "customerText": "No, that's all I needed. Thank you for your help!",
-        "systemMessage": "Issue has been resolved."
+        "agentText": "I've updated your account status in our system. You should now have full access to all premium features. I've also processed a refund for the difference between the standard and premium rates for this period. It will appear in your account within 3-5 business days. Is there anything else I can help you with today?",
+        "customerText": "That was quick! Thank you for fixing it so efficiently. I think that's all I needed help with today.",
+        "systemMessage": "Agent resolves the issue and confirms with the customer."
       },
       "on": {
         "DEFAULT": "conclusion"
       }
     },
-    "password_reset_process": {
+    
+    "technical_escalation_path": {
       "meta": {
-        "agentText": "I'll help you reset your password. I've sent a password reset link to your email on file. Once you've reset your password, you'll be able to update your personal information. The link is valid for 24 hours.",
-        "customerText": "Perfect, I'll check my email. Thank you!",
-        "systemMessage": "Password reset process initiated."
+        "agentText": "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
+        "customerText": "How long will that take? I need this resolved soon as I'm trying to use the premium features for an important project.",
+        "systemMessage": "Customer expresses urgency about their issue."
+      },
+      "on": {
+        "DEFAULT": "escalation_process"
+      }
+    },
+    "escalation_process": {
+      "meta": {
+        "agentText": "I understand the urgency. Let me create a priority ticket for our technical team. They typically respond within 4 hours for urgent matters. In the meantime, I can manually activate the premium features on your account as a temporary solution. Would that work for you?",
+        "customerText": "Yes, that would be very helpful. Thank you.",
+        "systemMessage": "Agent offers a temporary solution while escalating the issue."
+      },
+      "on": {
+        "DEFAULT": "temp_access_granted"
+      }
+    },
+    "temp_access_granted": {
+      "meta": {
+        "agentText": "I've activated all premium features on your account. This will remain active while our technical team investigates the billing issue. I've created ticket #TK-45678 for you. You'll receive an email confirmation shortly, and our team will contact you once the billing issue is permanently resolved. Is there anything else you need assistance with today?",
+        "customerText": "No, that's perfect. I appreciate your help with this.",
+        "systemMessage": "Agent provides a temporary solution and creates an escalation ticket."
       },
       "on": {
         "DEFAULT": "conclusion"
       }
     },
-    "submit_security_request": {
+    
+    "billing_explanation_path": {
       "meta": {
-        "agentText": "I've submitted the request to our security department. They will review it and make the necessary changes within 1-2 business days. You'll receive an email confirmation once the changes are approved.",
-        "customerText": "That sounds good. I'll wait for their email.",
-        "systemMessage": "Security request submitted."
+        "agentText": "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied.",
+        "customerText": "I upgraded over two weeks ago though, so I don't think it's just a delay. Something seems wrong.",
+        "systemMessage": "Customer clarifies the timeline, indicating this isn't a normal billing delay."
+      },
+      "on": {
+        "DEFAULT": "billing_investigation"
+      }
+    },
+    "billing_investigation": {
+      "meta": {
+        "agentText": "You're right, two weeks is longer than our typical processing time. Let me investigate this further. Could you tell me when exactly you upgraded and if you received any confirmation email?",
+        "customerText": "I upgraded on the 15th of last month and yes, I received a confirmation email saying my account was upgraded to premium.",
+        "systemMessage": "Agent investigates deeper and customer provides more details."
+      },
+      "on": {
+        "DEFAULT": "billing_resolution"
+      }
+    },
+    "billing_resolution": {
+      "meta": {
+        "agentText": "Thank you for that information. I've reviewed your account history and I can see the issue now. Your account was correctly upgraded, but there was an error in our billing system that didn't apply the correct rate. I've fixed this discrepancy and applied a credit to your account for the difference. You'll see this reflected in your next statement. You should now have full access to all premium features as well.",
+        "customerText": "That's great news! Thank you for sorting that out for me.",
+        "systemMessage": "Agent identifies and resolves the billing system error."
       },
       "on": {
         "DEFAULT": "conclusion"
       }
     },
-    "customer_follows_instructions": {
-      "meta": {
-        "agentText": "Great! Let me know if you encounter any issues while updating your information. I'll stay on the line to assist you.",
-        "customerText": "It worked! I was able to update my information. Thank you for your help.",
-        "systemMessage": "Customer successfully updates information."
-      },
-      "on": {
-        "DEFAULT": "conclusion"
-      }
-    },
-    "update_information": {
-      "meta": {
-        "agentText": "Thank you for providing that information. I've updated your address and phone number in our system. The changes are effective immediately. You'll receive a confirmation email shortly.",
-        "customerText": "That was easy! Thank you for your help.",
-        "systemMessage": "Information updated successfully."
-      },
-      "on": {
-        "DEFAULT": "conclusion"
-      }
-    },
-    "send_verification": {
-      "meta": {
-        "agentText": "I've sent a verification code to your email. Once you receive it, please let me know the code, and I'll proceed with updating your information.",
-        "customerText": "I got the code. It's 123456.",
-        "systemMessage": "Customer provides verification code."
-      },
-      "on": {
-        "DEFAULT": "verify_code"
-      }
-    },
-    "verify_code": {
-      "meta": {
-        "agentText": "Thank you for providing the verification code. I've verified it and can now update your information. What is your new address and phone number?",
-        "customerText": "My new address is 456 Oak Avenue, Springfield, and my new phone number is 555-987-6543.",
-        "systemMessage": "Customer provides new information after verification."
-      },
-      "on": {
-        "DEFAULT": "update_information"
-      }
-    },
-    "maintenance_explanation": {
-      "meta": {
-        "agentText": "Thank you for that information. We did have some scheduled maintenance yesterday evening which might have caused this issue. Our systems should be fully functional now. Could you try again while I stay on the line?",
-        "customerText": "Sure, I'll try now... It's working now! I can update my information.",
-        "systemMessage": "Customer confirms issue is resolved."
-      },
-      "on": {
-        "DEFAULT": "conclusion"
-      }
-    },
-    "technical_check": {
-      "meta": {
-        "agentText": "I apologize for the inconvenience. Let me check if there are any ongoing system issues affecting your account specifically. May I put you on a brief hold while I check with our technical team?",
-        "customerText": "Yes, that's fine.",
-        "systemMessage": "Customer agrees to hold while agent investigates."
-      },
-      "on": {
-        "DEFAULT": "return_from_hold"
-      }
-    },
-    "escalation_offer": {
-      "meta": {
-        "agentText": "I understand how frustrating this can be. Since you've been experiencing this issue since yesterday, I'd like to escalate this to our technical support team who can investigate further. They'll contact you within 24 hours. Is that acceptable?",
-        "customerText": "Yes, that would be fine. Thank you.",
-        "systemMessage": "Customer agrees to escalation."
-      },
-      "on": {
-        "DEFAULT": "create_escalation_ticket"
-      }
-    },
-    "return_from_hold": {
-      "meta": {
-        "agentText": "Thank you for your patience. I've checked with our technical team, and there was indeed a brief issue with the account settings module. They've resolved it now. Could you please try accessing your account settings again?",
-        "customerText": "Yes, let me check... It's working now! Thank you.",
-        "systemMessage": "Issue resolved after technical check."
-      },
-      "on": {
-        "DEFAULT": "conclusion"
-      }
-    },
-    "create_escalation_ticket": {
-      "meta": {
-        "agentText": "I've created an escalation ticket for our technical support team. Your ticket number is TS-98765. They will investigate the issue and contact you within 24 hours. Is there anything else I can help with today?",
-        "customerText": "No, that's all I needed. Thank you for your help.",
-        "systemMessage": "Escalation ticket created."
-      },
-      "on": {
-        "DEFAULT": "conclusion"
-      }
-    },
+    
     "conclusion": {
       "meta": {
-        "agentText": "Thank you for contacting our service center today. I'm glad we could resolve your issue. Is there anything else you need help with before we end this call?",
-        "customerText": "No, that's all. Thank you for your help!",
-        "systemMessage": "Call nearing conclusion."
+        "agentText": "It was my pleasure helping you today. Is there anything else I can assist you with?",
+        "customerText": "No, that's all. Thanks again for your help.",
+        "systemMessage": "Wrapping up the conversation."
       },
       "on": {
         "DEFAULT": "end_call"
@@ -325,7 +151,7 @@
     },
     "end_call": {
       "meta": {
-        "agentText": "Thank you for calling our service center. Have a wonderful day!",
+        "agentText": "Thank you for calling customer support. Have a wonderful day!",
         "systemMessage": "Call completed successfully."
       }
     }
