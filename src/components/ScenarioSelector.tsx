@@ -1,3 +1,4 @@
+
 // This file defines the ScenarioType that's used across the application
 export type ScenarioType = 'testscenario' | 'scenario2' | 'verification' | 'bankDetails' | 'accountHistory' | 'physioTherapy' | 'paymentReminder' | 'insurancePackage';
 
@@ -47,6 +48,28 @@ export const scenarioCallData: Record<ScenarioType, {
       duration: '1m 00s',
       sentiment: 'Neutral',
       keyPoints: ['Customer has a general inquiry', 'Testing the system functionality']
+    }
+  },
+  'scenario2': {
+    id: 8,
+    customerName: 'Internet Upgrade Customer',
+    phoneNumber: '+49 157 7788 9900',
+    waitTime: '1m 15s',
+    callType: 'Service Upgrade',
+    priority: 'medium',
+    expertise: 'Technical Support',
+    matchScore: 90,
+    caseHistory: [
+      {
+        type: 'Service Inquiry',
+        date: 'May 6, 2025',
+        description: 'Customer is interested in upgrading internet package.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '2m 45s',
+      sentiment: 'Frustrated',
+      keyPoints: ['Customer trying to upgrade internet package', 'Website giving errors during checkout']
     }
   },
   'verification': {
