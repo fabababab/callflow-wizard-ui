@@ -357,7 +357,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             </div>
           )}
           
-          {/* Message transcript with grouped system messages */}
+          {/* Message transcript with grouped system messages - without response options */}
           {groupedMessages.map((item, index) => {
             if (Array.isArray(item)) {
               // This is a group of system messages
@@ -390,9 +390,9 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           <div ref={messagesEndRef} />
         </div>
         
-        {/* Response options section - always display if available */}
+        {/* Single dedicated response options area - ONLY place where options are shown */}
         {callActive && stateData && stateData.meta?.suggestions && stateData.meta.suggestions.length > 0 && (
-          <div className="p-4 border-t">
+          <div className="p-4 border-t bg-gray-50">
             <div className="flex items-center gap-2 mb-2">
               <MessageSquare size={16} className="text-primary" />
               <span className="text-sm font-medium">Choose Your Response:</span>

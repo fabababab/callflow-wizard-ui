@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -5,12 +6,8 @@ import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
 import { StateMachineState } from '@/utils/stateMachineLoader';
 
-// We'll use the StateMachineState type from stateMachineLoader.ts instead of defining our own
-// This ensures consistency between the state machine definition and usage
-
 export function useTranscript(activeScenario: ScenarioType) {
   const { toast } = useToast();
-  const [inputValue, setInputValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [callActive, setCallActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState('00:00');
@@ -19,6 +16,7 @@ export function useTranscript(activeScenario: ScenarioType) {
   const [processedStates, setProcessedStates] = useState<Set<string>>(new Set());
   const [isInitialStateProcessed, setIsInitialStateProcessed] = useState(false);
   const [isUserAction, setIsUserAction] = useState(false);
+  const [awaitingUserResponse, setAwaitingUserResponse] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -69,6 +67,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
     setIsUserAction(false);
+    setAwaitingUserResponse(false);
   }, [activeScenario]);
   
   // Update to properly update UI when state changes, with debouncing and duplicate prevention
@@ -95,29 +94,21 @@ export function useTranscript(activeScenario: ScenarioType) {
       // When state changes, check for messages to display
       if (stateData.meta?.systemMessage) {
         console.log(`Adding system message: ${stateData.meta.systemMessage}`);
-        
-        // Add response options to the system message if they exist
-        if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
-          console.log('Adding system message with response options:', stateData.meta.responseOptions);
-          addSystemMessage(stateData.meta.systemMessage, {
-            responseOptions: stateData.meta.responseOptions
-          });
-        } else {
-          addSystemMessage(stateData.meta.systemMessage);
-        }
+        addSystemMessage(stateData.meta.systemMessage);
       }
       
       if (stateData.meta?.customerText) {
-        // Important change: If we have customer text, add the suggestions as well to show
-        // response options immediately after customer messages
         console.log(`Adding customer message: ${stateData.meta.customerText}`);
-        const suggestions = stateData.meta?.suggestions || [];
-        addCustomerMessage(stateData.meta.customerText, suggestions);
+        // Add customer message without suggestions - suggestions will be shown in dedicated area
+        addCustomerMessage(stateData.meta.customerText);
+        
+        // Set flag that we're waiting for user to respond
+        setAwaitingUserResponse(true);
       }
       
-      if (stateData.meta?.agentText) {
+      if (stateData.meta?.agentText && !isUserAction) {
         console.log(`Adding agent message: ${stateData.meta.agentText}`);
-        addAgentMessage(stateData.meta.agentText, stateData.meta?.suggestions || []);
+        addAgentMessage(stateData.meta.agentText);
       }
       
       // Mark this state as processed to prevent duplicate messages
@@ -133,7 +124,7 @@ export function useTranscript(activeScenario: ScenarioType) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates]);
+  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates, isUserAction]);
   
   // Update when messages update
   useEffect(() => {
@@ -166,12 +157,6 @@ export function useTranscript(activeScenario: ScenarioType) {
     };
   }, [callActive]);
 
-  // Handle sending a message - remove or simplify since we're not using text input
-  const handleSendMessage = () => {
-    // Keep this empty or remove references - we're not using text input anymore
-    console.log("Text input disabled - using response options only");
-  };
-
   // Handle accepting a suggestion - simplified to focus on responsiveness
   const handleAcceptSuggestion = (messageId: string, suggestionId: string) => {
     // Set the user action flag
@@ -200,12 +185,21 @@ export function useTranscript(activeScenario: ScenarioType) {
     console.log(`Suggestion ${suggestionId} rejected for message ${messageId}`);
   };
 
-  // This is now our primary interaction method
+  // This is our primary interaction method - updated to ensure explicit user action
   const handleSelectResponse = (response: string) => {
     console.log('Selecting response:', response);
     
+    // Only process if we're awaiting user response
+    if (!awaitingUserResponse && !isInitialStateProcessed) {
+      console.log('Not awaiting user response yet, skipping');
+      return;
+    }
+    
     // Set the user action flag
     setIsUserAction(true);
+    
+    // Reset awaiting user response flag
+    setAwaitingUserResponse(false);
     
     // Add the selected response as an agent message
     addAgentMessage(response);
@@ -238,6 +232,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setIsInitialStateProcessed(false);
     setLastTranscriptUpdate(new Date());
     setIsUserAction(false);
+    setAwaitingUserResponse(false);
   };
 
   // Improved call start function to properly initialize state
@@ -249,6 +244,7 @@ export function useTranscript(activeScenario: ScenarioType) {
       setProcessedStates(new Set());
       setIsInitialStateProcessed(false);
       setIsUserAction(false);
+      setAwaitingUserResponse(false);
       setLastTranscriptUpdate(new Date());
       
       addSystemMessage('Call started');
@@ -282,6 +278,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
     setIsUserAction(false);
+    setAwaitingUserResponse(false);
     setLastTranscriptUpdate(new Date());
     
     addSystemMessage(`Call accepted from ${callId}`);
@@ -309,21 +306,19 @@ export function useTranscript(activeScenario: ScenarioType) {
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
     setIsUserAction(false);
+    setAwaitingUserResponse(false);
     setLastTranscriptUpdate(new Date());
     addSystemMessage('Call ended');
   };
   
   return {
     messages,
-    inputValue,
-    setInputValue,
     isRecording,
     callActive,
     elapsedTime,
     acceptedCallId,
     lastTranscriptUpdate,
     messagesEndRef,
-    handleSendMessage, // Keep for interface compatibility but it's not used
     handleAcceptSuggestion,
     handleRejectSuggestion,
     handleSelectResponse, // This is now our primary interaction method
@@ -341,6 +336,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     resetConversation,
     handleValidateSensitiveData,
     sensitiveDataStats,
-    verificationBlocking
+    verificationBlocking,
+    awaitingUserResponse
   };
 }

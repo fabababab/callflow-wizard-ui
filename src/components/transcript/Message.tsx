@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -83,13 +84,6 @@ const Message: React.FC<MessageProps> = ({
     }
   };
   
-  // Determine if response options should be shown for this message
-  // Always show response options for customer messages when in agent mode
-  // This ensures options appear directly after customer messages
-  const shouldShowResponseOptions = 
-    hasResponseOptions || 
-    (message.sender === 'customer' && message.suggestions && message.suggestions.length > 0);
-  
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
@@ -173,52 +167,7 @@ const Message: React.FC<MessageProps> = ({
           </div>
         )}
         
-        {/* Display AI suggestions if available - for agent selection */}
-        {message.sender === 'customer' && hasSuggestions && onSelectResponse && (
-          <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
-            <div className="text-xs flex items-center gap-1 mb-2">
-              <MessageSquare size={12} />
-              <span className="font-medium">Choose Your Response:</span>
-            </div>
-            <div className="space-y-2">
-              {message.suggestions.map((suggestion, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  className="w-full justify-between text-sm py-2 px-3 h-auto flex items-center gap-1 group text-blue-800 hover:bg-blue-50"
-                  onClick={() => onSelectResponse(suggestion.text)}
-                >
-                  <span className="text-left">{suggestion.text}</span>
-                  <ChevronRight size={14} className="text-blue-600 flex-shrink-0" />
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Display response options - always shown for system messages with responseOptions */}
-        {hasResponseOptions && onSelectResponse && (
-          <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
-            <div className="text-xs flex items-center gap-1 mb-2">
-              <MessageSquare size={12} />
-              <span className="font-medium">Agent Response Options</span>
-            </div>
-            <div className="space-y-2">
-              {message.responseOptions.map((option, index) => (
-                <Button
-                  key={index}
-                  size="sm"
-                  variant="outline"
-                  className="w-full justify-between text-sm py-2 px-3 h-auto flex items-center gap-1 group text-blue-800 hover:bg-blue-50"
-                  onClick={() => onSelectResponse(option)}
-                >
-                  <span className="text-left">{option}</span>
-                  <ChevronRight size={14} className="text-blue-600 flex-shrink-0" />
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Removed all inline response options here */}
       </div>
     </div>
   );
