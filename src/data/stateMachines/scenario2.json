@@ -1,0 +1,200 @@
+
+{
+  "id": "scenario2",
+  "initial": "start",
+  "states": {
+    "start": {
+      "meta": {
+        "systemMessage": "Call initiated with customer."
+      },
+      "on": {
+        "START_CALL": "initial_greeting",
+        "DEFAULT": "initial_greeting"
+      }
+    },
+    "initial_greeting": {
+      "meta": {
+        "customerText": "Hi there. I'm trying to upgrade my internet package, but the website keeps giving me an error when I try to complete the transaction. I've been a customer for over three years and I'm getting really frustrated with this situation.",
+        "suggestions": [
+          "I understand how frustrating technical issues can be. I'd be happy to help you upgrade your internet package. To access your account, could you please provide your account number or the email address associated with your account?",
+          "I apologize for the inconvenience you're experiencing. Let me help you upgrade your internet package directly over the phone instead of using the website. First, I'll need to verify your identity.",
+          "Thank you for being a loyal customer for over three years. I'll definitely help you with upgrading your internet package. Could you tell me which package you're currently on and which one you'd like to upgrade to?"
+        ]
+      },
+      "on": {
+        "I understand how frustrating technical issues can be. I'd be happy to help you upgrade your internet package. To access your account, could you please provide your account number or the email address associated with your account?": "account_verification",
+        "I apologize for the inconvenience you're experiencing. Let me help you upgrade your internet package directly over the phone instead of using the website. First, I'll need to verify your identity.": "identity_verification",
+        "Thank you for being a loyal customer for over three years. I'll definitely help you with upgrading your internet package. Could you tell me which package you're currently on and which one you'd like to upgrade to?": "package_information",
+        "DEFAULT": "account_verification"
+      }
+    },
+    
+    "account_verification": {
+      "meta": {
+        "agentText": "I understand how frustrating technical issues can be. I'd be happy to help you upgrade your internet package. To access your account, could you please provide your account number or the email address associated with your account?",
+        "customerText": "My email is customer@example.com and my account number is INT98765.",
+        "suggestions": [
+          "Thank you for providing that information. I've located your account. I can see you're currently on our Standard 100Mbps plan. Which package would you like to upgrade to?",
+          "I've found your account, but I'm seeing a note that there might be some technical limitations in your area. Let me check what upgrade options are available for your specific location.",
+          "Thanks for the information. I've accessed your account and can see you've been with us for 3 years and 4 months. Before we proceed with the upgrade, I'd like to check if there are any special loyalty offers available for you."
+        ]
+      },
+      "on": {
+        "Thank you for providing that information. I've located your account. I can see you're currently on our Standard 100Mbps plan. Which package would you like to upgrade to?": "package_selection",
+        "I've found your account, but I'm seeing a note that there might be some technical limitations in your area. Let me check what upgrade options are available for your specific location.": "technical_limitations",
+        "Thanks for the information. I've accessed your account and can see you've been with us for 3 years and 4 months. Before we proceed with the upgrade, I'd like to check if there are any special loyalty offers available for you.": "loyalty_check",
+        "DEFAULT": "package_selection"
+      }
+    },
+    
+    "identity_verification": {
+      "meta": {
+        "agentText": "I apologize for the inconvenience you're experiencing. Let me help you upgrade your internet package directly over the phone instead of using the website. First, I'll need to verify your identity.",
+        "customerText": "Sure, what information do you need?",
+        "suggestions": [
+          "Could you please provide your full name, the email address associated with your account, and your service address for verification purposes?",
+          "To verify your identity, I'll need your full name, date of birth, and the last four digits of the payment method on file.",
+          "For security purposes, can you please provide your full name, account number, and the answer to your security question which appears to be 'What was the name of your first pet?'"
+        ]
+      },
+      "on": {
+        "Could you please provide your full name, the email address associated with your account, and your service address for verification purposes?": "service_address_verification",
+        "To verify your identity, I'll need your full name, date of birth, and the last four digits of the payment method on file.": "payment_method_verification",
+        "For security purposes, can you please provide your full name, account number, and the answer to your security question which appears to be 'What was the name of your first pet?'": "security_question_verification",
+        "DEFAULT": "service_address_verification"
+      }
+    },
+
+    "service_address_verification": {
+      "meta": {
+        "agentText": "Could you please provide your full name, the email address associated with your account, and your service address for verification purposes?",
+        "customerText": "My name is Alex Johnson, email is customer@example.com and my address is 123 Main Street, Anytown.",
+        "suggestions": [
+          "Thank you, Alex. I've verified your information. I can see you're currently on our Standard 100Mbps plan. Which package would you like to upgrade to?",
+          "Thanks for the verification, Alex. I notice you've been a loyal customer for over three years. Before discussing upgrade options, I'd like to check if you qualify for any of our loyalty discounts.",
+          "Thank you for confirming your details, Alex. I've found your account. Before we proceed with the upgrade, may I know which specific internet package you're interested in?"
+        ]
+      },
+      "on": {
+        "Thank you, Alex. I've verified your information. I can see you're currently on our Standard 100Mbps plan. Which package would you like to upgrade to?": "package_selection",
+        "Thanks for the verification, Alex. I notice you've been a loyal customer for over three years. Before discussing upgrade options, I'd like to check if you qualify for any of our loyalty discounts.": "loyalty_check",
+        "Thank you for confirming your details, Alex. I've found your account. Before we proceed with the upgrade, may I know which specific internet package you're interested in?": "package_selection",
+        "DEFAULT": "package_selection"
+      }
+    },
+
+    "package_information": {
+      "meta": {
+        "agentText": "Thank you for being a loyal customer for over three years. I'll definitely help you with upgrading your internet package. Could you tell me which package you're currently on and which one you'd like to upgrade to?",
+        "customerText": "I'm currently on the Standard 100Mbps plan, and I'd like to upgrade to the Premium 500Mbps plan if possible.",
+        "suggestions": [
+          "The Premium 500Mbps plan is an excellent choice! Before I process this upgrade, I need to verify your account. Could you please provide your account number or the email address associated with your account?",
+          "Great choice with the Premium 500Mbps plan! That will be perfect for multiple devices and streaming. Let me check if this plan is available at your location before we proceed.",
+          "The Premium 500Mbps plan is one of our most popular options. Given your loyalty, I can offer you this package at a special rate of $59.99 per month for the first year, instead of the regular $69.99. Would you like to proceed with this offer?"
+        ]
+      },
+      "on": {
+        "The Premium 500Mbps plan is an excellent choice! Before I process this upgrade, I need to verify your account. Could you please provide your account number or the email address associated with your account?": "account_verification",
+        "Great choice with the Premium 500Mbps plan! That will be perfect for multiple devices and streaming. Let me check if this plan is available at your location before we proceed.": "availability_check",
+        "The Premium 500Mbps plan is one of our most popular options. Given your loyalty, I can offer you this package at a special rate of $59.99 per month for the first year, instead of the regular $69.99. Would you like to proceed with this offer?": "special_offer",
+        "DEFAULT": "account_verification"
+      }
+    },
+
+    "package_selection": {
+      "meta": {
+        "agentText": "Thank you, Alex. I've verified your information. I can see you're currently on our Standard 100Mbps plan. Which package would you like to upgrade to?",
+        "customerText": "I'd like to upgrade to the Premium 500Mbps plan. I need faster speeds for working from home.",
+        "suggestions": [
+          "The Premium 500Mbps plan is an excellent choice for remote work! The monthly cost would be $69.99, which is $20 more than your current plan. Would you like me to proceed with this upgrade?",
+          "That's a great choice! Before I process the upgrade, I should mention that we're currently running a promotion - if you upgrade to our Premium 500Mbps plan, you'll get the first three months at your current rate before the new price takes effect. Would you like to take advantage of this offer?",
+          "The Premium 500Mbps plan would definitely improve your work-from-home experience. I also see we have an option to include our enhanced security package for just $5 more per month, which provides advanced protection for your home network. Would you like to add this to your upgrade?"
+        ]
+      },
+      "on": {
+        "The Premium 500Mbps plan is an excellent choice for remote work! The monthly cost would be $69.99, which is $20 more than your current plan. Would you like me to proceed with this upgrade?": "confirm_upgrade",
+        "That's a great choice! Before I process the upgrade, I should mention that we're currently running a promotion - if you upgrade to our Premium 500Mbps plan, you'll get the first three months at your current rate before the new price takes effect. Would you like to take advantage of this offer?": "promotion_offer",
+        "The Premium 500Mbps plan would definitely improve your work-from-home experience. I also see we have an option to include our enhanced security package for just $5 more per month, which provides advanced protection for your home network. Would you like to add this to your upgrade?": "security_addon",
+        "DEFAULT": "confirm_upgrade"
+      }
+    },
+
+    "confirm_upgrade": {
+      "meta": {
+        "agentText": "The Premium 500Mbps plan is an excellent choice for remote work! The monthly cost would be $69.99, which is $20 more than your current plan. Would you like me to proceed with this upgrade?",
+        "customerText": "Yes, please go ahead with the upgrade.",
+        "suggestions": [
+          "Great! I've processed the upgrade to the Premium 500Mbps plan. The changes will take effect within 24 hours. You'll receive a confirmation email shortly. Is there anything else I can help you with today?",
+          "Perfect! I've upgraded your plan to Premium 500Mbps. The new speed should be available within the next 2-4 hours. Your next bill will reflect the new rate of $69.99 per month. Is there anything else you'd like to know about your new plan?",
+          "I've submitted your upgrade request. You'll be enjoying your new Premium 500Mbps speeds by tomorrow morning. For your records, your confirmation number is UPG-12345. Is there anything else you need assistance with today?"
+        ]
+      },
+      "on": {
+        "Great! I've processed the upgrade to the Premium 500Mbps plan. The changes will take effect within 24 hours. You'll receive a confirmation email shortly. Is there anything else I can help you with today?": "conclusion",
+        "Perfect! I've upgraded your plan to Premium 500Mbps. The new speed should be available within the next 2-4 hours. Your next bill will reflect the new rate of $69.99 per month. Is there anything else you'd like to know about your new plan?": "plan_information",
+        "I've submitted your upgrade request. You'll be enjoying your new Premium 500Mbps speeds by tomorrow morning. For your records, your confirmation number is UPG-12345. Is there anything else you need assistance with today?": "conclusion",
+        "DEFAULT": "conclusion"
+      }
+    },
+
+    "plan_information": {
+      "meta": {
+        "agentText": "Perfect! I've upgraded your plan to Premium 500Mbps. The new speed should be available within the next 2-4 hours. Your next bill will reflect the new rate of $69.99 per month. Is there anything else you'd like to know about your new plan?",
+        "customerText": "Do I need a new modem for this higher speed?",
+        "suggestions": [
+          "That's a good question. Based on your account information, your current modem is compatible with the Premium 500Mbps plan, so you won't need a new one. However, for optimal performance, make sure your modem is placed in an open area away from walls and metal objects.",
+          "Looking at your equipment details, you currently have our standard modem which supports up to 300Mbps. To fully benefit from the 500Mbps speed, we should upgrade your modem. I can arrange for a complimentary modem upgrade with free delivery within 2 business days.",
+          "According to our records, you have our mid-tier modem that supports speeds up to 600Mbps, so your current equipment is sufficient for the Premium 500Mbps plan. Would you like me to send you some tips on optimizing your home network for the best experience?"
+        ]
+      },
+      "on": {
+        "That's a good question. Based on your account information, your current modem is compatible with the Premium 500Mbps plan, so you won't need a new one. However, for optimal performance, make sure your modem is placed in an open area away from walls and metal objects.": "modem_tips",
+        "Looking at your equipment details, you currently have our standard modem which supports up to 300Mbps. To fully benefit from the 500Mbps speed, we should upgrade your modem. I can arrange for a complimentary modem upgrade with free delivery within 2 business days.": "modem_upgrade",
+        "According to our records, you have our mid-tier modem that supports speeds up to 600Mbps, so your current equipment is sufficient for the Premium 500Mbps plan. Would you like me to send you some tips on optimizing your home network for the best experience?": "network_tips",
+        "DEFAULT": "modem_tips"
+      }
+    },
+
+    "modem_tips": {
+      "meta": {
+        "agentText": "That's a good question. Based on your account information, your current modem is compatible with the Premium 500Mbps plan, so you won't need a new one. However, for optimal performance, make sure your modem is placed in an open area away from walls and metal objects.",
+        "customerText": "Great, thanks for the information. That's all I needed to know.",
+        "suggestions": [
+          "You're welcome! I'll send a confirmation email shortly with details about your upgraded plan. Your new Premium 500Mbps service will be active within the next 2-4 hours. Thank you for choosing our services, and please don't hesitate to contact us if you have any other questions.",
+          "Perfect! Is there anything else you'd like help with today? Perhaps setting up Wi-Fi optimization or information about our mobile plans that pair well with your new internet package?",
+          "Glad I could help! As a quick reminder, your upgrade to Premium 500Mbps will be effective shortly. If you experience any issues with your connection after the upgrade, please don't hesitate to contact our 24/7 technical support team. Is there anything else you need assistance with today?"
+        ]
+      },
+      "on": {
+        "You're welcome! I'll send a confirmation email shortly with details about your upgraded plan. Your new Premium 500Mbps service will be active within the next 2-4 hours. Thank you for choosing our services, and please don't hesitate to contact us if you have any other questions.": "conclusion",
+        "Perfect! Is there anything else you'd like help with today? Perhaps setting up Wi-Fi optimization or information about our mobile plans that pair well with your new internet package?": "additional_services",
+        "Glad I could help! As a quick reminder, your upgrade to Premium 500Mbps will be effective shortly. If you experience any issues with your connection after the upgrade, please don't hesitate to contact our 24/7 technical support team. Is there anything else you need assistance with today?": "conclusion",
+        "DEFAULT": "conclusion"
+      }
+    },
+
+    "conclusion": {
+      "meta": {
+        "agentText": "You're welcome! I'll send a confirmation email shortly with details about your upgraded plan. Your new Premium 500Mbps service will be active within the next 2-4 hours. Thank you for choosing our services, and please don't hesitate to contact us if you have any other questions.",
+        "customerText": "Thank you for your help. Have a great day!",
+        "suggestions": [
+          "You too! Thank you for being a valued customer. Enjoy your upgraded internet service!",
+          "Thank you for choosing our services. Have a wonderful day and enjoy your new faster internet connection!",
+          "It was my pleasure assisting you today. Enjoy your Premium 500Mbps plan, and thank you for your continued loyalty. Have a great day!"
+        ]
+      },
+      "on": {
+        "You too! Thank you for being a valued customer. Enjoy your upgraded internet service!": "end_call",
+        "Thank you for choosing our services. Have a wonderful day and enjoy your new faster internet connection!": "end_call",
+        "It was my pleasure assisting you today. Enjoy your Premium 500Mbps plan, and thank you for your continued loyalty. Have a great day!": "end_call",
+        "DEFAULT": "end_call"
+      }
+    },
+    
+    "end_call": {
+      "meta": {
+        "agentText": "It was my pleasure assisting you today. Enjoy your Premium 500Mbps plan, and thank you for your continued loyalty. Have a great day!"
+      }
+    }
+  }
+}
