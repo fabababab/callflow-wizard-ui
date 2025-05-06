@@ -62,7 +62,7 @@ const Message: React.FC<MessageProps> = ({
   onSelectResponse,
   onValidateSensitiveData,
   onVerifySystemCheck,
-  isAgentMode = false
+  isAgentMode = true // Default to agent mode
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
@@ -83,6 +83,13 @@ const Message: React.FC<MessageProps> = ({
       onVerifySystemCheck(message.id);
     }
   };
+  
+  // Determine if response options should be shown for this message
+  // For system messages with responseOptions, always show them in agent mode
+  const shouldShowResponseOptions = hasResponseOptions && 
+    ((message.sender === 'system') || 
+     (message.sender === 'customer' && isAgentMode) || 
+     (message.sender === 'agent' && !isAgentMode));
   
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -177,32 +184,29 @@ const Message: React.FC<MessageProps> = ({
           />
         )}
         
-        {/* Display response options based on who's speaking */}
-        {hasResponseOptions && 
-          ((isAgentMode && message.sender === 'customer') || (!isAgentMode && message.sender === 'agent')) && 
-          onSelectResponse && (
-            <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
-              <div className="text-xs flex items-center gap-1">
-                <MessageSquare size={12} />
-                <span>Quick Responses</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {message.responseOptions.map((option, index) => (
-                  <Button
-                    key={index}
-                    size="sm"
-                    variant="outline"
-                    className="text-xs py-1 px-2 h-auto flex items-center gap-1 group text-blue-800 hover:bg-blue-50"
-                    onClick={() => onSelectResponse(option)}
-                  >
-                    <span>{option.length > 50 ? `${option.substring(0, 50)}...` : option}</span>
-                    <ChevronRight size={12} className="text-blue-600" />
-                  </Button>
-                ))}
-              </div>
+        {/* Display response options - modified to always show them for system messages with responseOptions */}
+        {shouldShowResponseOptions && onSelectResponse && (
+          <div className="mt-3 space-y-2 border-t border-gray-300/20 pt-2">
+            <div className="text-xs flex items-center gap-1 mb-2">
+              <MessageSquare size={12} />
+              <span className="font-medium">Agent Response Options</span>
             </div>
-          )
-        }
+            <div className="space-y-2">
+              {message.responseOptions.map((option, index) => (
+                <Button
+                  key={index}
+                  size="sm"
+                  variant="outline"
+                  className="w-full justify-between text-sm py-2 px-3 h-auto flex items-center gap-1 group text-blue-800 hover:bg-blue-50"
+                  onClick={() => onSelectResponse(option)}
+                >
+                  <span className="text-left">{option}</span>
+                  <ChevronRight size={14} className="text-blue-600 flex-shrink-0" />
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

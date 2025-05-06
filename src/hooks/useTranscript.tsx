@@ -19,6 +19,7 @@ export function useTranscript(activeScenario: ScenarioType) {
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   const [processedStates, setProcessedStates] = useState<Set<string>>(new Set());
   const [isInitialStateProcessed, setIsInitialStateProcessed] = useState(false);
+  const [isUserAction, setIsUserAction] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -65,8 +66,10 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Reset processed states when the scenario changes
   useEffect(() => {
+    console.log("Resetting processed states due to scenario change");
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
+    setIsUserAction(false);
   }, [activeScenario]);
   
   // Update to properly update UI when state changes, with debouncing and duplicate prevention
@@ -93,7 +96,14 @@ export function useTranscript(activeScenario: ScenarioType) {
       // When state changes, check for messages to display
       if (stateData.meta?.systemMessage) {
         console.log(`Adding system message: ${stateData.meta.systemMessage}`);
-        addSystemMessage(stateData.meta.systemMessage, stateData.requiresVerification);
+        
+        // Add response options to the system message if they exist
+        if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
+          console.log('Adding system message with response options:', stateData.meta.responseOptions);
+          addSystemMessage(stateData.meta.systemMessage, false, stateData.meta.responseOptions);
+        } else {
+          addSystemMessage(stateData.meta.systemMessage);
+        }
       }
       
       if (stateData.meta?.customerText) {
@@ -110,6 +120,9 @@ export function useTranscript(activeScenario: ScenarioType) {
       // Mark this state as processed to prevent duplicate messages
       markStateAsProcessed(currentState);
       setLastTranscriptUpdate(new Date());
+      
+      // Reset user action flag
+      setIsUserAction(false);
     }, 300); // 300ms debounce
     
     return () => {
@@ -154,6 +167,9 @@ export function useTranscript(activeScenario: ScenarioType) {
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
 
+    // Set the user action flag
+    setIsUserAction(true);
+    
     // Add message based on who is sending it
     addAgentMessage(inputValue);
     setInputValue('');
@@ -163,9 +179,13 @@ export function useTranscript(activeScenario: ScenarioType) {
   };
 
   // Handle accepting a suggestion
-  const handleAcceptSuggestion = (messageId: string, suggestionId: string) => {
-    // Find the suggestion text by ID
-    const suggestionText = stateData?.meta?.suggestions?.find((_, index) => index.toString() === suggestionId);
+  const handleAcceptSuggestion = (suggestionId: string, messageId: string) => {
+    // Set the user action flag
+    setIsUserAction(true);
+    
+    // Find the suggestion text by ID and convert suggestionId to number for index
+    const index = parseInt(suggestionId);
+    const suggestionText = stateData?.meta?.suggestions?.[index];
     
     if (suggestionText) {
       console.log('Accepting suggestion:', suggestionId, suggestionText);
@@ -183,11 +203,28 @@ export function useTranscript(activeScenario: ScenarioType) {
     console.log(`Suggestion ${suggestionId} rejected for message ${messageId}`);
   };
 
-  // Handle selecting a response
+  // Handle selecting a response - UPDATED to properly handle state transitions
   const handleSelectResponse = (response: string) => {
     console.log('Selecting response:', response);
+    
+    // Set the user action flag
+    setIsUserAction(true);
+    
+    // Add the selected response as an agent message
     addAgentMessage(response);
-    processSelection(response);
+    
+    // Process the selection in the state machine
+    console.log('Processing selection in state machine:', response, 'from state:', currentState);
+    const success = processSelection(response);
+    
+    if (!success) {
+      console.warn('Failed to process selection:', response);
+      // Try with DEFAULT transition as fallback
+      toast({
+        title: "Response Processing",
+        description: "Using default response path",
+      });
+    }
   };
 
   // Toggle recording state
@@ -203,6 +240,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
     setLastTranscriptUpdate(new Date());
+    setIsUserAction(false);
   };
 
   // Improved call start function to properly initialize state
@@ -213,6 +251,7 @@ export function useTranscript(activeScenario: ScenarioType) {
       clearMessages();
       setProcessedStates(new Set());
       setIsInitialStateProcessed(false);
+      setIsUserAction(false);
       setLastTranscriptUpdate(new Date());
       
       addSystemMessage('Call started');
@@ -245,6 +284,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setCallActive(true);
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
+    setIsUserAction(false);
     setLastTranscriptUpdate(new Date());
     
     addSystemMessage(`Call accepted from ${callId}`);
@@ -271,6 +311,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setAcceptedCallId(null);
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
+    setIsUserAction(false);
     setLastTranscriptUpdate(new Date());
     addSystemMessage('Call ended');
   };

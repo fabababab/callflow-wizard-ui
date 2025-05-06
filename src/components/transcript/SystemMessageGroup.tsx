@@ -11,14 +11,10 @@ interface SystemMessageGroupProps {
 const SystemMessageGroup: React.FC<SystemMessageGroupProps> = ({ messages }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // More robust filtering of messages that should be displayed separately
+  // Improved filtering - only filter out very specific system messages
   const systemOnlyMessages = messages.filter(message => {
-    // Skip customer explanation, customer messages, and specific action messages
-    return !(
-      message.text.includes("The customer explains their problem") ||
-      message.text.includes("customer explains") ||
-      message.text.includes("Call accepted from")
-    );
+    // Only filter out call accepted messages
+    return !message.text.includes("Call accepted from");
   });
   
   // Only show the first message text in the collapsed view
