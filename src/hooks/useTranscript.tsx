@@ -1,13 +1,11 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
 import { StateMachineState } from '@/utils/stateMachineLoader';
 
 export function useTranscript(activeScenario: ScenarioType) {
-  const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
   const [callActive, setCallActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState('00:00');
@@ -211,10 +209,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     if (!success) {
       console.warn('Failed to process selection:', response);
       // Try with DEFAULT transition as fallback
-      toast({
-        title: "Response Processing",
-        description: "Using default response path",
-      });
+      console.log("Using default response path");
     }
   };
 

@@ -10,13 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import { useToast } from '@/hooks/use-toast';
 import TranscriptPanel from '@/components/TranscriptPanel'; 
 
 const TestScenario = () => {
-  const {
-    toast
-  } = useToast();
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
   const [showJsonDialog, setShowJsonDialog] = useState(false); // Make sure this is initialized as false
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("testscenario");
@@ -85,22 +81,13 @@ const TestScenario = () => {
             scrollToTranscript();
           }, 300); // Short delay to ensure UI is updated
           
-          toast({
-            title: "State Machine Changed",
-            description: `Switched to ${selectedStateMachine} scenario`,
-          });
         } catch (error) {
           console.error("Failed to load state machine:", error);
-          toast({
-            title: "Error",
-            description: `Failed to load ${selectedStateMachine} state machine`,
-            variant: "destructive"
-          });
         }
       }
     }
     fetchStateMachine();
-  }, [selectedStateMachine, toast, transcript]);
+  }, [selectedStateMachine, transcript]);
   
   // Function to scroll to the transcript panel
   const scrollToTranscript = () => {

@@ -1,6 +1,5 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { 
   loadStateMachine, 
@@ -19,7 +18,6 @@ export function useStateMachine(activeScenario: ScenarioType) {
   const [error, setError] = useState<string | null>(null);
   const [verificationRequired, setVerificationRequired] = useState(false);
   const [lastStateChange, setLastStateChange] = useState<{from: string, to: string} | null>(null);
-  const { toast } = useToast();
 
   // Load state machine when scenario changes
   useEffect(() => {
@@ -79,11 +77,6 @@ export function useStateMachine(activeScenario: ScenarioType) {
       // Check if this state requires verification
       if (data && data.requiresVerification) {
         setVerificationRequired(true);
-        toast({
-          title: "Verification Required",
-          description: "This action requires additional verification of customer identity",
-          variant: "destructive",
-        });
       } else {
         setVerificationRequired(false);
       }
@@ -93,16 +86,12 @@ export function useStateMachine(activeScenario: ScenarioType) {
       // Log state data for debugging
       console.log(`State data for ${currentState}:`, data);
     }
-  }, [currentState, stateMachine, toast]);
+  }, [currentState, stateMachine]);
 
   // Listen for verification completed events
   useEffect(() => {
     const handleVerificationCompleted = () => {
       setVerificationRequired(false);
-      toast({
-        title: "Verification Completed",
-        description: "Customer identity has been verified",
-      });
     };
     
     window.addEventListener('verification-completed', handleVerificationCompleted);
@@ -110,7 +99,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
     return () => {
       window.removeEventListener('verification-completed', handleVerificationCompleted);
     };
-  }, [toast]);
+  }, []);
 
   // Transition to a new state
   const transitionToState = useCallback((newState: string) => {
@@ -121,11 +110,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
 
     // Check if verification is required before state transition
     if (verificationRequired) {
-      toast({
-        title: "Verification Required",
-        description: "Please complete verification before proceeding",
-        variant: "destructive",
-      });
+      console.log("Verification required before proceeding");
       return false;
     }
 
@@ -140,7 +125,7 @@ export function useStateMachine(activeScenario: ScenarioType) {
 
     setCurrentState(newState);
     return true;
-  }, [currentState, stateMachine, toast, verificationRequired]);
+  }, [currentState, stateMachine, verificationRequired]);
 
   // Process option selection
   const processSelection = useCallback((selectedOption: string): boolean => {
@@ -226,15 +211,10 @@ export function useStateMachine(activeScenario: ScenarioType) {
         to: initialState
       });
       
-      toast({
-        title: "Scenario Reset",
-        description: "Test scenario has been reset to the beginning",
-      });
-      
       return true;
     }
     return false;
-  }, [stateMachine, currentState, toast]);
+  }, [stateMachine, currentState]);
 
   // Manually set current state (useful for testing)
   const setCurrentStateManually = useCallback((newState: string) => {
