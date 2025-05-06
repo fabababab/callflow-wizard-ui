@@ -19,7 +19,7 @@ const TestScenario = () => {
     toast
   } = useToast();
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
-  const [showJsonDialog, setShowJsonDialog] = useState(false);
+  const [showJsonDialog, setShowJsonDialog] = useState(false); // Make sure this is initialized as false
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("testscenario");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
@@ -151,9 +151,9 @@ const TestScenario = () => {
         </div>
       </SidebarProvider>
 
-      {/* Dialog to display the JSON file */}
+      {/* Dialog to display the JSON file - using Portal to ensure proper rendering */}
       <Dialog open={showJsonDialog} onOpenChange={setShowJsonDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[80vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-background">
           <DialogHeader>
             <DialogTitle>
               {selectedStateMachine} State Machine
