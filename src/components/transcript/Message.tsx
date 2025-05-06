@@ -97,7 +97,7 @@ const Message: React.FC<MessageProps> = ({
         <div className="flex justify-between items-center mb-1">
           <Badge
             variant="outline"
-            className={`text-xs ${message.sender === 'agent' ? 'bg-primary/20' : 'bg-secondary/20'}`}
+            className={`text-xs text-white ${message.sender === 'agent' ? 'bg-primary/20' : 'bg-secondary/20'}`}
           >
             {message.sender === 'agent' ? 'You' : 
              message.sender === 'customer' ? 'Customer' : 'System'}

@@ -55,7 +55,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
                 : 'bg-muted text-center italic text-sm'
             }`}
           >
-            <p className="text-xs font-semibold mb-1">
+            <p className="text-xs font-semibold mb-1 text-white">
               {message.sender === 'agent' ? 'Agent' : 
                message.sender === 'customer' ? 'Customer' : 'System'}
               {isAgentMode && message.sender === 'agent' && " (You)"}
