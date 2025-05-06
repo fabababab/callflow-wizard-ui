@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { useStateMachine } from '@/hooks/useStateMachine';
 
 /**
@@ -9,7 +8,6 @@ import { useStateMachine } from '@/hooks/useStateMachine';
 export function usePhysioCoverageStateMachine() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   // Use the physio scenario state machine from the useStateMachine hook
   const {
@@ -28,13 +26,8 @@ export function usePhysioCoverageStateMachine() {
     setIsLoading(machineLoading);
     if (machineError) {
       setError(machineError);
-      toast({
-        title: "Error",
-        description: machineError,
-        variant: "destructive"
-      });
     }
-  }, [machineLoading, machineError, toast]);
+  }, [machineLoading, machineError]);
 
   return {
     currentState,
