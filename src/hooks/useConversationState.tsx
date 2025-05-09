@@ -8,7 +8,7 @@ export function useConversationState() {
   const [isUserAction, setIsUserAction] = useState(false);
   const [awaitingUserResponse, setAwaitingUserResponse] = useState(false);
   const [showNachbearbeitungModule, setShowNachbearbeitungModule] = useState(false);
-  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
+  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date | string>(new Date());
   const [manualReset, setManualReset] = useState(false);
   
   // Ref for debouncing

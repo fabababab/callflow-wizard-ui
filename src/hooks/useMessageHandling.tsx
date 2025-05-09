@@ -8,7 +8,7 @@ import { useSensitiveDataHandling } from '@/hooks/useSensitiveDataHandling';
 
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [lastMessageUpdate, setLastMessageUpdate] = useState<Date>(new Date());
+  const [lastMessageUpdate, setLastMessageUpdate] = useState<Date | null>(new Date());
   const [verificationBlocking, setVerificationBlocking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
