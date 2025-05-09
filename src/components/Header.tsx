@@ -4,6 +4,7 @@ import { Bell, Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar,
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { ScenarioType } from '@/components/ScenarioSelector';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,35 +23,24 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 
-export type ScenarioType = 
-  | 'verification' 
-  | 'bankDetails' 
-  | 'accountHistory'
-  | 'physioTherapy'
-  | 'paymentReminder'
-  | 'insurancePackage'
-  | null;
-
 const Header = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [scenario, setScenario] = useState<ScenarioType>(null);
+  const [scenario, setScenario] = useState<ScenarioType | null>(null);
 
   const handleSelectScenario = (selectedScenario: ScenarioType) => {
     setScenario(selectedScenario);
     
     const scenarioNames = {
-      'verification': 'Identity Verification',
-      'bankDetails': 'Change Bank Details',
-      'accountHistory': 'Account History Review',
-      'physioTherapy': 'Leistungsabdeckung Physiobehandlung',
-      'paymentReminder': 'Mahnung trotz Zahlung',
-      'insurancePackage': 'Neues Versicherungspacket (Studiumsabschluss)'
+      'testscenario': 'Test Scenario',
+      'verificationFlow': 'Identity Verification Flow',
+      'contractManagement': 'Contract Management',
+      'productInfo': 'Product Information'
     };
     
     toast({
       title: `Scenario Selected`,
-      description: `${scenarioNames[selectedScenario as keyof typeof scenarioNames]} scenario activated`,
+      description: `${scenarioNames[selectedScenario]} scenario activated`,
     });
     
     navigate('/', { state: { scenario: selectedScenario } });
@@ -82,57 +72,39 @@ const Header = () => {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-3 py-4">
               <Button 
-                variant={scenario === 'verification' ? 'default' : 'outline'} 
+                variant={scenario === 'verificationFlow' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('verification')}
+                onClick={() => handleSelectScenario('verificationFlow')}
               >
                 <Shield className="h-8 w-8 mb-2" />
                 <span className="text-xs text-center">Identity Verification</span>
               </Button>
               
               <Button 
-                variant={scenario === 'bankDetails' ? 'default' : 'outline'} 
+                variant={scenario === 'contractManagement' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('bankDetails')}
+                onClick={() => handleSelectScenario('contractManagement')}
               >
-                <CreditCard className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Change Bank Details</span>
+                <FileText className="h-8 w-8 mb-2" />
+                <span className="text-xs text-center">Contract Management</span>
               </Button>
               
               <Button 
-                variant={scenario === 'accountHistory' ? 'default' : 'outline'} 
+                variant={scenario === 'productInfo' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('accountHistory')}
+                onClick={() => handleSelectScenario('productInfo')}
               >
-                <FileText className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Account History</span>
+                <CreditCard className="h-8 w-8 mb-2" />
+                <span className="text-xs text-center">Product Information</span>
               </Button>
 
               <Button 
-                variant={scenario === 'physioTherapy' ? 'default' : 'outline'} 
+                variant={scenario === 'testscenario' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('physioTherapy')}
-              >
-                <Calendar className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Leistungsabdeckung Physiobehandlung</span>
-              </Button>
-              
-              <Button 
-                variant={scenario === 'paymentReminder' ? 'default' : 'outline'} 
-                className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('paymentReminder')}
+                onClick={() => handleSelectScenario('testscenario')}
               >
                 <AlertCircle className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Mahnung trotz Zahlung</span>
-              </Button>
-              
-              <Button 
-                variant={scenario === 'insurancePackage' ? 'default' : 'outline'} 
-                className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('insurancePackage')}
-              >
-                <Phone className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Neues Versicherungspacket</span>
+                <span className="text-xs text-center">Test Scenario</span>
               </Button>
             </div>
             <DialogClose asChild>

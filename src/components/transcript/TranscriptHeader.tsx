@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CallControl from '@/components/TestScenario/CallControl';
+
 interface TranscriptHeaderProps {
   activeScenario: ScenarioType;
   currentState?: string;
@@ -16,6 +18,7 @@ interface TranscriptHeaderProps {
   isLoadingJson?: boolean;
   resetConversation?: () => void;
 }
+
 const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
   activeScenario,
   currentState,
@@ -29,8 +32,10 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
   resetConversation
 }) => {
   // List of available scenarios for the dropdown
-  const scenarios: ScenarioType[] = ['testscenario', 'scenario2', 'verification', 'bankDetails', 'accountHistory', 'physioTherapy', 'paymentReminder', 'insurancePackage', 'basicTutorial', 'customerSupport', 'accountVerification'];
+  const scenarios: ScenarioType[] = ['testscenario', 'verificationFlow', 'contractManagement', 'productInfo'];
+  
   console.log('TranscriptHeader: callActive =', callActive, 'elapsedTime =', elapsedTime);
+  
   return <div className="p-4 bg-white border-b">
       <div className="flex flex-col">
         <div className="flex items-center justify-between mb-4">
@@ -80,4 +85,5 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
       </div>
     </div>;
 };
+
 export default TranscriptHeader;
