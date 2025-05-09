@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { MessageSender } from './MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
