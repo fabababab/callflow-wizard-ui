@@ -1,10 +1,10 @@
 
 import React from 'react';
 import NumberInputDisplay from './NumberInputDisplay';
-import MessageVerification from './MessageVerification';
 import SensitiveDataSection from './SensitiveDataSection';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 import { MessageSender } from './MessageTypes';
+import InlineChatVerification from './InlineChatVerification';
 
 interface MessageContentProps {
   text: string;
@@ -41,6 +41,13 @@ const MessageContent: React.FC<MessageContentProps> = ({
     }
   };
 
+  // Handler for verification
+  const handleVerify = (verified: boolean) => {
+    if (verified && onVerifySystemCheck) {
+      onVerifySystemCheck(messageId);
+    }
+  };
+
   const showInlineVerification = requiresVerification && !isVerified && sender === 'customer';
 
   return (
@@ -55,14 +62,16 @@ const MessageContent: React.FC<MessageContentProps> = ({
           matched={numberInput.matched}
         />
       )}
-
-      {/* Display inline verification component */}
+      
+      {/* Show inline verification directly in the message content */}
       {showInlineVerification && onVerifySystemCheck && (
-        <MessageVerification 
-          messageId={messageId}
-          isVerified={isVerified}
-          onVerify={onVerifySystemCheck}
-        />
+        <div className="mt-2">
+          <InlineChatVerification 
+            onVerify={handleVerify}
+            isVerifying={false}
+            isVerified={isVerified}
+          />
+        </div>
       )}
       
       {/* Display sensitive data validation fields if present */}

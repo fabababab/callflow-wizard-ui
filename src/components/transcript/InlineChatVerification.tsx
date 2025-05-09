@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, CheckCircle, Loader, ShieldCheck } from 'lucide-react';
+import { Check, CheckCircle, Loader, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface InlineChatVerificationProps {
   onVerify: (verified: boolean, data?: FormValues) => void;
@@ -21,6 +22,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [autoVerifyStarted, setAutoVerifyStarted] = useState(false);
+  const [showFailure, setShowFailure] = useState(false);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -49,6 +51,14 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isVerified, isVerifying, autoVerifyStarted, onVerify]);
+
+  const handleVerifyClick = () => {
+    setIsValidating(true);
+    setTimeout(() => {
+      setIsValidating(false);
+      onVerify(true, form.getValues());
+    }, 800);
+  };
   
   // If already verified, show success state
   if (isVerified) {
@@ -64,82 +74,67 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   }
   
   return (
-    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md mt-2 mb-2">
+    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
       <div className="flex items-center gap-2 mb-2">
         <ShieldCheck size={18} className="text-amber-600" />
         <p className="text-sm text-amber-700 font-medium">Customer Identity Verification</p>
       </div>
       
+      {showFailure && (
+        <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3">
+          <AlertCircle className="h-4 w-4" />
+          <span>Verification failed. Please check your information.</span>
+        </div>
+      )}
+      
       {isValidating ? (
-        <div className="flex items-center justify-center h-24 gap-2 text-amber-700">
+        <div className="flex items-center justify-center h-16 gap-2 text-amber-700">
           <Loader size={18} className="animate-spin" />
           <span>Verifying customer identity...</span>
         </div>
       ) : (
-        <Form {...form}>
-          <form className="space-y-3">
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs text-amber-800">Date of Birth</FormLabel>
-                  <FormControl>
-                    <Input placeholder="DD/MM/YYYY" {...field} className="h-8 text-sm bg-amber-50/50" />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+        <>
+          <div className="grid grid-cols-1 gap-3 mb-3">
+            <div>
+              <label className="text-xs text-amber-800 mb-1 block">Customer ID</label>
+              <Input 
+                placeholder="Enter customer ID" 
+                value="ACC123456" 
+                readOnly
+                className="h-8 text-sm bg-amber-50/50" 
+              />
+            </div>
             
-            <FormField
-              control={form.control}
-              name="postalCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs text-amber-800">Postal Code</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter postal code" {...field} className="h-8 text-sm bg-amber-50/50" />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="policyNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs text-amber-800">Policy Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="8-digit policy number" {...field} className="h-8 text-sm bg-amber-50/50" />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-            
+            <div>
+              <label className="text-xs text-amber-800 mb-1 block">Email Address</label>
+              <Input 
+                placeholder="Enter email address" 
+                value="customer@example.com"
+                readOnly
+                className="h-8 text-sm bg-amber-50/50" 
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2 justify-end">
+            <Button 
+              type="button"
+              variant="outline" 
+              size="sm"
+              className="text-xs"
+            >
+              Cancel
+            </Button>
             <Button 
               type="button" 
               size="sm"
-              className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-              disabled={isValidating}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+              onClick={handleVerifyClick}
             >
-              {isValidating ? (
-                <>
-                  <Loader size={14} className="animate-spin" />
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                <>
-                  <Check size={14} />
-                  <span>Verify Identity</span>
-                </>
-              )}
+              Verify
             </Button>
-          </form>
-        </Form>
+          </div>
+        </>
       )}
     </div>
   );

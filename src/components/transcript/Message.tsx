@@ -8,8 +8,6 @@ import MessageContent from './MessageContent';
 import MessageResponseOptions from './MessageResponseOptions';
 import AISuggestions from './AISuggestion';
 import MessageInlineModule from './MessageInlineModule';
-import InlineChatVerification from './InlineChatVerification';
-import MessageVerification from './MessageVerification';
 
 interface MessageProps {
   message: MessageInterface;
@@ -77,15 +75,6 @@ const Message: React.FC<MessageProps> = ({
           onValidateSensitiveData={onValidateSensitiveData}
           onVerifySystemCheck={onVerifySystemCheck}
         />
-        
-        {/* Display inline verification if required */}
-        {message.requiresVerification && !message.isVerified && onVerifySystemCheck && (
-          <MessageVerification
-            messageId={message.id}
-            isVerified={message.isVerified}
-            onVerify={onVerifySystemCheck}
-          />
-        )}
         
         {/* Display response options */}
         {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
