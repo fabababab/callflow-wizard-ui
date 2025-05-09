@@ -1,4 +1,3 @@
-
 // Core transcript hook functionality that composes other hooks
 import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -95,7 +94,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     addSystemMessage: messageHandling.addSystemMessage
   });
   
-  // Use messages scrolling hook - now accepts Date or string type for lastTranscriptUpdate
+  // Use messages scrolling hook - accepts Date or string type for lastTranscriptUpdate
   useMessagesScrolling({
     messagesEndRef,
     lastTranscriptUpdate: conversationState.lastTranscriptUpdate
@@ -123,6 +122,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     resetConversationState: conversationState.resetConversationState
   });
 
+  
   // Handle module completion
   const handleModuleComplete = useCallback((result: any) => {
     console.log('Module completed with result:', result);

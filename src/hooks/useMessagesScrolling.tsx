@@ -3,7 +3,7 @@ import { useEffect, RefObject } from 'react';
 
 interface MessagesScrollingProps {
   messagesEndRef: RefObject<HTMLDivElement>;
-  lastTranscriptUpdate: Date | string;  // Updated type to accept both Date and string
+  lastTranscriptUpdate: Date | string;  // Accept both Date and string types
 }
 
 export function useMessagesScrolling({ 
