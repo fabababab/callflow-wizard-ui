@@ -130,6 +130,7 @@ export function useTranscript(activeScenario: ScenarioType) {
           toast({
             title: "Sensitive Data Detected",
             description: "Please verify the detected information before proceeding.",
+            duration: 3000
           });
         }
       }
@@ -314,10 +315,11 @@ export function useTranscript(activeScenario: ScenarioType) {
     toast({
       title: "Conversation Reset",
       description: "The conversation has been reset to its initial state.",
+      duration: 2000,
     });
   }, [messageHandling.clearMessages, stateMachine.resetStateMachine, conversationState, toast]);
 
-  // Improved call start function to properly initialize state
+  // Improved call start function to properly initialize state - fixed toast issue here
   const handleCall = useCallback(() => {
     try {
       if (!callState.callActive) {
@@ -428,6 +430,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     toast({
       title: "Call Accepted",
       description: `Connected to caller ${callId}`,
+      duration: 2000,
     });
     
     // Trigger initial state with START_CALL event
@@ -456,6 +459,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     toast({
       title: "Call Ended",
       description: "Call successfully completed.",
+      duration: 2000,
     });
     
     // Show the Nachbearbeitung module at the end of the call
@@ -480,7 +484,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     }
   }, [stateMachine.stateData, stateMachine.currentState]);
 
-  // Fix state processing logic
+  // Fix state processing logic and prevent toast notifications on every update
   useEffect(() => {
     if (!stateMachine.stateData || !callState.callActive) {
       return;
@@ -491,11 +495,11 @@ export function useTranscript(activeScenario: ScenarioType) {
       clearTimeout(conversationState.debounceTimerRef.current);
     }
 
-    // Process state changes immediately for initial state
+    // Process state changes immediately for initial state without triggering toast
     if (!conversationState.isInitialStateProcessed) {
       console.log('Processing initial state');
       processStateChange();
-      conversationState.setIsInitialStateProcessed(true);  // <-- THIS IS THE FIX
+      conversationState.setIsInitialStateProcessed(true);
       return;
     }
 

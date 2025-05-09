@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -24,6 +25,7 @@ interface SelectedStateDetails {
   data: StateMachineState;
   sensitiveFields?: SensitiveField[];
 }
+
 const TestScenario = () => {
   const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("testscenario");
@@ -169,52 +171,11 @@ const TestScenario = () => {
     }
   }, [transcript.callActive]);
 
-  // Enhance the call button handler
-  const handleCallButton = () => {
-    try {
-      if (!loadedStateMachine) {
-        throw new Error('No state machine loaded');
-      }
-      if (!transcript) {
-        throw new Error('Transcript not initialized');
-      }
-      console.log('Call button clicked. Current state:', {
-        callActive: transcript.callActive,
-        currentState: transcript.currentState,
-        loadedMachine: !!loadedStateMachine
-      });
-      transcript.handleCall();
-
-      // Add success toast
-      toast({
-        title: transcript.callActive ? "Call Started" : "Call Ended",
-        description: transcript.callActive ? `Started ${selectedStateMachine} scenario` : "Call has been ended",
-        duration: 3000
-      });
-    } catch (error) {
-      console.error('Error handling call:', error);
-      toast({
-        title: "Error Starting Call",
-        description: error instanceof Error ? error.message : "Failed to start the call",
-        variant: "destructive",
-        duration: 5000
-      });
-    }
-  };
-
-  // Function to scroll to the transcript panel
-  const scrollToTranscript = () => {
-    if (transcriptRef.current) {
-      transcriptRef.current.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
-  };
-
   // Toggle view mode between JSON and visualization
   const handleViewModeToggle = (mode: "json" | "visualization") => {
     setDialogViewMode(mode);
   };
+  
   return <div className="flex h-screen bg-background">
       <SidebarProvider defaultOpen={false}>
         <Sidebar collapsed={sidebarCollapsed} />
@@ -408,9 +369,6 @@ const TestScenario = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Update the call button to use the new handler */}
-      
     </div>;
 };
 export default TestScenario;
