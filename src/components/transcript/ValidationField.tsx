@@ -8,7 +8,7 @@ import { SensitiveField, ValidationStatus, SensitiveDataType } from '@/data/scen
 
 interface ValidationFieldProps {
   field: SensitiveField;
-  onValidate: (fieldId: string, status: ValidationStatus, notes?: string) => void;
+  onValidate: (status: ValidationStatus, notes?: string) => void;
 }
 
 // Map of data types to human-readable labels
@@ -50,7 +50,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
   
   // Handle validation actions
   const handleValidate = (status: ValidationStatus) => {
-    onValidate(field.id, status, notes);
+    onValidate(status, notes);
   };
   
   // Handle note changes
@@ -117,7 +117,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
             className="text-xs"
             value={notes}
             onChange={handleNotesChange}
-            onBlur={() => onValidate(field.id, field.status, notes)}
+            onBlur={() => onValidate(field.status, notes)}
             rows={2}
           />
         </div>
