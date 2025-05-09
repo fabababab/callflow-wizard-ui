@@ -1,57 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { MessageSender } from './MessageTypes';
-import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
-import { ModuleConfig } from '@/types/modules';
-import AISuggestions, { AISuggestion } from './AISuggestion';
+import { ValidationStatus } from '@/data/scenarioData';
+import { AISuggestion } from './AISuggestion';
 import MessageHeader from './MessageHeader';
-import NumberInputDisplay from './NumberInputDisplay';
-import SensitiveDataSection from './SensitiveDataSection';
-import ResponseOptions from './ResponseOptions';
-import InlineModuleDisplay from './InlineModuleDisplay';
-import { ChevronRight } from 'lucide-react';
-import InlineChatVerification from './InlineChatVerification';
-import { FormValues } from '../identity-validation/FormFields';
-
-export type Message = {
-  id: string;
-  text: string;
-  sender: MessageSender;
-  timestamp: Date | string;
-  suggestions?: AISuggestion[];
-  responseOptions?: string[];
-  sensitiveData?: SensitiveField[];
-  isAccepted?: boolean;
-  isRejected?: boolean;
-  systemType?: 'info' | 'warning' | 'error' | 'success';
-  numberInput?: {
-    userValue: string | number;
-    systemValue: string | number;
-    matched: boolean;
-  };
-  requiresVerification?: boolean;
-  isVerified?: boolean;
-  productInfo?: {
-    name: string;
-    videoUrl: string;
-    description: string;
-    details: string[];
-  };
-  cancellation?: {
-    type: string;
-    contracts: Array<{
-      id: string;
-      name: string;
-      startDate: string;
-      monthly: string;
-    }>;
-    requiresVerification: boolean;
-  };
-  inlineModule?: ModuleConfig;
-};
+import MessageContent from './MessageContent';
+import MessageResponseOptions from './MessageResponseOptions';
+import AISuggestions from './AISuggestion';
+import MessageInlineModule from './MessageInlineModule';
+import { Message as MessageType } from './MessageTypes';
 
 interface MessageProps {
-  message: Message;
+  message: MessageType;
   onAcceptSuggestion: (suggestionId: string, messageId: string) => void;
   onRejectSuggestion: (suggestionId: string, messageId: string) => void;
   onSelectResponse?: (response: string) => void;
@@ -71,13 +31,9 @@ const Message: React.FC<MessageProps> = ({
   isAgentMode = true,
   onModuleComplete
 }) => {
-  const [isVerifying, setIsVerifying] = useState(false);
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
-  const hasNumberInput = message.numberInput !== undefined;
-  const requiresVerification = message.requiresVerification && !message.isVerified;
   const hasInlineModule = message.inlineModule !== undefined;
-  const showInlineVerification = requiresVerification && message.sender === 'customer';
   
   // Debug logging for response options
   React.useEffect(() => {
@@ -89,44 +45,11 @@ const Message: React.FC<MessageProps> = ({
     }
   }, [message.id, message.responseOptions, hasResponseOptions]);
   
-  // Handler for validating sensitive data
-  const handleValidate = (fieldId: string, status: ValidationStatus, notes?: string) => {
-    console.log(`Validating field ${fieldId} with status ${status}`);
-    if (onValidateSensitiveData) {
-      onValidateSensitiveData(message.id, fieldId, status, notes);
-    }
-  };
-
-  // Handler for verifying system check
-  const handleVerify = () => {
-    console.log(`Verifying message ${message.id}`);
-    if (onVerifySystemCheck) {
-      onVerifySystemCheck(message.id);
-    }
-  };
-
-  // Handler for inline verification form
-  const handleInlineVerify = (verified: boolean, data?: FormValues) => {
-    console.log(`Inline verification for message ${message.id}:`, { verified, data });
-    setIsVerifying(false);
-    if (verified && onVerifySystemCheck) {
-      onVerifySystemCheck(message.id);
-    }
-  };
-
-  // Handler for module completion
-  const handleModuleComplete = (result: any) => {
+  // Handler for inline module completion
+  const handleInlineModuleComplete = (moduleId: string, result: any) => {
     console.log(`Module completed for message ${message.id}`, result);
-    if (onModuleComplete && message.inlineModule) {
-      onModuleComplete(message.inlineModule.id, result);
-    }
-  };
-  
-  // Handler for response selection
-  const handleSelectResponse = (response: string) => {
-    console.log(`Selecting response: ${response}`);
-    if (onSelectResponse) {
-      onSelectResponse(response);
+    if (onModuleComplete) {
+      onModuleComplete(message.id, moduleId, result);
     }
   };
   
@@ -142,54 +65,27 @@ const Message: React.FC<MessageProps> = ({
       >
         <MessageHeader sender={message.sender} timestamp={message.timestamp} />
         
-        <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+        <MessageContent 
+          text={message.text}
+          sender={message.sender}
+          numberInput={message.numberInput}
+          requiresVerification={message.requiresVerification}
+          isVerified={message.isVerified}
+          messageId={message.id}
+          sensitiveData={message.sensitiveData}
+          onValidateSensitiveData={onValidateSensitiveData}
+          onVerifySystemCheck={onVerifySystemCheck}
+        />
         
-        {/* Display number matching visualization */}
-        {hasNumberInput && message.numberInput && (
-          <NumberInputDisplay 
-            userValue={message.numberInput.userValue}
-            systemValue={message.numberInput.systemValue}
-            matched={message.numberInput.matched}
-          />
-        )}
-
-        {/* Display inline verification component */}
-        {showInlineVerification && (
-          <InlineChatVerification 
-            onVerify={handleInlineVerify}
-            isVerifying={isVerifying}
-            isVerified={message.isVerified}
-          />
-        )}
-        
-        {/* Display sensitive data validation fields if present */}
-        {message.sensitiveData && message.sender === 'customer' && (
-          <SensitiveDataSection 
-            sensitiveData={message.sensitiveData}
-            onValidate={handleValidate}
+        {/* Display response options */}
+        {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
+          <MessageResponseOptions 
+            responseOptions={message.responseOptions} 
+            onSelectResponse={onSelectResponse}
           />
         )}
         
-        {/* Enhanced response options display */}
-        {hasResponseOptions && isAgentMode && message.responseOptions && (
-          <div className="mt-3 pt-2 border-t border-gray-300/20">
-            <div className="text-xs font-medium mb-2">Available Responses:</div>
-            <div className="space-y-1">
-              {message.responseOptions.map((option, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleSelectResponse(option)}
-                  className="w-full px-3 py-2 text-left text-sm bg-primary/10 hover:bg-primary/20 rounded-md transition-colors duration-200 flex items-center gap-2"
-                >
-                  <span className="flex-1 truncate">{option}</span>
-                  <ChevronRight className="h-4 w-4 opacity-50" />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Display AI suggestions if any are provided */}
+        {/* Display AI suggestions */}
         {hasSuggestions && isAgentMode && (
           <div className="mt-3 pt-2 border-t border-gray-300/20">
             <AISuggestions 
@@ -202,14 +98,12 @@ const Message: React.FC<MessageProps> = ({
         )}
       </div>
 
-      {/* Display inline module if present */}
-      {hasInlineModule && message.inlineModule && (
-        <div className="ml-4 mt-2 w-full max-w-md">
-          <InlineModuleDisplay 
-            moduleConfig={message.inlineModule}
-            onComplete={handleModuleComplete}
-          />
-        </div>
+      {/* Display inline module */}
+      {hasInlineModule && message.inlineModule && onModuleComplete && (
+        <MessageInlineModule 
+          moduleConfig={message.inlineModule}
+          onModuleComplete={handleInlineModuleComplete}
+        />
       )}
     </div>
   );

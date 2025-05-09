@@ -1,6 +1,5 @@
+
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Check, ShieldCheck } from 'lucide-react';
 
 interface VerificationButtonProps {
   requiresVerification: boolean;
@@ -13,8 +12,8 @@ const VerificationButton: React.FC<VerificationButtonProps> = ({
   isVerified,
   onVerify
 }) => {
-  // We no longer show this component since we're using InlineChatVerification
-  // But we'll keep it for backward compatibility with other parts of the app
+  // Deprecated - this component is kept for backward compatibility
+  // Verification now happens inline with MessageVerification component
   return null;
 };
 
