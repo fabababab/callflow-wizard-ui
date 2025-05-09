@@ -1,20 +1,38 @@
 
-import { ScenarioType } from "@/components/ScenarioSelector";
+import { ScenarioType } from '@/components/ScenarioSelector';
 
-// Define the status type for state machine stability
-export type StateMachineStatus = 'stable' | 'beta' | 'in-development';
+export enum StateMachineStatus {
+  DEVELOPMENT = 'development',
+  TESTING = 'testing',
+  PRODUCTION = 'production'
+}
 
-// Map of available state machines with their status
-export const stateMachines: Record<ScenarioType, { available: boolean, status: StateMachineStatus }> = {
-  testscenario: { available: true, status: 'stable' },
-  scenario2: { available: true, status: 'stable' },
-  verification: { available: true, status: 'beta' },
-  bankDetails: { available: true, status: 'beta' },
-  accountHistory: { available: true, status: 'in-development' },
-  physioTherapy: { available: true, status: 'beta' },
-  paymentReminder: { available: true, status: 'in-development' },
-  insurancePackage: { available: true, status: 'in-development' },
-  basicTutorial: { available: true, status: 'stable' },
-  customerSupport: { available: true, status: 'beta' },
-  accountVerification: { available: true, status: 'in-development' }
+interface StateMachineConfig {
+  status: StateMachineStatus;
+  available: boolean;
+  description?: string;
+}
+
+// Define available state machines and their status
+export const stateMachines: Record<ScenarioType, StateMachineConfig> = {
+  'testscenario': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'General test scenario with various interaction paths'
+  },
+  'verificationFlow': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Focused scenario for testing identity verification'
+  },
+  'contractManagement': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Scenario for contract review, modification and cancellation'
+  },
+  'productInfo': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Information-based scenario for product details and subscription options'
+  }
 };

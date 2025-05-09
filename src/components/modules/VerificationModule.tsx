@@ -113,26 +113,29 @@ const VerificationModule: React.FC<ModuleProps> = ({
           </div>
         )}
         
-        {verificationFields.map(field => (
-          <div key={field.id} className="space-y-1">
-            <div className="flex justify-between">
-              <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
-              {field.verified !== undefined && (
-                <Badge variant={field.verified ? "default" : "destructive"} className="text-xs py-0 h-5">
-                  {field.verified ? "Verified" : "Failed"}
-                </Badge>
-              )}
+        {/* For inline display, use a grid layout for fields */}
+        <div className={isInlineDisplay ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
+          {verificationFields.map(field => (
+            <div key={field.id} className="space-y-1">
+              <div className="flex justify-between">
+                <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
+                {field.verified !== undefined && (
+                  <Badge variant={field.verified ? "default" : "destructive"} className="text-xs py-0 h-5">
+                    {field.verified ? "Verified" : "Failed"}
+                  </Badge>
+                )}
+              </div>
+              <Input
+                id={field.id}
+                type={field.type}
+                value={field.value || ''}
+                onChange={(e) => handleInputChange(field.id, e.target.value)}
+                className={`${field.verified === false ? "border-red-300" : ""} text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
+                readOnly={isInlineDisplay} // Make fields readonly for inline display
+              />
             </div>
-            <Input
-              id={field.id}
-              type={field.type}
-              value={field.value || ''}
-              onChange={(e) => handleInputChange(field.id, e.target.value)}
-              className={`${field.verified === false ? "border-red-300" : ""} text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
-              readOnly={isInlineDisplay} // Make fields readonly for inline display
-            />
-          </div>
-        ))}
+          ))}
+        </div>
       </CardContent>
       
       <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-gray-50 border-t py-2"}`}>

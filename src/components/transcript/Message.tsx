@@ -52,62 +52,64 @@ const Message: React.FC<MessageProps> = ({
   const hasVerificationFeatures = message.requiresVerification || message.isVerified || (message.sensitiveData && message.sensitiveData.length > 0);
 
   return (
-    <div 
-      className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4 w-full`} 
-      key={`message-${message.id}`}
-    >
-      <div
-        className={`rounded-lg max-w-[85%] p-3 shadow-sm ${message.sender === 'agent'
-            ? 'bg-primary text-primary-foreground ml-auto'
-            : message.sender === 'customer' 
-            ? `bg-secondary text-secondary-foreground mr-auto ${hasVerificationFeatures ? 'border-l-4 border-amber-300/60' : ''}` 
-            : 'bg-muted text-center italic text-sm w-full'}`}
+    <>
+      <div 
+        className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4 w-full`} 
+        key={`message-${message.id}`}
       >
-        <MessageHeader sender={message.sender} timestamp={message.timestamp} />
-        
-        <MessageContent 
-          text={message.text}
-          sender={message.sender}
-          numberInput={message.numberInput}
-          requiresVerification={message.requiresVerification}
-          isVerified={message.isVerified}
-          messageId={message.id}
-          sensitiveData={message.sensitiveData}
-          onValidateSensitiveData={onValidateSensitiveData}
-          onVerifySystemCheck={onVerifySystemCheck}
-        />
-        
-        {/* Display response options */}
-        {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
-          <MessageResponseOptions 
-            responseOptions={message.responseOptions} 
-            onSelectResponse={onSelectResponse}
+        <div
+          className={`rounded-lg max-w-[85%] p-3 shadow-sm ${message.sender === 'agent'
+              ? 'bg-primary text-primary-foreground ml-auto'
+              : message.sender === 'customer' 
+              ? `bg-secondary text-secondary-foreground mr-auto ${hasVerificationFeatures ? 'border-l-4 border-amber-300/60' : ''}` 
+              : 'bg-muted text-center italic text-sm w-full'}`}
+        >
+          <MessageHeader sender={message.sender} timestamp={message.timestamp} />
+          
+          <MessageContent 
+            text={message.text}
+            sender={message.sender}
+            numberInput={message.numberInput}
+            requiresVerification={message.requiresVerification}
+            isVerified={message.isVerified}
+            messageId={message.id}
+            sensitiveData={message.sensitiveData}
+            onValidateSensitiveData={onValidateSensitiveData}
+            onVerifySystemCheck={onVerifySystemCheck}
           />
-        )}
-        
-        {/* Display AI suggestions */}
-        {hasSuggestions && isAgentMode && (
-          <div className="mt-3 pt-2 border-t border-gray-300/20">
-            <AISuggestions 
-              suggestions={message.suggestions || []} 
-              messageId={message.id}
-              onAccept={onAcceptSuggestion}
-              onReject={onRejectSuggestion}
+          
+          {/* Display response options */}
+          {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
+            <MessageResponseOptions 
+              responseOptions={message.responseOptions} 
+              onSelectResponse={onSelectResponse}
             />
-          </div>
-        )}
+          )}
+          
+          {/* Display AI suggestions */}
+          {hasSuggestions && isAgentMode && (
+            <div className="mt-3 pt-2 border-t border-gray-300/20">
+              <AISuggestions 
+                suggestions={message.suggestions || []} 
+                messageId={message.id}
+                onAccept={onAcceptSuggestion}
+                onReject={onRejectSuggestion}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Display inline module */}
+      {/* Display inline module - moved to separate flex row for full width alignment */}
       {hasInlineModule && message.inlineModule && (
-        <div className="w-full max-w-[85%] flex justify-start">
+        <div className="w-full flex justify-start mb-4">
           <MessageInlineModule 
             moduleConfig={message.inlineModule}
             onModuleComplete={(result) => handleInlineModuleComplete(message.inlineModule!.id, result)}
           />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

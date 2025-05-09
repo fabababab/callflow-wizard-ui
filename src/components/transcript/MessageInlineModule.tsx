@@ -17,7 +17,7 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   };
   
   return (
-    <div className="ml-2 mt-1 w-full max-w-[85%]">
+    <div className="ml-2 mt-2 w-full max-w-[85%]">
       <InlineModuleDisplay 
         moduleConfig={moduleConfig}
         onComplete={handleModuleComplete}
