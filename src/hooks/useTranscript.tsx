@@ -318,47 +318,88 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Improved call start function to properly initialize state
   const handleCall = useCallback(() => {
-    if (!callState.callActive) {
-      console.log('Starting call for scenario:', activeScenario);
-      callState.setCallActiveState(true);
-      messageHandling.clearMessages();
-      conversationState.resetConversationState();
-      
-      messageHandling.addSystemMessage('Call started');
-      
-      toast({
-        title: "Call Started",
-        description: `Scenario: ${activeScenario}`,
-      });
-      
-      // Important: Use a proper delay to ensure UI state is updated
-      setTimeout(() => {
-        console.log('Triggering processStartCall');
-        const success = stateMachine.processStartCall();
-        console.log('Process start call result:', success);
+    try {
+      if (!callState.callActive) {
+        console.log('Starting call for scenario:', activeScenario);
         
-        if (!success) {
-          console.log('Trying to process START_CALL event manually');
-          stateMachine.processSelection('START_CALL');
+        // Validate scenario is loaded
+        if (!stateMachine.stateMachine) {
+          throw new Error('State machine not loaded');
         }
         
-        // Mark initial state as processed after starting the call
-        conversationState.setIsInitialStateProcessed(true);
-      }, 500); // Slightly longer delay to ensure proper initialization
-    } else {
-      console.log('Ending call');
-      callState.setCallActiveState(false);
-      messageHandling.addSystemMessage('Call ended');
-      
-      toast({
-        title: "Call Ended",
-        description: "Call successfully completed.",
-      });
-      
-      // Show the Nachbearbeitung module at the end of the call
-      if (!conversationState.showNachbearbeitungModule) {
-        showNachbearbeitungSummary();
+        // Clear previous state
+        callState.setCallActiveState(true);
+        messageHandling.clearMessages();
+        conversationState.resetConversationState();
+        
+        // Add initial system message
+        messageHandling.addSystemMessage('Call started');
+        
+        // Log state before transition
+        console.log('State before processStartCall:', {
+          currentState: stateMachine.currentState,
+          stateData: stateMachine.stateData
+        });
+        
+        // Use a proper delay to ensure UI state is updated
+        setTimeout(() => {
+          console.log('Triggering processStartCall');
+          const success = stateMachine.processStartCall();
+          console.log('Process start call result:', success);
+          
+          if (!success) {
+            console.log('Trying to process START_CALL event manually');
+            const manualSuccess = stateMachine.processSelection('START_CALL');
+            
+            if (!manualSuccess) {
+              console.error('Failed to start call - both automatic and manual methods failed');
+              throw new Error('Failed to initialize call state');
+            }
+          }
+          
+          // Log state after transition
+          console.log('State after transition:', {
+            currentState: stateMachine.currentState,
+            stateData: stateMachine.stateData
+          });
+          
+          // Mark initial state as processed after starting the call
+          conversationState.setIsInitialStateProcessed(true);
+          
+          // Dispatch event for successful call start
+          const startEvent = new CustomEvent('call-started', {
+            detail: { scenario: activeScenario }
+          });
+          window.dispatchEvent(startEvent);
+          
+        }, 500); // Slightly longer delay to ensure proper initialization
+        
+      } else {
+        console.log('Ending call');
+        callState.setCallActiveState(false);
+        messageHandling.addSystemMessage('Call ended');
+        
+        // Show the Nachbearbeitung module at the end of the call
+        if (!conversationState.showNachbearbeitungModule) {
+          showNachbearbeitungSummary();
+        }
+        
+        // Dispatch event for call end
+        const endEvent = new CustomEvent('call-ended');
+        window.dispatchEvent(endEvent);
       }
+    } catch (error) {
+      console.error('Error in handleCall:', error);
+      messageHandling.addSystemMessage(`Error: ${error instanceof Error ? error.message : 'Failed to handle call'}`);
+      callState.setCallActiveState(false);
+      
+      // Dispatch error event
+      const errorEvent = new CustomEvent('call-error', {
+        detail: { error: error instanceof Error ? error.message : 'Unknown error' }
+      });
+      window.dispatchEvent(errorEvent);
+      
+      throw error; // Re-throw to be handled by UI layer
     }
   }, [
     callState, 
@@ -366,10 +407,12 @@ export function useTranscript(activeScenario: ScenarioType) {
     messageHandling.clearMessages, 
     messageHandling.addSystemMessage, 
     stateMachine.processStartCall, 
-    stateMachine.processSelection, 
+    stateMachine.processSelection,
+    stateMachine.currentState,
+    stateMachine.stateData,
+    stateMachine.stateMachine,
     conversationState,
-    showNachbearbeitungSummary,
-    toast
+    showNachbearbeitungSummary
   ]);
 
   // Accept incoming call with improved state handling
