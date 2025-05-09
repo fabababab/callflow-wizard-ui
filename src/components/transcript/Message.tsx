@@ -1,16 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { MessageSender } from './MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 import { ModuleConfig } from '@/types/modules';
 import AISuggestions, { AISuggestion } from './AISuggestion';
 import MessageHeader from './MessageHeader';
 import NumberInputDisplay from './NumberInputDisplay';
-import VerificationButton from './VerificationButton';
 import SensitiveDataSection from './SensitiveDataSection';
 import ResponseOptions from './ResponseOptions';
 import InlineModuleDisplay from './InlineModuleDisplay';
 import { ChevronRight } from 'lucide-react';
+import InlineChatVerification from './InlineChatVerification';
+import { FormValues } from '../identity-validation/FormFields';
 
 export type Message = {
   id: string;
@@ -70,11 +71,13 @@ const Message: React.FC<MessageProps> = ({
   isAgentMode = true,
   onModuleComplete
 }) => {
+  const [isVerifying, setIsVerifying] = useState(false);
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   const hasNumberInput = message.numberInput !== undefined;
   const requiresVerification = message.requiresVerification && !message.isVerified;
   const hasInlineModule = message.inlineModule !== undefined;
+  const showInlineVerification = requiresVerification && message.sender === 'customer';
   
   // Debug logging for response options
   React.useEffect(() => {
@@ -98,6 +101,15 @@ const Message: React.FC<MessageProps> = ({
   const handleVerify = () => {
     console.log(`Verifying message ${message.id}`);
     if (onVerifySystemCheck) {
+      onVerifySystemCheck(message.id);
+    }
+  };
+
+  // Handler for inline verification form
+  const handleInlineVerify = (verified: boolean, data?: FormValues) => {
+    console.log(`Inline verification for message ${message.id}:`, { verified, data });
+    setIsVerifying(false);
+    if (verified && onVerifySystemCheck) {
       onVerifySystemCheck(message.id);
     }
   };
@@ -141,12 +153,14 @@ const Message: React.FC<MessageProps> = ({
           />
         )}
 
-        {/* Display verification button or verified state */}
-        <VerificationButton 
-          requiresVerification={!!requiresVerification} 
-          isVerified={message.isVerified}
-          onVerify={handleVerify}
-        />
+        {/* Display inline verification component */}
+        {showInlineVerification && (
+          <InlineChatVerification 
+            onVerify={handleInlineVerify}
+            isVerifying={isVerifying}
+            isVerified={message.isVerified}
+          />
+        )}
         
         {/* Display sensitive data validation fields if present */}
         {message.sensitiveData && message.sender === 'customer' && (

@@ -96,6 +96,11 @@ export function useStateChangeProcessor({
         // Set flag that we're waiting for user to respond
         conversationState.setAwaitingUserResponse(true);
         
+        // If requires verification, add to pending verifications
+        if (stateMachine.stateData.requiresVerification) {
+          conversationState.addPendingVerification(stateMachine.currentState);
+        }
+        
         // If sensitive data was detected, show toast notification
         if (sensitiveData && sensitiveData.length > 0) {
           toast.toast({

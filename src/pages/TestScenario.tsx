@@ -5,17 +5,12 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import { useCustomerScenario } from '@/hooks/useCustomerScenario';
 import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
-import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
 import TranscriptPanel from '@/components/TranscriptPanel';
 import { useScenarioState } from '@/hooks/useScenarioState';
-import { StateMachine } from '@/utils/stateMachineLoader';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Info } from 'lucide-react';
 import VerificationBanner from '@/components/transcript/VerificationBanner';
 
 const TestScenario = () => {

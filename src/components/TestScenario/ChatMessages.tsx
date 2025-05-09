@@ -37,6 +37,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     );
   }
 
+  // Count messages requiring verification
+  const pendingVerifications = messages.filter(m => m.requiresVerification && !m.isVerified).length;
+  
   // Debug response options to help diagnose issues
   React.useEffect(() => {
     const debugResponseOptions = messages
@@ -45,8 +48,8 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     
     console.log("Messages with response options:", debugResponseOptions);
     console.log("Total messages:", messages.length);
-    console.log("Agent mode:", isAgentMode);
-  }, [messages, isAgentMode]);
+    console.log("Messages requiring verification:", pendingVerifications);
+  }, [messages, isAgentMode, pendingVerifications]);
   
   return (
     <div className="space-y-4 pb-4">
