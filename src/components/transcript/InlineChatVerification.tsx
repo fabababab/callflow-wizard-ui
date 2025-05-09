@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,8 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
-  const hasRenderedRef = useRef(true);
   const verificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isProcessingRef = useRef(false);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -38,6 +38,10 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   }, []);
   
   const handleVerifyClick = () => {
+    // Prevent multiple clicks
+    if (isProcessingRef.current || isValidating) return;
+    
+    isProcessingRef.current = true;
     console.log("Verify button clicked");
     setIsValidating(true);
     
@@ -46,13 +50,18 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       setIsValidating(false);
       console.log("Manual verification complete, calling onVerify(true)");
       onVerify(true, defaultValues);
+      
+      // Reset processing state after a delay
+      setTimeout(() => {
+        isProcessingRef.current = false;
+      }, 1000);
     }, 1500);
   };
   
   // If already verified, show success state
   if (isVerified) {
     return (
-      <div className="p-2 bg-green-50 border-l-4 border-green-400 rounded-md mt-2">
+      <div className="p-2 bg-green-50 border-l-4 border-green-400 rounded-md mt-2 transition-all duration-300">
         <div className="flex items-center gap-1.5 text-green-700">
           <CheckCircle size={14} />
           <span className="text-xs font-medium">Identity Verified</span>
@@ -64,7 +73,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   
   return (
     <div 
-      className="p-3 bg-amber-50/60 border-l-4 border-amber-300 rounded-md w-full" 
+      className="p-3 bg-amber-50/60 border-l-4 border-amber-300 rounded-md w-full transition-all duration-300" 
       data-testid="verification-form"
     >
       <div className="flex items-center gap-1.5 mb-2">
@@ -73,14 +82,14 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       </div>
       
       {verificationFailed && (
-        <div className="mb-3 p-2 bg-red-50 rounded-md flex items-center gap-2">
+        <div className="mb-3 p-2 bg-red-50 rounded-md flex items-center gap-2 transition-opacity duration-300">
           <AlertCircle size={14} className="text-red-500" />
           <p className="text-xs text-red-700">Verification failed. Please check your information.</p>
         </div>
       )}
       
       {isValidating ? (
-        <div className="flex items-center justify-center h-12 gap-2 text-amber-700 text-xs">
+        <div className="flex items-center justify-center h-12 gap-2 text-amber-700 text-xs transition-opacity duration-300">
           <Loader size={14} className="animate-spin" />
           <span>Verifying customer identity...</span>
         </div>
@@ -114,7 +123,9 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
               variant="outline" 
               size="sm"
               className="text-xs h-7 px-2 py-0 bg-white/80 hover:bg-white border-amber-200 text-amber-800"
-              onClick={() => onVerify(false)}
+              onClick={() => {
+                if (!isProcessingRef.current) onVerify(false);
+              }}
             >
               Cancel
             </Button>
@@ -123,6 +134,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
               size="sm"
               className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7 px-3 py-0"
               onClick={handleVerifyClick}
+              disabled={isProcessingRef.current || isValidating}
             >
               Verify
             </Button>
@@ -133,4 +145,5 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   );
 };
 
-export default React.memo(InlineChatVerification);
+// Use memo to prevent unnecessary re-renders
+export default memo(InlineChatVerification);

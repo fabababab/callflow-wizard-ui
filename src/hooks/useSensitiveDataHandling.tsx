@@ -22,6 +22,7 @@ export function useSensitiveDataHandling(
   // Track if we're currently performing a verification
   const [isVerifying, setIsVerifying] = useState(false);
   const lastVerifyTimeRef = useRef<number>(0);
+  const processingRef = useRef<boolean>(false);
 
   /**
    * Handle validation of sensitive data
@@ -34,55 +35,63 @@ export function useSensitiveDataHandling(
   ) => {
     // Prevent multiple validation calls in quick succession
     const now = Date.now();
-    if (isVerifying || now - lastVerifyTimeRef.current < 1000) return;
+    if (isVerifying || now - lastVerifyTimeRef.current < 1500 || processingRef.current) return;
     
+    processingRef.current = true;
     setIsVerifying(true);
     lastVerifyTimeRef.current = now;
     
     console.log(`Validating sensitive field ${fieldId} in message ${messageId} with status: ${status}`);
     
-    setMessages(prevMessages => 
-      prevMessages.map(message => {
-        if (message.id !== messageId || !message.sensitiveData) return message;
-        
-        // Find and update the specific field
-        const updatedSensitiveData = message.sensitiveData.map(field => {
-          if (field.id === fieldId) {
-            return {
-              ...field,
-              status,
-              notes,
-            } as SensitiveField;
-          }
-          return field;
-        });
-        
-        return {
-          ...message,
-          sensitiveData: updatedSensitiveData,
-        };
-      })
-    );
-    
-    // Update aggregate stats
-    if (status === 'valid') {
-      setSensitiveDataStats(prev => ({
-        ...prev,
-        valid: prev.valid + 1,
-      }));
-    } else if (status === 'invalid') {
-      setSensitiveDataStats(prev => ({
-        ...prev,
-        invalid: prev.invalid + 1,
-      }));
-    }
-    
-    // Reset verifying state after a longer delay to prevent rapid re-renders
+    // Use batch updates to minimize re-renders
     setTimeout(() => {
-      setIsVerifying(false);
-    }, 1000);
-    
-    setLastMessageUpdate(new Date());
+      setMessages(prevMessages => 
+        prevMessages.map(message => {
+          if (message.id !== messageId || !message.sensitiveData) return message;
+          
+          // Find and update the specific field
+          const updatedSensitiveData = message.sensitiveData.map(field => {
+            if (field.id === fieldId) {
+              return {
+                ...field,
+                status,
+                notes,
+              } as SensitiveField;
+            }
+            return field;
+          });
+          
+          return {
+            ...message,
+            sensitiveData: updatedSensitiveData,
+          };
+        })
+      );
+      
+      // Update aggregate stats
+      if (status === 'valid') {
+        setSensitiveDataStats(prev => ({
+          ...prev,
+          valid: prev.valid + 1,
+        }));
+      } else if (status === 'invalid') {
+        setSensitiveDataStats(prev => ({
+          ...prev,
+          invalid: prev.invalid + 1,
+        }));
+      }
+      
+      // Use a longer delay before allowing new verifications to prevent flickering
+      setTimeout(() => {
+        setIsVerifying(false);
+        processingRef.current = false;
+      }, 1500);
+      
+      // Delay the message update notification to avoid rapid UI changes
+      setTimeout(() => {
+        setLastMessageUpdate(new Date());
+      }, 100);
+    }, 50);
   }, [setMessages, setLastMessageUpdate, isVerifying]);
 
   /**
@@ -91,8 +100,9 @@ export function useSensitiveDataHandling(
   const handleVerifySystemCheck = useCallback((messageId: string) => {
     // Prevent multiple verification calls in quick succession
     const now = Date.now();
-    if (isVerifying || now - lastVerifyTimeRef.current < 1000) return;
+    if (isVerifying || now - lastVerifyTimeRef.current < 1500 || processingRef.current) return;
     
+    processingRef.current = true;
     setIsVerifying(true);
     lastVerifyTimeRef.current = now;
     
@@ -101,23 +111,30 @@ export function useSensitiveDataHandling(
     // Make sure verification blocking is set to false to avoid modals
     setVerificationBlocking(false);
     
-    setMessages(prevMessages =>
-      prevMessages.map(message => {
-        if (message.id !== messageId) return message;
-        
-        return {
-          ...message,
-          isVerified: true,
-        };
-      })
-    );
-    
-    // Reset verifying state after a delay
+    // Delay the state update to prevent rapid re-renders
     setTimeout(() => {
-      setIsVerifying(false);
-    }, 1000);
-    
-    setLastMessageUpdate(new Date());
+      setMessages(prevMessages =>
+        prevMessages.map(message => {
+          if (message.id !== messageId) return message;
+          
+          return {
+            ...message,
+            isVerified: true,
+          };
+        })
+      );
+      
+      // Reset verifying state after a longer delay
+      setTimeout(() => {
+        setIsVerifying(false);
+        processingRef.current = false;
+        
+        // Delay notification of message update to batch UI updates
+        setTimeout(() => {
+          setLastMessageUpdate(new Date());
+        }, 100);
+      }, 1500);
+    }, 50);
   }, [setMessages, setLastMessageUpdate, setVerificationBlocking, isVerifying]);
 
   return {

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ interface VerificationField {
   verified?: boolean;
 }
 
-const VerificationModule: React.FC<ModuleProps> = ({ 
+const VerificationModule: React.FC<ModuleProps> = memo(({ 
   id, 
   title, 
   data, 
@@ -29,13 +29,11 @@ const VerificationModule: React.FC<ModuleProps> = ({
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(fields);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const isInlineDisplay = data?.isInline === true;
-  const initialRenderRef = useRef(true);
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const processingRef = useRef(false);
   
   useEffect(() => {
     console.log(`VerificationModule rendered - id: ${id}, isInline: ${isInlineDisplay}`);
-    // Only log on first render to reduce console noise
-    initialRenderRef.current = false;
     
     return () => {
       if (completeTimeoutRef.current) {
@@ -45,6 +43,8 @@ const VerificationModule: React.FC<ModuleProps> = ({
   }, [id, isInlineDisplay]);
   
   const handleInputChange = (fieldId: string, value: string) => {
+    if (processingRef.current) return;
+    
     setVerificationFields(prev => 
       prev.map(field => 
         field.id === fieldId 
@@ -55,6 +55,9 @@ const VerificationModule: React.FC<ModuleProps> = ({
   };
   
   const handleVerify = () => {
+    if (processingRef.current) return;
+    processingRef.current = true;
+    
     const allVerified = verificationFields.every(field => 
       !field.required || (field.expectedValue ? field.value === field.expectedValue : field.value)
     );
@@ -83,14 +86,19 @@ const VerificationModule: React.FC<ModuleProps> = ({
           });
           window.dispatchEvent(event);
         }
+        
+        // Reset processing state after a longer delay to prevent rapid re-renders
+        setTimeout(() => {
+          processingRef.current = false;
+        }, 1000);
       }
-    }, 1000);
+    }, 1500);
   };
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
-    ? "w-full ml-auto border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60"
-    : "w-full max-w-md border border-amber-200 shadow-md";
+    ? "w-full ml-auto border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60 transition-all duration-300"
+    : "w-full max-w-md border border-amber-200 shadow-md transition-all duration-300";
   
   return (
     <Card className={cardClassName} data-testid={`verification-module-${id}`}>
@@ -108,14 +116,14 @@ const VerificationModule: React.FC<ModuleProps> = ({
       
       <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-4"} space-y-3`}>
         {verificationStatus === 'success' && (
-          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3">
+          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3 transition-opacity duration-300">
             <CheckCircle className="h-4 w-4" />
             <span>Verification successful</span>
           </div>
         )}
         
         {verificationStatus === 'failed' && (
-          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3">
+          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3 transition-opacity duration-300">
             <AlertCircle className="h-4 w-4" />
             <span>Verification failed. Please check your information.</span>
           </div>
@@ -151,8 +159,11 @@ const VerificationModule: React.FC<ModuleProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            onClick={onClose}
+            onClick={() => {
+              if (!processingRef.current && onClose) onClose();
+            }}
             className="text-xs"
+            disabled={processingRef.current}
           >
             Cancel
           </Button>
@@ -164,6 +175,7 @@ const VerificationModule: React.FC<ModuleProps> = ({
             size="sm"
             onClick={handleVerify}
             className={`text-xs ${isInlineDisplay ? "bg-amber-500 hover:bg-amber-600 text-white ml-auto" : ""}`}
+            disabled={processingRef.current}
           >
             Verify Identity
           </Button>
@@ -171,6 +183,8 @@ const VerificationModule: React.FC<ModuleProps> = ({
       </CardFooter>
     </Card>
   );
-};
+});
 
-export default React.memo(VerificationModule);
+VerificationModule.displayName = 'VerificationModule';
+
+export default VerificationModule;

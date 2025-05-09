@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, memo } from 'react';
 import NumberInputDisplay from './NumberInputDisplay';
 import SensitiveDataSection from './SensitiveDataSection';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
@@ -22,7 +22,7 @@ interface MessageContentProps {
   onVerifySystemCheck?: (messageId: string) => void;
 }
 
-const MessageContent: React.FC<MessageContentProps> = ({
+const MessageContent: React.FC<MessageContentProps> = memo(({
   text,
   sender,
   numberInput,
@@ -51,16 +51,9 @@ const MessageContent: React.FC<MessageContentProps> = ({
 
   // Calculate if we need to show inline verification
   const showInlineVerification = requiresVerification && !isVerified && sender === 'customer';
-  
-  // Debug log to check verification state
-  useEffect(() => {
-    if (requiresVerification) {
-      console.log(`MessageContent: Message ${messageId} verification status - requiresVerification: ${requiresVerification}, isVerified: ${isVerified}, showInlineVerification: ${showInlineVerification}, sender: ${sender}`);
-    }
-  }, [requiresVerification, isVerified, messageId, showInlineVerification, sender]);
 
   return (
-    <div className="space-y-2 w-full">
+    <div className="space-y-2 w-full transition-all duration-300">
       <div className="text-sm whitespace-pre-wrap">{text}</div>
       
       {/* Display number matching visualization */}
@@ -74,7 +67,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
       
       {/* Show inline verification directly in the message content */}
       {showInlineVerification && onVerifySystemCheck && (
-        <div className="mt-2 w-full" data-testid="inline-verification">
+        <div className="mt-2 w-full transition-all duration-300" data-testid="inline-verification">
           <InlineChatVerification 
             onVerify={handleVerify}
             isVerifying={false}
@@ -92,6 +85,8 @@ const MessageContent: React.FC<MessageContentProps> = ({
       )}
     </div>
   );
-};
+});
+
+MessageContent.displayName = 'MessageContent';
 
 export default MessageContent;

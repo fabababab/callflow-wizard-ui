@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { memo } from 'react';
 import { ModuleConfig } from '@/types/modules';
 import moduleRegistry from './ModuleRegistry';
 
@@ -10,7 +11,7 @@ interface ModuleContainerProps {
   stateData?: any;
 }
 
-const ModuleContainer: React.FC<ModuleContainerProps> = ({ 
+const ModuleContainer: React.FC<ModuleContainerProps> = memo(({ 
   moduleConfig,
   onClose,
   onComplete,
@@ -64,6 +65,8 @@ const ModuleContainer: React.FC<ModuleContainerProps> = ({
       </div>
     </div>
   );
-};
+});
+
+ModuleContainer.displayName = 'ModuleContainer';
 
 export default ModuleContainer;

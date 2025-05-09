@@ -1,5 +1,5 @@
 
-import React, { memo, useEffect } from 'react';
+import React, { memo, useRef, useEffect } from 'react';
 import { ModuleConfig } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 
@@ -12,7 +12,13 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   moduleConfig,
   onModuleComplete
 }) => {
+  const completedRef = useRef(false);
+  
   const handleModuleComplete = (result: any) => {
+    // Prevent duplicate completions
+    if (completedRef.current) return;
+    completedRef.current = true;
+    
     console.log(`Module ${moduleConfig.id} completed with result:`, result);
     onModuleComplete(result);
   };
@@ -35,7 +41,7 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   }, [moduleConfig.id]);
   
   return (
-    <div className="ml-auto mt-2 w-full max-w-[85%]">
+    <div className="ml-auto mt-2 w-full max-w-[85%] transition-all duration-300">
       <InlineModuleDisplay 
         moduleConfig={moduleConfig}
         onComplete={handleModuleComplete}

@@ -1,5 +1,5 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, memo } from 'react';
 import type { MessageSender, Message as MessageInterface } from './MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
 import MessageHeader from './MessageHeader';
@@ -33,13 +33,6 @@ const Message: React.FC<MessageProps> = ({
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   const hasInlineModule = message.inlineModule !== undefined;
   
-  // Debug logging for verification status
-  React.useEffect(() => {
-    if (message.requiresVerification) {
-      console.log(`Message ${message.id} requires verification. Current status: ${message.isVerified ? 'Verified' : 'Not verified'}`);
-    }
-  }, [message.id, message.requiresVerification, message.isVerified]);
-  
   // Handler for inline module completion - memoize to avoid unnecessary re-renders
   const handleInlineModuleComplete = useCallback((result: any) => {
     console.log(`Module completed for message ${message.id}`, result);
@@ -54,11 +47,11 @@ const Message: React.FC<MessageProps> = ({
   return (
     <>
       <div 
-        className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4 w-full`} 
-        key={`message-${message.id}`}
+        className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4 w-full transition-all duration-300`} 
+        key={`message-container-${message.id}`}
       >
         <div
-          className={`rounded-lg max-w-[85%] p-3 shadow-sm ${message.sender === 'agent'
+          className={`rounded-lg max-w-[85%] p-3 shadow-sm transition-all duration-300 ${message.sender === 'agent'
               ? 'bg-primary text-primary-foreground ml-auto'
               : message.sender === 'customer' 
               ? `bg-secondary text-secondary-foreground mr-auto ${hasVerificationFeatures ? 'border-l-4 border-amber-300/60' : ''}` 
@@ -102,7 +95,10 @@ const Message: React.FC<MessageProps> = ({
 
       {/* Display inline module */}
       {hasInlineModule && message.inlineModule && (
-        <div className="w-full flex justify-end mb-4" key={`module-${message.id}-${message.inlineModule.id}`}>
+        <div 
+          className="w-full flex justify-end mb-4 transition-all duration-300" 
+          key={`module-container-${message.id}-${message.inlineModule.id}`}
+        >
           <MessageInlineModule 
             moduleConfig={message.inlineModule}
             onModuleComplete={handleInlineModuleComplete}
@@ -113,4 +109,4 @@ const Message: React.FC<MessageProps> = ({
   );
 };
 
-export default React.memo(Message);
+export default memo(Message);
