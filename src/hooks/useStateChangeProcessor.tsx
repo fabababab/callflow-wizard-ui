@@ -1,4 +1,3 @@
-
 // Hook for processing state changes
 import { useCallback } from 'react';
 import { detectSensitiveData } from '@/data/scenarioData';
@@ -26,6 +25,10 @@ export function useStateChangeProcessor({
   const processStateChange = useCallback(() => {
     // If not active or already processed, skip
     if (!callState.callActive || !stateMachine.stateData) {
+      console.log('Skipping state change processing: call not active or no state data', {
+        callActive: callState.callActive,
+        hasStateData: !!stateMachine.stateData
+      });
       return;
     }
 
@@ -34,6 +37,10 @@ export function useStateChangeProcessor({
       console.log(`State ${stateMachine.currentState} already processed, skipping message updates`);
       return;
     }
+    
+    console.log('===== PROCESSING STATE CHANGE =====');
+    console.log(`Processing state change for state: ${stateMachine.currentState}`);
+    console.log('State data:', stateMachine.stateData);
     
     // Clear any existing debounce timer
     if (conversationState.debounceTimerRef.current) {
@@ -45,7 +52,8 @@ export function useStateChangeProcessor({
     
     // Debounce the state processing to prevent rapid fire updates
     conversationState.debounceTimerRef.current = window.setTimeout(() => {
-      console.log('Processing state change with data:', stateMachine.stateData);
+      console.log('Debounce complete, actually processing state change:', stateMachine.currentState);
+      console.log('State data for processing:', stateMachine.stateData);
       
       // When state changes, check for messages to display
       if (stateMachine.stateData.meta?.systemMessage) {
@@ -89,7 +97,7 @@ export function useStateChangeProcessor({
           ? responseOptions
           : transitionExtractor.extractTransitionsAsResponseOptions(stateMachine.currentState);
         
-        console.log("Effective response options:", effectiveResponseOptions);
+        console.log("Agent message response options:", effectiveResponseOptions);
           
         messageHandling.addAgentMessage(
           stateMachine.stateData.meta.agentText, 
@@ -121,6 +129,8 @@ export function useStateChangeProcessor({
       
       // Reset user action flag
       conversationState.setIsUserAction(false);
+      
+      console.log('===== STATE CHANGE PROCESSING COMPLETE =====');
     }, 300); // 300ms debounce
   }, [
     stateMachine.stateData, 
