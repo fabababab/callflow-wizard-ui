@@ -17,7 +17,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   isVerified = false
 }) => {
   const [isValidating, setIsValidating] = useState(false);
-  const [autoVerifyStarted, setAutoVerifyStarted] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
   
   // Default values that will always verify successfully
@@ -29,27 +28,12 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   
   // Debug logging for verification rendering
   useEffect(() => {
-    console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying, "isValidating:", isValidating, "autoVerifyStarted:", autoVerifyStarted);
-  }, [isVerified, isVerifying, isValidating, autoVerifyStarted]);
+    console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying, "isValidating:", isValidating);
+  }, [isVerified, isVerifying, isValidating]);
   
-  // Auto-submit the form after a brief delay - happens once
-  useEffect(() => {
-    if (!isVerified && !isVerifying && !autoVerifyStarted) {
-      setAutoVerifyStarted(true);
-      console.log("Starting auto verification process");
-      const timer = setTimeout(() => {
-        setIsValidating(true);
-        setTimeout(() => {
-          setIsValidating(false);
-          console.log("Auto verification complete, calling onVerify(true)");
-          onVerify(true, defaultValues);
-        }, 1000);
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isVerified, isVerifying, autoVerifyStarted, onVerify]);
-
+  // We remove the auto-submit functionality to prevent blinking
+  // Auto-verification will only happen when explicitly requested
+  
   const handleVerifyClick = () => {
     console.log("Verify button clicked");
     setIsValidating(true);

@@ -67,21 +67,12 @@ const VerificationModule: React.FC<ModuleProps> = ({
     }, 500);
   };
   
-  // Auto-verify if this is an inline verification after a short delay
-  useEffect(() => {
-    if (isInlineDisplay) {
-      const timer = setTimeout(() => {
-        console.log(`Auto-verifying inline module ${id}`);
-        handleVerify();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isInlineDisplay, id]);
+  // We're disabling auto-verify for inline verification
+  // to fix the blinking issue
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
-    ? "w-full border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60 animate-in fade-in duration-300"
+    ? "w-full ml-auto border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60 animate-in fade-in duration-300"
     : "w-full max-w-md border border-amber-200 shadow-md";
   
   return (
@@ -150,7 +141,16 @@ const VerificationModule: React.FC<ModuleProps> = ({
           </Button>
         )}
         
-        {!isInlineDisplay && (
+        {/* Always show the verify button for inline mode */}
+        {(isInlineDisplay && verificationStatus === 'pending') ? (
+          <Button 
+            size="sm"
+            onClick={handleVerify}
+            className="text-xs bg-amber-500 hover:bg-amber-600 text-white ml-auto"
+          >
+            Verify Identity
+          </Button>
+        ) : (!isInlineDisplay && (
           <Button 
             size="sm"
             onClick={handleVerify}
@@ -158,13 +158,7 @@ const VerificationModule: React.FC<ModuleProps> = ({
           >
             Verify
           </Button>
-        )}
-        
-        {isInlineDisplay && verificationStatus === 'pending' && (
-          <div className="w-full flex justify-center">
-            <p className="text-xs text-amber-700">Verifying automatically...</p>
-          </div>
-        )}
+        ))}
       </CardFooter>
     </Card>
   );

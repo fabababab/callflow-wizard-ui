@@ -100,9 +100,9 @@ const Message: React.FC<MessageProps> = ({
         </div>
       </div>
 
-      {/* Display inline module - moved to separate flex row for full width alignment */}
+      {/* Display inline module - now right-aligned with justify-end class */}
       {hasInlineModule && message.inlineModule && (
-        <div className="w-full flex justify-start mb-4">
+        <div className="w-full flex justify-end mb-4">
           <MessageInlineModule 
             moduleConfig={message.inlineModule}
             onModuleComplete={(result) => handleInlineModuleComplete(message.inlineModule!.id, result)}

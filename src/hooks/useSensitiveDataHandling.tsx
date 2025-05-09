@@ -18,6 +18,9 @@ export function useSensitiveDataHandling(
     valid: 0,
     invalid: 0,
   });
+  
+  // Track if we're currently performing a verification
+  const [isVerifying, setIsVerifying] = useState(false);
 
   /**
    * Handle validation of sensitive data
@@ -28,6 +31,10 @@ export function useSensitiveDataHandling(
     status: ValidationStatus, 
     notes?: string
   ) => {
+    // Prevent multiple validation calls in quick succession
+    if (isVerifying) return;
+    
+    setIsVerifying(true);
     console.log(`Validating sensitive field ${fieldId} in message ${messageId} with status: ${status}`);
     
     setMessages(prevMessages => 
@@ -66,17 +73,26 @@ export function useSensitiveDataHandling(
       }));
     }
     
+    // Reset verifying state after a delay
+    setTimeout(() => {
+      setIsVerifying(false);
+    }, 500);
+    
     setLastMessageUpdate(new Date());
-  }, [setMessages, setLastMessageUpdate]);
+  }, [setMessages, setLastMessageUpdate, isVerifying]);
 
   /**
-   * Handle verification of system checks - modified to never block
+   * Handle verification of system checks - No auto verification
    */
   const handleVerifySystemCheck = useCallback((messageId: string) => {
+    // Prevent multiple verification calls in quick succession
+    if (isVerifying) return;
+    
+    setIsVerifying(true);
     console.log(`Verifying system check for message ${messageId} - inline only, no modals`);
     
-    // Never set verification blocking to true
-    // This ensures that verification will always be inline
+    // Make sure verification blocking is set to false to avoid modals
+    setVerificationBlocking(false);
     
     setMessages(prevMessages =>
       prevMessages.map(message => {
@@ -89,12 +105,18 @@ export function useSensitiveDataHandling(
       })
     );
     
+    // Reset verifying state after a delay
+    setTimeout(() => {
+      setIsVerifying(false);
+    }, 500);
+    
     setLastMessageUpdate(new Date());
-  }, [setMessages, setLastMessageUpdate]);
+  }, [setMessages, setLastMessageUpdate, setVerificationBlocking, isVerifying]);
 
   return {
     sensitiveDataStats,
     handleValidateSensitiveData,
-    handleVerifySystemCheck
+    handleVerifySystemCheck,
+    isVerifying
   };
 }
