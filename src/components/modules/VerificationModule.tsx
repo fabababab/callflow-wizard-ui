@@ -30,11 +30,18 @@ const VerificationModule: React.FC<ModuleProps> = ({
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const isInlineDisplay = data?.isInline === true;
   const initialRenderRef = useRef(true);
+  const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     console.log(`VerificationModule rendered - id: ${id}, isInline: ${isInlineDisplay}`);
     // Only log on first render to reduce console noise
     initialRenderRef.current = false;
+    
+    return () => {
+      if (completeTimeoutRef.current) {
+        clearTimeout(completeTimeoutRef.current);
+      }
+    };
   }, [id, isInlineDisplay]);
   
   const handleInputChange = (fieldId: string, value: string) => {
@@ -55,7 +62,7 @@ const VerificationModule: React.FC<ModuleProps> = ({
     setVerificationStatus(allVerified ? 'success' : 'failed');
     
     // Add a slight delay to show the success/failure state before completing
-    setTimeout(() => {
+    completeTimeoutRef.current = setTimeout(() => {
       if (onComplete) {
         console.log(`VerificationModule ${id} completed with result:`, { verified: allVerified });
         onComplete({
@@ -66,8 +73,18 @@ const VerificationModule: React.FC<ModuleProps> = ({
             verified: f.expectedValue ? f.value === f.expectedValue : true
           }))
         });
+        
+        // If verification was successful and this is inline, trigger flow continuation
+        if (allVerified && isInlineDisplay) {
+          console.log("Verification successful, continuing flow...");
+          // Dispatch an event to continue the flow
+          const event = new CustomEvent('verification-successful', {
+            detail: { moduleId: id }
+          });
+          window.dispatchEvent(event);
+        }
       }
-    }, 500);
+    }, 1000);
   };
   
   // Use different styling for inline vs modal display
@@ -141,24 +158,16 @@ const VerificationModule: React.FC<ModuleProps> = ({
           </Button>
         )}
         
-        {/* Always show the verify button for inline mode */}
-        {(isInlineDisplay && verificationStatus === 'pending') ? (
+        {/* Show verify button when status is pending */}
+        {verificationStatus === 'pending' && (
           <Button 
             size="sm"
             onClick={handleVerify}
-            className="text-xs bg-amber-500 hover:bg-amber-600 text-white ml-auto"
+            className={`text-xs ${isInlineDisplay ? "bg-amber-500 hover:bg-amber-600 text-white ml-auto" : ""}`}
           >
             Verify Identity
           </Button>
-        ) : (!isInlineDisplay && (
-          <Button 
-            size="sm"
-            onClick={handleVerify}
-            className="text-xs"
-          >
-            Verify
-          </Button>
-        ))}
+        )}
       </CardFooter>
     </Card>
   );

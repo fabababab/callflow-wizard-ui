@@ -1,28 +1,18 @@
 
-import React from 'react';
-import { ModuleRegistryItem, ModuleType } from '@/types/modules';
+import { ModuleType } from '@/types/modules';
 import VerificationModule from './VerificationModule';
-import ContractModule from './ContractModule';
 import InformationModule from './InformationModule';
 import NachbearbeitungModule from './NachbearbeitungModule';
+import ContractModule from './ContractModule';
+import ContractManagementModule from './ContractManagementModule';
 
-const moduleRegistry: Record<ModuleType, ModuleRegistryItem> = {
-  [ModuleType.VERIFICATION]: {
-    type: ModuleType.VERIFICATION,
-    component: VerificationModule
-  },
-  [ModuleType.CONTRACT]: {
-    type: ModuleType.CONTRACT,
-    component: ContractModule
-  },
-  [ModuleType.INFORMATION]: {
-    type: ModuleType.INFORMATION,
-    component: InformationModule
-  },
-  [ModuleType.NACHBEARBEITUNG]: {
-    type: ModuleType.NACHBEARBEITUNG,
-    component: NachbearbeitungModule
-  }
+// This file serves as a registry to map module types to their respective components
+const ModuleRegistry = {
+  [ModuleType.VERIFICATION]: VerificationModule,
+  [ModuleType.INFORMATION]: InformationModule,
+  [ModuleType.NACHBEARBEITUNG]: NachbearbeitungModule,
+  [ModuleType.CONTRACT]: ContractModule,
+  [ModuleType.CONTRACT_MANAGEMENT]: ContractManagementModule,
 };
 
-export default moduleRegistry;
+export default ModuleRegistry;

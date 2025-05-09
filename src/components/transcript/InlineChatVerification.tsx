@@ -18,7 +18,8 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
-  const hasRenderedRef = useRef(false);
+  const hasRenderedRef = useRef(true);
+  const verificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -27,24 +28,25 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     policyNumber: '12345678',
   };
   
-  // Debug logging for verification rendering - only on first render
+  // Clear timeout on unmount
   useEffect(() => {
-    if (!hasRenderedRef.current) {
-      console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying, "isValidating:", isValidating);
-      hasRenderedRef.current = true;
-    }
-  }, [isVerified, isVerifying, isValidating]);
+    return () => {
+      if (verificationTimeoutRef.current) {
+        clearTimeout(verificationTimeoutRef.current);
+      }
+    };
+  }, []);
   
   const handleVerifyClick = () => {
     console.log("Verify button clicked");
     setIsValidating(true);
     
     // Use a longer delay to prevent rapid state changes
-    setTimeout(() => {
+    verificationTimeoutRef.current = setTimeout(() => {
       setIsValidating(false);
       console.log("Manual verification complete, calling onVerify(true)");
       onVerify(true, defaultValues);
-    }, 1000);
+    }, 1500);
   };
   
   // If already verified, show success state

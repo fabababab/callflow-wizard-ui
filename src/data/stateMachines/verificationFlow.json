@@ -115,24 +115,93 @@
     "verified_customer_query": {
       "meta": {
         "agentText": "Thank you for verifying your identity. How may I assist you today?",
-        "customerText": "I'd like to update my contact information. My phone number has changed.",
+        "customerText": "I'd like to review my current contracts and update my contact information.",
         "suggestions": [
-          "I'd be happy to help you update your contact information. What is your new phone number?",
-          "Certainly! I can update your phone number in our system. What would you like to change it to?",
-          "I can assist with that change. What is the new phone number you'd like to add to your account?"
+          "I'd be happy to help you review your contracts and update your contact information. Let's start with your contracts.",
+          "Let me pull up your contract information first, and then we can update your contact details.",
+          "I can assist with both requests. Let's first take a look at your current contracts."
         ]
       },
       "on": {
-        "I'd be happy to help you update your contact information. What is your new phone number?": "update_phone",
-        "Certainly! I can update your phone number in our system. What would you like to change it to?": "update_phone",
-        "I can assist with that change. What is the new phone number you'd like to add to your account?": "update_phone",
+        "I'd be happy to help you review your contracts and update your contact information. Let's start with your contracts.": "contract_review",
+        "Let me pull up your contract information first, and then we can update your contact details.": "contract_review",
+        "I can assist with both requests. Let's first take a look at your current contracts.": "contract_review",
+        "DEFAULT": "contract_review"
+      }
+    },
+    "contract_review": {
+      "meta": {
+        "agentText": "I'd be happy to help you review your contracts. Let me pull up your contract information.",
+        "customerText": "Thank you. I want to make sure my health insurance policy is still active.",
+        "module": {
+          "id": "contract-module-1",
+          "title": "Contract Management",
+          "type": "contract",
+          "data": {
+            "contracts": [
+              {
+                "id": "contract-1",
+                "name": "Health Insurance - Basic Plan",
+                "type": "Health Insurance",
+                "status": "active",
+                "startDate": "01/01/2025",
+                "endDate": "12/31/2025",
+                "details": {
+                  "Monthly Premium": "€120",
+                  "Coverage Level": "Standard",
+                  "Deductible": "€250",
+                  "Coverage Limit": "€500,000",
+                  "Includes Dental": "No",
+                  "Includes Vision": "No"
+                }
+              },
+              {
+                "id": "contract-2",
+                "name": "Dental Coverage Addon",
+                "type": "Supplemental Insurance",
+                "status": "pending",
+                "startDate": "06/01/2025",
+                "details": {
+                  "Monthly Premium": "€30",
+                  "Coverage Level": "Basic",
+                  "Waiting Period": "30 days",
+                  "Annual Coverage Limit": "€2,000"
+                }
+              },
+              {
+                "id": "contract-3",
+                "name": "Travel Insurance",
+                "type": "Supplemental Insurance",
+                "status": "expired",
+                "startDate": "01/01/2024",
+                "endDate": "01/01/2025",
+                "details": {
+                  "Coverage Type": "International",
+                  "Emergency Medical": "Included",
+                  "Trip Cancellation": "Up to €1,500",
+                  "Lost Luggage": "Up to €800"
+                }
+              }
+            ]
+          }
+        },
+        "responseOptions": [
+          "I can see your health insurance policy is active until the end of this year. Is there anything specific you'd like to know about it?",
+          "Your health insurance basic plan is active and valid through December 31, 2025. Would you like to make any changes to your coverage?",
+          "I've confirmed that your health insurance policy is active. I also see you have a pending dental coverage addon. Would you like to review the details of either of these policies?"
+        ]
+      },
+      "on": {
+        "I can see your health insurance policy is active until the end of this year. Is there anything specific you'd like to know about it?": "update_phone",
+        "Your health insurance basic plan is active and valid through December 31, 2025. Would you like to make any changes to your coverage?": "update_phone",
+        "I've confirmed that your health insurance policy is active. I also see you have a pending dental coverage addon. Would you like to review the details of either of these policies?": "update_phone",
         "DEFAULT": "update_phone"
       }
     },
     "update_phone": {
       "meta": {
-        "agentText": "I'd be happy to help you update your contact information. What is your new phone number?",
-        "customerText": "My new number is +49 170 8765 4321.",
+        "agentText": "I can see your health insurance policy is active until December 31, 2025. Now, you mentioned updating your contact information. What would you like to update?",
+        "customerText": "My new phone number is +49 170 8765 4321.",
         "sensitiveFields": [
           {
             "id": "phone-number-1",

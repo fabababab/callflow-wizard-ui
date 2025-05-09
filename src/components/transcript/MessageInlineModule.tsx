@@ -1,5 +1,5 @@
 
-import React, { memo } from 'react';
+import React, { memo, useEffect } from 'react';
 import { ModuleConfig } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 
@@ -13,8 +13,26 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   onModuleComplete
 }) => {
   const handleModuleComplete = (result: any) => {
+    console.log(`Module ${moduleConfig.id} completed with result:`, result);
     onModuleComplete(result);
   };
+  
+  // Listen for verification success events
+  useEffect(() => {
+    const handleVerificationSuccess = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && customEvent.detail.moduleId === moduleConfig.id) {
+        console.log(`Received verification success event for module ${moduleConfig.id}`);
+        // Will be handled by the regular complete flow
+      }
+    };
+    
+    window.addEventListener('verification-successful', handleVerificationSuccess);
+    
+    return () => {
+      window.removeEventListener('verification-successful', handleVerificationSuccess);
+    };
+  }, [moduleConfig.id]);
   
   return (
     <div className="ml-auto mt-2 w-full max-w-[85%]">
