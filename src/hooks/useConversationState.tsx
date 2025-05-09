@@ -32,8 +32,8 @@ export function useConversationState() {
 
   // Add a state that requires verification - completely disabled
   const addPendingVerification = useCallback((stateId: string) => {
-    console.log(`Verification for state ${stateId} would normally be required, but is bypassed`);
-    // We don't actually add to pending verifications
+    console.log(`State ${stateId} requires verification but verification blocking is disabled. Auto-verifying.`);
+    // We don't add to pending verifications - effectively auto-verifies
   }, []);
 
   // Remove a state from pending verifications

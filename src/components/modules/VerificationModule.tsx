@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,11 @@ const VerificationModule: React.FC<ModuleProps> = ({
   const fields = data?.fields || [];
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(fields);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
-  const isInlineDisplay = data?.isInline === true || true; // Default to inline display
+  const isInlineDisplay = data?.isInline === true;
+  
+  useEffect(() => {
+    console.log(`VerificationModule rendered - id: ${id}, isInline: ${isInlineDisplay}`);
+  }, [id, isInlineDisplay]);
   
   const handleInputChange = (fieldId: string, value: string) => {
     setVerificationFields(prev => 
@@ -47,17 +51,33 @@ const VerificationModule: React.FC<ModuleProps> = ({
     
     setVerificationStatus(allVerified ? 'success' : 'failed');
     
-    if (onComplete) {
-      onComplete({
-        verified: allVerified,
-        fields: verificationFields.map(f => ({
-          id: f.id,
-          value: f.value,
-          verified: f.expectedValue ? f.value === f.expectedValue : true
-        }))
-      });
-    }
+    // Add a slight delay to show the success/failure state before completing
+    setTimeout(() => {
+      if (onComplete) {
+        console.log(`VerificationModule ${id} completed with result:`, { verified: allVerified });
+        onComplete({
+          verified: allVerified,
+          fields: verificationFields.map(f => ({
+            id: f.id,
+            value: f.value,
+            verified: f.expectedValue ? f.value === f.expectedValue : true
+          }))
+        });
+      }
+    }, 500);
   };
+  
+  // Auto-verify if this is an inline verification after a short delay
+  useEffect(() => {
+    if (isInlineDisplay) {
+      const timer = setTimeout(() => {
+        console.log(`Auto-verifying inline module ${id}`);
+        handleVerify();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isInlineDisplay, id]);
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
@@ -65,7 +85,7 @@ const VerificationModule: React.FC<ModuleProps> = ({
     : "w-full max-w-md border border-amber-200 shadow-md";
   
   return (
-    <Card className={cardClassName}>
+    <Card className={cardClassName} data-testid={`verification-module-${id}`}>
       <CardHeader className="bg-amber-50 border-b border-amber-100 py-3">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-amber-600" />
@@ -107,27 +127,39 @@ const VerificationModule: React.FC<ModuleProps> = ({
               value={field.value || ''}
               onChange={(e) => handleInputChange(field.id, e.target.value)}
               className={field.verified === false ? "border-red-300 text-sm h-8" : "text-sm h-8"}
+              readOnly={isInlineDisplay} // Make fields readonly for inline display
             />
           </div>
         ))}
       </CardContent>
       
       <CardFooter className="flex justify-between bg-gray-50 border-t py-2">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={onClose}
-          className="text-xs"
-        >
-          Cancel
-        </Button>
-        <Button 
-          size="sm"
-          onClick={handleVerify}
-          className="text-xs"
-        >
-          Verify
-        </Button>
+        {!isInlineDisplay && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onClose}
+            className="text-xs"
+          >
+            Cancel
+          </Button>
+        )}
+        
+        {!isInlineDisplay && (
+          <Button 
+            size="sm"
+            onClick={handleVerify}
+            className="text-xs"
+          >
+            Verify
+          </Button>
+        )}
+        
+        {isInlineDisplay && verificationStatus === 'pending' && (
+          <div className="w-full flex justify-center">
+            <p className="text-xs text-amber-700">Verifying automatically...</p>
+          </div>
+        )}
       </CardFooter>
     </Card>
   );

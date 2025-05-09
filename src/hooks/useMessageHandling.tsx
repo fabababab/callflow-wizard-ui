@@ -30,6 +30,7 @@ export function useMessageHandling() {
    * Clear all messages from the transcript
    */
   const clearMessages = () => {
+    console.log("Clearing all messages");
     setMessages([]);
     setLastMessageUpdate(new Date());
   };
@@ -56,6 +57,7 @@ export function useMessageHandling() {
             isVerified: result?.verified === true
           };
           
+          console.log(`Updated message with completed inline module:`, updatedMessage);
           return updatedMessage;
         }
         
@@ -66,9 +68,9 @@ export function useMessageHandling() {
     setLastMessageUpdate(new Date());
   };
 
-  // Override the original handleVerifySystemCheck to ensure verificationBlocking is set to false
+  // Override the original handleVerifySystemCheck to ensure verificationBlocking is never true
   const enhancedHandleVerifySystemCheck = (messageId: string) => {
-    console.log(`Enhanced verification check for message ${messageId}`);
+    console.log(`Enhanced verification check for message ${messageId} - blocking disabled`);
     handleVerifySystemCheck(messageId);
   };
 
@@ -86,6 +88,8 @@ export function useMessageHandling() {
     handleValidateSensitiveData,
     handleVerifySystemCheck: enhancedHandleVerifySystemCheck,
     handleInlineModuleComplete,
-    setVerificationBlocking: () => {}, // No-op function
+    setVerificationBlocking: () => {
+      console.log("Verification blocking disabled - no-op function called");
+    }, // No-op function
   };
 }

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import NumberInputDisplay from './NumberInputDisplay';
 import SensitiveDataSection from './SensitiveDataSection';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
@@ -53,11 +53,11 @@ const MessageContent: React.FC<MessageContentProps> = ({
   const showInlineVerification = requiresVerification && !isVerified && sender === 'customer';
   
   // Debug log to check verification state
-  React.useEffect(() => {
+  useEffect(() => {
     if (requiresVerification) {
-      console.log(`Message ${messageId} verification status - requiresVerification: ${requiresVerification}, isVerified: ${isVerified}, showInlineVerification: ${showInlineVerification}`);
+      console.log(`MessageContent: Message ${messageId} verification status - requiresVerification: ${requiresVerification}, isVerified: ${isVerified}, showInlineVerification: ${showInlineVerification}, sender: ${sender}`);
     }
-  }, [requiresVerification, isVerified, messageId, showInlineVerification]);
+  }, [requiresVerification, isVerified, messageId, showInlineVerification, sender]);
 
   return (
     <div className="space-y-2">

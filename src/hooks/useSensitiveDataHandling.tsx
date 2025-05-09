@@ -70,10 +70,13 @@ export function useSensitiveDataHandling(
   }, [setMessages, setLastMessageUpdate]);
 
   /**
-   * Handle verification of system checks
+   * Handle verification of system checks - modified to never block
    */
   const handleVerifySystemCheck = useCallback((messageId: string) => {
-    console.log(`Verifying system check for message ${messageId}`);
+    console.log(`Verifying system check for message ${messageId} - inline only, no modals`);
+    
+    // Never set verification blocking to true
+    // This ensures that verification will always be inline
     
     setMessages(prevMessages =>
       prevMessages.map(message => {

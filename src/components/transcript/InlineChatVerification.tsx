@@ -28,10 +28,10 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   
   // Debug logging for verification rendering
   useEffect(() => {
-    console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying);
-  }, [isVerified, isVerifying]);
+    console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying, "isValidating:", isValidating, "autoVerifyStarted:", autoVerifyStarted);
+  }, [isVerified, isVerifying, isValidating, autoVerifyStarted]);
   
-  // Auto-submit the form after a brief delay
+  // Auto-submit the form after a brief delay - happens once
   useEffect(() => {
     if (!isVerified && !isVerifying && !autoVerifyStarted) {
       setAutoVerifyStarted(true);
@@ -73,7 +73,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   }
   
   return (
-    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md" data-testid="verification-form">
       <div className="flex items-center gap-2 mb-2">
         <ShieldCheck size={18} className="text-amber-600" />
         <p className="text-sm text-amber-700 font-medium">Customer Identity Verification</p>
