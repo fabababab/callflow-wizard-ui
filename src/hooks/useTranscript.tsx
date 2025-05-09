@@ -1,3 +1,4 @@
+
 // This is a major refactoring of the useTranscript hook to fix state transitions and response options
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -228,10 +229,10 @@ export function useTranscript(activeScenario: ScenarioType) {
       }
     };
     
-    window.addEventListener('module-completed', handleModuleCompletedEvent);
+    window.addEventListener('module-completed', handleModuleCompletedEvent as EventListener);
     
     return () => {
-      window.removeEventListener('module-completed', handleModuleCompletedEvent);
+      window.removeEventListener('module-completed', handleModuleCompletedEvent as EventListener);
     };
   }, [messageHandling.addSystemMessage]);
 
@@ -494,7 +495,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     if (!conversationState.isInitialStateProcessed) {
       console.log('Processing initial state');
       processStateChange();
-      conversationState.setInitialStateProcessed(true);
+      conversationState.setIsInitialStateProcessed(true);  // <-- THIS IS THE FIX
       return;
     }
 
