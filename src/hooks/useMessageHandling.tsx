@@ -1,226 +1,224 @@
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Message } from '@/components/transcript/Message';
-import { ValidationStatus } from '@/data/scenarioData';
-import { v4 as uuidv4 } from 'uuid';
-import { AISuggestion } from '@/components/transcript/AISuggestion';
 import { ModuleConfig } from '@/types/modules';
-
-// Define types for sensitive data stats
-interface SensitiveDataStats {
-  valid: number;
-  invalid: number;
-  pending: number;
-  total: number;
-}
-
-// New interface for system message options
-interface SystemMessageOptions {
-  requiresVerification?: boolean;
-  responseOptions?: string[];
-  inlineModule?: ModuleConfig;
-}
+import { SensitiveField } from '@/data/scenarioData';
 
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [verificationBlocking, setVerificationBlocking] = useState(false);
-  const [lastMessageUpdate, setLastMessageUpdate] = useState<Date | null>(null);
-  const messageIdCounter = useRef(0);
-  
-  // Initial stats state
-  const [sensitiveDataStats, setSensitiveDataStats] = useState<SensitiveDataStats>({
+  const [sensitiveDataStats, setSensitiveDataStats] = useState<{
+    total: number;
+    valid: number;
+    invalid: number;
+  }>({
+    total: 0,
     valid: 0,
     invalid: 0,
-    pending: 0,
-    total: 0
   });
+  const [verificationBlocking, setVerificationBlocking] = useState(false);
+  const [lastMessageUpdate, setLastMessageUpdate] = useState<Date>(new Date());
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Update stats whenever a sensitive field is validated
-  const updateSensitiveDataStats = useCallback(() => {
-    let valid = 0;
-    let invalid = 0;
-    let pending = 0;
-    let total = 0;
-
-    messages.forEach(message => {
-      if (message.sensitiveData) {
-        message.sensitiveData.forEach(field => {
-          total++;
-          if (field.status === 'valid') valid++;
-          else if (field.status === 'invalid') invalid++;
-          else pending++;
-        });
-      }
-    });
-
-    setSensitiveDataStats({ valid, invalid, pending, total });
-  }, [messages]);
-
-  // Clear all messages
-  const clearMessages = useCallback(() => {
-    setMessages([]);
-    messageIdCounter.current = 0;
-    setLastMessageUpdate(new Date());
-  }, []);
-
-  // Add a system message - Updated to accept options object instead of multiple args
-  const addSystemMessage = useCallback((text: string, options?: SystemMessageOptions) => {
-    // Special case for "customer explains their problem" messages
-    if (text === "The customer explains their problem." && 
-        messages.length > 0 && 
-        messages[messages.length - 1].text === "Call initiated with customer.") {
-      
-      // We don't add this as a system message - it will be handled by addCustomerMessage
-      console.log("Skipping system message for customer explanation, will be handled separately");
-      return;
-    }
-    
+  /**
+   * Add a system message to the transcript
+   */
+  const addSystemMessage = (text: string, options?: { responseOptions?: string[] }) => {
     const newMessage: Message = {
-      id: messageIdCounter.current.toString(),
+      id: Date.now().toString(),
       text,
       sender: 'system',
       timestamp: new Date(),
-      requiresVerification: options?.requiresVerification,
-      isVerified: false,
-      responseOptions: options?.responseOptions,
-      inlineModule: options?.inlineModule
+      systemType: 'info',
+      responseOptions: options?.responseOptions
     };
-    
-    messageIdCounter.current += 1;
-    setMessages(prev => [...prev, newMessage]);
-    setLastMessageUpdate(new Date());
-    
-    console.log("Adding system message:", text);
-    
-    if (options?.requiresVerification) {
-      setVerificationBlocking(true);
-    }
-  }, [messages]);
 
-  // Add a customer message
-  const addCustomerMessage = useCallback((text: string, suggestions: string[] = []) => {
-    // Convert string suggestions to AISuggestion objects if provided
-    const aiSuggestions: AISuggestion[] = suggestions.map((suggestion, index) => ({
-      id: index.toString(),
-      text: suggestion,
-      type: 'response'
-    }));
-    
-    const newMessage: Message = {
-      id: messageIdCounter.current.toString(),
-      text,
-      sender: 'customer',
-      timestamp: new Date(),
-      suggestions: aiSuggestions,
-    };
-    
-    messageIdCounter.current += 1;
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prevMessages => [...prevMessages, newMessage]);
     setLastMessageUpdate(new Date());
-    
-    console.log("Adding customer message:", text);
-  }, []);
+  };
 
-  // Add an agent message
-  const addAgentMessage = useCallback((text: string, suggestions: string[] = [], responseOptions?: string[]) => {
-    // Convert string suggestions to AISuggestion objects if provided
-    const aiSuggestions: AISuggestion[] = suggestions.map((suggestion, index) => ({
-      id: index.toString(),
-      text: suggestion,
-      type: 'response'
-    }));
-    
+  /**
+   * Add an agent message to the transcript
+   */
+  const addAgentMessage = (
+    text: string, 
+    suggestions: any[] = [], 
+    responseOptions?: string[]
+  ) => {
     const newMessage: Message = {
-      id: messageIdCounter.current.toString(),
+      id: Date.now().toString(),
       text,
       sender: 'agent',
       timestamp: new Date(),
-      suggestions: aiSuggestions,
+      suggestions: suggestions.length > 0 ? suggestions : undefined,
       responseOptions
     };
-    
-    messageIdCounter.current += 1;
-    setMessages(prev => [...prev, newMessage]);
-    setLastMessageUpdate(new Date());
-  }, []);
 
-  // Add a system message with an inline module
-  const addInlineModuleMessage = useCallback((text: string, moduleConfig: ModuleConfig) => {
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    setLastMessageUpdate(new Date());
+  };
+
+  /**
+   * Add a customer message to the transcript
+   */
+  const addCustomerMessage = (
+    text: string, 
+    sensitiveData?: SensitiveField[], 
+    responseOptions?: string[]
+  ) => {
     const newMessage: Message = {
-      id: messageIdCounter.current.toString(),
+      id: Date.now().toString(),
+      text,
+      sender: 'customer',
+      timestamp: new Date(),
+      sensitiveData,
+      responseOptions
+    };
+
+    // Update aggregate stats for sensitive data
+    if (sensitiveData && sensitiveData.length > 0) {
+      setSensitiveDataStats(prev => ({
+        ...prev,
+        total: prev.total + sensitiveData.length
+      }));
+    }
+
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    setLastMessageUpdate(new Date());
+  };
+
+  /**
+   * Add an inline module message
+   */
+  const addInlineModuleMessage = (text: string, moduleConfig: ModuleConfig) => {
+    const newMessage: Message = {
+      id: Date.now().toString(),
       text,
       sender: 'system',
       timestamp: new Date(),
+      systemType: 'info',
       inlineModule: moduleConfig
     };
-    
-    messageIdCounter.current += 1;
-    setMessages(prev => [...prev, newMessage]);
+
+    setMessages(prevMessages => [...prevMessages, newMessage]);
     setLastMessageUpdate(new Date());
-    
-    console.log("Adding inline module message:", text, moduleConfig);
-  }, []);
+  };
 
-  // Verify a system check
-  const handleVerifySystemCheck = useCallback((messageId: string) => {
-    setMessages(prev => 
-      prev.map(message => 
-        message.id === messageId 
-          ? { ...message, isVerified: true }
-          : message
-      )
+  /**
+   * Clear all messages from the transcript
+   */
+  const clearMessages = () => {
+    setMessages([]);
+    setSensitiveDataStats({
+      total: 0,
+      valid: 0,
+      invalid: 0,
+    });
+    setLastMessageUpdate(new Date());
+  };
+
+  /**
+   * Handle validation of sensitive data
+   */
+  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: string, notes?: string) => {
+    setMessages(prevMessages => 
+      prevMessages.map(message => {
+        if (message.id !== messageId || !message.sensitiveData) return message;
+        
+        // Find and update the specific field
+        const updatedSensitiveData = message.sensitiveData.map(field => {
+          if (field.id === fieldId) {
+            return {
+              ...field,
+              status,
+              notes,
+            };
+          }
+          return field;
+        });
+        
+        return {
+          ...message,
+          sensitiveData: updatedSensitiveData,
+        };
+      })
     );
+    
+    // Update aggregate stats
+    if (status === 'valid') {
+      setSensitiveDataStats(prev => ({
+        ...prev,
+        valid: prev.valid + 1,
+      }));
+    } else if (status === 'invalid') {
+      setSensitiveDataStats(prev => ({
+        ...prev,
+        invalid: prev.invalid + 1,
+      }));
+      
+      // Set verification blocking if any sensitive data is invalid
+      setVerificationBlocking(true);
+    }
+    
+    setLastMessageUpdate(new Date());
+  };
+
+  /**
+   * Handle verification of system checks
+   */
+  const handleVerifySystemCheck = (messageId: string) => {
+    setMessages(prevMessages =>
+      prevMessages.map(message => {
+        if (message.id !== messageId) return message;
+        
+        return {
+          ...message,
+          isVerified: true,
+        };
+      })
+    );
+    
+    // Clear verification blocking
     setVerificationBlocking(false);
-  }, []);
+    setLastMessageUpdate(new Date());
+  };
 
-  // Handle completion of an inline module
-  const handleInlineModuleComplete = useCallback((messageId: string, moduleId: string, result: any) => {
-    console.log(`Inline module ${moduleId} completed for message ${messageId}:`, result);
+  /**
+   * Handle inline module completion
+   */
+  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: any) => {
+    console.log(`Inline module ${moduleId} completed for message ${messageId} with result:`, result);
     
-    // Could update the message to reflect completion if needed
-    setMessages(prev => 
-      prev.map(message => 
-        message.id === messageId 
-          ? { 
-              ...message,
-              inlineModule: message.inlineModule ? {
-                ...message.inlineModule,
-                completed: true,
-                result
-              } : undefined
-            }
-          : message
-      )
-    );
-  }, []);
-
-  // Validate sensitive data
-  const handleValidateSensitiveData = useCallback((messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
-    setMessages(prev => 
-      prev.map(message => {
-        if (message.id === messageId && message.sensitiveData) {
-          return {
+    setMessages(prevMessages =>
+      prevMessages.map(message => {
+        if (message.id !== messageId) return message;
+        
+        // Mark the module as completed in some way
+        if (message.inlineModule && message.inlineModule.id === moduleId) {
+          const updatedMessage = {
             ...message,
-            sensitiveData: message.sensitiveData.map(field =>
-              field.id === fieldId
-                ? { ...field, status, notes: notes || field.notes }
-                : field
-            )
+            inlineModule: {
+              ...message.inlineModule,
+              completed: true,
+              result
+            }
           };
+          
+          return updatedMessage;
         }
+        
         return message;
       })
     );
     
-    // Update stats after validation
-    setTimeout(updateSensitiveDataStats, 0);
-  }, [updateSensitiveDataStats]);
+    setLastMessageUpdate(new Date());
+  };
 
   return {
     messages,
     sensitiveDataStats,
     verificationBlocking,
     lastMessageUpdate,
+    messagesEndRef,
     addSystemMessage,
     addAgentMessage,
     addCustomerMessage,
@@ -229,6 +227,6 @@ export function useMessageHandling() {
     handleValidateSensitiveData,
     handleVerifySystemCheck,
     handleInlineModuleComplete,
-    setVerificationBlocking
+    setVerificationBlocking,
   };
 }

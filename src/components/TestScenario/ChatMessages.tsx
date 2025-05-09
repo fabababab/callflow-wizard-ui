@@ -9,7 +9,7 @@ interface ChatMessagesProps {
   onVerifySystemCheck?: (messageId: string) => void;
   onValidateSensitiveData?: (messageId: string, fieldId: string, status: string, notes?: string) => void; 
   messagesEndRef?: React.RefObject<HTMLDivElement>;
-  onModuleComplete?: (moduleId: string, result: any) => void;
+  onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
@@ -47,7 +47,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           onVerifySystemCheck={onVerifySystemCheck}
           onValidateSensitiveData={onValidateSensitiveData}
           isAgentMode={isAgentMode}
-          onModuleComplete={onModuleComplete}
+          onModuleComplete={(moduleId, result) => onModuleComplete && onModuleComplete(message.id, moduleId, result)}
         />
       ))}
       <div ref={messagesEndRef} />

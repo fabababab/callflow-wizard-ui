@@ -1,384 +1,122 @@
+
 {
-  "id": "gespraechsdecisiontrees",
-  "scenarios": {
-    "leistungsabdeckung_physio": {
-      "id": "leistungsabdeckung_physio",
-      "initial": "start",
-      "states": {
-        "start": {
-          "meta": { "systemMessage": "Call initiated for physiotherapy coverage inquiry." },
-          "on": {
-            "START_CALL": "identification",
-            "DEFAULT": "identification"
-          }
-        },
-        "identification": {
-          "meta": {
-            "systemMessage": "Please identify the customer by asking for date of birth and address."
-          },
-          "on": {
-            "IDENTIFIED": "therapist_query"
-          }
-        },
-        "therapist_query": {
-          "meta": {
-            "agentText": "Um zu prüfen, ob Ihre Therapeutin anerkannt ist, nennen Sie mir bitte den Namen der Therapeutin."
-          },
-          "on": {
-            "THERAPIST_PROVIDED": "lookup_therapist"
-          }
-        },
-        "lookup_therapist": {
-          "meta": {
-            "systemMessage": "Looking up the therapist in the system."
-          },
-          "on": {
-            "RECOGNIZED": "explain_coverage",
-            "NOT_RECOGNIZED": "therapist_not_recognized",
-            "DEFAULT": "explain_coverage"
-          }
-        },
-        "therapist_not_recognized": {
-          "meta": {
-            "agentText": "Ihre Therapeutin ist leider nicht anerkannt. Sie können eine andere Therapeutin wählen oder eine Anerkennung beantragen."
-          },
-          "on": {
-            "ALTERNATIVE_THERAPIST": "provide_alternative",
-            "RECOGNITION_PROCESS": "explain_recognition_process",
-            "DEFAULT": "conclusion"
-          }
-        },
-        "provide_alternative": {
-          "meta": {
-            "agentText": "Hier sind einige anerkannte Therapeutinnen in Ihrer Region: [...]"
-          },
-          "on": {
-            "DEFAULT": "conclusion"
-          }
-        },
-        "explain_recognition_process": {
-          "meta": {
-            "agentText": "Sie können die Anerkennung beantragen, indem Sie das Formular XYZ einreichen."
-          },
-          "on": {
-            "DEFAULT": "conclusion"
-          }
-        },
-        "explain_coverage": {
-          "meta": {
-            "agentText": "Gemäss Grundversicherung benötigen Sie eine ärztliche Verordnung. Bis zu 15 Sitzungen pro Jahr werden übernommen. Bitte reichen Sie Verordnung und Rechnungen zur Rückerstattung ein."
-          },
-          "on": {
-            "ACKNOWLEDGE": "conclusion",
-            "DEFAULT": "conclusion"
-          }
-        },
-        "conclusion": {
-          "meta": {
-            "agentText": "Kann ich sonst noch etwas für Sie tun?"
-          },
-          "on": {
-            "NO": "end_call",
-            "DEFAULT": "end_call"
-          }
-        },
-        "end_call": {
-          "meta": {
-            "agentText": "Vielen Dank für Ihren Anruf. Auf Wiedersehen!"
-          },
-          "on": {
-            "CALL_ENDED": "nachbearbeitung"
-          }
-        },
-        "nachbearbeitung": {
-          "meta": {
-            "title": "Nachbearbeitung",
-            "summary": "Kunde erkundigte sich zur Übernahme der Physiotherapie; Therapeutin geprüft; Anforderungen an Verordnung und Rückerstattung erklärt.",
-            "checkboxes": [
-              { "id": "customer_identified",   "label": "Kunde identifiziert" },
-              { "id": "therapist_checked",     "label": "Therapeutin im System geprüft" },
-              { "id": "coverage_explained",    "label": "Leistungsabdeckung erklärt" }
-            ],
-            "proposition": "Verordnung und Rechnungen zur Rückerstattung anfordern."
-          },
-          "on": {
-            "CONFIRM": "complete"
-          }
-        },
-        "complete": {
-          "meta": {
-            "systemMessage": "Call completed and Nachbearbeitung bestätigt."
-          }
-        }
+  "id": "empty-state-machine",
+  "initialState": "start",
+  "states": {
+    "start": {
+      "meta": {
+        "systemMessage": "This is an empty state machine template. Add your own states and transitions."
+      },
+      "on": {
+        "START_CALL": "greeting"
       }
     },
-    "mahung_trotz_zahlung": {
-      "id": "mahung_trotz_zahlung",
-      "initial": "start",
-      "states": {
-        "start": {
-          "meta": { "systemMessage": "Call initiated for reminder despite payment." },
-          "on": {
-            "START_CALL": "identification",
-            "DEFAULT": "identification"
-          }
-        },
-        "identification": {
-          "meta": {
-            "systemMessage": "Please identify the customer by asking for date of birth and address."
-          },
-          "on": {
-            "IDENTIFIED": "issue_understanding"
-          }
-        },
-        "issue_understanding": {
-          "meta": {
-            "customerText": "Ich habe eine Mahnung erhalten, obwohl ich alle Rechnungen bezahlt habe.",
-            "suggestions": [
-              "Ich verstehe. Lassen Sie mich überprüfen, welche Forderungen noch offen sind."
-            ]
-          },
-          "on": {
-            "CHECK_RECORDS": "check_records",
-            "DEFAULT": "check_records"
-          }
-        },
-        "check_records": {
-          "meta": {
-            "systemMessage": "Überprüfe Zahlungseingänge und Nachforderungen."
-          },
-          "on": {
-            "FOUND_ADJUSTMENT": "explain_case"
-          }
-        },
-        "explain_case": {
-          "meta": {
-            "agentText": "Es handelt sich um eine Nachforderung für ein Medikament, das nachträglich eingereicht wurde. Möchten Sie die Zahlungsinformation per E-Mail erhalten?",
-            "suggestions": [
-              "Ja, senden Sie mir bitte die Zahlungsinformation zu.",
-              "Nein, ich habe noch Fragen zur Nachforderung."
-            ]
-          },
-          "on": {
-            "SEND_INFO": "send_payment_info",
-            "CLARIFY": "clarify_charge",
-            "DEFAULT": "send_payment_info"
-          }
-        },
-        "clarify_charge": {
-          "meta": {
-            "agentText": "Gerne erkläre ich Ihnen den Grund der Nachforderung und die Zahlungsfrist."
-          },
-          "on": {
-            "UNDERSTOOD": "send_payment_info",
-            "DEFAULT": "send_payment_info"
-          }
-        },
-        "send_payment_info": {
-          "meta": {
-            "agentText": "Ich sende Ihnen die Zahlungsinformation an Ihre E-Mail-Adresse. Kann ich sonst noch etwas für Sie tun?"
-          },
-          "on": {
-            "NO": "end_call",
-            "DEFAULT": "end_call"
-          }
-        },
-        "end_call": {
-          "meta": {
-            "agentText": "Vielen Dank für Ihren Anruf. Einen schönen Tag noch!"
-          },
-          "on": {
-            "CALL_ENDED": "nachbearbeitung"
-          }
-        },
-        "nachbearbeitung": {
-          "meta": {
-            "title": "Nachbearbeitung",
-            "summary": "Kunde erhielt Mahnung trotz Zahlung; Nachforderung für Medikament erklärt; Zahlungsinfo gesendet.",
-            "checkboxes": [
-              { "id": "customer_identified", "label": "Kunde identifiziert" },
-              { "id": "records_checked",    "label": "Zahlungen und Forderungen geprüft" },
-              { "id": "info_sent",          "label": "Zahlungsinformation gesendet" }
-            ],
-            "proposition": "Nachforderung in Kundenkonto vermerken und E-Mail‐Versand bestätigen."
-          },
-          "on": {
-            "CONFIRM": "complete"
-          }
-        },
-        "complete": {
-          "meta": {
-            "systemMessage": "Call completed and Nachbearbeitung bestätigt."
-          }
-        }
+    "greeting": {
+      "meta": {
+        "agentText": "Hello, how can I assist you today?",
+        "customerText": "I need some help with my account."
+      },
+      "on": {
+        "I'll help you with your account": "account_options",
+        "Could you provide more details?": "more_details",
+        "I'm sorry to hear that": "account_options",
+        "DEFAULT": "more_details"
       }
     },
-    "neues_krankenkassenpaket": {
-      "id": "neues_krankenkassenpaket",
-      "initial": "start",
-      "states": {
-        "start": {
-          "meta": { "systemMessage": "Call initiated for policy adjustment after graduation." },
-          "on": {
-            "START_CALL": "identification",
-            "DEFAULT": "identification"
-          }
-        },
-        "identification": {
-          "meta": {
-            "systemMessage": "Please identify the customer by asking for date of birth and address."
-          },
-          "on": {
-            "IDENTIFIED": "present_problem"
-          }
-        },
-        "present_problem": {
-          "meta": {
-            "customerText": "Studium abgeschlossen; fragt, ob sich etwas an der Versicherung ändert und ob Anpassung von Franchise oder Modell sinnvoll ist.",
-            "specificInfo": {
-              "Aktuell": {
-                "Modell": "Tel-Med",
-                "Franchise": "2'500 CHF",
-                "Prämie": "200.-"
-              },
-              "MöglicheAnpassungen": "Franchise senken oder Modell wechseln"
-            },
-            "suggestions": [
-              "Mehr Informationen zu Modellen",
-              "Mehr Informationen zu Franchise"
-            ]
-          },
-          "on": {
-            "Mehr Informationen zu Modellen": "moreModels",
-            "Mehr Informationen zu Franchise": "moreFranchise",
-            "DEFAULT": "notAsked"
-          }
-        },
-        "notAsked": {
-          "meta": {
-            "errorMessage": "Das wurde vom Kunden nicht gefragt."
-          },
-          "on": {
-            "Mehr Informationen zu Modellen": "moreModels",
-            "DEFAULT": "moreModels"
-          }
-        },
-        "moreModels": {
-          "meta": {
-            "modelOptions": [
-              { "name": "Standardmodell", "info": "Freie Arztwahl, CHF 290–330/Monat" },
-              { "name": "Hausarztmodell", "info": "CHF 240–270/Monat" },
-              { "name": "Telmed-Modell", "info": "CHF 220–250/Monat" },
-              { "name": "HMO-Modell", "info": "CHF 230–260/Monat" }
-            ],
-            "suggestions": [
-              "Keine Änderung, aber was würde eine Franchisenänderung ausmachen?",
-              "Wechsel zum Standardmodell",
-              "Wechsel zum Hausarztmodell",
-              "Wechsel zum HMO-Modell"
-            ]
-          },
-          "on": {
-            "Keine Änderung, aber was würde eine Franchisenänderung ausmachen?": "moreFranchise",
-            "Wechsel zum Standardmodell": "notAskedModel",
-            "Wechsel zum Hausarztmodell": "notAskedModel",
-            "Wechsel zum HMO-Modell": "notAskedModel",
-            "DEFAULT": "notAskedModel"
-          }
-        },
-        "notAskedModel": {
-          "meta": {
-            "errorMessage": "Das wurde vom Kunden nicht gefragt."
-          },
-          "on": {
-            "Mehr Informationen zu Franchise": "moreFranchise",
-            "DEFAULT": "moreFranchise"
-          }
-        },
-        "moreFranchise": {
-          "meta": {
-            "franchiseTable": [
-              { "Franchise": "300",  "Prämie": "400" },
-              { "Franchise": "500",  "Prämie": "360" },
-              { "Franchise": "1000", "Prämie": "310" },
-              { "Franchise": "1500", "Prämie": "270" },
-              { "Franchise": "2000", "Prämie": "240" },
-              { "Franchise": "2500", "Prämie": "220" }
-            ],
-            "info": "Wenn Arztkosten < 2000 CHF erwartet werden, spart man mit hoher Franchise.",
-            "suggestions": [
-              "CHF 300",
-              "CHF 500",
-              "CHF 1000",
-              "CHF 1500",
-              "CHF 2000",
-              "CHF 2500"
-            ]
-          },
-          "on": {
-            "CHF 1000": "changeFranchise",
-            "CHF 300": "notDecided",
-            "CHF 500": "notDecided",
-            "CHF 1500": "notDecided",
-            "CHF 2000": "notDecided",
-            "CHF 2500": "notDecided",
-            "DEFAULT": "notDecided"
-          }
-        },
-        "notDecided": {
-          "meta": {
-            "errorMessage": "Das wurde vom Kunden nicht entschieden."
-          },
-          "on": {
-            "Franchise 1000": "changeFranchise",
-            "DEFAULT": "changeFranchise"
-          }
-        },
-        "changeFranchise": {
-          "meta": {
-            "agentText": "Franchise wurde für das nächste Jahr auf CHF 1 000.– angepasst."
-          },
-          "on": {
-            "DEFAULT": "conclusion"
-          }
-        },
-        "conclusion": {
-          "meta": {
-            "agentText": "Kann ich sonst noch etwas für Sie tun?"
-          },
-          "on": {
-            "NO": "end_call",
-            "DEFAULT": "end_call"
-          }
-        },
-        "end_call": {
-          "meta": {
-            "agentText": "Vielen Dank für Ihren Anruf. Auf Wiedersehen!"
-          },
-          "on": {
-            "CALL_ENDED": "nachbearbeitung"
-          }
-        },
-        "nachbearbeitung": {
-          "meta": {
-            "title": "Nachbearbeitung",
-            "summary": "Kunde hat Studium abgeschlossen; Modell‐ und Franchisemöglichkeiten erklärt; Franchise auf CHF 1 000.– angepasst.",
-            "checkboxes": [
-              { "id": "customer_identified",  "label": "Kunde identifiziert" },
-              { "id": "options_explained",   "label": "Optionen besprochen" },
-              { "id": "franchise_changed",    "label": "Franchise angepasst" }
-            ],
-            "proposition": "Anpassung für nächstes Jahr im System einleiten."
-          },
-          "on": {
-            "CONFIRM": "complete"
-          }
-        },
-        "complete": {
-          "meta": {
-            "systemMessage": "Call completed and Nachbearbeitung bestätigt."
-          }
-        }
+    "more_details": {
+      "meta": {
+        "agentText": "Could you provide more details about your account issue?",
+        "customerText": "I can't access my online banking."
+      },
+      "on": {
+        "I'll help you regain access": "solution",
+        "When did you first notice this issue?": "timeline",
+        "Have you tried resetting your password?": "password_reset",
+        "DEFAULT": "solution"
+      }
+    },
+    "account_options": {
+      "meta": {
+        "agentText": "I'll be happy to help with your account. What specific issue are you experiencing?",
+        "customerText": "I can't access my online banking since yesterday."
+      },
+      "on": {
+        "Let me help you troubleshoot this": "solution",
+        "Have you tried accessing from a different device?": "device_check",
+        "I'll guide you through the password reset process": "password_reset",
+        "DEFAULT": "solution"
+      }
+    },
+    "timeline": {
+      "meta": {
+        "agentText": "When did you first notice this issue with your account?",
+        "customerText": "It started yesterday evening when I tried to log in."
+      },
+      "on": {
+        "Let's troubleshoot this issue": "solution",
+        "Did you receive any error messages?": "error_messages",
+        "DEFAULT": "solution"
+      }
+    },
+    "password_reset": {
+      "meta": {
+        "agentText": "Have you tried resetting your password? That often resolves access issues.",
+        "customerText": "No, I haven't tried that yet. How do I do that?"
+      },
+      "on": {
+        "I'll guide you through the password reset process": "solution",
+        "Go to the login page and click 'Forgot Password'": "solution",
+        "DEFAULT": "solution"
+      }
+    },
+    "device_check": {
+      "meta": {
+        "agentText": "Have you tried accessing your account from a different device or browser?",
+        "customerText": "Yes, I tried on both my phone and computer. Same issue."
+      },
+      "on": {
+        "In that case, let's try resetting your password": "password_reset",
+        "Let me check if there are any system issues": "solution",
+        "DEFAULT": "solution"
+      }
+    },
+    "error_messages": {
+      "meta": {
+        "agentText": "Did you receive any specific error messages when trying to log in?",
+        "customerText": "Yes, it said 'Your account has been temporarily locked for security reasons.'"
+      },
+      "on": {
+        "I'll help you unlock your account": "solution",
+        "This is a security measure to protect your account": "solution",
+        "DEFAULT": "solution"
+      }
+    },
+    "solution": {
+      "meta": {
+        "agentText": "I understand the issue now. To regain access to your account, I'll need to verify your identity and then we can reset your security settings. Would that be okay?",
+        "customerText": "Yes, that would be great. Thank you!"
+      },
+      "on": {
+        "I'm glad I could help": "conclusion",
+        "Let's proceed with the verification": "conclusion",
+        "Is there anything else you need help with today?": "conclusion",
+        "DEFAULT": "conclusion"
+      }
+    },
+    "conclusion": {
+      "meta": {
+        "agentText": "I'm glad we could resolve your issue today. Is there anything else I can help you with?",
+        "customerText": "No, that's all. Thank you for your help!"
+      },
+      "on": {
+        "You're welcome. Have a great day!": "end",
+        "Thank you for calling. Goodbye!": "end",
+        "DEFAULT": "end"
+      }
+    },
+    "end": {
+      "meta": {
+        "systemMessage": "Call completed successfully."
       }
     }
   }

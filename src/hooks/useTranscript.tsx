@@ -108,6 +108,36 @@ export function useTranscript(activeScenario: ScenarioType) {
     }
   };
 
+  // Function to extract available transitions from the current state
+  const extractTransitionsAsResponseOptions = (state: string) => {
+    if (!stateMachine || !stateMachine.states[state]) return [];
+    
+    const currentStateData = stateMachine.states[state];
+    const options: string[] = [];
+    
+    // First check if there are responseOptions explicitly defined
+    if (currentStateData.meta?.responseOptions && currentStateData.meta.responseOptions.length > 0) {
+      return currentStateData.meta.responseOptions;
+    }
+    
+    // If no explicit responseOptions, extract them from the transitions
+    if (currentStateData.on) {
+      // Get all available transitions except special ones like DEFAULT and START_CALL
+      for (const transition in currentStateData.on) {
+        if (transition !== 'DEFAULT' && transition !== 'START_CALL') {
+          options.push(transition);
+        }
+      }
+    }
+    
+    // If we have no transitions or only special ones, check for nextState as fallback
+    if (options.length === 0 && currentStateData.nextState) {
+      options.push("Continue");
+    }
+    
+    return options;
+  };
+
   // Update to properly update UI when state changes, with debouncing and duplicate prevention
   useEffect(() => {
     if (!stateData || !callActive || !lastStateChange) {
@@ -140,35 +170,21 @@ export function useTranscript(activeScenario: ScenarioType) {
         // Detect sensitive data in customer text
         const sensitiveData = detectSensitiveData(stateData.meta.customerText);
         
-        // Add customer message with detected sensitive data
-        const message = {
-          id: Math.random().toString(),
-          text: stateData.meta.customerText,
-          sender: 'customer' as const,
-          timestamp: new Date(),
-          sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined
-        };
+        // Extract response options from transitions
+        const responseOptions = extractTransitionsAsResponseOptions(currentState);
+        console.log(`Extracted response options for state ${currentState}:`, responseOptions);
         
-        // Add the customer message with potential sensitive data
-        addCustomerMessage(stateData.meta.customerText);
+        // Add customer message with detected sensitive data and response options
+        addCustomerMessage(stateData.meta.customerText, sensitiveData, responseOptions);
         
         // Set flag that we're waiting for user to respond
         setAwaitingUserResponse(true);
-
-        // If this state has response options, add them to the last customer message
-        if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
-          const lastMessage = messages[messages.length - 1];
-          if (lastMessage && lastMessage.sender === 'customer') {
-            // Update the last message with response options
-            messages[messages.length - 1].responseOptions = stateData.meta.responseOptions;
-          }
-        }
       }
       
       if (stateData.meta?.agentText && !isUserAction) {
         console.log(`Adding agent message: ${stateData.meta.agentText}`);
         
-        // Check if there are response options to add after the agent message
+        // Extract response options for next state if needed
         const responseOptions = stateData.meta?.responseOptions || [];
         addAgentMessage(stateData.meta.agentText, [], responseOptions.length > 0 ? responseOptions : undefined);
       }
@@ -203,7 +219,7 @@ export function useTranscript(activeScenario: ScenarioType) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates, isUserAction, messages, addInlineModuleMessage]);
+  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates, isUserAction, messages, addInlineModuleMessage, stateMachine]);
   
   // Update when messages update
   useEffect(() => {
