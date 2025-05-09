@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
 import { useCustomerScenario } from '@/hooks/useCustomerScenario';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -11,13 +10,11 @@ import { loadStateMachine, StateMachine, StateMachineState } from '@/utils/state
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
 import TranscriptPanel from '@/components/TranscriptPanel'; 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from '@/components/ui/button';
 import { FileJson, LayoutDashboard, Shield, AlertTriangle, Info, Database } from 'lucide-react';
 import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
-import { Button } from '@/components/ui/button';
-import { SensitiveField } from '@/data/scenarioData';
 import { Badge } from '@/components/ui/badge';
-import { useModuleManager } from '@/hooks/useModuleManager';
+import { SensitiveField } from '@/data/scenarioData';
 
 // New interface to track selected state details for the modal
 interface SelectedStateDetails {
@@ -27,28 +24,27 @@ interface SelectedStateDetails {
 }
 
 const TestScenario = () => {
-  const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
-  const [showJsonDialog, setShowJsonDialog] = useState(false); // Make sure this is initialized as false
+  const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("testscenario");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [jsonContent, setJsonContent] = useState<string>("");
   const transcriptRef = useRef<HTMLDivElement>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Initialize sidebar as collapsed
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
   
-  // New state for selected state details and sensitive fields
+  // State for selected state details and sensitive fields
   const [selectedStateDetails, setSelectedStateDetails] = useState<SelectedStateDetails | null>(null);
   const [showSensitiveFieldDetails, setShowSensitiveFieldDetails] = useState<SensitiveField | null>(null);
 
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(selectedStateMachine);
 
-  // Choose the appropriate state machine based on the mode
+  // Choose the appropriate state machine based on the mode (always agent mode now)
   const customerScenario = useCustomerScenario();
   const physioCoverage = usePhysioCoverageStateMachine();
-
-  // Use the appropriate scenario based on the mode
-  const activeScenario = isAgentMode ? customerScenario : physioCoverage;
+  
+  // Always use agent mode
+  const activeScenario = customerScenario;
   const {
     currentState,
     isLoading,
@@ -88,6 +84,22 @@ const TestScenario = () => {
     setShowSensitiveFieldDetails(null);
   };
 
+  // Listen for JSON visualization toggle events from TranscriptPanel
+  useEffect(() => {
+    const handleToggleJsonVisualization = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && customEvent.detail.hasOwnProperty('visible')) {
+        setShowJsonDialog(customEvent.detail.visible);
+      }
+    };
+
+    window.addEventListener('toggle-json-visualization', handleToggleJsonVisualization as EventListener);
+    
+    return () => {
+      window.removeEventListener('toggle-json-visualization', handleToggleJsonVisualization as EventListener);
+    };
+  }, []);
+
   // Listen for scenario change events from the TranscriptPanel
   useEffect(() => {
     const handleScenarioChange = (event: CustomEvent) => {
@@ -109,7 +121,7 @@ const TestScenario = () => {
     async function fetchStateMachine() {
       if (selectedStateMachine) {
         try {
-          // Clear messages immediately when a new state machine is selected
+          // Reset transcript and any active modules when scenario changes
           transcript.resetConversation();
           
           const machine = await loadStateMachine(selectedStateMachine);
@@ -125,15 +137,6 @@ const TestScenario = () => {
             transcript.handleHangUpCall();
           }
           
-          // Automatically start a new call after selecting a new state machine
-          setTimeout(() => {
-            // Start a new call with the selected state machine
-            transcript.handleCall();
-            
-            // Scroll to the transcript panel to show the new conversation
-            scrollToTranscript();
-          }, 300); // Short delay to ensure UI is updated
-          
         } catch (error) {
           console.error("Failed to load state machine:", error);
         }
@@ -147,11 +150,6 @@ const TestScenario = () => {
     if (transcriptRef.current) {
       transcriptRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  // Sidebar collapse toggle handler
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
   };
 
   // Toggle view mode between JSON and visualization
@@ -206,7 +204,7 @@ const TestScenario = () => {
         </div>
       </SidebarProvider>
 
-      {/* Dialog to display the JSON file and visualization - using Portal to ensure proper rendering */}
+      {/* Dialog to display the JSON file and visualization */}
       <Dialog open={showJsonDialog} onOpenChange={setShowJsonDialog}>
         <DialogContent className="max-w-4xl max-h-[80vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-background">
           <DialogHeader>

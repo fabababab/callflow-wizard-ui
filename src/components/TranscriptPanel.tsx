@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Button } from '@/components/ui/button';
-import { Shield, MessageCircle, Phone, PhoneOff, AlertTriangle, Mic, MicOff, RefreshCw } from 'lucide-react';
+import { Shield, MessageCircle, Phone, PhoneOff, AlertTriangle, Mic, MicOff, RefreshCw, FileJson } from 'lucide-react';
 import ChatMessages from '@/components/TestScenario/ChatMessages';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -20,6 +20,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 }) => {
   // Use the transcript hook with the active scenario
   const transcript = useTranscript(activeScenario);
+  const [showJsonDialog, setShowJsonDialog] = useState(false);
   
   // Scroll to bottom whenever messages are updated
   useEffect(() => {
@@ -44,6 +45,17 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     console.log('Module completed with result:', result);
     transcript.handleModuleComplete(result);
   };
+
+  // Toggle JSON dialog visibility
+  const toggleJsonDialog = () => {
+    setShowJsonDialog(!showJsonDialog);
+    
+    // Dispatch event for JSON visualization
+    const event = new CustomEvent('toggle-json-visualization', {
+      detail: { visible: !showJsonDialog }
+    });
+    window.dispatchEvent(event);
+  };
   
   return (
     <div className="flex flex-col h-full">
@@ -63,6 +75,34 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
               title="Reset conversation"
             >
               <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleJsonDialog}
+              className="flex items-center gap-1"
+            >
+              <FileJson className="h-4 w-4 mr-1" />
+              JSON
+            </Button>
+            
+            <Button 
+              size="sm" 
+              variant={transcript.callActive ? "destructive" : "default"}
+              onClick={transcript.handleCall}
+            >
+              {transcript.callActive ? (
+                <>
+                  <PhoneOff className="h-3.5 w-3.5 mr-1" /> End Call
+                </>
+              ) : (
+                <>
+                  <Phone className="h-3.5 w-3.5 mr-1" /> Start Call
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -95,6 +135,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           onVerifySystemCheck={transcript.handleVerifySystemCheck}
           onValidateSensitiveData={transcript.handleValidateSensitiveData}
           messagesEndRef={transcript.messagesEndRef}
+          onModuleComplete={transcript.handleInlineModuleComplete}
         />
       </ScrollArea>
       
@@ -131,22 +172,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
               ) : (
                 <>
                   <Mic className="h-3.5 w-3.5 mr-1" /> Start Recording
-                </>
-              )}
-            </Button>
-            
-            <Button 
-              size="sm" 
-              variant={transcript.callActive ? "destructive" : "default"}
-              onClick={transcript.handleCall}
-            >
-              {transcript.callActive ? (
-                <>
-                  <PhoneOff className="h-3.5 w-3.5 mr-1" /> End Call
-                </>
-              ) : (
-                <>
-                  <Phone className="h-3.5 w-3.5 mr-1" /> Start Call
                 </>
               )}
             </Button>
