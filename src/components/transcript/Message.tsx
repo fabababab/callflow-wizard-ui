@@ -1,15 +1,15 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { MessageSquare, ChevronRight, Shield, Check } from 'lucide-react';
-import AISuggestions, { AISuggestion } from './AISuggestion';
-import ValidationField from './ValidationField';
+import { MessageSender } from './MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 import { ModuleConfig } from '@/types/modules';
-import ModuleContainer from '../modules/ModuleContainer';
-
-export type MessageSender = 'agent' | 'customer' | 'system';
+import AISuggestions, { AISuggestion } from './AISuggestion';
+import MessageHeader from './MessageHeader';
+import NumberInputDisplay from './NumberInputDisplay';
+import VerificationButton from './VerificationButton';
+import SensitiveDataSection from './SensitiveDataSection';
+import ResponseOptions from './ResponseOptions';
+import InlineModuleDisplay from './InlineModuleDisplay';
 
 export type Message = {
   id: string;
@@ -61,17 +61,16 @@ interface MessageProps {
 
 const Message: React.FC<MessageProps> = ({ 
   message, 
-  onAcceptSuggestion, 
+  onAcceptSuggestion,
   onRejectSuggestion,
   onSelectResponse,
   onValidateSensitiveData,
   onVerifySystemCheck,
-  isAgentMode = true, // Default to agent mode
+  isAgentMode = true,
   onModuleComplete
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
-  const hasSensitiveData = message.sensitiveData && message.sensitiveData.length > 0;
   const hasNumberInput = message.numberInput !== undefined;
   const requiresVerification = message.requiresVerification && !message.isVerified;
   const hasInlineModule = message.inlineModule !== undefined;
@@ -99,12 +98,6 @@ const Message: React.FC<MessageProps> = ({
       onModuleComplete(message.inlineModule.id, result);
     }
   };
-
-  // Handler for module close
-  const handleModuleClose = () => {
-    // Just log for now, might need additional handling
-    console.log("Module closed");
-  };
   
   // Handler for response selection
   const handleSelectResponse = (response: string) => {
@@ -124,105 +117,47 @@ const Message: React.FC<MessageProps> = ({
             ? 'bg-secondary text-secondary-foreground mr-auto' 
             : 'bg-muted text-center italic text-sm w-full'}`}
       >
-        <div className="flex justify-between items-center mb-1">
-          <Badge
-            variant="outline"
-            className={`text-xs text-white ${message.sender === 'agent' ? 'bg-primary/20' : 'bg-secondary/20'}`}
-          >
-            {message.sender === 'agent' ? 'You' : 
-             message.sender === 'customer' ? 'Customer' : 'System'}
-          </Badge>
-          <span className="text-xs opacity-70">
-            {typeof message.timestamp === 'string' ? message.timestamp : message.timestamp.toLocaleTimeString()}
-          </span>
-        </div>
+        <MessageHeader sender={message.sender} timestamp={message.timestamp} />
         
         <p className="text-sm whitespace-pre-wrap">{message.text}</p>
         
         {/* Display number matching visualization */}
-        {hasNumberInput && (
-          <div className="mt-2 p-2 rounded bg-secondary/10 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-xs font-medium">Input: <strong>{message.numberInput.userValue}</strong></span>
-              <span className="text-xs font-medium">System: <strong>{message.numberInput.systemValue}</strong></span>
-            </div>
-            {message.numberInput.matched ? (
-              <div className="bg-green-100 text-green-700 p-1 rounded-full">
-                <Check className="h-4 w-4" />
-              </div>
-            ) : (
-              <span className="text-yellow-500 text-xs font-medium">No match</span>
-            )}
-          </div>
+        {hasNumberInput && message.numberInput && (
+          <NumberInputDisplay 
+            userValue={message.numberInput.userValue}
+            systemValue={message.numberInput.systemValue}
+            matched={message.numberInput.matched}
+          />
         )}
 
-        {/* Display verification button if needed */}
-        {requiresVerification && (
-          <div className="mt-2 p-2 rounded bg-yellow-50 border border-yellow-200">
-            <p className="text-sm text-yellow-700 mb-1">This requires manual verification to continue</p>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={handleVerify}
-              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-            >
-              Verify and Continue
-            </Button>
-          </div>
-        )}
-
-        {message.isVerified && (
-          <div className="mt-2 flex items-center gap-1 text-green-700">
-            <Check className="h-4 w-4" />
-            <span className="text-xs">Verified</span>
-          </div>
-        )}
+        {/* Display verification button or verified state */}
+        <VerificationButton 
+          requiresVerification={!!requiresVerification} 
+          isVerified={message.isVerified}
+          onVerify={handleVerify}
+        />
         
         {/* Display sensitive data validation fields if present */}
-        {hasSensitiveData && message.sender === 'customer' && (
-          <div className="mt-3 pt-2 border-t border-gray-300/20">
-            <div className="text-xs font-medium flex items-center gap-1 mb-2">
-              <Shield size={12} />
-              <span>Sensitive Data Detected</span>
-            </div>
-            <div className="space-y-2">
-              {message.sensitiveData.map((field) => (
-                <ValidationField 
-                  key={field.id} 
-                  field={field} 
-                  onValidate={(status, notes) => handleValidate(field.id, status, notes)} 
-                />
-              ))}
-            </div>
-          </div>
+        {message.sensitiveData && message.sender === 'customer' && (
+          <SensitiveDataSection 
+            sensitiveData={message.sensitiveData}
+            onValidate={handleValidate}
+          />
         )}
         
         {/* Display response options if any are provided */}
-        {hasResponseOptions && isAgentMode && (
-          <div className="mt-3 pt-2 border-t border-gray-300/20">
-            <div className="text-xs font-medium mb-2">Response Options:</div>
-            <div className="space-y-1">
-              {message.responseOptions.map((option, idx) => (
-                <Button
-                  key={idx}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-sm"
-                  onClick={() => handleSelectResponse(option)}
-                >
-                  <span className="truncate">{option}</span>
-                  <ChevronRight className="h-3 w-3 ml-auto" />
-                </Button>
-              ))}
-            </div>
-          </div>
+        {hasResponseOptions && isAgentMode && message.responseOptions && (
+          <ResponseOptions
+            options={message.responseOptions}
+            onSelectResponse={handleSelectResponse}
+          />
         )}
         
         {/* Display AI suggestions if any are provided */}
         {hasSuggestions && isAgentMode && (
           <div className="mt-3 pt-2 border-t border-gray-300/20">
             <AISuggestions 
-              suggestions={message.suggestions} 
+              suggestions={message.suggestions || []} 
               messageId={message.id}
               onAccept={onAcceptSuggestion}
               onReject={onRejectSuggestion}
@@ -232,21 +167,11 @@ const Message: React.FC<MessageProps> = ({
       </div>
 
       {/* Display inline module if present */}
-      {hasInlineModule && (
-        <div className="w-full max-w-md mx-auto mt-2">
-          {message.inlineModule && (
-            <ModuleContainer
-              moduleConfig={{
-                ...message.inlineModule,
-                data: { ...(message.inlineModule.data || {}), isInline: true }
-              }}
-              onClose={handleModuleClose}
-              onComplete={handleModuleComplete}
-              currentState=""
-              stateData={null}
-            />
-          )}
-        </div>
+      {hasInlineModule && message.inlineModule && (
+        <InlineModuleDisplay 
+          moduleConfig={message.inlineModule}
+          onComplete={handleModuleComplete}
+        />
       )}
     </div>
   );
