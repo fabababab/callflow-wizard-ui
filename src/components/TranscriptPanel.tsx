@@ -73,6 +73,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     transcript.handleInlineModuleComplete(messageId, moduleId, result);
   };
   
+  // Count pending verifications
+  const pendingVerifications = transcript.messages?.filter(
+    m => m.requiresVerification && !m.isVerified
+  ).length || 0;
+  
   return (
     <div className="flex flex-col h-full">
       {/* Header with call control */}
@@ -93,7 +98,10 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
       <div className="flex-grow overflow-auto relative">
         <ScrollArea className="h-full p-4">
           {/* Verification banner */}
-          <VerificationBanner isVisible={transcript.verificationBlocking} />
+          <VerificationBanner 
+            isVisible={transcript.verificationBlocking} 
+            pendingVerifications={pendingVerifications}
+          />
           
           {/* Chat messages */}
           <ChatMessages
