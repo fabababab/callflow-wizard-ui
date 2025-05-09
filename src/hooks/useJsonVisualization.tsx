@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { loadStateMachine, getStateJson, StateMachine } from '@/utils/stateMachineLoader';
+import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { SensitiveField } from '@/data/scenarioData';
 
 // Interface to track selected state details
