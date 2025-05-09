@@ -50,10 +50,10 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
       <div className="p-4 border-b bg-slate-50">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {/* Scenario selector */}
+            {/* Scenario selector - changing prop name from onScenarioChange to onSelectScenario */}
             <ScenarioSelector 
               activeScenario={activeScenario}
-              onScenarioChange={handleScenarioChange}
+              onSelectScenario={handleScenarioChange}
             />
             
             <Button 
