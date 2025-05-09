@@ -1,90 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Mic, CornerDownLeft, PhoneCall, PhoneOff, Clock, AlertCircle, ExternalLink, FileJson, MessageSquare, RefreshCw, LayoutDashboard } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScenarioType } from './ScenarioSelector';
+
+import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
-import MessageComponent, { Message as MessageType } from './transcript/Message';
-import SystemMessageGroup from './transcript/SystemMessageGroup';
-import IncomingCallCard from './transcript/IncomingCall';
-import PreCallInfo from './transcript/PreCallInfo';
-import { incomingCalls as scenarioIncomingCalls, preCalls as scenarioPreCalls, SensitiveField, ValidationStatus, SensitiveDataType } from '@/data/scenarioData';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { getStateMachineJson, hasStateMachine, getAvailableStateMachines } from '@/utils/stateMachineLoader';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import CallControl from './TestScenario/CallControl';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DecisionTreeVisualizer from './DecisionTreeVisualizer';
-
-// Define the PreCall type to match what PreCallInfo component expects
-export type PreCall = {
-  id: string; // Updated to string to match PreCallInfo
-  timestamp: string;
-  agent: string;
-  content: string;
-  response: string;
-  customerName: string;
-  callType: string;
-};
-
-// Convert PreCallInfo[] to Precall[]
-const convertPreCallsToPrecallFormat = (): PreCall[] => {
-  return scenarioPreCalls.map(preCall => ({
-    id: preCall.id,
-    timestamp: '14:32:15',
-    // Default time
-    agent: 'RoboVoice',
-    content: preCall.content,
-    response: preCall.title,
-    // Using title as response
-    customerName: scenarioIncomingCalls[0]?.name || 'Customer',
-    callType: 'Support Call'
-  }));
-};
-
-// Convert IncomingCall to IncomingCallWithCustomFields
-type IncomingCallWithCustomFields = {
-  id: string; // Updated to string to match IncomingCall
-  customerName: string;
-  phoneNumber: string;
-  waitTime: string;
-  callType: string;
-  priority: 'low' | 'medium' | 'high';
-  expertise: string;
-  matchScore: number;
-  caseHistory: any[];
-  roboCallSummary: {
-    duration: string;
-    intents: string[];
-    sentiment: string;
-    keyPoints: string[];
-  };
-};
-
-// Convert IncomingCall[] to IncomingCallWithCustomFields[]
-const convertIncomingCallsToCustomFormat = (): IncomingCallWithCustomFields[] => {
-  return scenarioIncomingCalls.map(call => ({
-    id: call.id,
-    customerName: call.name,
-    phoneNumber: call.phoneNumber,
-    waitTime: `${call.waitTime}s`,
-    callType: call.reason,
-    priority: call.urgency,
-    expertise: call.company || 'General Inquiry',
-    matchScore: 80,
-    caseHistory: [],
-    roboCallSummary: {
-      duration: '0m 0s',
-      intents: [],
-      sentiment: 'Neutral',
-      keyPoints: []
-    }
-  }));
-};
+import { ScenarioType } from '@/components/ScenarioSelector';
+import { Button } from '@/components/ui/button';
+import { Shield, MessageCircle, Phone, PhoneOff, AlertTriangle, Mic, MicOff, RefreshCw } from 'lucide-react';
+import ChatMessages from '@/components/TestScenario/ChatMessages';
+import { Separator } from '@/components/ui/separator';
+import { Card } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import ScenarioSelector from './ScenarioSelector';
+import ModuleContainer from '@/components/modules/ModuleContainer';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -93,381 +18,185 @@ interface TranscriptPanelProps {
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   activeScenario
 }) => {
-  const [historyCollapsed, setHistoryCollapsed] = useState(true);
-  const [showStateMachineInfo, setShowStateMachineInfo] = useState(false);
-  const [isJsonDialogOpen, setIsJsonDialogOpen] = useState(false);
-  const [jsonContent, setJsonContent] = useState<string>("");
-  const [isLoadingJson, setIsLoadingJson] = useState(false);
-  const [availableScenarios, setAvailableScenarios] = useState<ScenarioType[]>([]);
-  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
-  console.log("TranscriptPanel rendering with scenario:", activeScenario);
-
-  // Convert the scenario data to the expected format
-  const preCalls = convertPreCallsToPrecallFormat();
-  const incomingCalls = convertIncomingCallsToCustomFormat();
-  const {
-    messages,
-    isRecording,
-    callActive,
-    elapsedTime,
-    acceptedCallId,
-    messagesEndRef,
-    handleAcceptSuggestion,
-    handleRejectSuggestion,
-    handleSelectResponse,
-    toggleRecording,
-    handleCall,
-    handleAcceptCall,
-    currentState,
-    stateData,
-    lastStateChange,
-    handleHangUpCall,
-    resetConversation
-  } = useTranscript(activeScenario);
-
-  // Check if this scenario has a state machine
-  const hasStateMachineAvailable = activeScenario && hasStateMachine(activeScenario);
-
-  // Load available state machines
+  const [isAgentMode, setIsAgentMode] = useState(true);
+  
+  // Use the transcript hook with the active scenario
+  const transcript = useTranscript(activeScenario);
+  
+  // Scroll to bottom whenever messages are updated
   useEffect(() => {
-    const loadScenarios = async () => {
-      // Filter to only include testscenario and scenario2
-      const machines = await getAvailableStateMachines();
-      const filteredMachines = machines.filter(machine => 
-        machine === 'testscenario' || machine === 'scenario2');
-      setAvailableScenarios(filteredMachines);
-    };
-    loadScenarios();
-  }, []);
-
-  // Group consecutive system messages
-  const groupedMessages = React.useMemo(() => {
-    const result: (MessageType | MessageType[])[] = [];
-    let systemMessageGroup: MessageType[] = [];
-    
-    messages.forEach(message => {
-      if (message.sender === 'system') {
-        // Add to current system message group
-        // Need to convert the useMessageHandling Message type to MessageType from Message component
-        const convertedMessage: MessageType = {
-          ...message,
-          sensitiveData: message.sensitiveData ? message.sensitiveData.map(field => ({
-            ...field,
-            type: field.type as SensitiveDataType // Type assertion to match the expected SensitiveDataType
-          })) : undefined
-        };
-        systemMessageGroup.push(convertedMessage);
-      } else {
-        // If we have system messages stored, push them first
-        if (systemMessageGroup.length > 0) {
-          result.push([...systemMessageGroup]);
-          systemMessageGroup = [];
-        }
-        // Then push the current non-system message
-        // Also convert non-system message types
-        const convertedMessage: MessageType = {
-          ...message,
-          sensitiveData: message.sensitiveData ? message.sensitiveData.map(field => ({
-            ...field,
-            type: field.type as SensitiveDataType // Type assertion to match the expected SensitiveDataType
-          })) : undefined
-        };
-        result.push(convertedMessage);
-      }
-    });
-    
-    // Don't forget any remaining system messages
-    if (systemMessageGroup.length > 0) {
-      result.push([...systemMessageGroup]);
+    if (transcript.messagesEndRef.current) {
+      transcript.messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-    
-    return result;
-  }, [messages]);
+  }, [transcript.lastTranscriptUpdate]);
 
-  // Function to open the JSON dialog
-  const handleViewJson = async () => {
-    if (!activeScenario) return;
-    setIsLoadingJson(true);
-    try {
-      const json = await getStateMachineJson(activeScenario);
-      setJsonContent(json);
-      setIsJsonDialogOpen(true);
-    } catch (error) {
-      console.error("Failed to load JSON:", error);
-      setJsonContent("Error loading state machine JSON");
-    } finally {
-      setIsLoadingJson(false);
+  // Function to handle scenario changes
+  const handleScenarioChange = (newScenario: ScenarioType) => {
+    if (activeScenario !== newScenario) {
+      // Dispatch custom event for scenario change
+      const event = new CustomEvent('scenario-change', { 
+        detail: { scenario: newScenario } 
+      });
+      window.dispatchEvent(event);
     }
   };
 
-  // Function to handle state selection from the visualizer
-  const handleStateSelection = (state: string) => {
-    console.log(`State selected from visualizer: ${state}`);
-    if (stateData && currentState) {
-      // Update visualization to show this state
-      setDialogViewMode("visualization");
-    }
+  // Handle module completion
+  const handleModuleComplete = (result: any) => {
+    console.log('Module completed with result:', result);
+    transcript.handleModuleComplete(result);
   };
-
-  // Handle changing the scenario from the selector
-  const handleScenarioChange = (value: string) => {
-    if (callActive) {
-      handleHangUpCall();
-    }
-    const scenarioValue = value as ScenarioType;
-    
-    // Use our parent component's way to update the scenario
-    const event = new CustomEvent('scenario-change', { 
-      detail: { scenario: scenarioValue }
-    });
-    window.dispatchEvent(event);
-  };
-
-  // Debug state changes
-  useEffect(() => {
-    console.log("Current state:", currentState);
-    console.log("Current stateData:", stateData);
-    console.log("Last state change:", lastStateChange);
-  }, [currentState, stateData, lastStateChange]);
-
-  // Debug messages
-  useEffect(() => {
-    console.log("Current messages:", messages);
-  }, [messages]);
-
-  return <Card className="flex flex-col h-full border-none shadow-none">
-      <CardHeader className="px-4 py-3 flex flex-row items-center justify-between space-y-0">
-        <div className="flex items-center gap-2">
-          <div>
-            <CardTitle className="text-lg">Transcript</CardTitle>
-            <CardDescription className="flex items-center gap-2 flex-wrap">
-              {activeScenario && <Badge variant="outline" className="capitalize">
-                  {activeScenario}
-                </Badge>}
-              {hasStateMachineAvailable && currentState && <Badge variant="secondary" className="cursor-help flex items-center gap-1" onClick={() => setShowStateMachineInfo(!showStateMachineInfo)}>
-                  <span>State: {currentState}</span>
-                  <ExternalLink size={10} />
-                </Badge>}
-              
-              {/* State change notification with update icon */}
-              {lastStateChange && <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="outline" className="animate-pulse bg-primary/10 text-primary flex items-center gap-1 cursor-help">
-                        <RefreshCw size={12} className="animate-spin-slow" />
-                        <span>Updated</span>
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p className="text-xs">State changed from {lastStateChange.from} to {lastStateChange.to}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>}
-              
-              Agent call transcript
-            </CardDescription>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Timer display for active calls */}
-          {callActive && <Badge variant="outline" className="flex items-center gap-1">
-              <Clock size={14} className="text-red-500" />
-              <span>{elapsedTime}</span>
-            </Badge>}
-          
-          {/* JSON viewer button */}
-          <Button size="icon" variant="outline" className="h-8 w-8" title="View State Machine JSON" onClick={handleViewJson} disabled={isLoadingJson}>
-            <FileJson size={16} />
-          </Button>
-          
-          {/* Call control buttons */}
-          <CallControl callActive={callActive} elapsedTime={elapsedTime} onStartCall={handleCall} onEndCall={handleHangUpCall} onResetScenario={resetConversation} />
-          
-          {/* Menu with additional options */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-8 w-8">
-                <MessageSquare size={16} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white">
-              <DropdownMenuItem onClick={() => setShowStateMachineInfo(!showStateMachineInfo)}>
-                {showStateMachineInfo ? "Hide" : "Show"} State Info
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={resetConversation}>
-                Reset Conversation
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardHeader>
-
-      {/* Add scenario selector below the header */}
-      <div className="px-4 mb-2 flex">
-        <Select onValueChange={handleScenarioChange} value={activeScenario}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select scenario" />
-          </SelectTrigger>
-          <SelectContent align="center" className="bg-white">
-            <SelectGroup>
-              {availableScenarios.map((scenario) => (
-                <SelectItem 
-                  key={scenario} 
-                  value={scenario}
-                  className="capitalize"
-                  disabled={callActive}
-                >
-                  {scenario}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      {showStateMachineInfo && hasStateMachineAvailable && <div className="mx-4 mb-2 p-2 bg-muted/50 rounded-md border border-border text-xs">
-          <div className="flex justify-between items-center">
-            <h4 className="font-medium">State Machine Information</h4>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowStateMachineInfo(false)}>
-              <PhoneOff size={14} />
+  
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b bg-slate-50">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            {/* Toggle for Agent/Customer mode */}
+            <Button 
+              variant="outline"
+              className={`text-xs ${isAgentMode ? 'bg-blue-50' : ''}`}
+              onClick={() => setIsAgentMode(true)}
+            >
+              Agent Mode
+            </Button>
+            
+            <Button 
+              variant="outline"
+              className={`text-xs ${!isAgentMode ? 'bg-blue-50' : ''}`}
+              onClick={() => setIsAgentMode(false)}
+            >
+              Customer Mode
             </Button>
           </div>
-          <p className="text-muted-foreground mt-1">
-            Current state: <span className="font-medium">{currentState}</span>
-          </p>
-          <p className="text-muted-foreground mt-1">
-            Type: <span className="font-medium">
-              {stateData?.stateType || "unknown"}
-            </span>
-          </p>
-          {stateData?.nextState && <p className="text-muted-foreground mt-1">
-              Next state: <span className="font-medium">
-                {stateData.nextState}
-              </span>
-            </p>}
-          {stateData?.action && <p className="text-muted-foreground mt-1">
-              Action: <span className="font-medium">
-                {stateData.action}
-              </span>
-            </p>}
-        </div>}
-      
-      <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-        <div className="p-4 flex-1 overflow-y-auto space-y-4">
-          {!callActive && !acceptedCallId}
           
-          {/* State machine not available warning */}
-          {callActive && activeScenario && !hasStateMachineAvailable && <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 mb-3">
-              <AlertCircle size={16} />
-              <span>No state machine available for the current scenario. Using fallback conversation flow.</span>
-            </div>}
-          
-          {/* Agent guidance - new section */}
-          {callActive && (
-            <div className="text-xs p-2 mb-2 bg-blue-50 border border-blue-100 rounded">
-              <p className="font-medium text-blue-800">Agent Instructions:</p>
-              <p className="text-blue-700">You're the call center agent. Select one of the available response options below to respond to the customer.</p>
-            </div>
-          )}
-          
-          {/* Message transcript with grouped system messages - without response options */}
-          {groupedMessages.map((item, index) => {
-            if (Array.isArray(item)) {
-              // This is a group of system messages
-              return item.length === 1 ? (
-                // If only one system message, render it normally
-                <MessageComponent 
-                  key={item[0].id} 
-                  message={item[0]} 
-                  onAcceptSuggestion={handleAcceptSuggestion} 
-                  onRejectSuggestion={handleRejectSuggestion} 
-                  onSelectResponse={handleSelectResponse}
-                />
-              ) : (
-                // Otherwise, render as a group
-                <SystemMessageGroup key={`group-${index}`} messages={item} />
-              );
-            } else {
-              // Regular message
-              return (
-                <MessageComponent 
-                  key={item.id} 
-                  message={item}
-                  onAcceptSuggestion={(suggestionId, messageId) => handleAcceptSuggestion(messageId, suggestionId)} 
-                  onRejectSuggestion={handleRejectSuggestion} 
-                  onSelectResponse={handleSelectResponse}
-                />
-              );
-            }
-          })}
-          <div ref={messagesEndRef} />
+          <div className="flex items-center gap-2">
+            {/* Scenario selector */}
+            <ScenarioSelector 
+              activeScenario={activeScenario}
+              onScenarioChange={handleScenarioChange}
+            />
+            
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={transcript.resetConversation}
+              title="Reset conversation"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        
-        {/* Single dedicated response options area - ONLY place where options are shown */}
-        {callActive && stateData && stateData.meta?.suggestions && stateData.meta.suggestions.length > 0 && (
-          <div className="p-4 border-t bg-gray-50">
-            <div className="flex items-center gap-2 mb-2">
-              <MessageSquare size={16} className="text-primary" />
-              <span className="text-sm font-medium">Choose Your Response:</span>
+      </div>
+      
+      <ScrollArea className="flex-grow p-4">
+        {transcript.verificationBlocking && (
+          <Card className="mb-4 bg-amber-50 border border-amber-200 shadow-sm">
+            <div className="p-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-amber-700">
+                <Shield size={16} />
+                <span className="text-sm font-medium">Verification required to continue</span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="text-xs bg-white"
+                onClick={() => transcript.handleVerifySystemCheck('system')}
+              >
+                Verify Identity
+              </Button>
             </div>
-            <div className="grid gap-2">
-              {stateData.meta.suggestions.map((option, index) => (
-                <Button 
-                  key={index} 
-                  variant="outline" 
-                  className="justify-start text-left h-auto py-2" 
-                  onClick={() => handleSelectResponse(option)}
-                >
-                  {option}
-                </Button>
-              ))}
+          </Card>
+        )}
+        
+        <ChatMessages 
+          messages={transcript.messages}
+          isAgentMode={isAgentMode}
+          onSelectResponse={transcript.handleSelectResponse}
+          onVerifySystemCheck={transcript.handleVerifySystemCheck}
+          onValidateSensitiveData={transcript.handleValidateSensitiveData}
+          messagesEndRef={transcript.messagesEndRef}
+        />
+      </ScrollArea>
+      
+      <div className="p-4 border-t">
+        <div className="flex items-center justify-between pb-2 gap-3">
+          <div className="flex-grow">
+            <div className="flex items-center gap-2">
+              {transcript.callActive ? (
+                <span className="flex items-center gap-1.5 text-green-500">
+                  <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                  <span className="text-xs font-medium">Call Active</span>
+                  <span className="text-xs text-gray-400 ml-1">{transcript.elapsedTime}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-gray-400">
+                  <span className="h-2 w-2 rounded-full bg-gray-400"></span>
+                  <span className="text-xs">No Active Call</span>
+                </span>
+              )}
             </div>
           </div>
-        )}
-      </CardContent>
-      
-      {/* Dialog to display the full JSON state machine with visualization option */}
-      <Dialog open={isJsonDialogOpen} onOpenChange={setIsJsonDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>State Machine for {activeScenario}</DialogTitle>
-            <DialogDescription>
-              {dialogViewMode === "json" 
-                ? "Full state machine configuration" 
-                : "Visual representation of the state machine"}
-            </DialogDescription>
-          </DialogHeader>
           
-          <Tabs value={dialogViewMode} onValueChange={(value) => setDialogViewMode(value as "json" | "visualization")}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="json" className="flex items-center gap-2">
-                <FileJson size={16} />
-                JSON View
-              </TabsTrigger>
-              <TabsTrigger value="visualization" className="flex items-center gap-2">
-                <LayoutDashboard size={16} />
-                Visualization
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className={`${transcript.isRecording ? 'bg-red-50 text-red-700' : ''}`}
+              onClick={transcript.toggleRecording}
+            >
+              {transcript.isRecording ? (
+                <>
+                  <MicOff className="h-3.5 w-3.5 mr-1" /> Stop Recording
+                </>
+              ) : (
+                <>
+                  <Mic className="h-3.5 w-3.5 mr-1" /> Start Recording
+                </>
+              )}
+            </Button>
             
-            <TabsContent value="json" className="mt-2 overflow-auto max-h-[60vh]">
-              <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto whitespace-pre-wrap">
-                {jsonContent}
-              </pre>
-            </TabsContent>
-            
-            <TabsContent value="visualization" className="mt-2 overflow-auto max-h-[60vh]">
-              <div className="bg-white p-4 rounded-md border">
-                <DecisionTreeVisualizer 
-                  stateMachine={JSON.parse(jsonContent || "{}")} 
-                  currentState={currentState}
-                  onStateClick={handleStateSelection}
-                />
-              </div>
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
-      </Dialog>
-    </Card>;
+            <Button 
+              size="sm" 
+              variant={transcript.callActive ? "destructive" : "default"}
+              onClick={transcript.handleCall}
+            >
+              {transcript.callActive ? (
+                <>
+                  <PhoneOff className="h-3.5 w-3.5 mr-1" /> End Call
+                </>
+              ) : (
+                <>
+                  <Phone className="h-3.5 w-3.5 mr-1" /> Start Call
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+        
+        <Separator className="my-2" />
+        
+        <div className="flex justify-center pt-2">
+          <span className="text-center text-xs text-gray-400">
+            {transcript.awaitingUserResponse 
+              ? "Customer is waiting for your response" 
+              : "Waiting for customer input"}
+          </span>
+        </div>
+      </div>
+
+      {/* Module container that will display active modules */}
+      {transcript.activeModule && (
+        <ModuleContainer
+          moduleConfig={transcript.activeModule}
+          onClose={transcript.closeModule}
+          onComplete={handleModuleComplete}
+          currentState={transcript.currentState}
+          stateData={transcript.stateData}
+        />
+      )}
+    </div>
+  );
 };
+
 export default TranscriptPanel;

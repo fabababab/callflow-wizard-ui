@@ -90,7 +90,7 @@ const VerificationModule: React.FC<ModuleProps> = ({
             <div className="flex justify-between">
               <Label htmlFor={field.id}>{field.label}</Label>
               {field.verified !== undefined && (
-                <Badge variant={field.verified ? "success" : "destructive"}>
+                <Badge variant={field.verified ? "default" : "destructive"}>
                   {field.verified ? "Verified" : "Failed"}
                 </Badge>
               )}

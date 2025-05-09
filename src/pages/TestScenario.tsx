@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -17,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { SensitiveField } from '@/data/scenarioData';
 import { Badge } from '@/components/ui/badge';
 import { useModuleManager } from '@/hooks/useModuleManager';
-import ModuleContainer from '@/components/modules/ModuleContainer';
 
 // New interface to track selected state details for the modal
 interface SelectedStateDetails {
@@ -54,30 +54,6 @@ const TestScenario = () => {
     isLoading,
     error
   } = activeScenario;
-
-  // Add module manager hook
-  const {
-    activeModule,
-    moduleHistory,
-    closeModule,
-    completeModule
-  } = useModuleManager(
-    loadedStateMachine,
-    currentState,
-    activeScenario.stateData
-  );
-
-  // Handle module completion
-  const handleModuleComplete = (result: any) => {
-    console.log('Module completed with result:', result);
-    completeModule(result);
-    
-    // Dispatch event for any component that needs to know about module completion
-    const event = new CustomEvent('module-completed', {
-      detail: { moduleId: activeModule?.id, result }
-    });
-    window.dispatchEvent(event);
-  };
 
   // Handle state selection from the visualizer
   const handleStateSelection = (state: string) => {
@@ -313,6 +289,17 @@ const TestScenario = () => {
                       </div>
                     )}
                     
+                    {/* Display Module Information if present */}
+                    {selectedStateDetails.data.meta?.module && (
+                      <div className="mb-3 p-2 rounded bg-indigo-50 border border-indigo-200">
+                        <div className="flex items-center gap-1 text-indigo-700 text-sm font-medium mb-1">
+                          <Info size={16} />
+                          <span>Module: {selectedStateDetails.data.meta.module.title}</span>
+                        </div>
+                        <p className="text-sm">Type: {selectedStateDetails.data.meta.module.type}</p>
+                      </div>
+                    )}
+                    
                     {/* Display Sensitive Data Fields */}
                     {selectedStateDetails.sensitiveFields && selectedStateDetails.sensitiveFields.length > 0 && (
                       <div className="mb-3 p-2 rounded bg-yellow-50 border border-yellow-200">
@@ -410,17 +397,6 @@ const TestScenario = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Module container that will display active modules */}
-      {activeModule && (
-        <ModuleContainer
-          moduleConfig={activeModule}
-          onClose={closeModule}
-          onComplete={handleModuleComplete}
-          currentState={currentState}
-          stateData={activeScenario.stateData}
-        />
-      )}
     </div>;
 };
 

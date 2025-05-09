@@ -5,6 +5,7 @@ import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
 import { StateMachineState } from '@/utils/stateMachineLoader';
 import { detectSensitiveData } from '@/data/scenarioData';
+import { useModuleManager } from '@/hooks/useModuleManager';
 
 export function useTranscript(activeScenario: ScenarioType) {
   const [isRecording, setIsRecording] = useState(false);
@@ -43,8 +44,21 @@ export function useTranscript(activeScenario: ScenarioType) {
     processSelection,
     processStartCall,
     lastStateChange,
-    resetStateMachine
+    resetStateMachine,
+    stateMachine
   } = useStateMachine(activeScenario);
+
+  // Get the module manager functionality
+  const {
+    activeModule,
+    moduleHistory,
+    closeModule,
+    completeModule
+  } = useModuleManager(
+    stateMachine,
+    currentState,
+    stateData
+  );
   
   // Function to check if we've already processed this state to avoid duplicate messages
   const hasProcessedState = (state: string): boolean => {
@@ -69,6 +83,17 @@ export function useTranscript(activeScenario: ScenarioType) {
     setAwaitingUserResponse(false);
   }, [activeScenario]);
   
+  // Handle module completion
+  const handleModuleComplete = (result: any) => {
+    console.log('Module completed with result:', result);
+    completeModule(result);
+    
+    // Update the transcript to reflect the module interaction
+    if (activeModule) {
+      addSystemMessage(`${activeModule.title} completed: ${result.verified ? "Success" : "Failed"}`);
+    }
+  };
+
   // Update to properly update UI when state changes, with debouncing and duplicate prevention
   useEffect(() => {
     if (!stateData || !callActive || !lastStateChange) {
@@ -122,6 +147,13 @@ export function useTranscript(activeScenario: ScenarioType) {
         addAgentMessage(stateData.meta.agentText);
       }
       
+      // Check if this state has a module trigger
+      if (stateData.meta?.module) {
+        console.log(`Module trigger found in state:`, stateData.meta.module);
+        // Add a system message about the module if not already shown
+        addSystemMessage(`Opening ${stateData.meta.module.title}`);
+      }
+      
       // Mark this state as processed to prevent duplicate messages
       markStateAsProcessed(currentState);
       setLastTranscriptUpdate(new Date());
@@ -143,6 +175,33 @@ export function useTranscript(activeScenario: ScenarioType) {
       setLastTranscriptUpdate(lastMessageUpdate);
     }
   }, [lastMessageUpdate]);
+
+  // Listen for module completion events
+  useEffect(() => {
+    const handleModuleCompletedEvent = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('Module completed event:', customEvent.detail);
+      
+      // Add a system message about the module completion
+      if (customEvent.detail && customEvent.detail.moduleId) {
+        const resultText = customEvent.detail.result?.verified 
+          ? 'successfully verified'
+          : customEvent.detail.result?.action
+          ? `completed action: ${customEvent.detail.result.action}`
+          : customEvent.detail.result?.acknowledged
+          ? 'acknowledged'
+          : 'completed';
+          
+        addSystemMessage(`Module ${resultText}`);
+      }
+    };
+    
+    window.addEventListener('module-completed', handleModuleCompletedEvent);
+    
+    return () => {
+      window.removeEventListener('module-completed', handleModuleCompletedEvent);
+    };
+  }, [addSystemMessage]);
 
   // Update timer when call is active
   useEffect(() => {
@@ -329,7 +388,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     messagesEndRef,
     handleAcceptSuggestion,
     handleRejectSuggestion,
-    handleSelectResponse, // This is now our primary interaction method
+    handleSelectResponse,
     toggleRecording,
     handleCall,
     handleAcceptCall,
@@ -345,6 +404,9 @@ export function useTranscript(activeScenario: ScenarioType) {
     handleValidateSensitiveData,
     sensitiveDataStats,
     verificationBlocking,
-    awaitingUserResponse
+    awaitingUserResponse,
+    activeModule,
+    closeModule,
+    handleModuleComplete
   };
 }
