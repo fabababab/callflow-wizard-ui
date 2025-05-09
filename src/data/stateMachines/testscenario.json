@@ -37,6 +37,19 @@
           "Thank you for providing that information. I can see that you upgraded to the premium plan last week. Looking at your account, I notice that there's a system flag that hasn't properly updated your billing tier. Let me fix that for you right away.",
           "I've found your account, but I'm having trouble seeing the premium upgrade on our system. Can you tell me when exactly you made the upgrade?",
           "Thank you. I can see your account details, but there seems to be a discrepancy between what you're saying and what our system shows. Let me double check with our billing department."
+        ],
+        "sensitiveFields": [
+          {
+            "id": "cust-email-1",
+            "type": "customer_id",
+            "value": "ACC123456",
+            "pattern": "/\\b[0-9]{9}\\b/",
+            "status": "pending",
+            "requiresVerification": true,
+            "systemValue": "ACC123457",
+            "source": "Customer Database Record #45789",
+            "matched": false
+          }
         ]
       },
       "on": {
@@ -55,6 +68,19 @@
           "Thank you for that clarification. I can now see the upgrade in our system. There appears to be a processing delay that prevented it from being fully applied. I'll fix this right away.",
           "I appreciate that information. Our records show the upgrade was initiated but not completed due to a payment processing issue. Would you like me to try processing it again now?",
           "Thanks for confirming. I've found the record of your upgrade request, but it seems there was a technical error during processing. Let me escalate this to our technical team."
+        ],
+        "sensitiveFields": [
+          {
+            "id": "upgrade-date-1",
+            "type": "date_of_birth",
+            "value": "15.05.2023",
+            "pattern": "/\\b(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.(19|20)\\d\\d\\b/",
+            "status": "pending",
+            "requiresVerification": true,
+            "systemValue": "15.05.2023",
+            "source": "Transaction History",
+            "matched": true
+          }
         ]
       },
       "on": {
@@ -91,6 +117,19 @@
           "I've updated your payment method and successfully processed the premium upgrade. Your account now has full premium access, and you'll be billed at the correct rate starting today.",
           "Thank you for providing the new payment details. The system is processing your upgrade now. You should receive a confirmation email within the next hour.",
           "I've updated your payment information. To ensure everything works properly, I'm also going to apply a one-time credit to your account for the inconvenience caused."
+        ],
+        "sensitiveFields": [
+          {
+            "id": "bank-account-1",
+            "type": "bank_account",
+            "value": "CH9300762011623852957",
+            "pattern": "/\\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]{0,16})?\\b/i",
+            "status": "pending",
+            "requiresVerification": true,
+            "systemValue": "CH9300762011623852957",
+            "source": "Payment Records",
+            "matched": true
+          }
         ]
       },
       "on": {
@@ -163,6 +202,19 @@
           "Thank you for providing your contact information. I've added it to the ticket. As a goodwill gesture, I've also activated the premium features on your account immediately while we resolve the billing issue.",
           "Perfect, I've updated the ticket with your phone number and availability. The technical team will call you within 24 hours. Is there anything else you need assistance with today?",
           "I've added your contact details to the priority ticket. For your convenience, I can also send you updates via email as the technical team works on your case. Would you like that?"
+        ],
+        "sensitiveFields": [
+          {
+            "id": "phone-number-1",
+            "type": "customer_id",
+            "value": "555-123-4567",
+            "pattern": "/\\b[0-9]{9}\\b/",
+            "status": "pending",
+            "requiresVerification": true,
+            "systemValue": "555-123-4568",
+            "source": "Customer Profile",
+            "matched": false
+          }
         ]
       },
       "on": {

@@ -1,4 +1,3 @@
-
 import { nanoid } from 'nanoid';
 
 // Define sensitive data validation types
@@ -14,6 +13,9 @@ export type SensitiveField = {
   status: ValidationStatus;
   notes?: string;
   requiresVerification?: boolean;
+  systemValue?: string; // The "correct" value from internal database
+  source?: string; // Where this data originally came from
+  matched?: boolean; // If the value matches the systemValue
 };
 
 // Define call data types
@@ -96,31 +98,41 @@ export const sensitiveDataPatterns = {
     regex: /\b[A-Z]{2}[0-9]{8}\b/,
     description: "Insurance number (format: XX12345678)",
     exampleValue: "DE12345678",
-    requiresVerification: true
+    requiresVerification: true,
+    systemValue: "CH12345678", // Example system value
+    source: "Customer Insurance Record #CR-78923"
   },
   customer_id: {
     regex: /\b[0-9]{9}\b/,
     description: "Customer ID (9 digits)",
     exampleValue: "987654321",
-    requiresVerification: false
+    requiresVerification: false,
+    systemValue: "987654321",
+    source: "Customer Database"
   },
   bank_account: {
     regex: /\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]{0,16})?\b/i,
     description: "IBAN (International Bank Account Number)",
     exampleValue: "CH9300762011623852957",
-    requiresVerification: false
+    requiresVerification: false,
+    systemValue: "CH9300762011623852957",
+    source: "Payment Records"
   },
   date_of_birth: {
     regex: /\b(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])\.(19|20)\d\d\b/,
     description: "Date of birth (DD.MM.YYYY)",
     exampleValue: "15.03.1985",
-    requiresVerification: true
+    requiresVerification: true,
+    systemValue: "15.03.1985",
+    source: "Customer Profile"
   },
   address: {
     regex: /\b[A-Za-zäöüÄÖÜß\s\d\.\-]+\s\d+,\s\d{4,5}\s[A-Za-zäöüÄÖÜß\s\.\-]+\b/,
     description: "Address (format: Street Number, ZIP City)",
     exampleValue: "Musterstrasse 123, 8000 Zürich",
-    requiresVerification: true
+    requiresVerification: true,
+    systemValue: "Musterstrasse 123, 8000 Zürich",
+    source: "Customer Registration Form"
   }
 };
 
@@ -133,17 +145,44 @@ export const detectSensitiveData = (text: string): SensitiveField[] => {
     const matches = text.match(pattern.regex);
     if (matches) {
       matches.forEach(match => {
+        const systemValue = pattern.systemValue;
+        const matched = match === systemValue;
+        
         results.push({
           id: nanoid(),
           type: type as SensitiveDataType,
           value: match,
           pattern: pattern.regex.toString(),
           status: 'pending',
-          requiresVerification: pattern.requiresVerification
+          requiresVerification: pattern.requiresVerification,
+          systemValue: pattern.systemValue,
+          source: pattern.source,
+          matched
         });
       });
     }
   });
   
   return results;
+};
+
+// Utility function to get the verification status of sensitive fields
+export const getSensitiveDataVerificationStatus = (sensitiveFields: SensitiveField[] | undefined): {
+  required: boolean;
+  verified: boolean;
+  matched: boolean;
+} => {
+  if (!sensitiveFields || sensitiveFields.length === 0) {
+    return { required: false, verified: false, matched: false };
+  }
+  
+  const requiresVerification = sensitiveFields.some(field => field.requiresVerification);
+  const allVerified = sensitiveFields.every(field => field.status !== 'pending');
+  const allMatched = sensitiveFields.every(field => field.matched);
+  
+  return {
+    required: requiresVerification,
+    verified: allVerified,
+    matched: allMatched
+  };
 };

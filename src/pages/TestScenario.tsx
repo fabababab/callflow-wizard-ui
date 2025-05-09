@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -6,14 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { usePhysioCoverageStateMachine } from '@/hooks/usePhysioCoverageStateMachine';
 import { useCustomerScenario } from '@/hooks/useCustomerScenario';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
+import { loadStateMachine, StateMachine, StateMachineState } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
 import TranscriptPanel from '@/components/TranscriptPanel'; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileJson, LayoutDashboard } from 'lucide-react';
+import { FileJson, LayoutDashboard, Shield, AlertTriangle, Info, Database } from 'lucide-react';
 import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { Button } from '@/components/ui/button';
+import { SensitiveField } from '@/data/scenarioData';
+
+// New interface to track selected state details for the modal
+interface SelectedStateDetails {
+  id: string;
+  data: StateMachineState;
+  sensitiveFields?: SensitiveField[];
+}
 
 const TestScenario = () => {
   const [isAgentMode, setIsAgentMode] = useState(true); // Default to agent mode (you responding as agent)
@@ -24,6 +33,10 @@ const TestScenario = () => {
   const transcriptRef = useRef<HTMLDivElement>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Initialize sidebar as collapsed
   const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
+  
+  // New state for selected state details and sensitive fields
+  const [selectedStateDetails, setSelectedStateDetails] = useState<SelectedStateDetails | null>(null);
+  const [showSensitiveFieldDetails, setShowSensitiveFieldDetails] = useState<SensitiveField | null>(null);
 
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(selectedStateMachine);
@@ -47,10 +60,30 @@ const TestScenario = () => {
     // If we have a valid state machine, update the current state
     if (loadedStateMachine && loadedStateMachine.states[state]) {
       setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
+
+      // Store the selected state details including any sensitive fields
+      const stateData = loadedStateMachine.states[state];
+      const sensitiveFields = stateData.meta?.sensitiveFields;
+      
+      setSelectedStateDetails({
+        id: state,
+        data: stateData,
+        sensitiveFields: sensitiveFields
+      });
       
       // Update dialog view mode to show the visualization with this state
       setDialogViewMode("visualization");
     }
+  };
+
+  // Handle clicking on a sensitive field to show details
+  const handleSensitiveFieldClick = (field: SensitiveField) => {
+    setShowSensitiveFieldDetails(field);
+  };
+
+  // Close sensitive field details modal
+  const handleCloseSensitiveDetails = () => {
+    setShowSensitiveFieldDetails(null);
   };
 
   // Listen for scenario change events from the TranscriptPanel
@@ -218,9 +251,137 @@ const TestScenario = () => {
                   currentState={currentState}
                   onStateClick={handleStateSelection}
                 />
+                
+                {/* Display Selected State Details */}
+                {selectedStateDetails && (
+                  <div className="mt-6 border-t pt-4">
+                    <h3 className="text-lg font-semibold mb-2">State: {selectedStateDetails.id}</h3>
+                    
+                    {selectedStateDetails.data.meta?.systemMessage && (
+                      <div className="mb-3 p-2 rounded bg-blue-50 border border-blue-200">
+                        <div className="flex items-center gap-1 text-blue-700 text-sm font-medium mb-1">
+                          <Info size={16} />
+                          <span>System Message</span>
+                        </div>
+                        <p className="text-sm">{selectedStateDetails.data.meta.systemMessage}</p>
+                      </div>
+                    )}
+                    
+                    {selectedStateDetails.data.meta?.customerText && (
+                      <div className="mb-3 p-2 rounded bg-amber-50 border border-amber-200">
+                        <div className="flex items-center gap-1 text-amber-700 text-sm font-medium mb-1">
+                          <AlertTriangle size={16} />
+                          <span>Customer Text</span>
+                        </div>
+                        <p className="text-sm">{selectedStateDetails.data.meta.customerText}</p>
+                      </div>
+                    )}
+                    
+                    {selectedStateDetails.data.meta?.agentText && (
+                      <div className="mb-3 p-2 rounded bg-emerald-50 border border-emerald-200">
+                        <div className="flex items-center gap-1 text-emerald-700 text-sm font-medium mb-1">
+                          <Info size={16} />
+                          <span>Agent Text</span>
+                        </div>
+                        <p className="text-sm">{selectedStateDetails.data.meta.agentText}</p>
+                      </div>
+                    )}
+                    
+                    {/* Display Sensitive Data Fields */}
+                    {selectedStateDetails.sensitiveFields && selectedStateDetails.sensitiveFields.length > 0 && (
+                      <div className="mb-3 p-2 rounded bg-yellow-50 border border-yellow-200">
+                        <div className="flex items-center gap-1 text-yellow-700 text-sm font-medium mb-1">
+                          <Shield size={16} />
+                          <span>Sensitive Data Detection</span>
+                        </div>
+                        <div className="space-y-2">
+                          {selectedStateDetails.sensitiveFields.map(field => (
+                            <div 
+                              key={field.id} 
+                              className="p-2 bg-white border rounded cursor-pointer hover:bg-yellow-100 transition-colors"
+                              onClick={() => handleSensitiveFieldClick(field)}
+                            >
+                              <div className="flex justify-between">
+                                <span className="font-medium text-sm">{field.type}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  Click for details
+                                </Badge>
+                              </div>
+                              <div className="mt-1 text-sm">
+                                <strong>Value:</strong> {field.value}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sensitive Field Details Dialog */}
+      <Dialog open={!!showSensitiveFieldDetails} onOpenChange={() => setShowSensitiveFieldDetails(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-yellow-600" />
+              Sensitive Data: {showSensitiveFieldDetails?.type}
+            </DialogTitle>
+            <DialogDescription>
+              Verification and source information
+            </DialogDescription>
+          </DialogHeader>
+          
+          {showSensitiveFieldDetails && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-yellow-50 rounded-md border border-yellow-200">
+                  <h4 className="text-sm font-medium text-yellow-800 mb-1">Customer Provided</h4>
+                  <p className="text-lg font-mono">{showSensitiveFieldDetails.value}</p>
+                </div>
+                
+                <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+                  <h4 className="text-sm font-medium text-blue-800 mb-1">System Value</h4>
+                  <p className="text-lg font-mono">{showSensitiveFieldDetails.systemValue}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center">
+                {showSensitiveFieldDetails.value === showSensitiveFieldDetails.systemValue ? (
+                  <Badge className="bg-green-100 text-green-800 border-green-300">Match</Badge>
+                ) : (
+                  <Badge className="bg-red-100 text-red-800 border-red-300">No Match</Badge>
+                )}
+              </div>
+              
+              <div className="p-3 bg-gray-50 rounded-md border">
+                <div className="flex items-center gap-1 mb-1">
+                  <Database size={14} />
+                  <h4 className="text-sm font-medium">Source</h4>
+                </div>
+                <p className="text-sm">{showSensitiveFieldDetails.source || "Unknown source"}</p>
+              </div>
+              
+              <div className="p-3 bg-gray-50 rounded-md border">
+                <h4 className="text-sm font-medium mb-1">Validation Status</h4>
+                <Badge 
+                  variant={showSensitiveFieldDetails.status === 'valid' ? 'default' : 
+                          showSensitiveFieldDetails.status === 'invalid' ? 'destructive' : 
+                          'outline'}
+                >
+                  {showSensitiveFieldDetails.status.toUpperCase()}
+                </Badge>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button onClick={handleCloseSensitiveDetails}>Close</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>;
