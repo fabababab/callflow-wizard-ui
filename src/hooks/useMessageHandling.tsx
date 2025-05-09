@@ -66,16 +66,21 @@ export function useMessageHandling() {
     
     setLastMessageUpdate(new Date());
     
-    // If verification was successful, unblock the flow
-    if (result?.verified === true) {
-      setVerificationBlocking(false);
-    }
+    // Always set verification blocking to false
+    setVerificationBlocking(false);
+  };
+
+  // Override the original handleVerifySystemCheck to ensure verificationBlocking is set to false
+  const enhancedHandleVerifySystemCheck = (messageId: string) => {
+    handleVerifySystemCheck(messageId);
+    // Always set verification blocking to false
+    setVerificationBlocking(false);
   };
 
   return {
     messages,
     sensitiveDataStats,
-    verificationBlocking,
+    verificationBlocking: false, // Always return false to disable blocking
     lastMessageUpdate,
     messagesEndRef,
     addSystemMessage,
@@ -84,8 +89,8 @@ export function useMessageHandling() {
     addInlineModuleMessage,
     clearMessages,
     handleValidateSensitiveData,
-    handleVerifySystemCheck,
+    handleVerifySystemCheck: enhancedHandleVerifySystemCheck,
     handleInlineModuleComplete,
-    setVerificationBlocking,
+    setVerificationBlocking: () => setVerificationBlocking(false), // Always set to false
   };
 }

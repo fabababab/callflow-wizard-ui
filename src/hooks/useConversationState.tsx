@@ -30,14 +30,10 @@ export function useConversationState() {
     });
   }, []);
 
-  // Add a state that requires verification
+  // Add a state that requires verification - disabled to prevent verification blocking
   const addPendingVerification = useCallback((stateId: string) => {
-    setPendingVerifications(prev => {
-      if (!prev.includes(stateId)) {
-        return [...prev, stateId];
-      }
-      return prev;
-    });
+    // Skip adding to pending verifications
+    console.log(`Verification for state ${stateId} would normally be required, but is bypassed`);
   }, []);
 
   // Remove a state from pending verifications
@@ -71,7 +67,7 @@ export function useConversationState() {
     showNachbearbeitungModule,
     lastTranscriptUpdate,
     manualReset,
-    pendingVerifications,
+    pendingVerifications: [], // Always return empty array
     debounceTimerRef,
     hasProcessedState,
     markStateAsProcessed,

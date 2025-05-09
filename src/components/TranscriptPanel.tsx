@@ -8,7 +8,6 @@ import { useConversationSummary } from '@/hooks/useConversationSummary';
 import { useTranscriptTimer } from '@/hooks/useTranscriptTimer';
 import { useScenarioManagement } from '@/hooks/useScenarioManagement';
 import TranscriptHeader from '@/components/transcript/TranscriptHeader';
-import VerificationBanner from '@/components/transcript/VerificationBanner';
 import JsonVisualizationDialog from '@/components/transcript/JsonVisualizationDialog';
 import ModuleDisplay from '@/components/transcript/ModuleDisplay';
 import { StateMachine } from '@/utils/stateMachineLoader';
@@ -73,11 +72,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     transcript.handleInlineModuleComplete(messageId, moduleId, result);
   };
   
-  // Count pending verifications
-  const pendingVerifications = transcript.messages?.filter(
-    m => m.requiresVerification && !m.isVerified
-  ).length || 0;
-  
   return (
     <div className="flex flex-col h-full">
       {/* Header with call control */}
@@ -97,12 +91,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
       {/* Main content area with messages */}
       <div className="flex-grow overflow-auto relative">
         <ScrollArea className="h-full p-4">
-          {/* Verification banner */}
-          <VerificationBanner 
-            isVisible={transcript.verificationBlocking} 
-            pendingVerifications={pendingVerifications}
-          />
-          
           {/* Chat messages */}
           <ChatMessages
             messages={transcript.messages}

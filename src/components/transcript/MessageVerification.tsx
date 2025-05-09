@@ -14,13 +14,17 @@ const MessageVerification: React.FC<MessageVerificationProps> = ({
   isVerified,
   onVerify
 }) => {
-  // Auto verify after component mounts
+  // Auto verify immediately after component mounts
   useEffect(() => {
     if (!isVerified) {
       // Add a small delay to make it look natural
       const timer = setTimeout(() => {
+        // Auto verify
         onVerify(messageId);
-      }, 1500);
+        
+        // Log verification
+        console.log(`Auto-verified message ${messageId}`);
+      }, 800);
       
       return () => clearTimeout(timer);
     }
