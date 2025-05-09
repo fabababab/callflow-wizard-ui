@@ -4,6 +4,7 @@ import { ModuleRegistryItem, ModuleType } from '@/types/modules';
 import VerificationModule from './VerificationModule';
 import ContractModule from './ContractModule';
 import InformationModule from './InformationModule';
+import NachbearbeitungModule from './NachbearbeitungModule';
 
 const moduleRegistry: Record<ModuleType, ModuleRegistryItem> = {
   [ModuleType.VERIFICATION]: {
@@ -17,6 +18,10 @@ const moduleRegistry: Record<ModuleType, ModuleRegistryItem> = {
   [ModuleType.INFORMATION]: {
     type: ModuleType.INFORMATION,
     component: InformationModule
+  },
+  [ModuleType.NACHBEARBEITUNG]: {
+    type: ModuleType.NACHBEARBEITUNG,
+    component: NachbearbeitungModule
   }
 };
 

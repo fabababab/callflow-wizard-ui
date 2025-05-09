@@ -28,6 +28,7 @@ const VerificationModule: React.FC<ModuleProps> = ({
   const fields = data?.fields || [];
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(fields);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
+  const isInlineDisplay = data?.isInline === true;
   
   const handleInputChange = (fieldId: string, value: string) => {
     setVerificationFields(prev => 
@@ -58,8 +59,13 @@ const VerificationModule: React.FC<ModuleProps> = ({
     }
   };
   
+  // Use different styling for inline vs modal display
+  const cardClassName = isInlineDisplay
+    ? "w-full border border-amber-200 shadow-sm my-4"
+    : "w-full max-w-md border border-amber-200 shadow-md";
+  
   return (
-    <Card className="w-full max-w-md border border-amber-200 shadow-md">
+    <Card className={cardClassName}>
       <CardHeader className="bg-amber-50 border-b border-amber-100">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-amber-600" />

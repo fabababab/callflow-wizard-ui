@@ -12,7 +12,8 @@ export interface ModuleConfig {
 export enum ModuleType {
   VERIFICATION = "verification",
   CONTRACT = "contract",
-  INFORMATION = "information"
+  INFORMATION = "information",
+  NACHBEARBEITUNG = "nachbearbeitung"
 }
 
 export interface ModuleProps {

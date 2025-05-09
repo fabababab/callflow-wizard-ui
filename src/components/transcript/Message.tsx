@@ -6,6 +6,8 @@ import { MessageSquare, ChevronRight, Shield, Check } from 'lucide-react';
 import AISuggestions, { AISuggestion } from './AISuggestion';
 import ValidationField from './ValidationField';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
+import { ModuleConfig } from '@/types/modules';
+import ModuleContainer from '../modules/ModuleContainer';
 
 export type MessageSender = 'agent' | 'customer' | 'system';
 
@@ -43,6 +45,7 @@ export type Message = {
     }>;
     requiresVerification: boolean;
   };
+  inlineModule?: ModuleConfig;
 };
 
 interface MessageProps {
@@ -53,6 +56,7 @@ interface MessageProps {
   onValidateSensitiveData?: (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => void;
   onVerifySystemCheck?: (messageId: string) => void;
   isAgentMode?: boolean;
+  onModuleComplete?: (moduleId: string, result: any) => void;
 }
 
 const Message: React.FC<MessageProps> = ({ 
@@ -62,13 +66,15 @@ const Message: React.FC<MessageProps> = ({
   onSelectResponse,
   onValidateSensitiveData,
   onVerifySystemCheck,
-  isAgentMode = true // Default to agent mode
+  isAgentMode = true, // Default to agent mode
+  onModuleComplete
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   const hasSensitiveData = message.sensitiveData && message.sensitiveData.length > 0;
   const hasNumberInput = message.numberInput !== undefined;
   const requiresVerification = message.requiresVerification && !message.isVerified;
+  const hasInlineModule = message.inlineModule !== undefined;
   
   // Handler for validating sensitive data
   const handleValidate = (fieldId: string, status: ValidationStatus, notes?: string) => {
@@ -82,6 +88,19 @@ const Message: React.FC<MessageProps> = ({
     if (onVerifySystemCheck) {
       onVerifySystemCheck(message.id);
     }
+  };
+
+  // Handler for module completion
+  const handleModuleComplete = (result: any) => {
+    if (onModuleComplete && message.inlineModule) {
+      onModuleComplete(message.inlineModule.id, result);
+    }
+  };
+
+  // Handler for module close
+  const handleModuleClose = () => {
+    // Just log for now, might need additional handling
+    console.log("Module closed");
   };
   
   return (
@@ -167,8 +186,57 @@ const Message: React.FC<MessageProps> = ({
           </div>
         )}
         
-        {/* Removed all inline response options here */}
+        {/* Display response options if any are provided */}
+        {hasResponseOptions && isAgentMode && (
+          <div className="mt-3 pt-2 border-t border-gray-300/20">
+            <div className="text-xs font-medium mb-2">Response Options:</div>
+            <div className="space-y-1">
+              {message.responseOptions.map((option, idx) => (
+                <Button
+                  key={idx}
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-sm"
+                  onClick={() => onSelectResponse && onSelectResponse(option)}
+                >
+                  <span className="truncate">{option}</span>
+                  <ChevronRight className="h-3 w-3 ml-auto" />
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Display AI suggestions if any are provided */}
+        {hasSuggestions && isAgentMode && (
+          <div className="mt-3 pt-2 border-t border-gray-300/20">
+            <AISuggestions 
+              suggestions={message.suggestions} 
+              messageId={message.id}
+              onAccept={onAcceptSuggestion}
+              onReject={onRejectSuggestion}
+            />
+          </div>
+        )}
       </div>
+
+      {/* Display inline module if present */}
+      {hasInlineModule && (
+        <div className="w-full max-w-md mx-auto mt-2">
+          {message.inlineModule && (
+            <ModuleContainer
+              moduleConfig={{
+                ...message.inlineModule,
+                data: { ...(message.inlineModule.data || {}), isInline: true }
+              }}
+              onClose={handleModuleClose}
+              onComplete={handleModuleComplete}
+              currentState=""
+              stateData={null}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 };

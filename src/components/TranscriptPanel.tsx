@@ -18,8 +18,6 @@ interface TranscriptPanelProps {
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   activeScenario
 }) => {
-  const [isAgentMode, setIsAgentMode] = useState(true);
-  
   // Use the transcript hook with the active scenario
   const transcript = useTranscript(activeScenario);
   
@@ -50,26 +48,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b bg-slate-50">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            {/* Toggle for Agent/Customer mode */}
-            <Button 
-              variant="outline"
-              className={`text-xs ${isAgentMode ? 'bg-blue-50' : ''}`}
-              onClick={() => setIsAgentMode(true)}
-            >
-              Agent Mode
-            </Button>
-            
-            <Button 
-              variant="outline"
-              className={`text-xs ${!isAgentMode ? 'bg-blue-50' : ''}`}
-              onClick={() => setIsAgentMode(false)}
-            >
-              Customer Mode
-            </Button>
-          </div>
-          
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {/* Scenario selector */}
             <ScenarioSelector 
@@ -111,7 +90,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         
         <ChatMessages 
           messages={transcript.messages}
-          isAgentMode={isAgentMode}
+          isAgentMode={true}
           onSelectResponse={transcript.handleSelectResponse}
           onVerifySystemCheck={transcript.handleVerifySystemCheck}
           onValidateSensitiveData={transcript.handleValidateSensitiveData}

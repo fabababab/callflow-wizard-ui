@@ -6,6 +6,7 @@ import { useMessageHandling } from '@/hooks/useMessageHandling';
 import { StateMachineState } from '@/utils/stateMachineLoader';
 import { detectSensitiveData } from '@/data/scenarioData';
 import { useModuleManager } from '@/hooks/useModuleManager';
+import { ModuleType } from '@/types/modules';
 
 export function useTranscript(activeScenario: ScenarioType) {
   const [isRecording, setIsRecording] = useState(false);
@@ -17,6 +18,7 @@ export function useTranscript(activeScenario: ScenarioType) {
   const [isInitialStateProcessed, setIsInitialStateProcessed] = useState(false);
   const [isUserAction, setIsUserAction] = useState(false);
   const [awaitingUserResponse, setAwaitingUserResponse] = useState(false);
+  const [showNachbearbeitungModule, setShowNachbearbeitungModule] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -31,9 +33,11 @@ export function useTranscript(activeScenario: ScenarioType) {
     addSystemMessage,
     addAgentMessage,
     addCustomerMessage,
+    addInlineModuleMessage,
     clearMessages,
     handleValidateSensitiveData,
     handleVerifySystemCheck,
+    handleInlineModuleComplete,
     setVerificationBlocking
   } = useMessageHandling();
   
@@ -81,6 +85,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setIsInitialStateProcessed(false);
     setIsUserAction(false);
     setAwaitingUserResponse(false);
+    setShowNachbearbeitungModule(false);
   }, [activeScenario]);
   
   // Handle module completion
@@ -90,7 +95,16 @@ export function useTranscript(activeScenario: ScenarioType) {
     
     // Update the transcript to reflect the module interaction
     if (activeModule) {
-      addSystemMessage(`${activeModule.title} completed: ${result.verified ? "Success" : "Failed"}`);
+      // Only add system message if it's not the Nachbearbeitung module
+      if (activeModule.type !== ModuleType.NACHBEARBEITUNG) {
+        addSystemMessage(`${activeModule.title} completed: ${result.verified ? "Success" : "Failed"}`);
+      } else {
+        // For Nachbearbeitung module, add a summary message
+        addSystemMessage(`Call summary completed. Points verified: ${result.points?.length || 0}`, {
+          responseOptions: ["Thank you for your call. Have a nice day!"]
+        });
+        setShowNachbearbeitungModule(false);
+      }
     }
   };
 
@@ -140,18 +154,40 @@ export function useTranscript(activeScenario: ScenarioType) {
         
         // Set flag that we're waiting for user to respond
         setAwaitingUserResponse(true);
+
+        // If this state has response options, add them to the last customer message
+        if (stateData.meta?.responseOptions && stateData.meta.responseOptions.length > 0) {
+          const lastMessage = messages[messages.length - 1];
+          if (lastMessage && lastMessage.sender === 'customer') {
+            // Update the last message with response options
+            messages[messages.length - 1].responseOptions = stateData.meta.responseOptions;
+          }
+        }
       }
       
       if (stateData.meta?.agentText && !isUserAction) {
         console.log(`Adding agent message: ${stateData.meta.agentText}`);
-        addAgentMessage(stateData.meta.agentText);
+        
+        // Check if there are response options to add after the agent message
+        const responseOptions = stateData.meta?.responseOptions || [];
+        addAgentMessage(stateData.meta.agentText, [], responseOptions.length > 0 ? responseOptions : undefined);
       }
       
       // Check if this state has a module trigger
       if (stateData.meta?.module) {
         console.log(`Module trigger found in state:`, stateData.meta.module);
-        // Add a system message about the module if not already shown
-        addSystemMessage(`Opening ${stateData.meta.module.title}`);
+        
+        // Special handling for verification modules - make them inline
+        if (stateData.meta.module.type === ModuleType.VERIFICATION) {
+          // Add inline verification module
+          addInlineModuleMessage(
+            `Please verify the following information:`,
+            stateData.meta.module
+          );
+        } else {
+          // Add a system message about the module if not already shown
+          addSystemMessage(`Opening ${stateData.meta.module.title}`);
+        }
       }
       
       // Mark this state as processed to prevent duplicate messages
@@ -167,7 +203,7 @@ export function useTranscript(activeScenario: ScenarioType) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates, isUserAction]);
+  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates, isUserAction, messages, addInlineModuleMessage]);
   
   // Update when messages update
   useEffect(() => {
@@ -300,6 +336,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setLastTranscriptUpdate(new Date());
     setIsUserAction(false);
     setAwaitingUserResponse(false);
+    setShowNachbearbeitungModule(false);
   };
 
   // Improved call start function to properly initialize state
@@ -312,6 +349,7 @@ export function useTranscript(activeScenario: ScenarioType) {
       setIsInitialStateProcessed(false);
       setIsUserAction(false);
       setAwaitingUserResponse(false);
+      setShowNachbearbeitungModule(false);
       setLastTranscriptUpdate(new Date());
       
       addSystemMessage('Call started');
@@ -334,7 +372,44 @@ export function useTranscript(activeScenario: ScenarioType) {
       console.log('Ending call');
       setCallActive(false);
       addSystemMessage('Call ended');
+      
+      // Show the Nachbearbeitung module at the end of the call
+      if (!showNachbearbeitungModule) {
+        showNachbearbeitungSummary();
+      }
     }
+  };
+
+  // Show the Nachbearbeitung (call summary) module
+  const showNachbearbeitungSummary = () => {
+    setShowNachbearbeitungModule(true);
+    
+    // Create nachbearbeitung module config
+    const nachbearbeitungModuleConfig = {
+      id: 'nachbearbeitung-' + Date.now(),
+      title: 'Call Summary',
+      type: ModuleType.NACHBEARBEITUNG,
+      data: {
+        summaryPoints: [
+          { id: '1', text: 'Customer identity was verified', checked: false, important: true },
+          { id: '2', text: 'Customer issue was addressed', checked: false, important: true },
+          { id: '3', text: 'Relevant information was provided', checked: false, important: true },
+          { id: '4', text: 'Next steps were explained to customer', checked: false, important: false },
+          { id: '5', text: 'Customer was offered additional assistance', checked: false, important: false }
+        ]
+      }
+    };
+    
+    // Update module manager
+    completeModule({ showSummary: true });
+    
+    // Set the active module to show the Nachbearbeitung
+    setTimeout(() => {
+      const event = new CustomEvent('module-trigger', { 
+        detail: { module: nachbearbeitungModuleConfig } 
+      });
+      window.dispatchEvent(event);
+    }, 300);
   };
 
   // Accept incoming call with improved state handling
@@ -346,6 +421,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     setIsInitialStateProcessed(false);
     setIsUserAction(false);
     setAwaitingUserResponse(false);
+    setShowNachbearbeitungModule(false);
     setLastTranscriptUpdate(new Date());
     
     addSystemMessage(`Call accepted from ${callId}`);
@@ -376,6 +452,11 @@ export function useTranscript(activeScenario: ScenarioType) {
     setAwaitingUserResponse(false);
     setLastTranscriptUpdate(new Date());
     addSystemMessage('Call ended');
+    
+    // Show the Nachbearbeitung module at the end of the call
+    if (!showNachbearbeitungModule) {
+      showNachbearbeitungSummary();
+    }
   };
   
   return {
@@ -407,6 +488,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     awaitingUserResponse,
     activeModule,
     closeModule,
-    handleModuleComplete
+    handleModuleComplete,
+    showNachbearbeitungSummary,
+    handleInlineModuleComplete,
   };
 }

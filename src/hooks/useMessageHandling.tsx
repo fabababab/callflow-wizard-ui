@@ -4,6 +4,7 @@ import { Message } from '@/components/transcript/Message';
 import { ValidationStatus } from '@/data/scenarioData';
 import { v4 as uuidv4 } from 'uuid';
 import { AISuggestion } from '@/components/transcript/AISuggestion';
+import { ModuleConfig } from '@/types/modules';
 
 // Define types for sensitive data stats
 interface SensitiveDataStats {
@@ -17,6 +18,7 @@ interface SensitiveDataStats {
 interface SystemMessageOptions {
   requiresVerification?: boolean;
   responseOptions?: string[];
+  inlineModule?: ModuleConfig;
 }
 
 export function useMessageHandling() {
@@ -81,6 +83,7 @@ export function useMessageHandling() {
       requiresVerification: options?.requiresVerification,
       isVerified: false,
       responseOptions: options?.responseOptions,
+      inlineModule: options?.inlineModule
     };
     
     messageIdCounter.current += 1;
@@ -119,7 +122,7 @@ export function useMessageHandling() {
   }, []);
 
   // Add an agent message
-  const addAgentMessage = useCallback((text: string, suggestions: string[] = []) => {
+  const addAgentMessage = useCallback((text: string, suggestions: string[] = [], responseOptions?: string[]) => {
     // Convert string suggestions to AISuggestion objects if provided
     const aiSuggestions: AISuggestion[] = suggestions.map((suggestion, index) => ({
       id: index.toString(),
@@ -133,11 +136,29 @@ export function useMessageHandling() {
       sender: 'agent',
       timestamp: new Date(),
       suggestions: aiSuggestions,
+      responseOptions
     };
     
     messageIdCounter.current += 1;
     setMessages(prev => [...prev, newMessage]);
     setLastMessageUpdate(new Date());
+  }, []);
+
+  // Add a system message with an inline module
+  const addInlineModuleMessage = useCallback((text: string, moduleConfig: ModuleConfig) => {
+    const newMessage: Message = {
+      id: messageIdCounter.current.toString(),
+      text,
+      sender: 'system',
+      timestamp: new Date(),
+      inlineModule: moduleConfig
+    };
+    
+    messageIdCounter.current += 1;
+    setMessages(prev => [...prev, newMessage]);
+    setLastMessageUpdate(new Date());
+    
+    console.log("Adding inline module message:", text, moduleConfig);
   }, []);
 
   // Verify a system check
@@ -150,6 +171,27 @@ export function useMessageHandling() {
       )
     );
     setVerificationBlocking(false);
+  }, []);
+
+  // Handle completion of an inline module
+  const handleInlineModuleComplete = useCallback((messageId: string, moduleId: string, result: any) => {
+    console.log(`Inline module ${moduleId} completed for message ${messageId}:`, result);
+    
+    // Could update the message to reflect completion if needed
+    setMessages(prev => 
+      prev.map(message => 
+        message.id === messageId 
+          ? { 
+              ...message,
+              inlineModule: message.inlineModule ? {
+                ...message.inlineModule,
+                completed: true,
+                result
+              } : undefined
+            }
+          : message
+      )
+    );
   }, []);
 
   // Validate sensitive data
@@ -182,9 +224,11 @@ export function useMessageHandling() {
     addSystemMessage,
     addAgentMessage,
     addCustomerMessage,
+    addInlineModuleMessage,
     clearMessages,
     handleValidateSensitiveData,
     handleVerifySystemCheck,
+    handleInlineModuleComplete,
     setVerificationBlocking
   };
 }
