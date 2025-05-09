@@ -16,7 +16,7 @@ import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { Badge } from '@/components/ui/badge';
 import { SensitiveField } from '@/data/scenarioData';
 import { toast } from '@/components/ui/use-toast';
-import { StateMachineSelector } from '@/components/StateMachineSelector';
+import StateMachineSelector from '@/components/StateMachineSelector';
 
 // New interface to track selected state details for the modal
 interface SelectedStateDetails {
