@@ -49,6 +49,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
     }
   };
 
+  // Calculate if we need to show inline verification
   const showInlineVerification = requiresVerification && !isVerified && sender === 'customer';
   
   // Debug log to check verification state
@@ -73,7 +74,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
       
       {/* Show inline verification directly in the message content */}
       {showInlineVerification && onVerifySystemCheck && (
-        <div className="mt-2">
+        <div className="mt-2" data-testid="inline-verification">
           <InlineChatVerification 
             onVerify={handleVerify}
             isVerifying={false}

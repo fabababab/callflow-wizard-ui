@@ -26,14 +26,21 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     policyNumber: '12345678',
   };
   
+  // Debug logging for verification rendering
+  useEffect(() => {
+    console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying);
+  }, [isVerified, isVerifying]);
+  
   // Auto-submit the form after a brief delay
   useEffect(() => {
     if (!isVerified && !isVerifying && !autoVerifyStarted) {
       setAutoVerifyStarted(true);
+      console.log("Starting auto verification process");
       const timer = setTimeout(() => {
         setIsValidating(true);
         setTimeout(() => {
           setIsValidating(false);
+          console.log("Auto verification complete, calling onVerify(true)");
           onVerify(true, defaultValues);
         }, 1000);
       }, 500);
@@ -43,9 +50,11 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   }, [isVerified, isVerifying, autoVerifyStarted, onVerify]);
 
   const handleVerifyClick = () => {
+    console.log("Verify button clicked");
     setIsValidating(true);
     setTimeout(() => {
       setIsValidating(false);
+      console.log("Manual verification complete, calling onVerify(true)");
       onVerify(true, defaultValues);
     }, 800);
   };

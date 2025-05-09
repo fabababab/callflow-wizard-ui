@@ -34,8 +34,9 @@ const TestScenario = () => {
   
   // Add console.log to help debug the issue
   useEffect(() => {
-    console.log("TestScenario re-rendering, checking for open dialogs");
-  }, []);
+    console.log("TestScenario re-rendering, checking for sensitive field details:", 
+      scenarioState.showSensitiveFieldDetails ? "Open" : "Closed");
+  }, [scenarioState.showSensitiveFieldDetails]);
   
   return (
     <div className="flex h-screen bg-background">
@@ -48,10 +49,10 @@ const TestScenario = () => {
               {/* Main content section with transcript panel as the main view */}
               {scenarioState.loadedStateMachine && (
                 <div className="h-full" ref={transcriptRef}>
-                    <TranscriptPanel 
-                      activeScenario={scenarioState.selectedStateMachine} 
-                      jsonVisualization={jsonVisualization}
-                    />
+                  <TranscriptPanel 
+                    activeScenario={scenarioState.selectedStateMachine} 
+                    jsonVisualization={jsonVisualization}
+                  />
                 </div>
               )}
 
@@ -66,11 +67,13 @@ const TestScenario = () => {
         </div>
       </SidebarProvider>
 
-      {/* Sensitive Field Details Dialog - keep this one as it's needed */}
-      <SensitiveFieldDetailsDialog 
-        showSensitiveFieldDetails={scenarioState.showSensitiveFieldDetails} 
-        handleCloseSensitiveDetails={scenarioState.handleCloseSensitiveDetails} 
-      />
+      {/* Sensitive Field Details Dialog - this is the only dialog we should keep */}
+      {scenarioState.showSensitiveFieldDetails && (
+        <SensitiveFieldDetailsDialog 
+          showSensitiveFieldDetails={scenarioState.showSensitiveFieldDetails} 
+          handleCloseSensitiveDetails={scenarioState.handleCloseSensitiveDetails} 
+        />
+      )}
     </div>
   );
 };

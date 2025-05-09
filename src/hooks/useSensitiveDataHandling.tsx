@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Message } from '@/components/transcript/MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
@@ -27,6 +28,8 @@ export function useSensitiveDataHandling(
     status: ValidationStatus, 
     notes?: string
   ) => {
+    console.log(`Validating sensitive field ${fieldId} in message ${messageId} with status: ${status}`);
+    
     setMessages(prevMessages => 
       prevMessages.map(message => {
         if (message.id !== messageId || !message.sensitiveData) return message;
@@ -38,7 +41,7 @@ export function useSensitiveDataHandling(
               ...field,
               status,
               notes,
-            } as SensitiveField; // Cast to ensure type compatibility
+            } as SensitiveField;
           }
           return field;
         });
@@ -61,18 +64,17 @@ export function useSensitiveDataHandling(
         ...prev,
         invalid: prev.invalid + 1,
       }));
-      
-      // Set verification blocking if any sensitive data is invalid
-      setVerificationBlocking(true);
     }
     
     setLastMessageUpdate(new Date());
-  }, [setMessages, setLastMessageUpdate, setVerificationBlocking]);
+  }, [setMessages, setLastMessageUpdate]);
 
   /**
    * Handle verification of system checks
    */
   const handleVerifySystemCheck = useCallback((messageId: string) => {
+    console.log(`Verifying system check for message ${messageId}`);
+    
     setMessages(prevMessages =>
       prevMessages.map(message => {
         if (message.id !== messageId) return message;
@@ -84,10 +86,8 @@ export function useSensitiveDataHandling(
       })
     );
     
-    // Clear verification blocking
-    setVerificationBlocking(false);
     setLastMessageUpdate(new Date());
-  }, [setMessages, setLastMessageUpdate, setVerificationBlocking]);
+  }, [setMessages, setLastMessageUpdate]);
 
   return {
     sensitiveDataStats,

@@ -8,7 +8,7 @@ import { useMessageAdders } from '@/hooks/useMessageAdders';
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastMessageUpdate, setLastMessageUpdate] = useState<Date | null>(new Date());
-  const [verificationBlocking, setVerificationBlocking] = useState(false);
+  const [verificationBlocking, setVerificationBlocking] = useState(false); // We'll keep this but never use it
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get sensitive data handlers
@@ -16,7 +16,7 @@ export function useMessageHandling() {
     sensitiveDataStats,
     handleValidateSensitiveData,
     handleVerifySystemCheck
-  } = useSensitiveDataHandling(messages, setMessages, setVerificationBlocking, setLastMessageUpdate);
+  } = useSensitiveDataHandling(messages, setMessages, () => {}, setLastMessageUpdate);
   
   // Get message adders
   const {
@@ -64,17 +64,12 @@ export function useMessageHandling() {
     );
     
     setLastMessageUpdate(new Date());
-    
-    // Always set verification blocking to false
-    setVerificationBlocking(false);
   };
 
   // Override the original handleVerifySystemCheck to ensure verificationBlocking is set to false
   const enhancedHandleVerifySystemCheck = (messageId: string) => {
     console.log(`Enhanced verification check for message ${messageId}`);
     handleVerifySystemCheck(messageId);
-    // Always set verification blocking to false
-    setVerificationBlocking(false);
   };
 
   return {
@@ -91,6 +86,6 @@ export function useMessageHandling() {
     handleValidateSensitiveData,
     handleVerifySystemCheck: enhancedHandleVerifySystemCheck,
     handleInlineModuleComplete,
-    setVerificationBlocking: () => setVerificationBlocking(false), // Always set to false
+    setVerificationBlocking: () => {}, // No-op function
   };
 }
