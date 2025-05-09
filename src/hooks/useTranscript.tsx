@@ -1,4 +1,3 @@
-
 // This is a major refactoring of the useTranscript hook to fix state transitions and response options
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -420,7 +419,114 @@ export function useTranscript(activeScenario: ScenarioType) {
       showNachbearbeitungSummary();
     }
   }, [callState, messageHandling.addSystemMessage, conversationState, showNachbearbeitungSummary, toast]);
-  
+
+  // Add debug logging for scenario changes
+  useEffect(() => {
+    console.log('Active scenario changed:', activeScenario);
+  }, [activeScenario]);
+
+  // Add debug logging for state machine changes
+  useEffect(() => {
+    if (stateMachine.stateData) {
+      console.log('State machine data:', {
+        currentState: stateMachine.currentState,
+        stateData: stateMachine.stateData,
+        meta: stateMachine.stateData.meta
+      });
+    }
+  }, [stateMachine.stateData, stateMachine.currentState]);
+
+  // Fix state processing logic
+  useEffect(() => {
+    if (!stateMachine.stateData || !callState.callActive) {
+      return;
+    }
+
+    // Clear any existing timer
+    if (conversationState.debounceTimerRef.current) {
+      clearTimeout(conversationState.debounceTimerRef.current);
+    }
+
+    // Process state changes immediately for initial state
+    if (!conversationState.isInitialStateProcessed) {
+      console.log('Processing initial state');
+      processStateChange();
+      conversationState.setInitialStateProcessed(true);
+      return;
+    }
+
+    // Debounce other state changes
+    conversationState.debounceTimerRef.current = window.setTimeout(processStateChange, 300);
+
+    function processStateChange() {
+      console.log('Processing state change:', {
+        state: stateMachine.currentState,
+        data: stateMachine.stateData
+      });
+
+      // Process system message first
+      if (stateMachine.stateData.meta?.systemMessage) {
+        messageHandling.addSystemMessage(stateMachine.stateData.meta.systemMessage);
+      }
+
+      // Process customer message if present
+      if (stateMachine.stateData.meta?.customerText) {
+        const sensitiveData = detectSensitiveData(stateMachine.stateData.meta.customerText);
+        const responseOptions = extractTransitionsAsResponseOptions(stateMachine.currentState);
+        
+        messageHandling.addCustomerMessage(
+          stateMachine.stateData.meta.customerText,
+          sensitiveData,
+          responseOptions
+        );
+
+        conversationState.setAwaitingUserResponse(true);
+      }
+
+      // Process agent message if present and not from user action
+      if (stateMachine.stateData.meta?.agentText && !conversationState.isUserAction) {
+        const responseOptions = stateMachine.stateData.meta?.responseOptions || 
+          extractTransitionsAsResponseOptions(stateMachine.currentState);
+
+        messageHandling.addAgentMessage(
+          stateMachine.stateData.meta.agentText,
+          [],
+          responseOptions
+        );
+      }
+
+      // Process modules
+      if (stateMachine.stateData.meta?.module) {
+        if (stateMachine.stateData.meta.module.type === ModuleType.VERIFICATION) {
+          messageHandling.addInlineModuleMessage(
+            'Please verify the following information:',
+            stateMachine.stateData.meta.module
+          );
+        } else {
+          messageHandling.addSystemMessage(
+            `Opening ${stateMachine.stateData.meta.module.title}`
+          );
+        }
+      }
+
+      // Update state
+      conversationState.markStateAsProcessed(stateMachine.currentState);
+      conversationState.setLastTranscriptUpdate(new Date());
+      conversationState.setIsUserAction(false);
+    }
+
+    return () => {
+      if (conversationState.debounceTimerRef.current) {
+        clearTimeout(conversationState.debounceTimerRef.current);
+      }
+    };
+  }, [
+    stateMachine.stateData,
+    stateMachine.currentState,
+    callState.callActive,
+    conversationState.isInitialStateProcessed
+  ]);
+
   return {
     // Combine properties and methods from all hooks
     ...messageHandling,

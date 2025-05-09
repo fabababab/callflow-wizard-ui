@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MessageSender } from './MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
@@ -10,6 +9,7 @@ import VerificationButton from './VerificationButton';
 import SensitiveDataSection from './SensitiveDataSection';
 import ResponseOptions from './ResponseOptions';
 import InlineModuleDisplay from './InlineModuleDisplay';
+import { ChevronRight } from 'lucide-react';
 
 export type Message = {
   id: string;
@@ -75,6 +75,16 @@ const Message: React.FC<MessageProps> = ({
   const requiresVerification = message.requiresVerification && !message.isVerified;
   const hasInlineModule = message.inlineModule !== undefined;
   
+  // Debug logging for response options
+  React.useEffect(() => {
+    if (hasResponseOptions) {
+      console.log('Message has response options:', {
+        messageId: message.id,
+        options: message.responseOptions
+      });
+    }
+  }, [message.id, message.responseOptions, hasResponseOptions]);
+  
   // Handler for validating sensitive data
   const handleValidate = (fieldId: string, status: ValidationStatus, notes?: string) => {
     console.log(`Validating field ${fieldId} with status ${status}`);
@@ -101,7 +111,7 @@ const Message: React.FC<MessageProps> = ({
   
   // Handler for response selection
   const handleSelectResponse = (response: string) => {
-    console.log(`Selected response: ${response}`);
+    console.log(`Selecting response: ${response}`);
     if (onSelectResponse) {
       onSelectResponse(response);
     }
@@ -145,12 +155,23 @@ const Message: React.FC<MessageProps> = ({
           />
         )}
         
-        {/* Display response options if any are provided */}
+        {/* Enhanced response options display */}
         {hasResponseOptions && isAgentMode && message.responseOptions && (
-          <ResponseOptions
-            options={message.responseOptions}
-            onSelectResponse={handleSelectResponse}
-          />
+          <div className="mt-3 pt-2 border-t border-gray-300/20">
+            <div className="text-xs font-medium mb-2">Available Responses:</div>
+            <div className="space-y-1">
+              {message.responseOptions.map((option, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSelectResponse(option)}
+                  className="w-full px-3 py-2 text-left text-sm bg-primary/10 hover:bg-primary/20 rounded-md transition-colors duration-200 flex items-center gap-2"
+                >
+                  <span className="flex-1 truncate">{option}</span>
+                  <ChevronRight className="h-4 w-4 opacity-50" />
+                </button>
+              ))}
+            </div>
+          </div>
         )}
         
         {/* Display AI suggestions if any are provided */}

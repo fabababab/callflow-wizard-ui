@@ -11,10 +11,12 @@ import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
 import TranscriptPanel from '@/components/TranscriptPanel'; 
 import { Button } from '@/components/ui/button';
-import { FileJson, LayoutDashboard, Shield, AlertTriangle, Info, Database } from 'lucide-react';
+import { FileJson, LayoutDashboard, Shield, AlertTriangle, Info, Database, Loader2 } from 'lucide-react';
 import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { Badge } from '@/components/ui/badge';
 import { SensitiveField } from '@/data/scenarioData';
+import { toast } from '@/components/ui/use-toast';
+import { StateMachineSelector } from '@/components/StateMachineSelector';
 
 // New interface to track selected state details for the modal
 interface SelectedStateDetails {
@@ -31,6 +33,7 @@ const TestScenario = () => {
   const transcriptRef = useRef<HTMLDivElement>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
+  const [isLoading, setIsLoading] = useState(true);
   
   // State for selected state details and sensitive fields
   const [selectedStateDetails, setSelectedStateDetails] = useState<SelectedStateDetails | null>(null);
@@ -47,7 +50,6 @@ const TestScenario = () => {
   const activeScenario = customerScenario;
   const {
     currentState,
-    isLoading,
     error
   } = activeScenario;
 
@@ -106,6 +108,7 @@ const TestScenario = () => {
     const handleScenarioChange = (event: CustomEvent) => {
       const newScenario = event.detail.scenario as ScenarioType;
       if (newScenario && newScenario !== selectedStateMachine) {
+        console.log('Scenario changed to:', newScenario);
         setSelectedStateMachine(newScenario);
       }
     };
@@ -121,31 +124,102 @@ const TestScenario = () => {
   useEffect(() => {
     async function fetchStateMachine() {
       if (selectedStateMachine) {
+        setIsLoading(true);
         try {
+          console.log('Loading state machine for scenario:', selectedStateMachine);
+          
           // Reset transcript and any active modules when scenario changes
           transcript.resetConversation();
           
           const machine = await loadStateMachine(selectedStateMachine);
+          console.log('Loaded state machine:', machine);
+          
+          if (!machine) {
+            throw new Error('Failed to load state machine - received null or undefined');
+          }
+          
+          if (!machine.states || Object.keys(machine.states).length === 0) {
+            throw new Error('State machine has no states defined');
+          }
+          
           setLoadedStateMachine(machine);
 
           // Also load the JSON content for display
-          if (machine) {
-            setJsonContent(JSON.stringify(machine, null, 2));
-          }
+          setJsonContent(JSON.stringify(machine, null, 2));
 
           // Reset any active call when changing scenarios
           if (transcript.callActive) {
             transcript.handleHangUpCall();
           }
           
+          // Don't auto-initialize the state machine anymore
+          // Let the user explicitly start the call
+          
         } catch (error) {
           console.error("Failed to load state machine:", error);
+          toast({
+            title: "Error Loading Scenario",
+            description: error instanceof Error ? error.message : "Failed to load the test scenario",
+            variant: "destructive",
+            duration: 5000
+          });
+        } finally {
+          setIsLoading(false);
         }
       }
     }
+    
     fetchStateMachine();
   }, [selectedStateMachine, transcript]);
-  
+
+  // Add a new effect to monitor call state changes
+  useEffect(() => {
+    if (transcript.callActive) {
+      console.log('Call is now active');
+    } else {
+      console.log('Call is now inactive');
+    }
+  }, [transcript.callActive]);
+
+  // Enhance the call button handler
+  const handleCallButton = () => {
+    try {
+      if (!loadedStateMachine) {
+        throw new Error('No state machine loaded');
+      }
+
+      if (!transcript) {
+        throw new Error('Transcript not initialized');
+      }
+
+      console.log('Call button clicked. Current state:', {
+        callActive: transcript.callActive,
+        currentState: transcript.currentState,
+        loadedMachine: !!loadedStateMachine
+      });
+
+      transcript.handleCall();
+      
+      // Add success toast
+      toast({
+        title: transcript.callActive ? "Call Started" : "Call Ended",
+        description: transcript.callActive 
+          ? `Started ${selectedStateMachine} scenario` 
+          : "Call has been ended",
+        duration: 3000
+      });
+
+    } catch (error) {
+      console.error('Error handling call:', error);
+      toast({
+        title: "Error Starting Call",
+        description: error instanceof Error ? error.message : "Failed to start the call",
+        variant: "destructive",
+        duration: 5000
+      });
+    }
+  };
+
   // Function to scroll to the transcript panel
   const scrollToTranscript = () => {
     if (transcriptRef.current) {
@@ -185,7 +259,10 @@ const TestScenario = () => {
               {/* Display loading or error states */}
               {isLoading && <Card>
                   <CardContent className="py-4">
-                    <p className="text-center">Loading state machine...</p>
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                    </div>
+                    <p className="text-center">Loading scenario...</p>
                   </CardContent>
                 </Card>}
 
@@ -396,6 +473,19 @@ const TestScenario = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Update the call button to use the new handler */}
+      <Button 
+        onClick={handleCallButton}
+        disabled={isLoading || !loadedStateMachine}
+        className="flex items-center gap-2"
+      >
+        {transcript.callActive ? (
+          <>End Call</>
+        ) : (
+          <>Start Call</>
+        )}
+      </Button>
     </div>;
 };
 

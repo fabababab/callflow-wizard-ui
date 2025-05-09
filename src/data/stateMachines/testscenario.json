@@ -4,10 +4,64 @@
   "states": {
     "start": {
       "meta": {
-        "systemMessage": "Call initiated with customer."
+        "systemMessage": "Call initiated with customer.",
+        "agentText": "Welcome! How can I assist you today?",
+        "responseOptions": [
+          "Start the conversation",
+          "Verify customer identity first"
+        ]
       },
       "on": {
         "START_CALL": "customer_issue",
+        "Start the conversation": "customer_issue",
+        "Verify customer identity first": "verify_identity",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "verify_identity": {
+      "meta": {
+        "agentText": "Before we proceed, I'll need to verify your identity. Could you please provide your account number or email address?",
+        "customerText": "Sure, my account number is ACC123456 and my email is customer@example.com",
+        "sensitiveFields": [
+          {
+            "id": "account-number",
+            "type": "account_id",
+            "value": "ACC123456",
+            "pattern": "/\\b[A-Z]{3}[0-9]{6}\\b/",
+            "status": "pending",
+            "requiresVerification": true,
+            "systemValue": "ACC123456",
+            "source": "Customer Database",
+            "matched": true
+          }
+        ],
+        "module": {
+          "id": "verification-module-1",
+          "title": "Customer Verification",
+          "type": "verification",
+          "data": {
+            "fields": [
+              {
+                "id": "account-id",
+                "label": "Account Number",
+                "type": "text",
+                "value": "ACC123456",
+                "expectedValue": "ACC123456",
+                "required": true
+              }
+            ]
+          }
+        },
+        "responseOptions": [
+          "Thank you for verifying your identity. How can I help you today?",
+          "I see there's a note about a recent issue on your account. Is that what you're calling about?",
+          "I notice you've been a customer for over 2 years. Before we proceed, let me check if there are any loyalty rewards available."
+        ]
+      },
+      "on": {
+        "Thank you for verifying your identity. How can I help you today?": "customer_issue",
+        "I see there's a note about a recent issue on your account. Is that what you're calling about?": "customer_issue",
+        "I notice you've been a customer for over 2 years. Before we proceed, let me check if there are any loyalty rewards available.": "loyalty_check",
         "DEFAULT": "customer_issue"
       }
     },
@@ -15,6 +69,11 @@
       "meta": {
         "customerText": "Hi there. I recently purchased your premium subscription package, but I'm being charged the standard rate. I checked my account online and it shows I'm on the premium plan, but the features are limited to the standard plan and my last invoice shows the standard rate.",
         "suggestions": [
+          "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
+          "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
+          "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied."
+        ],
+        "responseOptions": [
           "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
           "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
           "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied."
