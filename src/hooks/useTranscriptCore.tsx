@@ -111,7 +111,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     debounceTimerRef: conversationState.debounceTimerRef
   });
   
-  // Use message updates hook
+  // Use message updates hook - make sure we pass the correct type for lastMessageUpdate
   useMessageUpdates({
     lastMessageUpdate: messageHandling.lastMessageUpdate,
     setLastTranscriptUpdate: conversationState.setLastTranscriptUpdate
