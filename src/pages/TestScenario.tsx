@@ -12,6 +12,7 @@ import { useScenarioState } from '@/hooks/useScenarioState';
 import { StateMachine } from '@/utils/stateMachineLoader';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
+import { useJsonVisualization } from '@/hooks/useJsonVisualization';
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
@@ -19,6 +20,9 @@ const TestScenario = () => {
   
   // State management for scenarios, states, and visualization
   const scenarioState = useScenarioState("testscenario");
+
+  // Use the useJsonVisualization hook for JSON view functionality
+  const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);
 
   // Use the useTranscript hook for the active scenario
   const transcript = useTranscript(scenarioState.selectedStateMachine);
@@ -44,7 +48,10 @@ const TestScenario = () => {
                 <div className="h-full">
                   {/* Directly embed the transcript panel without tabs */}
                   <div className="h-full" ref={transcriptRef}>
-                    <TranscriptPanel activeScenario={scenarioState.selectedStateMachine} />
+                    <TranscriptPanel 
+                      activeScenario={scenarioState.selectedStateMachine} 
+                      jsonVisualization={jsonVisualization}
+                    />
                   </div>
                 </div>
               )}

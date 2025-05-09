@@ -41,6 +41,7 @@ export function useCallState() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    setElapsedTime('00:00');
   }, []);
 
   // Set call active state and start timer

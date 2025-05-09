@@ -24,6 +24,7 @@ const CallControl: React.FC<CallControlProps> = ({
         <Button 
           onClick={onStartCall} 
           className="flex items-center gap-1 h-8"
+          variant="default"
           size="sm"
         >
           <PhoneCall size={16} />

@@ -6,7 +6,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import ChatMessages from '@/components/TestScenario/ChatMessages';
 import { useConversationSummary } from '@/hooks/useConversationSummary';
 import { useTranscriptTimer } from '@/hooks/useTranscriptTimer';
-import { useJsonVisualization } from '@/hooks/useJsonVisualization';
 import { useScenarioManagement } from '@/hooks/useScenarioManagement';
 import TranscriptHeader from '@/components/transcript/TranscriptHeader';
 import TranscriptFooter from '@/components/transcript/TranscriptFooter';
@@ -16,16 +15,17 @@ import ModuleDisplay from '@/components/transcript/ModuleDisplay';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
+  jsonVisualization?: any; // Accept jsonVisualization prop
 }
 
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
-  activeScenario
+  activeScenario,
+  jsonVisualization
 }) => {
   // Use the transcript hook with the active scenario
   const transcript = useTranscript(activeScenario);
   const { generateSummary } = useConversationSummary();
   const elapsedTime = useTranscriptTimer(transcript.callActive);
-  const jsonVisualization = useJsonVisualization(activeScenario);
   const scenarioManagement = useScenarioManagement(activeScenario);
   
   // Update summary when scenario changes
@@ -97,23 +97,25 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         activeScenario={activeScenario}
         onSelectScenario={scenarioManagement.handleScenarioChange}
         resetConversation={transcript.resetConversation}
-        viewJson={jsonVisualization.handleViewJson}
-        isLoadingJson={jsonVisualization.isLoadingJson}
+        viewJson={jsonVisualization ? jsonVisualization.handleViewJson : () => {}}
+        isLoadingJson={jsonVisualization ? jsonVisualization.isLoadingJson : false}
       />
       
       {/* JSON visualization dialog */}
-      <JsonVisualizationDialog 
-        open={jsonVisualization.jsonDialogOpen}
-        onOpenChange={jsonVisualization.setJsonDialogOpen}
-        dialogViewMode={jsonVisualization.dialogViewMode}
-        handleViewModeToggle={jsonVisualization.handleViewModeToggle}
-        jsonContent={jsonVisualization.jsonContent}
-        loadedStateMachine={jsonVisualization.loadedStateMachine}
-        currentState={transcript.currentState}
-        activeScenario={activeScenario}
-        selectedState={jsonVisualization.selectedState}
-        onStateClick={jsonVisualization.handleStateSelection}
-      />
+      {jsonVisualization && (
+        <JsonVisualizationDialog 
+          open={jsonVisualization.jsonDialogOpen}
+          onOpenChange={jsonVisualization.setJsonDialogOpen}
+          dialogViewMode={jsonVisualization.dialogViewMode}
+          handleViewModeToggle={jsonVisualization.handleViewModeToggle}
+          jsonContent={jsonVisualization.jsonContent}
+          loadedStateMachine={jsonVisualization.loadedStateMachine}
+          currentState={transcript.currentState}
+          activeScenario={activeScenario}
+          selectedState={jsonVisualization.selectedState}
+          onStateClick={jsonVisualization.handleStateSelection}
+        />
+      )}
     </div>
   );
 }
