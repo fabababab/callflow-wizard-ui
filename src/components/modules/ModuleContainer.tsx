@@ -19,14 +19,12 @@ const ModuleContainer: React.FC<ModuleContainerProps> = ({
 }) => {
   if (!moduleConfig) return null;
   
-  const moduleRegistryItem = moduleRegistry[moduleConfig.type];
+  const ModuleComponent = moduleRegistry[moduleConfig.type];
   
-  if (!moduleRegistryItem) {
+  if (!ModuleComponent) {
     console.error(`Module type "${moduleConfig.type}" not found in registry`);
     return null;
   }
-  
-  const ModuleComponent = moduleRegistryItem.component;
   
   // Check if this module should be displayed inline (not in a modal)
   const isInlineDisplay = moduleConfig.data?.isInline === true;
