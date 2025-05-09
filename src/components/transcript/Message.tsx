@@ -53,12 +53,11 @@ const Message: React.FC<MessageProps> = ({
 
   return (
     <div 
-      className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`} 
+      className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4 w-full`} 
       key={`message-${message.id}`}
     >
       <div
-        className={`rounded-lg max-w-[85%] p-3 shadow-sm 
-          ${message.sender === 'agent'
+        className={`rounded-lg max-w-[85%] p-3 shadow-sm ${message.sender === 'agent'
             ? 'bg-primary text-primary-foreground ml-auto'
             : message.sender === 'customer' 
             ? `bg-secondary text-secondary-foreground mr-auto ${hasVerificationFeatures ? 'border-l-4 border-amber-300/60' : ''}` 
@@ -101,10 +100,12 @@ const Message: React.FC<MessageProps> = ({
 
       {/* Display inline module */}
       {hasInlineModule && message.inlineModule && (
-        <MessageInlineModule 
-          moduleConfig={message.inlineModule}
-          onModuleComplete={(result) => handleInlineModuleComplete(message.inlineModule!.id, result)}
-        />
+        <div className="w-full max-w-[85%] flex justify-start">
+          <MessageInlineModule 
+            moduleConfig={message.inlineModule}
+            onModuleComplete={(result) => handleInlineModuleComplete(message.inlineModule!.id, result)}
+          />
+        </div>
       )}
     </div>
   );

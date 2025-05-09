@@ -60,7 +60,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
   }, [requiresVerification, isVerified, messageId, showInlineVerification, sender]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 w-full">
       <div className="text-sm whitespace-pre-wrap">{text}</div>
       
       {/* Display number matching visualization */}
@@ -74,7 +74,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
       
       {/* Show inline verification directly in the message content */}
       {showInlineVerification && onVerifySystemCheck && (
-        <div className="mt-2 w-full max-w-[95%]" data-testid="inline-verification">
+        <div className="mt-2 w-full" data-testid="inline-verification">
           <InlineChatVerification 
             onVerify={handleVerify}
             isVerifying={false}

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, Loader, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Loader, ShieldCheck, AlertCircle } from 'lucide-react';
 
 interface InlineChatVerificationProps {
   onVerify: (verified: boolean, data?: FormValues) => void;
@@ -18,6 +18,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [autoVerifyStarted, setAutoVerifyStarted] = useState(false);
+  const [verificationFailed, setVerificationFailed] = useState(false);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -74,13 +75,20 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   
   return (
     <div 
-      className="p-3 bg-amber-50/60 border-l-4 border-amber-300 rounded-md animate-in fade-in slide-in-right duration-300" 
+      className="p-3 bg-amber-50/60 border-l-4 border-amber-300 rounded-md animate-in fade-in slide-in-right duration-300 w-full" 
       data-testid="verification-form"
     >
       <div className="flex items-center gap-1.5 mb-2">
         <ShieldCheck size={16} className="text-amber-500" />
-        <p className="text-xs text-amber-700 font-medium">Customer Identity Verification</p>
+        <p className="text-xs text-amber-700 font-medium">Customer Verification Required</p>
       </div>
+      
+      {verificationFailed && (
+        <div className="mb-3 p-2 bg-red-50 rounded-md flex items-center gap-2">
+          <AlertCircle size={14} className="text-red-500" />
+          <p className="text-xs text-red-700">Verification failed. Please check your information.</p>
+        </div>
+      )}
       
       {isValidating ? (
         <div className="flex items-center justify-center h-12 gap-2 text-amber-700 text-xs">
@@ -89,7 +97,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-2 mb-2">
+          <div className="grid grid-cols-2 gap-3 mb-2">
             <div>
               <label className="text-xs text-amber-800/80 mb-1 block">Customer ID</label>
               <Input 
@@ -111,7 +119,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
             </div>
           </div>
           
-          <div className="flex gap-2 justify-end mt-2">
+          <div className="flex gap-2 justify-end mt-3">
             <Button 
               type="button"
               variant="outline" 
