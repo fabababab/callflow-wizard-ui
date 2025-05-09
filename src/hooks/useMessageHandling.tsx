@@ -1,7 +1,9 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Message } from '@/components/transcript/MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
+import { useSensitiveDataHandling } from '@/hooks/useSensitiveDataHandling';
+import { useMessageAdders } from '@/hooks/useMessageAdders';
 
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
