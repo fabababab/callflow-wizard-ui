@@ -147,6 +147,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const enhancedConversationInitializer = {
     ...conversationInitializer,
     handleCall: useCallback(() => {
+      console.log('Enhanced handleCall triggered');
       conversationInitializer.handleCall();
     }, [conversationInitializer]),
     resetConversation: useCallback(() => {

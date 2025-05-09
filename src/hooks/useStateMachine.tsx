@@ -48,6 +48,7 @@ export function useStateMachine(scenario: ScenarioType) {
         
         // Get data for initial state
         const initialStateData = getStateData(machine, initialState);
+        console.log(`Initial state data:`, initialStateData);
         setStateData(initialStateData);
         
         // Set loading false
@@ -88,6 +89,7 @@ export function useStateMachine(scenario: ScenarioType) {
         
         // Get data for new state
         const nextStateData = getStateData(stateMachine, defaultTransition);
+        console.log(`Next state data (from DEFAULT):`, nextStateData);
         setStateData(nextStateData);
         
         // Update last state change timestamp
@@ -106,6 +108,7 @@ export function useStateMachine(scenario: ScenarioType) {
     
     // Get data for new state
     const nextStateData = getStateData(stateMachine, nextState);
+    console.log(`Next state data:`, nextStateData);
     setStateData(nextStateData);
     
     // Update last state change timestamp
@@ -122,10 +125,13 @@ export function useStateMachine(scenario: ScenarioType) {
     }
 
     console.log("Processing start call");
+    console.log("Current state:", currentState);
+    console.log("State data:", stateData);
+    console.log("StateMachine has START_CALL transition:", !!stateMachine.states[currentState]?.on?.["START_CALL"]);
     
     // Process the START_CALL transition
     return processSelection("START_CALL");
-  }, [stateMachine, currentState, processSelection]);
+  }, [stateMachine, currentState, stateData, processSelection]);
   
   // Reset the state machine to initial state
   const resetStateMachine = useCallback(() => {

@@ -21,6 +21,7 @@ export function useConversationState() {
   
   // Mark a state as processed
   const markStateAsProcessed = useCallback((state: string) => {
+    console.log(`Marking state as processed: ${state}`);
     setProcessedStates(prev => {
       const newSet = new Set(prev);
       newSet.add(state);

@@ -51,6 +51,7 @@ export function useCallInitialization({
     callState.setCallActive(true);
     
     console.log('Initializing conversation...');
+    console.log('Current state machine:', stateMachine.stateMachine);
     
     // Add system message
     messageHandling.addSystemMessage(`Call started. Scenario: ${activeScenario}`);
@@ -71,6 +72,16 @@ export function useCallInitialization({
       
       // Update last transcript update time
       conversationState.setLastTranscriptUpdate(new Date());
+      
+      // Force state change processing
+      setTimeout(() => {
+        console.log('Forcing state change processing...');
+        if (stateMachine.currentState && stateMachine.stateData) {
+          const stateToProcess = stateMachine.currentState;
+          console.log(`Processing state: ${stateToProcess}`);
+          conversationState.markStateAsProcessed(stateToProcess);
+        }
+      }, 500);
     } else {
       console.error('Failed to start state machine - trying to process START_CALL event manually');
       
@@ -89,6 +100,16 @@ export function useCallInitialization({
         
         // Update last transcript update time
         conversationState.setLastTranscriptUpdate(new Date());
+        
+        // Force state change processing
+        setTimeout(() => {
+          console.log('Forcing state change processing after manual start...');
+          if (stateMachine.currentState && stateMachine.stateData) {
+            const stateToProcess = stateMachine.currentState;
+            console.log(`Processing state: ${stateToProcess}`);
+            conversationState.markStateAsProcessed(stateToProcess);
+          }
+        }, 500);
       } else {
         console.error('Failed to start state machine both ways');
         console.error('Current state machine:', stateMachine.stateMachine);

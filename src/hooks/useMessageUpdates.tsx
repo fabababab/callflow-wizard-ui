@@ -13,6 +13,7 @@ export function useMessageUpdates({
   // Update when messages update
   useEffect(() => {
     if (lastMessageUpdate) {
+      console.log("Message update detected, updating transcript:", lastMessageUpdate);
       setLastTranscriptUpdate(lastMessageUpdate);
     }
   }, [lastMessageUpdate, setLastTranscriptUpdate]);

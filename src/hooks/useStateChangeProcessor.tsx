@@ -1,3 +1,4 @@
+
 // Hook for processing state changes
 import { useCallback } from 'react';
 import { detectSensitiveData } from '@/data/scenarioData';
@@ -50,8 +51,22 @@ export function useStateChangeProcessor({
     // Log the current state transitions for debugging
     transitionExtractor.logStateTransitions(stateMachine.currentState);
     
+    // Do immediate processing for initial state to avoid delays
+    if (stateMachine.currentState && 
+        (stateMachine.currentState === 'start' || 
+         stateMachine.currentState === 'initial' || 
+         stateMachine.currentState.includes('initial'))) {
+      console.log('Processing initial state immediately without debounce');
+      processStateChangeInternal();
+      return;
+    }
+    
     // Debounce the state processing to prevent rapid fire updates
     conversationState.debounceTimerRef.current = window.setTimeout(() => {
+      processStateChangeInternal();
+    }, 300); // 300ms debounce
+    
+    function processStateChangeInternal() {
       console.log('Debounce complete, actually processing state change:', stateMachine.currentState);
       console.log('State data for processing:', stateMachine.stateData);
       
@@ -131,7 +146,7 @@ export function useStateChangeProcessor({
       conversationState.setIsUserAction(false);
       
       console.log('===== STATE CHANGE PROCESSING COMPLETE =====');
-    }, 300); // 300ms debounce
+    }
   }, [
     stateMachine.stateData, 
     stateMachine.currentState, 

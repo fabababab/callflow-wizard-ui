@@ -1,13 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, MutableRefObject } from 'react';
+import { StateMachineState } from '@/utils/stateMachineLoader';
 
 interface StateChangeEffectProps {
-  stateData: any;
-  lastStateChange: string | null;
+  stateData: StateMachineState | null;
+  lastStateChange: Date | null;
   callActive: boolean;
   currentState: string;
   processStateChange: () => void;
-  debounceTimerRef: React.MutableRefObject<number | null>;
+  debounceTimerRef: MutableRefObject<number | null>;
 }
 
 export function useStateChangeEffect({
@@ -18,33 +19,44 @@ export function useStateChangeEffect({
   processStateChange,
   debounceTimerRef
 }: StateChangeEffectProps) {
-  const [debugLastStateChange, setDebugLastStateChange] = useState<string>("");
-  
-  // Update to properly update UI when state changes
+  const [debugLastStateChange, setDebugLastStateChange] = useState<string>('');
+
+  // Effect to track the last state change for debugging
   useEffect(() => {
-    if (!stateData || !callActive || !lastStateChange) {
-      return;
+    if (lastStateChange) {
+      setDebugLastStateChange(`State changed to ${currentState} at ${lastStateChange.toISOString()}`);
+    }
+  }, [lastStateChange, currentState]);
+
+  // Effect that processes state changes
+  useEffect(() => {
+    console.log("State change effect triggered. Current state:", currentState);
+    console.log("Call active:", callActive);
+    console.log("State data exists:", !!stateData);
+    
+    if (callActive && currentState && stateData) {
+      // Process state change
+      console.log(`Processing state change for state: ${currentState}`);
+      processStateChange();
     }
     
-    // For debugging purposes, track state changes
-    setDebugLastStateChange(new Date().toISOString());
-    console.log(`State change detected: ${currentState} at ${new Date().toISOString()}`);
-    
-    processStateChange();
-    
     return () => {
+      // Clear any pending timers when unmounting or when dependencies change
       if (debounceTimerRef.current) {
+        console.log("Clearing debounce timer on cleanup");
         clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
     };
-  }, [
-    stateData, 
-    lastStateChange, 
-    callActive, 
-    processStateChange,
-    debounceTimerRef,
-    currentState
-  ]);
+  }, [callActive, currentState, stateData, processStateChange, debounceTimerRef]);
+
+  // Also trigger state change when lastStateChange updates (e.g., after a transition)
+  useEffect(() => {
+    if (lastStateChange && callActive && currentState && stateData) {
+      console.log(`State change detected at ${lastStateChange.toISOString()}`);
+      processStateChange();
+    }
+  }, [lastStateChange, callActive, currentState, stateData, processStateChange]);
 
   return { debugLastStateChange };
 }
