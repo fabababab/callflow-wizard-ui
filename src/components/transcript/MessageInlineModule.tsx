@@ -5,7 +5,7 @@ import InlineModuleDisplay from './InlineModuleDisplay';
 
 interface MessageInlineModuleProps {
   moduleConfig: ModuleConfig;
-  onModuleComplete: (moduleId: string, result: any) => void;
+  onModuleComplete: (result: any) => void;
 }
 
 const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
@@ -13,7 +13,7 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   onModuleComplete
 }) => {
   const handleModuleComplete = (result: any) => {
-    onModuleComplete(moduleConfig.id, result);
+    onModuleComplete(result);
   };
   
   return (

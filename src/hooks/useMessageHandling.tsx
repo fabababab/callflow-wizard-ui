@@ -1,13 +1,14 @@
 
 import { useState, useRef } from 'react';
-import { Message } from '@/components/transcript/Message';
+import Message from '@/components/transcript/Message';
+import { MessageType } from '@/components/transcript/Message';
 import { ModuleConfig } from '@/types/modules';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 import { useMessageAdders } from '@/hooks/useMessageAdders';
 import { useSensitiveDataHandling } from '@/hooks/useSensitiveDataHandling';
 
 export function useMessageHandling() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<MessageType[]>([]);
   const [lastMessageUpdate, setLastMessageUpdate] = useState<Date | null>(new Date());
   const [verificationBlocking, setVerificationBlocking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);

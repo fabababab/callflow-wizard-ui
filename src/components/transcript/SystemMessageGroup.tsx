@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Message as MessageType } from './Message';
+import Message from './Message';
+import { MessageType } from './Message';
 
 interface SystemMessageGroupProps {
   messages: MessageType[];

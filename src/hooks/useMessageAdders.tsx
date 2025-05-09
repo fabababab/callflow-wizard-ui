@@ -1,12 +1,13 @@
 
 import { useState, useCallback } from 'react';
-import { Message } from '@/components/transcript/Message';
+import Message from '@/components/transcript/Message';
+import { MessageType } from '@/components/transcript/Message';
 import { ModuleConfig } from '@/types/modules';
 import { SensitiveField } from '@/data/scenarioData';
 
 export function useMessageAdders(
-  messages: Message[],
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
+  messages: MessageType[],
+  setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>,
   sensitiveDataStats: { total: number; valid: number; invalid: number },
   setLastMessageUpdate: React.Dispatch<React.SetStateAction<Date>>
 ) {

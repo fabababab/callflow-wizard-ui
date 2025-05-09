@@ -1,7 +1,6 @@
-
 import React from 'react';
 import Message from '../transcript/Message';
-import { Message as MessageType } from '../transcript/MessageTypes';
+import { MessageType } from '../transcript/Message';
 import { ValidationStatus } from '@/data/scenarioData';
 
 interface ChatMessagesProps {

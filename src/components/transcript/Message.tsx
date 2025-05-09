@@ -18,7 +18,7 @@ interface MessageProps {
   onValidateSensitiveData?: (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => void;
   onVerifySystemCheck?: (messageId: string) => void;
   isAgentMode?: boolean;
-  onModuleComplete?: (moduleId: string, result: any) => void;
+  onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
 }
 
 const Message: React.FC<MessageProps> = ({ 
@@ -102,11 +102,14 @@ const Message: React.FC<MessageProps> = ({
       {hasInlineModule && message.inlineModule && onModuleComplete && (
         <MessageInlineModule 
           moduleConfig={message.inlineModule}
-          onModuleComplete={handleInlineModuleComplete}
+          onModuleComplete={(result) => handleInlineModuleComplete(message.inlineModule!.id, result)}
         />
       )}
     </div>
   );
 };
+
+// Export MessageType type for other files to use
+export type { MessageType };
 
 export default Message;
