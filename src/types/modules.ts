@@ -1,4 +1,5 @@
 
+
 export enum ModuleType {
   VERIFICATION = 'verification',
   INFORMATION = 'information',
@@ -20,4 +21,7 @@ export interface ModuleProps {
   data?: any;
   onClose?: () => void;
   onComplete?: (result: any) => void;
+  currentState?: string;
+  stateData?: any;
 }
+
