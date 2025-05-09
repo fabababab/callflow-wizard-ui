@@ -1,5 +1,7 @@
+
 // This file defines the ScenarioType that's used across the application
-export type ScenarioType = 'testscenario' | 'scenario2' | 'verification' | 'bankDetails' | 'accountHistory' | 'physioTherapy' | 'paymentReminder' | 'insurancePackage' | 'empty';
+export type ScenarioType = 'testscenario' | 'scenario2' | 'verification' | 'bankDetails' | 'accountHistory' | 
+  'physioTherapy' | 'paymentReminder' | 'insurancePackage' | 'basicTutorial' | 'customerSupport' | 'accountVerification';
 
 import React from 'react';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -238,11 +240,19 @@ const ScenarioSelector = ({
   onSelectScenario,
   disabled = false
 }: ScenarioSelectorProps) => {
-  // Update the scenarios array to include empty scenario
+  // Update the scenarios array to include all available scenarios
   const scenarios: ScenarioType[] = [
     'testscenario',
     'scenario2',
-    'empty'
+    'verification',
+    'bankDetails',
+    'accountHistory',
+    'physioTherapy',
+    'paymentReminder',
+    'insurancePackage',
+    'basicTutorial',
+    'customerSupport',
+    'accountVerification'
   ];
 
   return (
@@ -260,7 +270,10 @@ const ScenarioSelector = ({
           <SelectGroup>
             {scenarios.map((scenario) => (
               <SelectItem key={scenario} value={scenario}>
-                {scenario.charAt(0).toUpperCase() + scenario.slice(1)}
+                {scenario === 'basicTutorial' ? 'Basic Tutorial' :
+                 scenario === 'customerSupport' ? 'Customer Support' :
+                 scenario === 'accountVerification' ? 'Account Verification' :
+                 scenario.charAt(0).toUpperCase() + scenario.slice(1)}
               </SelectItem>
             ))}
           </SelectGroup>

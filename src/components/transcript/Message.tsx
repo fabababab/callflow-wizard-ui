@@ -78,6 +78,7 @@ const Message: React.FC<MessageProps> = ({
   
   // Handler for validating sensitive data
   const handleValidate = (fieldId: string, status: ValidationStatus, notes?: string) => {
+    console.log(`Validating field ${fieldId} with status ${status}`);
     if (onValidateSensitiveData) {
       onValidateSensitiveData(message.id, fieldId, status, notes);
     }
@@ -85,6 +86,7 @@ const Message: React.FC<MessageProps> = ({
 
   // Handler for verifying system check
   const handleVerify = () => {
+    console.log(`Verifying message ${message.id}`);
     if (onVerifySystemCheck) {
       onVerifySystemCheck(message.id);
     }
@@ -92,6 +94,7 @@ const Message: React.FC<MessageProps> = ({
 
   // Handler for module completion
   const handleModuleComplete = (result: any) => {
+    console.log(`Module completed for message ${message.id}`, result);
     if (onModuleComplete && message.inlineModule) {
       onModuleComplete(message.inlineModule.id, result);
     }
@@ -103,6 +106,14 @@ const Message: React.FC<MessageProps> = ({
     console.log("Module closed");
   };
   
+  // Handler for response selection
+  const handleSelectResponse = (response: string) => {
+    console.log(`Selected response: ${response}`);
+    if (onSelectResponse) {
+      onSelectResponse(response);
+    }
+  };
+  
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
@@ -111,7 +122,7 @@ const Message: React.FC<MessageProps> = ({
             ? 'bg-primary text-primary-foreground ml-auto'
             : message.sender === 'customer' 
             ? 'bg-secondary text-secondary-foreground mr-auto' 
-            : 'bg-muted text-center italic text-sm'}`}
+            : 'bg-muted text-center italic text-sm w-full'}`}
       >
         <div className="flex justify-between items-center mb-1">
           <Badge
@@ -179,7 +190,7 @@ const Message: React.FC<MessageProps> = ({
                 <ValidationField 
                   key={field.id} 
                   field={field} 
-                  onValidate={handleValidate} 
+                  onValidate={(status, notes) => handleValidate(field.id, status, notes)} 
                 />
               ))}
             </div>
@@ -197,7 +208,7 @@ const Message: React.FC<MessageProps> = ({
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start text-sm"
-                  onClick={() => onSelectResponse && onSelectResponse(option)}
+                  onClick={() => handleSelectResponse(option)}
                 >
                   <span className="truncate">{option}</span>
                   <ChevronRight className="h-3 w-3 ml-auto" />

@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ScenarioSelector from './ScenarioSelector';
 import ModuleContainer from '@/components/modules/ModuleContainer';
 import { useConversationSummary } from '@/hooks/useConversationSummary';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { getStateMachineJson } from '@/utils/stateMachineLoader';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -24,9 +26,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   // Use the transcript hook with the active scenario
   const transcript = useTranscript(activeScenario);
   const { generateSummary } = useConversationSummary();
-  const [showJsonDialog, setShowJsonDialog] = useState(false);
+  const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
+  const [jsonContent, setJsonContent] = useState("");
   const [activeTab, setActiveTab] = useState<string>("chat");
   const [conversationSummary, setConversationSummary] = useState<string>("");
+  const [isLoadingJson, setIsLoadingJson] = useState(false);
 
   // Update summary when scenario changes
   useEffect(() => {
@@ -68,17 +72,24 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     transcript.handleInlineModuleComplete(messageId, moduleId, result);
   };
 
-  // Toggle JSON dialog visibility
-  const toggleJsonDialog = () => {
-    setShowJsonDialog(!showJsonDialog);
-
-    // Dispatch event for JSON visualization
-    const event = new CustomEvent('toggle-json-visualization', {
-      detail: {
-        visible: !showJsonDialog
-      }
-    });
-    window.dispatchEvent(event);
+  // Function to load and show JSON dialog
+  const handleViewJson = async () => {
+    if (!activeScenario) return;
+    
+    setIsLoadingJson(true);
+    try {
+      const json = transcript.currentState ? 
+        transcript.getStateJson(transcript.currentState) :
+        await getStateMachineJson(activeScenario);
+      
+      setJsonContent(json);
+      setJsonDialogOpen(true);
+    } catch (error) {
+      console.error("Failed to load JSON:", error);
+      setJsonContent(JSON.stringify({ error: "Failed to load state machine JSON" }, null, 2));
+    } finally {
+      setIsLoadingJson(false);
+    }
   };
   
   return (
@@ -97,12 +108,18 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           
           <div className="flex items-center gap-2">
             {/* JSON button */}
-            <Button variant="outline" size="sm" onClick={toggleJsonDialog} className="flex items-center gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleViewJson} 
+              className="flex items-center gap-1"
+              disabled={isLoadingJson}
+            >
               <FileJson className="h-4 w-4 mr-1" />
               JSON
             </Button>
             
-            {/* Call button - now positioned at the same level as scenario selector */}
+            {/* Call button */}
             <Button 
               size="sm" 
               variant={transcript.callActive ? "destructive" : "default"}
@@ -146,144 +163,111 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                     <Shield size={16} />
                     <span className="text-sm font-medium">Verification required to continue</span>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="text-xs bg-white" 
-                    onClick={() => transcript.handleVerifySystemCheck('system')}
-                  >
-                    Verify Identity
-                  </Button>
+                  <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                    Pending
+                  </Badge>
                 </div>
               </Card>
             }
             
             {/* Chat messages */}
-            <ChatMessages 
-              messages={transcript.messages} 
-              isAgentMode={true} 
-              onSelectResponse={transcript.handleSelectResponse} 
-              onVerifySystemCheck={transcript.handleVerifySystemCheck} 
-              onValidateSensitiveData={transcript.handleValidateSensitiveData} 
-              messagesEndRef={transcript.messagesEndRef} 
-              onModuleComplete={handleInlineModuleComplete} 
+            <ChatMessages
+              messages={transcript.messages}
+              onSelectResponse={transcript.handleSelectResponse}
+              onVerifySystemCheck={transcript.handleVerifySystemCheck}
+              onValidateSensitiveData={transcript.handleValidateSensitiveData}
+              messagesEndRef={transcript.messagesEndRef}
+              onModuleComplete={transcript.handleInlineModuleComplete}
             />
             
-            {/* Empty state */}
-            {transcript.messages.length === 0 && !transcript.callActive && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Phone className="h-12 w-12 text-muted-foreground mb-4" strokeWidth={1.5} />
-                <h3 className="text-lg font-medium text-muted-foreground mb-2">No Active Call</h3>
-                <p className="text-sm text-muted-foreground/70 max-w-xs mb-6">
-                  Click the "Start Call" button to begin a conversation with the virtual customer
-                </p>
-                <Button 
-                  onClick={transcript.handleCall}
-                  className="gap-2"
-                >
-                  <Phone className="h-4 w-4" /> Start Call
-                </Button>
+            {/* Show module if active */}
+            {transcript.activeModule && (
+              <div className="mt-4 border rounded-lg overflow-hidden">
+                <ModuleContainer
+                  moduleConfig={transcript.activeModule}
+                  onClose={() => transcript.completeModule({ cancelled: true })}
+                  onComplete={handleModuleComplete}
+                  currentState={transcript.currentState}
+                  stateData={transcript.stateData}
+                />
               </div>
             )}
           </ScrollArea>
         </TabsContent>
         
-        <TabsContent value="summary" className="flex-grow overflow-auto p-4 m-0">
-          <Card className="border shadow-sm">
-            <div className="p-5">
-              <h2 className="text-lg font-semibold mb-4">Conversation Summary</h2>
+        <TabsContent value="summary" className="flex-grow p-4 overflow-auto">
+          <Card>
+            <ScrollArea className="h-[calc(100vh-200px)] p-4">
+              <h3 className="text-lg font-semibold mb-2">Call Summary</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {activeScenario ? `Scenario: ${activeScenario}` : 'No scenario selected'}
+              </p>
+              
               <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="bg-muted/50">{activeScenario}</Badge>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                    {transcript.callActive ? "Active Call" : "Completed Call"}
-                  </Badge>
+                <div className="border-l-4 border-primary pl-4 py-2">
+                  <h4 className="font-medium">Conversation Overview</h4>
+                  <p className="text-sm mt-1">{conversationSummary}</p>
                 </div>
                 
-                <Separator />
-                
-                <div className="prose prose-sm max-w-none">
-                  <p className="whitespace-pre-line">{conversationSummary}</p>
+                <div>
+                  <h4 className="font-medium mb-2">Key Points</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm">
+                    <li>Customer identity was verified</li>
+                    <li>Customer's concern was acknowledged</li>
+                    <li>Relevant information was provided</li>
+                    <li>Follow-up actions were agreed upon</li>
+                  </ul>
                 </div>
                 
-                {transcript.callActive && (
-                  <div className="bg-amber-50 p-3 rounded-md border border-amber-200 text-sm text-amber-700">
-                    Call is currently in progress. Summary will be updated when the call ends.
+                <div>
+                  <h4 className="font-medium mb-2">Agent Actions</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
+                      <span>Identity verification</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
+                      <span>Information provision</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
+                      <span>Issue resolution</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
+                      <span>Next steps explained</span>
+                    </div>
                   </div>
-                )}
-                
-                {!transcript.callActive && transcript.messages.length > 0 && (
-                  <div className="pt-3 border-t">
-                    <h3 className="text-sm font-semibold mb-2">Key Points:</h3>
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      <li>Customer identity was successfully verified</li>
-                      <li>Customer concern was addressed</li>
-                      <li>Required information was provided</li>
-                      <li>Next steps were clearly communicated</li>
-                      <li>Follow-up actions were documented</li>
-                    </ul>
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
+            </ScrollArea>
           </Card>
         </TabsContent>
       </Tabs>
       
-      {/* Footer status area */}
-      <div className="p-4 border-t">
-        <div className="flex items-center justify-between pb-2 gap-3">
-          <div className="flex-grow">
-            <div className="flex items-center gap-2">
-              {transcript.callActive ? 
-                <span className="flex items-center gap-1.5 text-green-500">
-                  <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                  <span className="text-xs font-medium">Call Active</span>
-                  <span className="text-xs text-gray-400 ml-1">{transcript.elapsedTime}</span>
-                </span> : 
-                <span className="flex items-center gap-1.5 text-gray-400">
-                  <span className="h-2 w-2 rounded-full bg-gray-400"></span>
-                  <span className="text-xs">No Active Call</span>
+      {/* JSON dialog */}
+      <Dialog open={jsonDialogOpen} onOpenChange={setJsonDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              State Machine for {activeScenario}
+              {transcript.currentState && (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  (Current state: {transcript.currentState})
                 </span>
-              }
-            </div>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto max-h-[60vh]">
+            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+              {jsonContent}
+            </pre>
           </div>
-          
-          <div className="flex items-center gap-2">
-            {transcript.awaitingUserResponse && (
-              <Badge variant="outline" className="bg-amber-50 border-amber-200 text-amber-700 animate-pulse">
-                Awaiting your response
-              </Badge>
-            )}
-          </div>
-        </div>
-        
-        <Separator className="my-2" />
-        
-        <div className="flex justify-center pt-2">
-          <span className="text-center text-xs text-gray-400">
-            {transcript.awaitingUserResponse ? 
-              "Customer is waiting for your response" : 
-              transcript.callActive ? 
-                "Waiting for customer input" :
-                "Start a call to begin conversation"
-            }
-          </span>
-        </div>
-      </div>
-
-      {/* Module container that will display active modules */}
-      {transcript.activeModule && 
-        <ModuleContainer 
-          moduleConfig={transcript.activeModule} 
-          onClose={transcript.closeModule} 
-          onComplete={handleModuleComplete} 
-          currentState={transcript.currentState} 
-          stateData={transcript.stateData} 
-        />
-      }
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
+}
 
 export default TranscriptPanel;

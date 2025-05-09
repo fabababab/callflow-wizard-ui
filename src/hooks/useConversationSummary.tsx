@@ -3,42 +3,46 @@ import { useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 
 export function useConversationSummary() {
-  const generateSummary = useCallback((scenario: ScenarioType | null): string => {
-    if (!scenario) return "No scenario selected. Start a call to begin.";
-
-    // Generate different summaries based on scenario type
-    switch (scenario) {
+  // Generate conversation summary based on scenario
+  const generateSummary = useCallback((scenario: ScenarioType): string => {
+    switch(scenario) {
+      case 'testscenario':
+        return "Customer called for a general inquiry about the system functionality. The agent verified the customer's identity and provided basic information about the service.";
+      
+      case 'scenario2':
+        return "Customer was experiencing problems upgrading their internet package through the website. The agent guided them through the process, identified a technical issue with the checkout, and successfully helped complete the upgrade.";
+      
       case 'verification':
-        return "The customer requested identity verification after receiving an alert about a login from an unfamiliar location. Agent verified the customer's identity using date of birth and account details. Confirmed this was unauthorized access and recommended a password change. The customer was advised about enabling two-factor authentication for additional security.";
+        return "Customer received a security alert about unauthorized login attempt. The agent verified the customer's identity, confirmed the suspicious activity, and helped secure the account by changing the password and enabling two-factor authentication.";
       
       case 'bankDetails':
-        return "Customer called to update their bank account details after switching banks. Agent verified the customer's identity and collected new banking information. The changes were confirmed and processed. Customer was informed that the changes will take effect for the next payment cycle.";
+        return "Customer needed to update their bank details after changing banks. After verifying the customer's identity, the agent collected and updated the new bank information and confirmed the changes would be effective before the next payment cycle.";
       
       case 'accountHistory':
-        return "Customer reported suspicious transactions on their account. Agent verified customer identity and reviewed account history for the past three months. Three unknown transactions were identified and flagged for investigation. A temporary hold was placed on the account and a new card was issued to the customer as a precaution.";
+        return "Customer noticed unusual transactions on their account statement. The agent verified the customer's identity, reviewed the account history, identified three unauthorized charges, and initiated the dispute process while arranging for a new card to be issued.";
       
       case 'physioTherapy':
-        return "Der Kunde fragte nach der Deckung für 10 Physiotherapiebehandlungen, die vom Arzt verschrieben wurden. Der Agent bestätigte, dass die Versicherung alle 10 Behandlungen abdeckt, solange sie medizinisch notwendig sind. Der Kunde wurde darüber informiert, dass keine Vorabgenehmigung erforderlich ist und die Erstattung direkt erfolgen kann.";
+        return "Customer inquired about coverage for physiotherapy after receiving a prescription for 10 sessions. The agent verified the insurance coverage, confirmed all sessions were covered under their plan, and explained the process for submitting claims after treatment.";
       
       case 'paymentReminder':
-        return "Der Kunde erhielt eine Zahlungserinnerung, obwohl die Zahlung bereits geleistet wurde. Der Agent überprüfte die Zahlung und bestätigte, dass sie eingegangen ist, aber nicht korrekt verbucht wurde. Die Mahnung wurde storniert und der Agent versicherte, dass keine Mahngebühren anfallen werden.";
+        return "Customer received a payment reminder despite having already made payment. The agent located the payment in the system, confirmed it was processed after the reminder was automatically generated, and removed the late payment fee from the account.";
       
       case 'insurancePackage':
-        return "Der Kunde wollte nach Studienabschluss von einer Studentenversicherung auf ein reguläres Versicherungspaket umsteigen. Der Agent erläuterte verschiedene Pakete mit besonderem Fokus auf Zahnversicherung und Zusatzleistungen für Brillen. Ein passendes Paket wurde identifiziert und der Kunde erhält ein detailliertes Angebot per E-Mail.";
+        return "Customer is graduating from studies and needed to update their insurance package. The agent reviewed available options for young professionals, recommended a comprehensive package with dental and vision coverage, and set up the transition for the beginning of next month.";
       
       case 'basicTutorial':
-        return "This was a basic tutorial call to demonstrate the system functionality. The agent went through standard greeting procedures and basic customer service protocols. This scenario serves as an introduction to the call handling workflow.";
+        return "This is a basic tutorial scenario that walks through the fundamental features of the system. The agent demonstrated how to navigate the interface, access account information, and perform basic actions like updating personal details.";
       
       case 'customerSupport':
-        return "Customer called with general inquiries about their account services. Agent provided information about account features, answered questions about billing cycles, and explained premium service options. Customer was satisfied with the information provided and will consider upgrading their package.";
-      
+        return "Customer reached out with general questions about their account services. The agent provided information about account features, answered questions about billing cycles, and helped troubleshoot a minor access issue with the customer's online dashboard.";
+        
       case 'accountVerification':
-        return "Customer needed to verify their account details after receiving system notifications. Agent guided them through the verification process using security questions and confirmed all details were correct. Additional security measures were explained and account access was restored successfully.";
-      
+        return "New customer needed to complete their account verification process. The agent guided them through identity verification steps, helped set up security questions, and explained the account protection measures in place for their privacy and security.";
+        
       default:
-        return "Customer called with a general inquiry. Agent provided information and assistance according to company protocols. The call was resolved successfully and customer's concerns were addressed appropriately.";
+        return "No conversation summary available for this scenario. Please select a different scenario or start a conversation to generate a summary.";
     }
   }, []);
-
+  
   return { generateSummary };
 }

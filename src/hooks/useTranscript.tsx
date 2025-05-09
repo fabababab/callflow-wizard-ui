@@ -1,4 +1,5 @@
 
+// This is a major refactoring of the useTranscript hook to fix state transitions and response options
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useStateMachine } from '@/hooks/useStateMachine';
@@ -10,8 +11,10 @@ import { useCallState } from '@/hooks/useCallState';
 import { useConversationState } from '@/hooks/useConversationState';
 import { useTransitionExtractor } from '@/hooks/useTransitionExtractor';
 import { useNachbearbeitungHandler } from '@/hooks/useNachbearbeitungHandler';
+import { useToast } from '@/hooks/use-toast';
 
 export function useTranscript(activeScenario: ScenarioType) {
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the message handling functionality
@@ -27,9 +30,11 @@ export function useTranscript(activeScenario: ScenarioType) {
   const conversationState = useConversationState();
   
   // Get transition extractor
-  const { extractTransitionsAsResponseOptions } = useTransitionExtractor(
-    stateMachine.stateMachine
-  );
+  const { 
+    extractTransitionsAsResponseOptions,
+    getStateJson,
+    logStateTransitions
+  } = useTransitionExtractor(stateMachine.stateMachine);
   
   // Get the module manager functionality
   const moduleManager = useModuleManager(
@@ -42,6 +47,9 @@ export function useTranscript(activeScenario: ScenarioType) {
   const { showNachbearbeitungSummary } = useNachbearbeitungHandler(
     moduleManager.completeModule
   );
+
+  // Debug timers for state tracking
+  const [debugLastStateChange, setDebugLastStateChange] = useState<string>("");
 
   // Reset processed states when the scenario changes
   useEffect(() => {
@@ -74,6 +82,9 @@ export function useTranscript(activeScenario: ScenarioType) {
       return;
     }
     
+    // For debugging purposes, track state changes
+    setDebugLastStateChange(new Date().toISOString());
+    
     // Prevent duplicate processing of the same state
     if (conversationState.hasProcessedState(stateMachine.currentState)) {
       console.log(`State ${stateMachine.currentState} already processed, skipping message updates`);
@@ -84,6 +95,9 @@ export function useTranscript(activeScenario: ScenarioType) {
     if (conversationState.debounceTimerRef.current) {
       clearTimeout(conversationState.debounceTimerRef.current);
     }
+    
+    // Log the current state transitions for debugging
+    logStateTransitions(stateMachine.currentState);
     
     // Debounce the state processing to prevent rapid fire updates
     conversationState.debounceTimerRef.current = window.setTimeout(() => {
@@ -109,6 +123,14 @@ export function useTranscript(activeScenario: ScenarioType) {
         
         // Set flag that we're waiting for user to respond
         conversationState.setAwaitingUserResponse(true);
+        
+        // If sensitive data was detected, show toast notification
+        if (sensitiveData && sensitiveData.length > 0) {
+          toast({
+            title: "Sensitive Data Detected",
+            description: "Please verify the detected information before proceeding.",
+          });
+        }
       }
       
       if (stateMachine.stateData.meta?.agentText && !conversationState.isUserAction) {
@@ -116,7 +138,17 @@ export function useTranscript(activeScenario: ScenarioType) {
         
         // Extract response options for next state if needed
         const responseOptions = stateMachine.stateData.meta?.responseOptions || [];
-        messageHandling.addAgentMessage(stateMachine.stateData.meta.agentText, [], responseOptions.length > 0 ? responseOptions : undefined);
+        
+        // If explicit responseOptions aren't provided, extract them from transitions
+        const effectiveResponseOptions = responseOptions.length > 0 
+          ? responseOptions
+          : extractTransitionsAsResponseOptions(stateMachine.currentState);
+          
+        messageHandling.addAgentMessage(
+          stateMachine.stateData.meta.agentText, 
+          [], 
+          effectiveResponseOptions.length > 0 ? effectiveResponseOptions : undefined
+        );
       }
       
       // Check if this state has a module trigger
@@ -162,7 +194,9 @@ export function useTranscript(activeScenario: ScenarioType) {
     conversationState.isUserAction,
     messageHandling.addInlineModuleMessage, 
     extractTransitionsAsResponseOptions,
-    conversationState
+    conversationState,
+    logStateTransitions,
+    toast
   ]);
   
   // Update when messages update
@@ -205,9 +239,16 @@ export function useTranscript(activeScenario: ScenarioType) {
     
     // Only process if we're awaiting user response or at initial state
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
-      console.log('Not awaiting user response yet, skipping');
+      console.warn('Not awaiting user response yet, skipping');
       return;
     }
+    
+    // Show toast notification for response selection
+    toast({
+      title: "Response Selected",
+      description: response,
+      duration: 2000,
+    });
     
     // Set the user action flag
     conversationState.setIsUserAction(true);
@@ -220,21 +261,37 @@ export function useTranscript(activeScenario: ScenarioType) {
     
     // Process the selection in the state machine
     console.log('Processing selection in state machine:', response, 'from state:', stateMachine.currentState);
-    const success = stateMachine.processSelection(response);
     
-    if (!success) {
-      console.warn('Failed to process selection:', response);
-      // Try with DEFAULT transition as fallback
-      console.log("Using default response path");
-      stateMachine.processSelection("DEFAULT");
-    }
+    // Small delay to ensure UI updates before state changes
+    setTimeout(() => {
+      const success = stateMachine.processSelection(response);
+      
+      if (!success) {
+        console.warn('Failed to process selection:', response);
+        // Try with DEFAULT transition as fallback
+        console.log("Using default response path");
+        const defaultSuccess = stateMachine.processSelection("DEFAULT");
+        
+        if (!defaultSuccess) {
+          toast({
+            title: "State Transition Failed",
+            description: "Could not proceed to the next state. Try resetting the conversation.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        console.log("Successfully transitioned to new state:", stateMachine.currentState);
+      }
+    }, 100);
+    
   }, [
     conversationState.awaitingUserResponse, 
     conversationState.isInitialStateProcessed, 
     messageHandling.addAgentMessage, 
     stateMachine.processSelection, 
     stateMachine.currentState,
-    conversationState
+    conversationState,
+    toast
   ]);
 
   // Reset the conversation
@@ -243,7 +300,12 @@ export function useTranscript(activeScenario: ScenarioType) {
     messageHandling.clearMessages();
     stateMachine.resetStateMachine();
     conversationState.resetConversationState();
-  }, [messageHandling.clearMessages, stateMachine.resetStateMachine, conversationState]);
+    
+    toast({
+      title: "Conversation Reset",
+      description: "The conversation has been reset to its initial state.",
+    });
+  }, [messageHandling.clearMessages, stateMachine.resetStateMachine, conversationState, toast]);
 
   // Improved call start function to properly initialize state
   const handleCall = useCallback(() => {
@@ -254,6 +316,11 @@ export function useTranscript(activeScenario: ScenarioType) {
       conversationState.resetConversationState();
       
       messageHandling.addSystemMessage('Call started');
+      
+      toast({
+        title: "Call Started",
+        description: `Scenario: ${activeScenario}`,
+      });
       
       // Important: Use a proper delay to ensure UI state is updated
       setTimeout(() => {
@@ -274,6 +341,11 @@ export function useTranscript(activeScenario: ScenarioType) {
       callState.setCallActiveState(false);
       messageHandling.addSystemMessage('Call ended');
       
+      toast({
+        title: "Call Ended",
+        description: "Call successfully completed.",
+      });
+      
       // Show the Nachbearbeitung module at the end of the call
       if (!conversationState.showNachbearbeitungModule) {
         showNachbearbeitungSummary();
@@ -287,7 +359,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     stateMachine.processStartCall, 
     stateMachine.processSelection, 
     conversationState,
-    showNachbearbeitungSummary
+    showNachbearbeitungSummary,
+    toast
   ]);
 
   // Accept incoming call with improved state handling
@@ -298,6 +371,11 @@ export function useTranscript(activeScenario: ScenarioType) {
     conversationState.resetConversationState();
     
     messageHandling.addSystemMessage(`Call accepted from ${callId}`);
+    
+    toast({
+      title: "Call Accepted",
+      description: `Connected to caller ${callId}`,
+    });
     
     // Trigger initial state with START_CALL event
     setTimeout(() => {
@@ -313,7 +391,7 @@ export function useTranscript(activeScenario: ScenarioType) {
       // Mark initial state as processed
       conversationState.setIsInitialStateProcessed(true);
     }, 500);
-  }, [callState, messageHandling.addSystemMessage, stateMachine.processStartCall, stateMachine.processSelection, conversationState]);
+  }, [callState, messageHandling.addSystemMessage, stateMachine.processStartCall, stateMachine.processSelection, conversationState, toast]);
 
   // Hang up call with cleanup
   const handleHangUpCall = useCallback(() => {
@@ -322,11 +400,16 @@ export function useTranscript(activeScenario: ScenarioType) {
     conversationState.resetConversationState();
     messageHandling.addSystemMessage('Call ended');
     
+    toast({
+      title: "Call Ended",
+      description: "Call successfully completed.",
+    });
+    
     // Show the Nachbearbeitung module at the end of the call
-    if (!conversationState.showNachbearbeitungModule) {
+    if (!conversationState.showNachbearbeitingModule) {
       showNachbearbeitungSummary();
     }
-  }, [callState, messageHandling.addSystemMessage, conversationState, showNachbearbeitungSummary]);
+  }, [callState, messageHandling.addSystemMessage, conversationState, showNachbearbeitungSummary, toast]);
   
   return {
     // Combine properties and methods from all hooks
@@ -346,5 +429,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     showNachbearbeitungSummary,
     handleSelectResponse,
     ...moduleManager,
+    getStateJson, // Add the JSON state getter
+    debugLastStateChange, // Add debug info
   };
 }
