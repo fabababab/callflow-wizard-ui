@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -8,14 +7,34 @@ import { useConversationSummary } from '@/hooks/useConversationSummary';
 import { useTranscriptTimer } from '@/hooks/useTranscriptTimer';
 import { useScenarioManagement } from '@/hooks/useScenarioManagement';
 import TranscriptHeader from '@/components/transcript/TranscriptHeader';
-import TranscriptFooter from '@/components/transcript/TranscriptFooter';
 import VerificationBanner from '@/components/transcript/VerificationBanner';
 import JsonVisualizationDialog from '@/components/transcript/JsonVisualizationDialog';
 import ModuleDisplay from '@/components/transcript/ModuleDisplay';
+import { StateMachine } from '@/utils/stateMachineLoader';
+
+// Define type for selected state details
+interface SelectedStateDetails {
+  id: string;
+  data: Record<string, unknown>;
+}
+
+// Define type for JsonVisualization
+interface JsonVisualization {
+  handleViewJson: () => void;
+  isLoadingJson: boolean;
+  jsonDialogOpen: boolean;
+  setJsonDialogOpen: (open: boolean) => void;
+  dialogViewMode: "json" | "visualization";
+  handleViewModeToggle: (mode: "json" | "visualization") => void;
+  jsonContent: string;
+  loadedStateMachine: StateMachine | null;
+  selectedState: SelectedStateDetails | null;
+  handleStateSelection: (state: string) => void;
+}
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
-  jsonVisualization?: any; // Accept jsonVisualization prop
+  jsonVisualization?: JsonVisualization;
 }
 
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
@@ -43,19 +62,19 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   }, [transcript.lastTranscriptUpdate]);
   
   // Handle module completion
-  const handleModuleComplete = (result: any) => {
+  const handleModuleComplete = (result: Record<string, unknown>) => {
     console.log('Module completed with result:', result);
     transcript.handleModuleComplete(result);
   };
 
   // Handle inline module completion
-  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: any) => {
+  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: Record<string, unknown>) => {
     transcript.handleInlineModuleComplete(messageId, moduleId, result);
   };
   
   return (
     <div className="flex flex-col h-full">
-      {/* Header with call controls */}
+      {/* Header with call control */}
       <TranscriptHeader 
         activeScenario={activeScenario}
         currentState={transcript.currentState}
@@ -63,6 +82,10 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         callActive={transcript.callActive}
         handleCall={transcript.handleCall}
         handleHangUpCall={transcript.handleHangUpCall}
+        onSelectScenario={scenarioManagement.handleScenarioChange}
+        viewJson={jsonVisualization ? jsonVisualization.handleViewJson : undefined}
+        isLoadingJson={jsonVisualization ? jsonVisualization.isLoadingJson : false}
+        resetConversation={transcript.resetConversation}
       />
       
       {/* Main content area with messages */}
@@ -91,15 +114,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           />
         </ScrollArea>
       </div>
-      
-      {/* Footer with scenario selector */}
-      <TranscriptFooter 
-        activeScenario={activeScenario}
-        onSelectScenario={scenarioManagement.handleScenarioChange}
-        resetConversation={transcript.resetConversation}
-        viewJson={jsonVisualization ? jsonVisualization.handleViewJson : () => {}}
-        isLoadingJson={jsonVisualization ? jsonVisualization.isLoadingJson : false}
-      />
       
       {/* JSON visualization dialog */}
       {jsonVisualization && (
