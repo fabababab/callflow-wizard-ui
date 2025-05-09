@@ -3,22 +3,26 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
-import { StateMachineState } from '@/utils/stateMachineLoader';
 import { detectSensitiveData } from '@/data/scenarioData';
 import { useModuleManager } from '@/hooks/useModuleManager';
 import { ModuleType } from '@/types/modules';
 
 export function useTranscript(activeScenario: ScenarioType) {
+  // Basic state
   const [isRecording, setIsRecording] = useState(false);
   const [callActive, setCallActive] = useState(false);
   const [elapsedTime, setElapsedTime] = useState('00:00');
   const [acceptedCallId, setAcceptedCallId] = useState<string | null>(null);
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
+  
+  // State to track conversation flow
   const [processedStates, setProcessedStates] = useState<Set<string>>(new Set());
   const [isInitialStateProcessed, setIsInitialStateProcessed] = useState(false);
   const [isUserAction, setIsUserAction] = useState(false);
   const [awaitingUserResponse, setAwaitingUserResponse] = useState(false);
   const [showNachbearbeitungModule, setShowNachbearbeitungModule] = useState(false);
+  
+  // Refs for timing
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -65,22 +69,22 @@ export function useTranscript(activeScenario: ScenarioType) {
   );
   
   // Function to check if we've already processed this state to avoid duplicate messages
-  const hasProcessedState = (state: string): boolean => {
+  const hasProcessedState = useCallback((state: string): boolean => {
     return processedStates.has(state);
-  };
+  }, [processedStates]);
   
   // Mark a state as processed
-  const markStateAsProcessed = (state: string) => {
+  const markStateAsProcessed = useCallback((state: string) => {
     setProcessedStates(prev => {
       const newSet = new Set(prev);
       newSet.add(state);
       return newSet;
     });
-  };
+  }, []);
 
   // Reset processed states when the scenario changes
   useEffect(() => {
-    console.log("Resetting processed states due to scenario change");
+    console.log("Resetting processed states due to scenario change:", activeScenario);
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
     setIsUserAction(false);
@@ -89,11 +93,10 @@ export function useTranscript(activeScenario: ScenarioType) {
   }, [activeScenario]);
   
   // Handle module completion
-  const handleModuleComplete = (result: any) => {
+  const handleModuleComplete = useCallback((result: any) => {
     console.log('Module completed with result:', result);
     completeModule(result);
     
-    // Update the transcript to reflect the module interaction
     if (activeModule) {
       // Only add system message if it's not the Nachbearbeitung module
       if (activeModule.type !== ModuleType.NACHBEARBEITUNG) {
@@ -106,17 +109,21 @@ export function useTranscript(activeScenario: ScenarioType) {
         setShowNachbearbeitungModule(false);
       }
     }
-  };
+  }, [activeModule, completeModule, addSystemMessage]);
 
   // Function to extract available transitions from the current state
-  const extractTransitionsAsResponseOptions = (state: string) => {
-    if (!stateMachine || !stateMachine.states[state]) return [];
+  const extractTransitionsAsResponseOptions = useCallback((state: string): string[] => {
+    if (!stateMachine || !stateMachine.states[state]) {
+      console.log(`No state machine or state not found: ${state}`);
+      return [];
+    }
     
     const currentStateData = stateMachine.states[state];
     const options: string[] = [];
     
     // First check if there are responseOptions explicitly defined
     if (currentStateData.meta?.responseOptions && currentStateData.meta.responseOptions.length > 0) {
+      console.log(`Found explicit responseOptions for state ${state}:`, currentStateData.meta.responseOptions);
       return currentStateData.meta.responseOptions;
     }
     
@@ -128,6 +135,10 @@ export function useTranscript(activeScenario: ScenarioType) {
           options.push(transition);
         }
       }
+      
+      if (options.length > 0) {
+        console.log(`Extracted transitions for state ${state}:`, options);
+      }
     }
     
     // If we have no transitions or only special ones, check for nextState as fallback
@@ -136,7 +147,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     }
     
     return options;
-  };
+  }, [stateMachine]);
 
   // Update to properly update UI when state changes, with debouncing and duplicate prevention
   useEffect(() => {
@@ -219,7 +230,20 @@ export function useTranscript(activeScenario: ScenarioType) {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [stateData, lastStateChange, callActive, addSystemMessage, addCustomerMessage, addAgentMessage, currentState, processedStates, isUserAction, messages, addInlineModuleMessage, stateMachine]);
+  }, [
+    stateData, 
+    lastStateChange, 
+    callActive, 
+    addSystemMessage, 
+    addCustomerMessage, 
+    addAgentMessage, 
+    currentState, 
+    hasProcessedState, 
+    markStateAsProcessed, 
+    isUserAction,
+    addInlineModuleMessage, 
+    extractTransitionsAsResponseOptions
+  ]);
   
   // Update when messages update
   useEffect(() => {
@@ -279,39 +303,11 @@ export function useTranscript(activeScenario: ScenarioType) {
     };
   }, [callActive]);
 
-  // Handle accepting a suggestion - simplified to focus on responsiveness
-  const handleAcceptSuggestion = (messageId: string, suggestionId: string) => {
-    // Set the user action flag
-    setIsUserAction(true);
-    
-    // Find the message and suggestion
-    const message = messages.find(m => m.id === messageId);
-    if (!message || !message.suggestions) return;
-    
-    // Find the suggestion text by ID
-    const suggestion = message.suggestions.find(s => s.id === suggestionId);
-    
-    if (suggestion) {
-      console.log('Accepting suggestion:', suggestionId, suggestion.text);
-      // Add the accepted suggestion as a new agent message
-      addAgentMessage(suggestion.text);
-      
-      // Process the selected option in the state machine
-      processSelection(suggestion.text);
-    }
-  };
-
-  // Handle rejecting a suggestion - likely won't be used much with the new flow
-  const handleRejectSuggestion = (suggestionId: string, messageId: string) => {
-    // For now, just log the rejection
-    console.log(`Suggestion ${suggestionId} rejected for message ${messageId}`);
-  };
-
   // This is our primary interaction method - updated to ensure explicit user action
-  const handleSelectResponse = (response: string) => {
+  const handleSelectResponse = useCallback((response: string) => {
     console.log('Selecting response:', response);
     
-    // Only process if we're awaiting user response
+    // Only process if we're awaiting user response or at initial state
     if (!awaitingUserResponse && !isInitialStateProcessed) {
       console.log('Not awaiting user response yet, skipping');
       return;
@@ -334,16 +330,15 @@ export function useTranscript(activeScenario: ScenarioType) {
       console.warn('Failed to process selection:', response);
       // Try with DEFAULT transition as fallback
       console.log("Using default response path");
+      processSelection("DEFAULT");
     }
-  };
+  }, [awaitingUserResponse, isInitialStateProcessed, addAgentMessage, processSelection, currentState]);
 
   // Toggle recording state
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-  };
+  const toggleRecording = () => setIsRecording(!isRecording);
 
   // Reset the conversation
-  const resetConversation = () => {
+  const resetConversation = useCallback(() => {
     console.log('Resetting conversation');
     clearMessages();
     resetStateMachine();
@@ -353,10 +348,10 @@ export function useTranscript(activeScenario: ScenarioType) {
     setIsUserAction(false);
     setAwaitingUserResponse(false);
     setShowNachbearbeitungModule(false);
-  };
+  }, [clearMessages, resetStateMachine]);
 
   // Improved call start function to properly initialize state
-  const handleCall = () => {
+  const handleCall = useCallback(() => {
     if (!callActive) {
       console.log('Starting call for scenario:', activeScenario);
       setCallActive(true);
@@ -394,10 +389,18 @@ export function useTranscript(activeScenario: ScenarioType) {
         showNachbearbeitungSummary();
       }
     }
-  };
+  }, [
+    callActive, 
+    activeScenario, 
+    clearMessages, 
+    addSystemMessage, 
+    processStartCall, 
+    processSelection, 
+    showNachbearbeitungModule
+  ]);
 
   // Show the Nachbearbeitung (call summary) module
-  const showNachbearbeitungSummary = () => {
+  const showNachbearbeitungSummary = useCallback(() => {
     setShowNachbearbeitungModule(true);
     
     // Create nachbearbeitung module config
@@ -426,10 +429,10 @@ export function useTranscript(activeScenario: ScenarioType) {
       });
       window.dispatchEvent(event);
     }, 300);
-  };
+  }, [completeModule]);
 
   // Accept incoming call with improved state handling
-  const handleAcceptCall = (callId: string) => {
+  const handleAcceptCall = useCallback((callId: string) => {
     console.log('Accepting call:', callId);
     setAcceptedCallId(callId);
     setCallActive(true);
@@ -456,10 +459,10 @@ export function useTranscript(activeScenario: ScenarioType) {
       // Mark initial state as processed
       setIsInitialStateProcessed(true);
     }, 500);
-  };
+  }, [addSystemMessage, processStartCall, processSelection]);
 
   // Hang up call with cleanup
-  const handleHangUpCall = () => {
+  const handleHangUpCall = useCallback(() => {
     setCallActive(false);
     setAcceptedCallId(null);
     setProcessedStates(new Set());
@@ -473,7 +476,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     if (!showNachbearbeitungModule) {
       showNachbearbeitungSummary();
     }
-  };
+  }, [addSystemMessage, showNachbearbeitungModule, showNachbearbeitungSummary]);
   
   return {
     messages,
@@ -483,9 +486,6 @@ export function useTranscript(activeScenario: ScenarioType) {
     acceptedCallId,
     lastTranscriptUpdate,
     messagesEndRef,
-    handleAcceptSuggestion,
-    handleRejectSuggestion,
-    handleSelectResponse,
     toggleRecording,
     handleCall,
     handleAcceptCall,
@@ -507,5 +507,6 @@ export function useTranscript(activeScenario: ScenarioType) {
     handleModuleComplete,
     showNachbearbeitungSummary,
     handleInlineModuleComplete,
+    handleSelectResponse,
   };
 }

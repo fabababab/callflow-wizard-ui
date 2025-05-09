@@ -28,7 +28,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 mb-2">No messages yet</h3>
           <p className="text-sm text-gray-500">
-            Start a conversation to see messages here
+            Click "Start Call" to begin a conversation
           </p>
         </div>
       </div>

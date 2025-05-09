@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { Message } from '@/components/transcript/Message';
 import { ModuleConfig } from '@/types/modules';
-import { SensitiveField } from '@/data/scenarioData';
+import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -119,7 +119,7 @@ export function useMessageHandling() {
   /**
    * Handle validation of sensitive data
    */
-  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: string, notes?: string) => {
+  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
     setMessages(prevMessages => 
       prevMessages.map(message => {
         if (message.id !== messageId || !message.sensitiveData) return message;
@@ -131,7 +131,7 @@ export function useMessageHandling() {
               ...field,
               status,
               notes,
-            };
+            } as SensitiveField; // Cast to ensure type compatibility
           }
           return field;
         });

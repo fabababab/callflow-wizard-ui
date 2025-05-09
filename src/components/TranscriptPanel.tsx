@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Button } from '@/components/ui/button';
-import { Shield, MessageCircle, Phone, PhoneOff, AlertTriangle, Mic, MicOff, RefreshCw, FileJson } from 'lucide-react';
+import { Shield, Phone, PhoneOff, RefreshCw, FileJson } from 'lucide-react';
 import ChatMessages from '@/components/TestScenario/ChatMessages';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -77,17 +77,20 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             {/* Scenario selector */}
             <ScenarioSelector activeScenario={activeScenario} onSelectScenario={handleScenarioChange} />
             
+            {/* Reset button */}
             <Button variant="outline" size="icon" onClick={transcript.resetConversation} title="Reset conversation">
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
           
           <div className="flex items-center gap-2">
+            {/* JSON button */}
             <Button variant="outline" size="sm" onClick={toggleJsonDialog} className="flex items-center gap-1">
               <FileJson className="h-4 w-4 mr-1" />
               JSON
             </Button>
             
+            {/* Call button - now positioned at the same level as scenario selector */}
             <Button 
               size="sm" 
               variant={transcript.callActive ? "destructive" : "default"}
@@ -108,6 +111,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
       </div>
       
       <ScrollArea className="flex-grow p-4">
+        {/* Verification banner */}
         {transcript.verificationBlocking && 
           <Card className="mb-4 bg-amber-50 border border-amber-200 shadow-sm">
             <div className="p-3 flex items-center justify-between">
@@ -127,6 +131,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           </Card>
         }
         
+        {/* Chat messages */}
         <ChatMessages 
           messages={transcript.messages} 
           isAgentMode={true} 
@@ -137,6 +142,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           onModuleComplete={handleInlineModuleComplete} 
         />
         
+        {/* Empty state */}
         {transcript.messages.length === 0 && !transcript.callActive && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Phone className="h-12 w-12 text-muted-foreground mb-4" strokeWidth={1.5} />
@@ -154,6 +160,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         )}
       </ScrollArea>
       
+      {/* Footer status area */}
       <div className="p-4 border-t">
         <div className="flex items-center justify-between pb-2 gap-3">
           <div className="flex-grow">
