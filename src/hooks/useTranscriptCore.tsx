@@ -1,6 +1,6 @@
 
 // Core transcript hook functionality that composes other hooks
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
@@ -14,6 +14,12 @@ import { useResponseHandler } from '@/hooks/useResponseHandler';
 import { useStateChangeProcessor } from '@/hooks/useStateChangeProcessor';
 import { useToast } from '@/hooks/use-toast';
 import { ModuleType } from '@/types/modules';
+import { useDebugLogging } from '@/hooks/useDebugLogging';
+import { useModuleCompletionEvents } from '@/hooks/useModuleCompletionEvents';
+import { useMessagesScrolling } from '@/hooks/useMessagesScrolling';
+import { useStateChangeEffect } from '@/hooks/useStateChangeEffect';
+import { useMessageUpdates } from '@/hooks/useMessageUpdates';
+import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
   const toast = useToast();
@@ -46,12 +52,6 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     moduleManager.completeModule
   );
 
-  // Debug timers for state tracking
-  const [debugLastStateChange, setDebugLastStateChange] = useState<string>("");
-  
-  // Track if we've already initialized the conversation
-  const [hasInitializedConversation, setHasInitializedConversation] = useState(false);
-  
   // Use response handler
   const responseHandler = useResponseHandler({
     stateMachine,
@@ -77,11 +77,52 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     stateMachine,
     messageHandling,
     callState,
-    setHasInitializedConversation,
+    setHasInitializedConversation: () => {}, // Will be replaced by useScenarioChangeEffect
     toast,
     showNachbearbeitungSummary
   });
+
+  // Use debug logging hooks
+  const { debugLastStateChange } = useDebugLogging({
+    activeScenario,
+    stateData: stateMachine.stateData,
+    currentState: stateMachine.currentState,
+    debugLastStateChange: ""
+  });
   
+  // Use module completion events hook
+  useModuleCompletionEvents({
+    addSystemMessage: messageHandling.addSystemMessage
+  });
+  
+  // Use messages scrolling hook
+  useMessagesScrolling({
+    messagesEndRef,
+    lastTranscriptUpdate: conversationState.lastTranscriptUpdate
+  });
+  
+  // Use state change effect hook
+  const stateChangeDebug = useStateChangeEffect({
+    stateData: stateMachine.stateData,
+    lastStateChange: stateMachine.lastStateChange,
+    callActive: callState.callActive,
+    currentState: stateMachine.currentState,
+    processStateChange: stateChangeProcessor.processStateChange,
+    debounceTimerRef: conversationState.debounceTimerRef
+  });
+  
+  // Use message updates hook
+  useMessageUpdates({
+    lastMessageUpdate: messageHandling.lastMessageUpdate,
+    setLastTranscriptUpdate: conversationState.setLastTranscriptUpdate
+  });
+  
+  // Use scenario change effect hook
+  const scenarioChangeState = useScenarioChangeEffect({
+    activeScenario,
+    resetConversationState: conversationState.resetConversationState
+  });
+
   // Handle module completion
   const handleModuleComplete = useCallback((result: any) => {
     console.log('Module completed with result:', result);
@@ -100,111 +141,39 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
       }
     }
   }, [moduleManager, messageHandling, conversationState]);
-
-  // Prevent full reset on scenario change - just reset conversation state, not messages
-  useEffect(() => {
-    console.log("Scenario changed to:", activeScenario);
-    // Only reset conversation tracking state, not messages
-    conversationState.resetConversationState(false);
-    setHasInitializedConversation(false);
-  }, [activeScenario, conversationState]);
   
-  // Update to properly update UI when state changes
-  useEffect(() => {
-    if (!stateMachine.stateData || !callState.callActive || !stateMachine.lastStateChange) {
-      return;
-    }
-    
-    // For debugging purposes, track state changes
-    setDebugLastStateChange(new Date().toISOString());
-    console.log(`State change detected: ${stateMachine.currentState} at ${new Date().toISOString()}`);
-    
-    stateChangeProcessor.processStateChange();
-    
-    return () => {
-      if (conversationState.debounceTimerRef.current) {
-        clearTimeout(conversationState.debounceTimerRef.current);
-      }
-    };
-  }, [
-    stateMachine.stateData, 
-    stateMachine.lastStateChange, 
-    callState.callActive, 
-    stateChangeProcessor,
-    conversationState.debounceTimerRef,
-    stateMachine.currentState
-  ]);
-  
-  // Update when messages update
-  useEffect(() => {
-    if (messageHandling.lastMessageUpdate) {
-      conversationState.setLastTranscriptUpdate(messageHandling.lastMessageUpdate);
-    }
-  }, [messageHandling.lastMessageUpdate, conversationState]);
-
-  // Listen for module completion events
-  useEffect(() => {
-    const handleModuleCompletedEvent = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      console.log('Module completed event:', customEvent.detail);
-      
-      // Add a system message about the module completion
-      if (customEvent.detail && customEvent.detail.moduleId) {
-        const resultText = customEvent.detail.result?.verified 
-          ? 'successfully verified'
-          : customEvent.detail.result?.action
-          ? `completed action: ${customEvent.detail.result.action}`
-          : customEvent.detail.result?.acknowledged
-          ? 'acknowledged'
-          : 'completed';
-          
-        messageHandling.addSystemMessage(`Module ${resultText}`);
-      }
-    };
-    
-    window.addEventListener('module-completed', handleModuleCompletedEvent as EventListener);
-    
-    return () => {
-      window.removeEventListener('module-completed', handleModuleCompletedEvent as EventListener);
-    };
-  }, [messageHandling.addSystemMessage]);
-
-  // Add debug logging for state changes
-  useEffect(() => {
-    console.log('Active scenario changed:', activeScenario);
-  }, [activeScenario]);
-
-  // Add debug logging for state machine changes
-  useEffect(() => {
-    if (stateMachine.stateData) {
-      console.log('State machine data:', {
-        currentState: stateMachine.currentState,
-        stateData: stateMachine.stateData,
-        meta: stateMachine.stateData.meta
-      });
-    }
-  }, [stateMachine.stateData, stateMachine.currentState]);
+  // Combine state from scenario change effect with conversation initializer
+  const enhancedConversationInitializer = {
+    ...conversationInitializer,
+    handleCall: useCallback(() => {
+      conversationInitializer.handleCall();
+    }, [conversationInitializer]),
+    resetConversation: useCallback(() => {
+      conversationInitializer.resetConversation();
+      scenarioChangeState.setHasInitializedConversation(false);
+    }, [conversationInitializer, scenarioChangeState])
+  };
 
   return {
     // Combine properties and methods from all hooks
     ...messageHandling,
-    ...callState, // This now includes all call state methods
+    ...callState,
     lastTranscriptUpdate: conversationState.lastTranscriptUpdate,
     awaitingUserResponse: conversationState.awaitingUserResponse,
     messagesEndRef,
     currentState: stateMachine.currentState,
     stateData: stateMachine.stateData,
     lastStateChange: stateMachine.lastStateChange,
-    handleCall: conversationInitializer.handleCall, // Use the initializer's handleCall
+    handleCall: enhancedConversationInitializer.handleCall,
     handleAcceptCall: conversationInitializer.handleAcceptCall,
     handleHangUpCall: conversationInitializer.handleHangUpCall,
-    resetConversation: conversationInitializer.resetConversation,
+    resetConversation: enhancedConversationInitializer.resetConversation,
     handleModuleComplete,
     showNachbearbeitungSummary,
     handleSelectResponse: responseHandler.handleSelectResponse,
     ...moduleManager,
     getStateJson: transitionExtractor.getStateJson,
-    debugLastStateChange,
-    hasInitializedConversation,
+    debugLastStateChange: stateChangeDebug.debugLastStateChange || debugLastStateChange,
+    hasInitializedConversation: scenarioChangeState.hasInitializedConversation,
   };
 }
