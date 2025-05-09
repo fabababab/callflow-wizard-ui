@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MessageSender } from './MessageTypes';
+import type { MessageSender, Message as MessageInterface } from './MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
 import { AISuggestion } from './AISuggestion';
 import MessageHeader from './MessageHeader';
@@ -8,10 +8,10 @@ import MessageContent from './MessageContent';
 import MessageResponseOptions from './MessageResponseOptions';
 import AISuggestions from './AISuggestion';
 import MessageInlineModule from './MessageInlineModule';
-import { Message } from './MessageTypes';
+import InlineChatVerification from './InlineChatVerification';
 
 interface MessageProps {
-  message: Message;
+  message: MessageInterface;
   onAcceptSuggestion: (suggestionId: string, messageId: string) => void;
   onRejectSuggestion: (suggestionId: string, messageId: string) => void;
   onSelectResponse?: (response: string) => void;
@@ -52,6 +52,26 @@ const Message: React.FC<MessageProps> = ({
       onModuleComplete(message.id, moduleId, result);
     }
   };
+
+  // Inline verification handler - always verifies successfully
+  const handleInlineVerify = React.useCallback(() => {
+    if (message.requiresVerification && onVerifySystemCheck && !message.isVerified) {
+      console.log('Auto-verifying message:', message.id);
+      onVerifySystemCheck(message.id);
+    }
+  }, [message.id, message.requiresVerification, message.isVerified, onVerifySystemCheck]);
+  
+  // Auto-verify if required
+  React.useEffect(() => {
+    if (message.requiresVerification && !message.isVerified) {
+      // Short delay before auto-verification
+      const timer = setTimeout(() => {
+        handleInlineVerify();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [message.requiresVerification, message.isVerified, handleInlineVerify]);
   
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -77,6 +97,19 @@ const Message: React.FC<MessageProps> = ({
           onVerifySystemCheck={onVerifySystemCheck}
         />
         
+        {/* Display inline verification if required */}
+        {message.requiresVerification && !message.isVerified && onVerifySystemCheck && (
+          <InlineChatVerification 
+            onVerify={(verified) => {
+              if (verified) {
+                onVerifySystemCheck(message.id);
+              }
+            }}
+            isVerifying={false}
+            isVerified={message.isVerified}
+          />
+        )}
+        
         {/* Display response options */}
         {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
           <MessageResponseOptions 
@@ -99,7 +132,7 @@ const Message: React.FC<MessageProps> = ({
       </div>
 
       {/* Display inline module */}
-      {hasInlineModule && message.inlineModule && onModuleComplete && (
+      {hasInlineModule && message.inlineModule && (
         <MessageInlineModule 
           moduleConfig={message.inlineModule}
           onModuleComplete={(result) => handleInlineModuleComplete(message.inlineModule!.id, result)}
@@ -108,8 +141,5 @@ const Message: React.FC<MessageProps> = ({
     </div>
   );
 };
-
-// Export MessageType type for other files to use
-export type { Message as MessageType };
 
 export default Message;

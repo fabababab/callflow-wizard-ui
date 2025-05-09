@@ -5,7 +5,7 @@ import { ModuleConfig } from '@/types/modules';
 
 export type MessageSender = 'agent' | 'customer' | 'system';
 
-export type Message = {
+export interface Message {
   id: string;
   text: string;
   sender: MessageSender;
@@ -40,4 +40,7 @@ export type Message = {
     requiresVerification: boolean;
   };
   inlineModule?: ModuleConfig;
-};
+}
+
+// Export MessageType as an alias for Message for backward compatibility
+export type MessageType = Message;
