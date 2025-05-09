@@ -1,0 +1,12 @@
+
+{
+  "initial": "start",
+  "states": {
+    "start": {
+      "meta": {
+        "systemMessage": "This is an empty scenario. You can use this as a starting point.",
+        "agentText": "Welcome to the empty scenario."
+      }
+    }
+  }
+}

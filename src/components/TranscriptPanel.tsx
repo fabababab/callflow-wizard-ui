@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -46,6 +45,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     transcript.handleModuleComplete(result);
   };
 
+  // Updated to correctly handle inline module completion
+  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: any) => {
+    transcript.handleInlineModuleComplete(messageId, moduleId, result);
+  };
+  
   // Toggle JSON dialog visibility
   const toggleJsonDialog = () => {
     setShowJsonDialog(!showJsonDialog);
@@ -62,7 +66,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
       <div className="p-4 border-b bg-slate-50">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {/* Scenario selector - changing prop name from onScenarioChange to onSelectScenario */}
+            {/* Scenario selector */}
             <ScenarioSelector 
               activeScenario={activeScenario}
               onSelectScenario={handleScenarioChange}
@@ -135,7 +139,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           onVerifySystemCheck={transcript.handleVerifySystemCheck}
           onValidateSensitiveData={transcript.handleValidateSensitiveData}
           messagesEndRef={transcript.messagesEndRef}
-          onModuleComplete={transcript.handleInlineModuleComplete}
+          onModuleComplete={handleInlineModuleComplete}
         />
       </ScrollArea>
       

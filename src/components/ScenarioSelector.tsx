@@ -1,6 +1,5 @@
-
 // This file defines the ScenarioType that's used across the application
-export type ScenarioType = 'testscenario' | 'scenario2' | 'verification' | 'bankDetails' | 'accountHistory' | 'physioTherapy' | 'paymentReminder' | 'insurancePackage';
+export type ScenarioType = 'testscenario' | 'scenario2' | 'verification' | 'bankDetails' | 'accountHistory' | 'physioTherapy' | 'paymentReminder' | 'insurancePackage' | 'empty';
 
 import React from 'react';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -203,6 +202,28 @@ export const scenarioCallData: Record<ScenarioType, {
       sentiment: 'Positive',
       keyPoints: ['Customer completing studies soon', 'Needs to update insurance package']
     }
+  },
+  'empty': {
+    id: 9,
+    customerName: 'Empty Scenario',
+    phoneNumber: '+49 000 0000 0000',
+    waitTime: '0m 00s',
+    callType: 'Empty Template',
+    priority: 'low',
+    expertise: 'General',
+    matchScore: 100,
+    caseHistory: [
+      {
+        type: 'Empty',
+        date: 'May 9, 2025',
+        description: 'Empty scenario template.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '0m 00s',
+      sentiment: 'Neutral',
+      keyPoints: ['Empty scenario for custom workflows']
+    }
   }
 };
 
@@ -217,10 +238,11 @@ const ScenarioSelector = ({
   onSelectScenario,
   disabled = false
 }: ScenarioSelectorProps) => {
-  // Modify the scenarios array to only include testscenario and scenario2
+  // Update the scenarios array to include empty scenario
   const scenarios: ScenarioType[] = [
     'testscenario',
-    'scenario2'
+    'scenario2',
+    'empty'
   ];
 
   return (

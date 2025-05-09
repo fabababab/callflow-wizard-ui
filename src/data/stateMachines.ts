@@ -1,17 +1,16 @@
 
-import { ScenarioType } from '@/components/ScenarioSelector';
+import { ScenarioType } from "@/components/ScenarioSelector";
 
 // Map of available state machines
-// Key is scenario name, value is boolean indicating if it's available
-export const stateMachines: Record<string, boolean> = {
+// This determines which state machines can be loaded
+export const stateMachines: Record<ScenarioType, boolean> = {
   testscenario: true,
   scenario2: true,
-  physioCoverage: true,
-  customerPhysioCoverage: true,
   verification: true,
   bankDetails: true,
+  accountHistory: true,
+  physioTherapy: true,
   paymentReminder: true,
   insurancePackage: true,
-  accountHistory: true,
-  physioTherapy: true
+  empty: true // Add the new empty scenario
 };
