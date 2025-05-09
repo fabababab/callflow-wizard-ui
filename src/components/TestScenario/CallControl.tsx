@@ -19,7 +19,7 @@ const CallControl: React.FC<CallControlProps> = ({
   onResetScenario,
 }) => {
   return (
-    <>
+    <div className="flex items-center gap-2">
       {!callActive ? (
         <Button 
           onClick={onStartCall} 
@@ -31,17 +31,20 @@ const CallControl: React.FC<CallControlProps> = ({
           Start Call
         </Button>
       ) : (
-        <Button 
-          onClick={onEndCall} 
-          variant="destructive"
-          className="flex items-center gap-1 h-8"
-          size="sm"
-        >
-          <PhoneOff size={16} />
-          End Call
-        </Button>
+        <>
+          <span className="text-sm font-medium mr-2">{elapsedTime}</span>
+          <Button 
+            onClick={onEndCall} 
+            variant="destructive"
+            className="flex items-center gap-1 h-8"
+            size="sm"
+          >
+            <PhoneOff size={16} />
+            End Call
+          </Button>
+        </>
       )}
-    </>
+    </div>
   );
 };
 
