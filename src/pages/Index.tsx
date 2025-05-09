@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   // Move useState hooks inside the component body
-  const [activeScenario, setActiveScenario] = React.useState<ScenarioType>(null);
+  const [activeScenario, setActiveScenario] = React.useState<ScenarioType | null>(null);
   const [availableScenarios, setAvailableScenarios] = React.useState<ScenarioType[]>([]);
   const [showScenarioDialog, setShowScenarioDialog] = React.useState(false);
   const location = useLocation();
@@ -51,15 +51,13 @@ const Index = () => {
   // Function to initialize or reset available scenarios
   const initializeScenarios = () => {
     const allScenarios: ScenarioType[] = [
-      'verification', 
-      'bankDetails', 
-      'accountHistory', 
-      'physioTherapy', 
-      'paymentReminder', 
-      'insurancePackage'
+      'verificationFlow', 
+      'contractManagement', 
+      'productInfo', 
+      'testscenario'
     ];
     
-    // Randomly select 3 scenarios (or fewer if there aren't 6 available)
+    // Randomly select 3 scenarios (or fewer if there aren't enough available)
     const shuffled = [...allScenarios].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
     
@@ -76,18 +74,22 @@ const Index = () => {
     setActiveScenario(scenario);
     setShowScenarioDialog(false);
     
-    const scenarioNames = {
-      'verification': 'Identity Verification',
+    const scenarioNames: Record<ScenarioType, string> = {
+      'testscenario': 'Test Scenario',
+      'verificationFlow': 'Identity Verification',
+      'contractManagement': 'Contract Management',
+      'productInfo': 'Product Information',
+      'verification': 'Identity Verification (Legacy)',
       'bankDetails': 'Change Bank Details',
       'accountHistory': 'Account History Review',
-      'physioTherapy': 'Leistungsabdeckung Physiobehandlung',
-      'paymentReminder': 'Mahnung trotz Zahlung',
-      'insurancePackage': 'Neues Versicherungspacket (Studiumsabschluss)'
+      'physioTherapy': 'Physiotherapy Coverage',
+      'paymentReminder': 'Payment Reminder Dispute',
+      'insurancePackage': 'Insurance Package Update'
     };
     
     toast({
       title: "Scenario Selected",
-      description: `You are now working on the ${scenarioNames[scenario as keyof typeof scenarioNames]} scenario.`,
+      description: `You are now working on the ${scenarioNames[scenario]} scenario.`,
     });
   };
 
@@ -235,12 +237,10 @@ const Index = () => {
                 onClick={() => selectScenario(scenario)}
                 className="justify-start text-left"
               >
-                {scenario === 'verification' && 'Customer Identity Verification'}
-                {scenario === 'bankDetails' && 'Update Bank Account Details'}
-                {scenario === 'accountHistory' && 'Review Account History'}
-                {scenario === 'physioTherapy' && 'Leistungsabdeckung Physiobehandlung'}
-                {scenario === 'paymentReminder' && 'Mahnung trotz Zahlung'}
-                {scenario === 'insurancePackage' && 'Neues Versicherungspacket (Studiumsabschluss)'}
+                {scenario === 'testscenario' && 'Test Scenario'}
+                {scenario === 'verificationFlow' && 'Identity Verification'}
+                {scenario === 'contractManagement' && 'Contract Management'}
+                {scenario === 'productInfo' && 'Product Information'}
               </Button>
             ))}
           </div>
