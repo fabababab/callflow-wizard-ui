@@ -62,58 +62,61 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   // If already verified, show success state
   if (isVerified) {
     return (
-      <div className="p-3 bg-green-50 border border-green-200 rounded-md mt-2">
-        <div className="flex items-center gap-2 text-green-700">
-          <CheckCircle size={16} />
-          <span className="text-sm font-medium">Identity Verified</span>
+      <div className="p-2 bg-green-50 border-l-4 border-green-400 rounded-md mt-2 animate-in fade-in duration-300">
+        <div className="flex items-center gap-1.5 text-green-700">
+          <CheckCircle size={14} />
+          <span className="text-xs font-medium">Identity Verified</span>
         </div>
-        <p className="text-xs text-green-600 mt-1 pl-6">All customer details have been confirmed.</p>
+        <p className="text-xs text-green-600 mt-0.5 pl-5">All customer details have been confirmed.</p>
       </div>
     );
   }
   
   return (
-    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md" data-testid="verification-form">
-      <div className="flex items-center gap-2 mb-2">
-        <ShieldCheck size={18} className="text-amber-600" />
-        <p className="text-sm text-amber-700 font-medium">Customer Identity Verification</p>
+    <div 
+      className="p-3 bg-amber-50/60 border-l-4 border-amber-300 rounded-md animate-in fade-in slide-in-right duration-300" 
+      data-testid="verification-form"
+    >
+      <div className="flex items-center gap-1.5 mb-2">
+        <ShieldCheck size={16} className="text-amber-500" />
+        <p className="text-xs text-amber-700 font-medium">Customer Identity Verification</p>
       </div>
       
       {isValidating ? (
-        <div className="flex items-center justify-center h-16 gap-2 text-amber-700">
-          <Loader size={18} className="animate-spin" />
+        <div className="flex items-center justify-center h-12 gap-2 text-amber-700 text-xs">
+          <Loader size={14} className="animate-spin" />
           <span>Verifying customer identity...</span>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 mb-3">
+          <div className="grid grid-cols-1 gap-2 mb-2">
             <div>
-              <label className="text-xs text-amber-800 mb-1 block">Customer ID</label>
+              <label className="text-xs text-amber-800/80 mb-1 block">Customer ID</label>
               <Input 
                 placeholder="Enter customer ID" 
                 value="ACC123456" 
                 readOnly
-                className="h-8 text-sm bg-amber-50/50" 
+                className="h-7 text-xs bg-amber-50/50 border-amber-200" 
               />
             </div>
             
             <div>
-              <label className="text-xs text-amber-800 mb-1 block">Email Address</label>
+              <label className="text-xs text-amber-800/80 mb-1 block">Email Address</label>
               <Input 
                 placeholder="Enter email address" 
                 value="customer@example.com"
                 readOnly
-                className="h-8 text-sm bg-amber-50/50" 
+                className="h-7 text-xs bg-amber-50/50 border-amber-200" 
               />
             </div>
           </div>
           
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-2 justify-end mt-2">
             <Button 
               type="button"
               variant="outline" 
               size="sm"
-              className="text-xs"
+              className="text-xs h-7 px-2 py-0 bg-white/80 hover:bg-white border-amber-200 text-amber-800"
               onClick={() => onVerify(false)}
             >
               Cancel
@@ -121,7 +124,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
             <Button 
               type="button" 
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+              className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7 px-3 py-0"
               onClick={handleVerifyClick}
             >
               Verify

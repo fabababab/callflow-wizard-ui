@@ -48,14 +48,20 @@ const Message: React.FC<MessageProps> = ({
     }
   };
 
+  // Determine if message has verification features
+  const hasVerificationFeatures = message.requiresVerification || message.isVerified || (message.sensitiveData && message.sensitiveData.length > 0);
+
   return (
-    <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`} key={`message-${message.id}`}>
+    <div 
+      className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`} 
+      key={`message-${message.id}`}
+    >
       <div
         className={`rounded-lg max-w-[85%] p-3 shadow-sm 
           ${message.sender === 'agent'
             ? 'bg-primary text-primary-foreground ml-auto'
             : message.sender === 'customer' 
-            ? 'bg-secondary text-secondary-foreground mr-auto' 
+            ? `bg-secondary text-secondary-foreground mr-auto ${hasVerificationFeatures ? 'border-l-4 border-amber-300/60' : ''}` 
             : 'bg-muted text-center italic text-sm w-full'}`}
       >
         <MessageHeader sender={message.sender} timestamp={message.timestamp} />

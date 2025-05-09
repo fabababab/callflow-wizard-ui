@@ -81,38 +81,40 @@ const VerificationModule: React.FC<ModuleProps> = ({
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
-    ? "w-full border border-amber-200 shadow-sm my-4 bg-white"
+    ? "w-full border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60 animate-in fade-in duration-300"
     : "w-full max-w-md border border-amber-200 shadow-md";
   
   return (
     <Card className={cardClassName} data-testid={`verification-module-${id}`}>
-      <CardHeader className="bg-amber-50 border-b border-amber-100 py-3">
+      <CardHeader className={`${isInlineDisplay ? "bg-transparent py-2 pb-0" : "bg-amber-50 border-b border-amber-100 py-3"}`}>
         <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-amber-600" />
-          <CardTitle className="text-amber-900 text-base">{title || 'Identity Verification'}</CardTitle>
+          <Shield className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-amber-500`} />
+          <CardTitle className={`${isInlineDisplay ? "text-amber-700 text-sm" : "text-amber-900 text-base"}`}>
+            {title || 'Identity Verification'}
+          </CardTitle>
         </div>
-        <CardDescription className="text-xs">
+        <CardDescription className={`text-xs ${isInlineDisplay ? "text-amber-600/70" : ""}`}>
           Please verify the following information to continue
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="pt-4 space-y-3">
+      <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-4"} space-y-3`}>
         {verificationStatus === 'success' && (
-          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3">
+          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3 animate-in fade-in duration-300">
             <CheckCircle className="h-4 w-4" />
             <span>Verification successful</span>
           </div>
         )}
         
         {verificationStatus === 'failed' && (
-          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3">
+          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3 animate-in fade-in duration-300">
             <AlertCircle className="h-4 w-4" />
             <span>Verification failed. Please check your information.</span>
           </div>
         )}
         
         {verificationFields.map(field => (
-          <div key={field.id} className="space-y-1.5">
+          <div key={field.id} className="space-y-1">
             <div className="flex justify-between">
               <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
               {field.verified !== undefined && (
@@ -126,14 +128,14 @@ const VerificationModule: React.FC<ModuleProps> = ({
               type={field.type}
               value={field.value || ''}
               onChange={(e) => handleInputChange(field.id, e.target.value)}
-              className={field.verified === false ? "border-red-300 text-sm h-8" : "text-sm h-8"}
+              className={`${field.verified === false ? "border-red-300" : ""} text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
               readOnly={isInlineDisplay} // Make fields readonly for inline display
             />
           </div>
         ))}
       </CardContent>
       
-      <CardFooter className="flex justify-between bg-gray-50 border-t py-2">
+      <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-gray-50 border-t py-2"}`}>
         {!isInlineDisplay && (
           <Button 
             variant="outline" 
