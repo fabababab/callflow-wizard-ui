@@ -16,6 +16,8 @@ import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { Button } from '@/components/ui/button';
 import { SensitiveField } from '@/data/scenarioData';
 import { Badge } from '@/components/ui/badge';
+import { useModuleManager } from '@/hooks/useModuleManager';
+import ModuleContainer from '@/components/modules/ModuleContainer';
 
 // New interface to track selected state details for the modal
 interface SelectedStateDetails {
@@ -52,6 +54,30 @@ const TestScenario = () => {
     isLoading,
     error
   } = activeScenario;
+
+  // Add module manager hook
+  const {
+    activeModule,
+    moduleHistory,
+    closeModule,
+    completeModule
+  } = useModuleManager(
+    loadedStateMachine,
+    currentState,
+    activeScenario.stateData
+  );
+
+  // Handle module completion
+  const handleModuleComplete = (result: any) => {
+    console.log('Module completed with result:', result);
+    completeModule(result);
+    
+    // Dispatch event for any component that needs to know about module completion
+    const event = new CustomEvent('module-completed', {
+      detail: { moduleId: activeModule?.id, result }
+    });
+    window.dispatchEvent(event);
+  };
 
   // Handle state selection from the visualizer
   const handleStateSelection = (state: string) => {
@@ -384,6 +410,18 @@ const TestScenario = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Module container that will display active modules */}
+      {activeModule && (
+        <ModuleContainer
+          moduleConfig={activeModule}
+          onClose={closeModule}
+          onComplete={handleModuleComplete}
+          currentState={currentState}
+          stateData={activeScenario.stateData}
+        />
+      )}
     </div>;
 };
+
 export default TestScenario;

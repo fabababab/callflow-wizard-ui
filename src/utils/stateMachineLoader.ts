@@ -1,6 +1,8 @@
+
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { stateMachines } from '@/data/stateMachines';
 import { SensitiveField } from '@/data/scenarioData';
+import { ModuleConfig } from '@/types/modules';
 
 // Define the state machine types
 export interface StateMachineState {
@@ -13,6 +15,7 @@ export interface StateMachineState {
     responseOptions?: string[];
     customerText?: string;
     sensitiveFields?: SensitiveField[]; // Add support for sensitive data fields
+    module?: ModuleConfig; // Add support for module configuration
   };
   on?: Record<string, string>;
   nextState?: string;

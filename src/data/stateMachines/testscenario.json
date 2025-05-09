@@ -1,4 +1,3 @@
-
 {
   "id": "test-scenario",
   "initial": "start",
@@ -50,7 +49,32 @@
             "source": "Customer Database Record #45789",
             "matched": false
           }
-        ]
+        ],
+        "module": {
+          "id": "verification-module-1",
+          "title": "Customer Verification Required",
+          "type": "verification",
+          "data": {
+            "fields": [
+              {
+                "id": "customer-id",
+                "label": "Customer ID",
+                "type": "text",
+                "value": "ACC123456",
+                "expectedValue": "ACC123457",
+                "required": true
+              },
+              {
+                "id": "email",
+                "label": "Email Address",
+                "type": "email",
+                "value": "customer@example.com",
+                "expectedValue": "customer@example.com",
+                "required": true
+              }
+            ]
+          }
+        }
       },
       "on": {
         "Thank you for providing that information. I can see that you upgraded to the premium plan last week. Looking at your account, I notice that there's a system flag that hasn't properly updated your billing tier. Let me fix that for you right away.": "account_resolution",
@@ -130,7 +154,42 @@
             "source": "Payment Records",
             "matched": true
           }
-        ]
+        ],
+        "module": {
+          "id": "contract-module-1",
+          "title": "Payment Contracts",
+          "type": "contract",
+          "data": {
+            "contracts": [
+              {
+                "id": "contract-001",
+                "name": "Premium Subscription",
+                "type": "Monthly Billing",
+                "status": "active",
+                "startDate": "2023-09-15",
+                "endDate": "2024-09-15",
+                "details": {
+                  "Monthly Rate": "$19.99",
+                  "Billing Cycle": "15th of each month",
+                  "Payment Method": "Credit Card ending in 4567",
+                  "Auto Renewal": "Yes"
+                }
+              },
+              {
+                "id": "contract-002",
+                "name": "Add-on Services Package",
+                "type": "Pay-as-you-go",
+                "status": "pending",
+                "startDate": "2023-10-01",
+                "details": {
+                  "Base Rate": "$5.99",
+                  "Usage Charges": "Variable",
+                  "Payment Method": "Same as primary subscription"
+                }
+              }
+            ]
+          }
+        }
       },
       "on": {
         "I've updated your payment method and successfully processed the premium upgrade. Your account now has full premium access, and you'll be billed at the correct rate starting today.": "account_resolution",
@@ -157,7 +216,7 @@
         "DEFAULT": "conclusion"
       }
     },
-
+    
     "account_resolution": {
       "meta": {
         "agentText": "I've updated your account status in our system. You should now have full access to all premium features. I've also processed a refund for the difference between the standard and premium rates for this period. It will appear in your account within 3-5 business days. Is there anything else I can help you with today?",
@@ -242,7 +301,7 @@
         "DEFAULT": "conclusion"
       }
     },
-
+    
     "temp_access_granted": {
       "meta": {
         "agentText": "I've activated all premium features on your account. This will remain active while our technical team investigates the billing issue. I've created ticket #TK-45678 for you. You'll receive an email confirmation shortly, and our team will contact you once the billing issue is permanently resolved. Is there anything else you need assistance with today?",
@@ -287,7 +346,41 @@
           "You're right, two weeks is longer than our typical processing time. Let me investigate this further. Could you tell me when exactly you upgraded and if you received any confirmation email?",
           "I apologize for the misunderstanding. This does seem like an error rather than a normal delay. Let me check your account details more thoroughly to find the issue.",
           "You're absolutely right. After checking our system more carefully, I can see this isn't a normal delay but an error in our billing system. Let me fix this for you immediately."
-        ]
+        ],
+        "module": {
+          "id": "information-module-1",
+          "title": "Billing Information",
+          "type": "information",
+          "data": {
+            "blocks": [
+              {
+                "id": "info-001",
+                "title": "Billing Cycle Information",
+                "content": "Billing changes typically take effect within 24-48 hours of making changes to your subscription.",
+                "type": "info",
+                "hasDetails": true,
+                "detailsContent": "Our billing system processes subscription changes in batches every 24 hours. After a change is submitted, it enters the next processing queue. Once processed, the changes are applied to your account and reflected in your next billing statement.",
+                "link": "#",
+                "linkText": "View billing policy"
+              },
+              {
+                "id": "info-002",
+                "title": "Delayed Processing Detected",
+                "content": "We've detected an unusual delay in processing your subscription change.",
+                "type": "warning",
+                "hasDetails": false
+              },
+              {
+                "id": "info-003",
+                "title": "System Maintenance Notice",
+                "content": "There was scheduled system maintenance on the 15th which may have affected some account changes.",
+                "type": "info",
+                "hasDetails": true,
+                "detailsContent": "Our system underwent routine maintenance between 2AM and 5AM on the 15th. During this time, some account changes may have been queued but not fully processed. Our technical team is aware of this issue and working to process all pending changes."
+              }
+            ]
+          }
+        }
       },
       "on": {
         "You're right, two weeks is longer than our typical processing time. Let me investigate this further. Could you tell me when exactly you upgraded and if you received any confirmation email?": "billing_investigation",
