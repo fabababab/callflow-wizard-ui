@@ -3,14 +3,16 @@ import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Button } from '@/components/ui/button';
-import { Shield, Phone, PhoneOff, RefreshCw, FileJson } from 'lucide-react';
+import { Shield, Phone, PhoneOff, RefreshCw, FileJson, AlignLeft, Layers } from 'lucide-react';
 import ChatMessages from '@/components/TestScenario/ChatMessages';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ScenarioSelector from './ScenarioSelector';
 import ModuleContainer from '@/components/modules/ModuleContainer';
+import { useConversationSummary } from '@/hooks/useConversationSummary';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -21,16 +23,24 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 }) => {
   // Use the transcript hook with the active scenario
   const transcript = useTranscript(activeScenario);
+  const { generateSummary } = useConversationSummary();
   const [showJsonDialog, setShowJsonDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("chat");
+  const [conversationSummary, setConversationSummary] = useState<string>("");
+
+  // Update summary when scenario changes
+  useEffect(() => {
+    setConversationSummary(generateSummary(activeScenario));
+  }, [activeScenario, generateSummary]);
 
   // Scroll to bottom whenever messages are updated
   useEffect(() => {
-    if (transcript.messagesEndRef.current) {
+    if (transcript.messagesEndRef.current && activeTab === "chat") {
       transcript.messagesEndRef.current.scrollIntoView({
         behavior: 'smooth'
       });
     }
-  }, [transcript.lastTranscriptUpdate]);
+  }, [transcript.lastTranscriptUpdate, activeTab]);
 
   // Function to handle scenario changes
   const handleScenarioChange = (newScenario: ScenarioType) => {
@@ -42,6 +52,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         }
       });
       window.dispatchEvent(event);
+      // Update conversation summary
+      setConversationSummary(generateSummary(newScenario));
     }
   };
 
@@ -110,55 +122,113 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         </div>
       </div>
       
-      <ScrollArea className="flex-grow p-4">
-        {/* Verification banner */}
-        {transcript.verificationBlocking && 
-          <Card className="mb-4 bg-amber-50 border border-amber-200 shadow-sm">
-            <div className="p-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-700">
-                <Shield size={16} />
-                <span className="text-sm font-medium">Verification required to continue</span>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
+        <div className="border-b px-4">
+          <TabsList className="h-10">
+            <TabsTrigger value="chat" className="flex items-center gap-1">
+              <Layers className="h-4 w-4" />
+              <span>Chat View</span>
+            </TabsTrigger>
+            <TabsTrigger value="summary" className="flex items-center gap-1">
+              <AlignLeft className="h-4 w-4" />
+              <span>Text Summary</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent value="chat" className="flex-grow overflow-auto p-0 m-0">
+          <ScrollArea className="flex-grow p-4">
+            {/* Verification banner */}
+            {transcript.verificationBlocking && 
+              <Card className="mb-4 bg-amber-50 border border-amber-200 shadow-sm">
+                <div className="p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-amber-700">
+                    <Shield size={16} />
+                    <span className="text-sm font-medium">Verification required to continue</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs bg-white" 
+                    onClick={() => transcript.handleVerifySystemCheck('system')}
+                  >
+                    Verify Identity
+                  </Button>
+                </div>
+              </Card>
+            }
+            
+            {/* Chat messages */}
+            <ChatMessages 
+              messages={transcript.messages} 
+              isAgentMode={true} 
+              onSelectResponse={transcript.handleSelectResponse} 
+              onVerifySystemCheck={transcript.handleVerifySystemCheck} 
+              onValidateSensitiveData={transcript.handleValidateSensitiveData} 
+              messagesEndRef={transcript.messagesEndRef} 
+              onModuleComplete={handleInlineModuleComplete} 
+            />
+            
+            {/* Empty state */}
+            {transcript.messages.length === 0 && !transcript.callActive && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Phone className="h-12 w-12 text-muted-foreground mb-4" strokeWidth={1.5} />
+                <h3 className="text-lg font-medium text-muted-foreground mb-2">No Active Call</h3>
+                <p className="text-sm text-muted-foreground/70 max-w-xs mb-6">
+                  Click the "Start Call" button to begin a conversation with the virtual customer
+                </p>
+                <Button 
+                  onClick={transcript.handleCall}
+                  className="gap-2"
+                >
+                  <Phone className="h-4 w-4" /> Start Call
+                </Button>
               </div>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="text-xs bg-white" 
-                onClick={() => transcript.handleVerifySystemCheck('system')}
-              >
-                Verify Identity
-              </Button>
+            )}
+          </ScrollArea>
+        </TabsContent>
+        
+        <TabsContent value="summary" className="flex-grow overflow-auto p-4 m-0">
+          <Card className="border shadow-sm">
+            <div className="p-5">
+              <h2 className="text-lg font-semibold mb-4">Conversation Summary</h2>
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="bg-muted/50">{activeScenario}</Badge>
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    {transcript.callActive ? "Active Call" : "Completed Call"}
+                  </Badge>
+                </div>
+                
+                <Separator />
+                
+                <div className="prose prose-sm max-w-none">
+                  <p className="whitespace-pre-line">{conversationSummary}</p>
+                </div>
+                
+                {transcript.callActive && (
+                  <div className="bg-amber-50 p-3 rounded-md border border-amber-200 text-sm text-amber-700">
+                    Call is currently in progress. Summary will be updated when the call ends.
+                  </div>
+                )}
+                
+                {!transcript.callActive && transcript.messages.length > 0 && (
+                  <div className="pt-3 border-t">
+                    <h3 className="text-sm font-semibold mb-2">Key Points:</h3>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Customer identity was successfully verified</li>
+                      <li>Customer concern was addressed</li>
+                      <li>Required information was provided</li>
+                      <li>Next steps were clearly communicated</li>
+                      <li>Follow-up actions were documented</li>
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           </Card>
-        }
-        
-        {/* Chat messages */}
-        <ChatMessages 
-          messages={transcript.messages} 
-          isAgentMode={true} 
-          onSelectResponse={transcript.handleSelectResponse} 
-          onVerifySystemCheck={transcript.handleVerifySystemCheck} 
-          onValidateSensitiveData={transcript.handleValidateSensitiveData} 
-          messagesEndRef={transcript.messagesEndRef} 
-          onModuleComplete={handleInlineModuleComplete} 
-        />
-        
-        {/* Empty state */}
-        {transcript.messages.length === 0 && !transcript.callActive && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Phone className="h-12 w-12 text-muted-foreground mb-4" strokeWidth={1.5} />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">No Active Call</h3>
-            <p className="text-sm text-muted-foreground/70 max-w-xs mb-6">
-              Click the "Start Call" button to begin a conversation with the virtual customer
-            </p>
-            <Button 
-              onClick={transcript.handleCall}
-              className="gap-2"
-            >
-              <Phone className="h-4 w-4" /> Start Call
-            </Button>
-          </div>
-        )}
-      </ScrollArea>
+        </TabsContent>
+      </Tabs>
       
       {/* Footer status area */}
       <div className="p-4 border-t">

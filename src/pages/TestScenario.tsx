@@ -57,7 +57,7 @@ const TestScenario = () => {
     
     // If we have a valid state machine, update the current state
     if (loadedStateMachine && loadedStateMachine.states[state]) {
-      setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
+      setJsonContent(JSON.stringify(loadedStateMachine.states[state], null, 2));
 
       // Store the selected state details including any sensitive fields
       const stateData = loadedStateMachine.states[state];
@@ -77,6 +77,7 @@ const TestScenario = () => {
   // Handle clicking on a sensitive field to show details
   const handleSensitiveFieldClick = (field: SensitiveField) => {
     setShowSensitiveFieldDetails(field);
+    console.log("Showing sensitive field details:", field);
   };
 
   // Close sensitive field details modal

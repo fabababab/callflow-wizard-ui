@@ -1,8 +1,11 @@
 
 import { useCallback } from 'react';
 import { ModuleType } from '@/types/modules';
+import { useToast } from '@/hooks/use-toast';
 
 export function useNachbearbeitungHandler(completeModule: (result: any) => void) {
+  const { toast } = useToast();
+  
   // Show the Nachbearbeitung (call summary) module
   const showNachbearbeitungSummary = useCallback(() => {
     // Create nachbearbeitung module config
@@ -30,8 +33,14 @@ export function useNachbearbeitungHandler(completeModule: (result: any) => void)
         detail: { module: nachbearbeitungModuleConfig } 
       });
       window.dispatchEvent(event);
+      
+      // Show toast notification
+      toast({
+        title: "Call Summary Module",
+        description: "Please complete the call summary checklist",
+      });
     }, 300);
-  }, [completeModule]);
+  }, [completeModule, toast]);
 
   return { showNachbearbeitungSummary };
 }

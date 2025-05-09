@@ -38,8 +38,25 @@ export function useTransitionExtractor(stateMachine: StateMachine | null) {
       options.push("Continue");
     }
     
+    // If we still have no options, add a default one
+    if (options.length === 0) {
+      options.push("Acknowledge");
+    }
+    
     return options;
   }, [stateMachine]);
 
-  return { extractTransitionsAsResponseOptions };
+  // Function to get detailed JSON representation of a state
+  const getStateJson = useCallback((state: string): string => {
+    if (!stateMachine || !stateMachine.states[state]) {
+      return JSON.stringify({ error: "State not found" }, null, 2);
+    }
+    
+    return JSON.stringify(stateMachine.states[state], null, 2);
+  }, [stateMachine]);
+
+  return { 
+    extractTransitionsAsResponseOptions,
+    getStateJson
+  };
 }

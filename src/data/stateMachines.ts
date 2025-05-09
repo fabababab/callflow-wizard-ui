@@ -12,5 +12,7 @@ export const stateMachines: Record<ScenarioType, boolean> = {
   physioTherapy: true,
   paymentReminder: true,
   insurancePackage: true,
-  empty: true // Add the new empty scenario
+  basicTutorial: true, // Renamed from "empty"
+  customerSupport: true, // New descriptive scenario
+  accountVerification: true // New descriptive scenario
 };
