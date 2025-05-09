@@ -200,6 +200,15 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     }
   };
 
+  // Function to handle state selection from the visualizer
+  const handleStateSelection = (state: string) => {
+    console.log(`State selected from visualizer: ${state}`);
+    if (stateData && currentState) {
+      // Update visualization to show this state
+      setDialogViewMode("visualization");
+    }
+  };
+
   // Handle changing the scenario from the selector
   const handleScenarioChange = (value: string) => {
     if (callActive) {
@@ -452,6 +461,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                 <DecisionTreeVisualizer 
                   stateMachine={JSON.parse(jsonContent || "{}")} 
                   currentState={currentState}
+                  onStateClick={handleStateSelection}
                 />
               </div>
             </TabsContent>

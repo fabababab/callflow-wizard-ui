@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -40,6 +39,19 @@ const TestScenario = () => {
     isLoading,
     error
   } = activeScenario;
+
+  // Handle state selection from the visualizer
+  const handleStateSelection = (state: string) => {
+    console.log(`State selected in TestScenario: ${state}`);
+    
+    // If we have a valid state machine, update the current state
+    if (loadedStateMachine && loadedStateMachine.states[state]) {
+      setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
+      
+      // Update dialog view mode to show the visualization with this state
+      setDialogViewMode("visualization");
+    }
+  };
 
   // Listen for scenario change events from the TranscriptPanel
   useEffect(() => {
@@ -204,6 +216,7 @@ const TestScenario = () => {
                 <DecisionTreeVisualizer 
                   stateMachine={loadedStateMachine} 
                   currentState={currentState}
+                  onStateClick={handleStateSelection}
                 />
               </div>
             )}

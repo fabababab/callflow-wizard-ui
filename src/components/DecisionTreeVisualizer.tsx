@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { StateMachine } from '@/utils/stateMachineLoader';
 import { Search, ZoomIn, ZoomOut, MousePointer, RefreshCw } from 'lucide-react';
