@@ -4,6 +4,7 @@ import { ScenarioType } from '@/components/ScenarioSelector';
 import { useStateMachine } from '@/hooks/useStateMachine';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
 import { StateMachineState } from '@/utils/stateMachineLoader';
+import { detectSensitiveData } from '@/data/scenarioData';
 
 export function useTranscript(activeScenario: ScenarioType) {
   const [isRecording, setIsRecording] = useState(false);
@@ -97,7 +98,19 @@ export function useTranscript(activeScenario: ScenarioType) {
       
       if (stateData.meta?.customerText) {
         console.log(`Adding customer message: ${stateData.meta.customerText}`);
-        // Add customer message without suggestions - suggestions will be shown in dedicated area
+        // Detect sensitive data in customer text
+        const sensitiveData = detectSensitiveData(stateData.meta.customerText);
+        
+        // Add customer message with detected sensitive data
+        const message = {
+          id: Math.random().toString(),
+          text: stateData.meta.customerText,
+          sender: 'customer' as const,
+          timestamp: new Date(),
+          sensitiveData: sensitiveData.length > 0 ? sensitiveData : undefined
+        };
+        
+        // Add the customer message with potential sensitive data
         addCustomerMessage(stateData.meta.customerText);
         
         // Set flag that we're waiting for user to respond

@@ -1,3 +1,4 @@
+
 import { nanoid } from 'nanoid';
 
 // Define sensitive data validation types
