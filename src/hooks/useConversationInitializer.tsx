@@ -1,5 +1,5 @@
 
-// Hook for initializing and resetting conversations
+// Hook for conversation initialization
 import { useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useToast } from '@/hooks/use-toast';
@@ -10,7 +10,7 @@ interface ConversationInitializerProps {
   stateMachine: any;
   messageHandling: any;
   callState: any;
-  setHasInitializedConversation: React.Dispatch<React.SetStateAction<boolean>>;
+  setHasInitializedConversation: (value: boolean) => void;
   toast: ReturnType<typeof useToast>;
   showNachbearbeitungSummary: () => void;
 }
@@ -26,193 +26,147 @@ export function useConversationInitializer({
   showNachbearbeitungSummary
 }: ConversationInitializerProps) {
 
-  // Reset the conversation - ONLY when explicitly requested by the user
-  const resetConversation = useCallback(() => {
-    console.log('Manually resetting conversation');
-    messageHandling.clearMessages();
+  // Function to handle accepting a call
+  const handleAcceptCall = useCallback(() => {
+    if (!activeScenario) {
+      toast.toast({
+        title: "No Scenario Selected",
+        description: "Please select a scenario first.",
+        variant: "destructive",
+        duration: 3000
+      });
+      return;
+    }
+
+    console.log('Accepting call for scenario:', activeScenario);
+    callState.setCallActive(true);
+  }, [activeScenario, callState, toast]);
+
+  // Function to handle starting a call
+  const handleCall = useCallback(() => {
+    if (!activeScenario) {
+      toast.toast({
+        title: "No Scenario Selected",
+        description: "Please select a scenario first.",
+        variant: "destructive",
+        duration: 3000
+      });
+      return;
+    }
+    
+    console.log('Starting call...');
+
+    // Reset conversation state but don't clear messages
+    conversationState.resetConversationState(false);
+    
+    // Set call as active
+    callState.setCallActive(true);
+    
+    console.log('Initializing conversation...');
+    
+    // Initialize the state machine
+    const success = stateMachine.initializeStateMachine(activeScenario);
+    
+    if (success) {
+      console.log('State machine initialized successfully');
+      
+      // Add system message
+      messageHandling.addSystemMessage(`Call started. Scenario: ${activeScenario}`);
+    
+      // Start with initial state
+      stateMachine.processSelection("START_CALL");
+      
+      // Set flags for initialization
+      conversationState.setIsInitialStateProcessed(true);
+      setHasInitializedConversation(true);
+      
+      // Update last transcript update time
+      conversationState.setLastTranscriptUpdate(new Date());
+    } else {
+      console.error('Failed to initialize state machine');
+      
+      // Show error toast
+      toast.toast({
+        title: "Failed to Start Call",
+        description: "There was an error initializing the conversation.",
+        variant: "destructive",
+        duration: 3000
+      });
+      
+      callState.setCallActive(false);
+    }
+  }, [activeScenario, callState, conversationState, messageHandling, stateMachine, toast, setHasInitializedConversation]);
+
+  // Function to handle hanging up a call
+  const handleHangUpCall = useCallback(() => {
+    console.log('Hanging up call...');
+    
+    // Set call as inactive
+    callState.setCallActive(false);
+    
+    // Reset state machine
     stateMachine.resetStateMachine();
+    
+    // Add system message
+    messageHandling.addSystemMessage('Call ended.');
+    
+    // Reset conversation state tracking but don't clear messages
+    conversationState.resetConversationState(false);
+    
+    // Show summary screen
+    if (conversationState.showNachbearbeitungModule) {
+      console.log('Showing Nachbearbeitung summary...');
+      showNachbearbeitungSummary();
+    } else {
+      toast.toast({
+        title: "Call Ended",
+        description: "The call has been ended successfully.",
+        duration: 3000
+      });
+    }
+  }, [callState, stateMachine, messageHandling, conversationState, showNachbearbeitungSummary, toast]);
+
+  // Function to reset the conversation
+  const resetConversation = useCallback(() => {
+    console.log('Resetting conversation...');
+    
+    // First check if call is active
+    if (callState.callActive) {
+      // End call first
+      callState.setCallActive(false);
+      messageHandling.addSystemMessage('Call ended.');
+    }
+    
+    // Reset state machine
+    stateMachine.resetStateMachine();
+    
+    // Reset conversation state including messages
     conversationState.resetConversationState(true);
+    
+    // Clear messages
+    messageHandling.clearMessages();
+    
+    // Add reset message
+    messageHandling.addSystemMessage('Conversation reset. Ready to start a new call.');
+    
+    // Update last transcript update time
+    conversationState.setLastTranscriptUpdate(new Date());
+    
+    // Set flag for initialization
     setHasInitializedConversation(false);
     
-    toast({
+    // Show toast
+    toast.toast({
       title: "Conversation Reset",
-      description: "The conversation has been reset to its initial state.",
-      duration: 2000,
+      description: "The conversation has been reset. Ready to start a new call.",
+      duration: 3000
     });
-  }, [messageHandling.clearMessages, stateMachine.resetStateMachine, conversationState, setHasInitializedConversation, toast]);
-
-  // Improved call start function to properly initialize state
-  const handleCall = useCallback(() => {
-    try {
-      if (!callState.callActive) {
-        console.log('Starting call for scenario:', activeScenario);
-        
-        // Validate scenario is loaded
-        if (!stateMachine.stateMachine) {
-          throw new Error('State machine not loaded');
-        }
-        
-        // Set call active state
-        callState.setCallActiveState(true);
-        
-        // IMPORTANT: Only clear messages if this is a manual reset or first initialization
-        if (conversationState.manualReset || !messageHandling.messages.length) {
-          if (messageHandling.messages.length > 0) {
-            console.log('Clearing existing messages due to manual reset or first initialization');
-          }
-          
-          // Add system message only if we don't already have messages
-          if (!messageHandling.messages.length) {
-            messageHandling.addSystemMessage('Call started');
-            setHasInitializedConversation(true);
-          }
-          
-          // Reset the manual reset flag
-          conversationState.setManualReset(false);
-          
-          // Use a proper delay to ensure UI state is updated
-          setTimeout(() => {
-            console.log('Triggering processStartCall');
-            const success = stateMachine.processStartCall();
-            console.log('Process start call result:', success);
-            
-            if (!success) {
-              console.log('Trying to process START_CALL event manually');
-              const manualSuccess = stateMachine.processSelection('START_CALL');
-              
-              if (!manualSuccess) {
-                console.error('Failed to start call - both automatic and manual methods failed');
-                throw new Error('Failed to initialize call state');
-              }
-            }
-            
-            // Mark initial state as processed after starting the call
-            conversationState.setIsInitialStateProcessed(true);
-            
-            // Dispatch event for successful call start
-            const startEvent = new CustomEvent('call-started', {
-              detail: { scenario: activeScenario }
-            });
-            window.dispatchEvent(startEvent);
-            
-          }, 500);
-        } else {
-          console.log('Call is already initialized with messages, not clearing or re-initializing');
-          
-          // Still need to trigger the state machine
-          setTimeout(() => {
-            if (!conversationState.isInitialStateProcessed) {
-              console.log('Processing start call for already initialized conversation');
-              stateMachine.processStartCall() || stateMachine.processSelection('START_CALL');
-              conversationState.setIsInitialStateProcessed(true);
-            } else {
-              console.log('Initial state already processed, not triggering state machine');
-            }
-          }, 100);
-        }
-      } else {
-        console.log('Ending call');
-        callState.setCallActiveState(false);
-        messageHandling.addSystemMessage('Call ended');
-        
-        // Show the Nachbearbeitung module at the end of the call
-        if (!conversationState.showNachbearbeitungModule) {
-          showNachbearbeitungSummary();
-        }
-        
-        // Dispatch event for call end
-        const endEvent = new CustomEvent('call-ended');
-        window.dispatchEvent(endEvent);
-      }
-    } catch (error) {
-      console.error('Error in handleCall:', error);
-      messageHandling.addSystemMessage(`Error: ${error instanceof Error ? error.message : 'Failed to handle call'}`);
-      callState.setCallActiveState(false);
-      
-      // Dispatch error event
-      const errorEvent = new CustomEvent('call-error', {
-        detail: { error: error instanceof Error ? error.message : 'Unknown error' }
-      });
-      window.dispatchEvent(errorEvent);
-      
-      throw error; // Re-throw to be handled by UI layer
-    }
-  }, [
-    callState, 
-    activeScenario, 
-    messageHandling, 
-    stateMachine, 
-    conversationState,
-    showNachbearbeitungSummary,
-    setHasInitializedConversation
-  ]);
-
-  // Accept incoming call with improved state handling
-  const handleAcceptCall = useCallback((callId: string) => {
-    console.log('Accepting call:', callId);
-    callState.setAcceptedCallId(callId);
-    callState.setCallActiveState(true);
-    
-    // Only reset on explicit accept
-    conversationState.resetConversationState(true);
-    setHasInitializedConversation(true);
-    
-    messageHandling.addSystemMessage(`Call accepted from ${callId}`);
-    
-    toast({
-      title: "Call Accepted",
-      description: `Connected to caller ${callId}`,
-      duration: 2000,
-    });
-    
-    // Trigger initial state with START_CALL event
-    setTimeout(() => {
-      console.log('Triggering processStartCall from accept call');
-      const success = stateMachine.processStartCall();
-      console.log('Process start call result:', success);
-      
-      if (!success) {
-        console.log('Trying to process START_CALL event manually');
-        stateMachine.processSelection('START_CALL');
-      }
-      
-      // Mark initial state as processed
-      conversationState.setIsInitialStateProcessed(true);
-    }, 500);
-  }, [
-    callState, 
-    messageHandling.addSystemMessage, 
-    stateMachine.processStartCall, 
-    stateMachine.processSelection, 
-    conversationState, 
-    setHasInitializedConversation,
-    toast
-  ]);
-
-  // Hang up call with cleanup
-  const handleHangUpCall = useCallback(() => {
-    callState.setCallActiveState(false);
-    callState.setAcceptedCallId(null);
-    
-    // Don't reset conversation state on hang up to preserve messages
-    messageHandling.addSystemMessage('Call ended');
-    
-    toast({
-      title: "Call Ended",
-      description: "Call successfully completed.",
-      duration: 2000,
-    });
-    
-    // Show the Nachbearbeitung module at the end of the call
-    if (!conversationState.showNachbearbeitungModule) {
-      showNachbearbeitungSummary();
-    }
-  }, [callState, messageHandling.addSystemMessage, conversationState, showNachbearbeitungSummary, toast]);
+  }, [callState, conversationState, messageHandling, stateMachine, toast, setHasInitializedConversation]);
 
   return {
-    resetConversation,
     handleCall,
     handleAcceptCall,
-    handleHangUpCall
+    handleHangUpCall,
+    resetConversation
   };
 }

@@ -15,7 +15,7 @@ import { useStateChangeProcessor } from '@/hooks/useStateChangeProcessor';
 import { useToast } from '@/hooks/use-toast';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
-  const { toast } = useToast();
+  const toast = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the message handling functionality
@@ -88,7 +88,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     
     if (moduleManager.activeModule) {
       // Only add system message if it's not the Nachbearbeitung module
-      if (moduleManager.activeModule.type !== 'NACHBEARBEITUNG') {
+      if (moduleManager.activeModule.type !== "NACHBEARBEITUNG") {
         messageHandling.addSystemMessage(`${moduleManager.activeModule.title} completed: ${result.verified ? "Success" : "Failed"}`);
       } else {
         // For Nachbearbeitung module, add a summary message

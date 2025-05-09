@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Button } from '@/components/ui/button';
-import { Shield, Phone, PhoneOff, RefreshCw, FileJson, AlignLeft, Layers, LayoutDashboard, Clock, Copy, MessageSquare } from 'lucide-react';
+import { Shield, Phone, PhoneOff, RefreshCw, FileText, AlignLeft, Layers, LayoutDashboard, Clock, Copy, MessageSquare } from 'lucide-react';
 import ChatMessages from '@/components/TestScenario/ChatMessages';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -263,15 +264,15 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             <RefreshCw className="h-4 w-4 mr-1" /> Reset
           </Button>
           
-          {/* JSON button */}
+          {/* JSON button - using FileText icon from lucide-react */}
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={handleViewJson} 
-            className="ml-auto"
+            className="ml-auto flex items-center"
             disabled={isLoadingJson}
           >
-            <FileJson className="h-4 w-4 mr-1" /> View JSON
+            <FileText className="h-4 w-4 mr-1" /> View JSON
           </Button>
         </div>
       </div>
@@ -302,7 +303,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
               onClick={() => handleViewModeToggle("json")}
               className="flex items-center gap-2"
             >
-              <FileJson size={16} />
+              <FileText size={16} />
               JSON View
             </Button>
             <Button 

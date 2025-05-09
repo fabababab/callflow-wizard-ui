@@ -70,7 +70,7 @@ export function useStateChangeProcessor({
         
         // If sensitive data was detected, show toast notification
         if (sensitiveData && sensitiveData.length > 0) {
-          toast({
+          toast.toast({
             title: "Sensitive Data Detected",
             description: "Please verify the detected information before proceeding.",
             duration: 3000
