@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import { FileText, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ScenarioSelector from '@/components/ScenarioSelector';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -9,12 +9,16 @@ interface TranscriptFooterProps {
   activeScenario: ScenarioType;
   onSelectScenario: (scenario: ScenarioType) => void;
   resetConversation: () => void;
+  viewJson: () => void;
+  isLoadingJson: boolean;
 }
 
 const TranscriptFooter: React.FC<TranscriptFooterProps> = ({
   activeScenario,
   onSelectScenario,
-  resetConversation
+  resetConversation,
+  viewJson,
+  isLoadingJson
 }) => {
   return (
     <div className="border-t p-2 bg-gray-50">
@@ -33,6 +37,17 @@ const TranscriptFooter: React.FC<TranscriptFooterProps> = ({
           title="Reset conversation"
         >
           <RefreshCw className="h-4 w-4 mr-1" /> Reset
+        </Button>
+        
+        {/* JSON button */}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={viewJson} 
+          className="ml-auto flex items-center"
+          disabled={isLoadingJson}
+        >
+          <FileText className="h-4 w-4 mr-1" /> View JSON
         </Button>
       </div>
     </div>

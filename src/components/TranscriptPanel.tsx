@@ -15,7 +15,7 @@ import ModuleDisplay from '@/components/transcript/ModuleDisplay';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
-  jsonVisualization?: any;
+  jsonVisualization?: any; // Accept jsonVisualization prop
 }
 
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
@@ -55,7 +55,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   
   return (
     <div className="flex flex-col h-full">
-      {/* Header with call controls and View JSON button */}
+      {/* Header with call controls */}
       <TranscriptHeader 
         activeScenario={activeScenario}
         currentState={transcript.currentState}
@@ -63,8 +63,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         callActive={transcript.callActive}
         handleCall={transcript.handleCall}
         handleHangUpCall={transcript.handleHangUpCall}
-        viewJson={jsonVisualization ? jsonVisualization.handleViewJson : undefined}
-        isLoadingJson={jsonVisualization ? jsonVisualization.isLoadingJson : false}
       />
       
       {/* Main content area with messages */}
@@ -94,11 +92,13 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         </ScrollArea>
       </div>
       
-      {/* Footer with scenario selector (without JSON button) */}
+      {/* Footer with scenario selector */}
       <TranscriptFooter 
         activeScenario={activeScenario}
         onSelectScenario={scenarioManagement.handleScenarioChange}
         resetConversation={transcript.resetConversation}
+        viewJson={jsonVisualization ? jsonVisualization.handleViewJson : () => {}}
+        isLoadingJson={jsonVisualization ? jsonVisualization.isLoadingJson : false}
       />
       
       {/* JSON visualization dialog */}
