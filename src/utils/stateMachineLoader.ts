@@ -4,8 +4,8 @@ import { stateMachines, StateMachineStatus } from '@/data/stateMachines';
 import { SensitiveField } from '@/data/scenarioData';
 import { ModuleConfig } from '@/types/modules';
 
-// Re-export the type so it can be used in DecisionTreeVisualizer
-export type { StateMachineStatus };
+// Re-export the enum so it can be used in DecisionTreeVisualizer
+export { StateMachineStatus };
 
 // Define the state machine types
 export interface StateMachineState {

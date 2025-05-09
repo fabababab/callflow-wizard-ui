@@ -2,9 +2,9 @@
 import { ScenarioType } from '@/components/ScenarioSelector';
 
 export enum StateMachineStatus {
-  DEVELOPMENT = 'development',
-  TESTING = 'testing',
-  PRODUCTION = 'production'
+  DEVELOPMENT = 'DEVELOPMENT',
+  TESTING = 'TESTING',
+  PRODUCTION = 'PRODUCTION'
 }
 
 interface StateMachineConfig {
