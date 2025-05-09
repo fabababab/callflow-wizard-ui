@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { MessageSender } from './Message';
+import { MessageSender } from './MessageTypes';
 
 interface MessageHeaderProps {
   sender: MessageSender;
