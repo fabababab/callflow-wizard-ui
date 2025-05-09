@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -251,7 +250,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           <ScenarioSelector 
             activeScenario={activeScenario} 
             onSelectScenario={handleScenarioChange}
-            className="text-sm"
           />
           
           {/* Reset button */}
