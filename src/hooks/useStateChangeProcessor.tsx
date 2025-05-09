@@ -86,7 +86,12 @@ export function useStateChangeProcessor({
         console.log(`Extracted response options for state ${stateMachine.currentState}:`, responseOptions);
         
         // Add customer message with detected sensitive data and response options
-        messageHandling.addCustomerMessage(stateMachine.stateData.meta.customerText, sensitiveData, responseOptions);
+        messageHandling.addCustomerMessage(
+          stateMachine.stateData.meta.customerText, 
+          sensitiveData, 
+          responseOptions, 
+          stateMachine.stateData.requiresVerification // Pass verification flag
+        );
         
         // Set flag that we're waiting for user to respond
         conversationState.setAwaitingUserResponse(true);
@@ -117,7 +122,8 @@ export function useStateChangeProcessor({
         messageHandling.addAgentMessage(
           stateMachine.stateData.meta.agentText, 
           [], 
-          effectiveResponseOptions.length > 0 ? effectiveResponseOptions : undefined
+          effectiveResponseOptions.length > 0 ? effectiveResponseOptions : undefined,
+          stateMachine.stateData.requiresVerification // Pass verification flag
         );
       }
       

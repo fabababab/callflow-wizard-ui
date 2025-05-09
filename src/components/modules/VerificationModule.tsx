@@ -28,7 +28,7 @@ const VerificationModule: React.FC<ModuleProps> = ({
   const fields = data?.fields || [];
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(fields);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
-  const isInlineDisplay = data?.isInline === true;
+  const isInlineDisplay = data?.isInline === true || true; // Default to inline display
   
   const handleInputChange = (fieldId: string, value: string) => {
     setVerificationFields(prev => 
@@ -61,42 +61,42 @@ const VerificationModule: React.FC<ModuleProps> = ({
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
-    ? "w-full border border-amber-200 shadow-sm my-4"
+    ? "w-full border border-amber-200 shadow-sm my-4 bg-white"
     : "w-full max-w-md border border-amber-200 shadow-md";
   
   return (
     <Card className={cardClassName}>
-      <CardHeader className="bg-amber-50 border-b border-amber-100">
+      <CardHeader className="bg-amber-50 border-b border-amber-100 py-3">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-amber-600" />
-          <CardTitle className="text-amber-900">{title || 'Identity Verification'}</CardTitle>
+          <CardTitle className="text-amber-900 text-base">{title || 'Identity Verification'}</CardTitle>
         </div>
-        <CardDescription>
+        <CardDescription className="text-xs">
           Please verify the following information to continue
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className="pt-4 space-y-3">
         {verificationStatus === 'success' && (
-          <div className="bg-green-50 p-3 rounded-md flex items-center gap-2 text-green-700 mb-4">
-            <CheckCircle className="h-5 w-5" />
+          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3">
+            <CheckCircle className="h-4 w-4" />
             <span>Verification successful</span>
           </div>
         )}
         
         {verificationStatus === 'failed' && (
-          <div className="bg-red-50 p-3 rounded-md flex items-center gap-2 text-red-700 mb-4">
-            <AlertCircle className="h-5 w-5" />
-            <span>Verification failed. Please check your information and try again.</span>
+          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3">
+            <AlertCircle className="h-4 w-4" />
+            <span>Verification failed. Please check your information.</span>
           </div>
         )}
         
         {verificationFields.map(field => (
-          <div key={field.id} className="space-y-2">
+          <div key={field.id} className="space-y-1.5">
             <div className="flex justify-between">
-              <Label htmlFor={field.id}>{field.label}</Label>
+              <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
               {field.verified !== undefined && (
-                <Badge variant={field.verified ? "default" : "destructive"}>
+                <Badge variant={field.verified ? "default" : "destructive"} className="text-xs py-0 h-5">
                   {field.verified ? "Verified" : "Failed"}
                 </Badge>
               )}
@@ -106,17 +106,26 @@ const VerificationModule: React.FC<ModuleProps> = ({
               type={field.type}
               value={field.value || ''}
               onChange={(e) => handleInputChange(field.id, e.target.value)}
-              className={field.verified === false ? "border-red-300" : ""}
+              className={field.verified === false ? "border-red-300 text-sm h-8" : "text-sm h-8"}
             />
           </div>
         ))}
       </CardContent>
       
-      <CardFooter className="flex justify-between bg-gray-50 border-t">
-        <Button variant="outline" onClick={onClose}>
+      <CardFooter className="flex justify-between bg-gray-50 border-t py-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onClose}
+          className="text-xs"
+        >
           Cancel
         </Button>
-        <Button onClick={handleVerify}>
+        <Button 
+          size="sm"
+          onClick={handleVerify}
+          className="text-xs"
+        >
           Verify
         </Button>
       </CardFooter>

@@ -189,10 +189,12 @@ const Message: React.FC<MessageProps> = ({
 
       {/* Display inline module if present */}
       {hasInlineModule && message.inlineModule && (
-        <InlineModuleDisplay 
-          moduleConfig={message.inlineModule}
-          onComplete={handleModuleComplete}
-        />
+        <div className="ml-4 mt-2 w-full max-w-md">
+          <InlineModuleDisplay 
+            moduleConfig={message.inlineModule}
+            onComplete={handleModuleComplete}
+          />
+        </div>
       )}
     </div>
   );

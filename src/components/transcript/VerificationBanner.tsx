@@ -6,9 +6,13 @@ import { Badge } from '@/components/ui/badge';
 
 interface VerificationBannerProps {
   isVisible: boolean;
+  pendingVerifications: number;
 }
 
-const VerificationBanner: React.FC<VerificationBannerProps> = ({ isVisible }) => {
+const VerificationBanner: React.FC<VerificationBannerProps> = ({ 
+  isVisible, 
+  pendingVerifications = 0 
+}) => {
   if (!isVisible) return null;
   
   return (
@@ -19,7 +23,7 @@ const VerificationBanner: React.FC<VerificationBannerProps> = ({ isVisible }) =>
           <span className="text-sm font-medium">Verification required to continue</span>
         </div>
         <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
-          Pending
+          {pendingVerifications > 0 ? `${pendingVerifications} pending` : 'Pending'}
         </Badge>
       </div>
     </Card>

@@ -13,6 +13,10 @@ import { StateMachine } from '@/utils/stateMachineLoader';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Info } from 'lucide-react';
+import VerificationBanner from '@/components/transcript/VerificationBanner';
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
@@ -35,6 +39,11 @@ const TestScenario = () => {
   const activeScenario = customerScenario;
   const { currentState, error } = activeScenario;
   
+  // Count pending verifications
+  const pendingVerifications = transcript.messages.filter(
+    m => m.requiresVerification && !m.isVerified
+  ).length;
+  
   return (
     <div className="flex h-screen bg-background">
       <SidebarProvider defaultOpen={false}>
@@ -43,6 +52,16 @@ const TestScenario = () => {
           <Header />
           <div className="flex-1 overflow-auto p-0">
             <div className="h-full">
+              {/* Display verification banner if needed */}
+              {pendingVerifications > 0 && (
+                <div className="max-w-5xl mx-auto px-4 pt-2">
+                  <VerificationBanner 
+                    isVisible={pendingVerifications > 0}
+                    pendingVerifications={pendingVerifications}
+                  />
+                </div>
+              )}
+              
               {/* Main content section with transcript panel as the main view */}
               {scenarioState.loadedStateMachine && (
                 <div className="h-full">

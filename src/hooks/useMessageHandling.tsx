@@ -53,7 +53,8 @@ export function useMessageHandling() {
               ...message.inlineModule,
               completed: true,
               result
-            }
+            },
+            isVerified: result?.verified === true
           };
           
           return updatedMessage;
@@ -64,6 +65,11 @@ export function useMessageHandling() {
     );
     
     setLastMessageUpdate(new Date());
+    
+    // If verification was successful, unblock the flow
+    if (result?.verified === true) {
+      setVerificationBlocking(false);
+    }
   };
 
   return {

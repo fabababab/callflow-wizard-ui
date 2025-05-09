@@ -37,6 +37,13 @@ export function useStateChangeEffect({
     if (callActive && currentState && stateData) {
       // Process state change
       console.log(`Processing state change for state: ${currentState}`);
+      
+      // Check if the state requires verification
+      const requiresVerification = stateData.requiresVerification === true;
+      if (requiresVerification) {
+        console.log(`State ${currentState} requires verification before proceeding`);
+      }
+      
       processStateChange();
     }
     

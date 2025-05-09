@@ -10,6 +10,7 @@ export function useConversationState() {
   const [showNachbearbeitungModule, setShowNachbearbeitungModule] = useState(false);
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date | string>(new Date());
   const [manualReset, setManualReset] = useState(false);
+  const [pendingVerifications, setPendingVerifications] = useState<string[]>([]);
   
   // Ref for debouncing
   const debounceTimerRef = useRef<number | null>(null);
@@ -29,6 +30,21 @@ export function useConversationState() {
     });
   }, []);
 
+  // Add a state that requires verification
+  const addPendingVerification = useCallback((stateId: string) => {
+    setPendingVerifications(prev => {
+      if (!prev.includes(stateId)) {
+        return [...prev, stateId];
+      }
+      return prev;
+    });
+  }, []);
+
+  // Remove a state from pending verifications
+  const removePendingVerification = useCallback((stateId: string) => {
+    setPendingVerifications(prev => prev.filter(id => id !== stateId));
+  }, []);
+
   // Reset conversation state - but only reset the tracking, not erase messages
   const resetConversationState = useCallback((shouldResetMessages = false) => {
     console.log("Resetting conversation state tracking. Reset messages:", shouldResetMessages);
@@ -39,6 +55,7 @@ export function useConversationState() {
     setShowNachbearbeitungModule(false);
     setLastTranscriptUpdate(new Date());
     setManualReset(shouldResetMessages);
+    setPendingVerifications([]);
     
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -54,6 +71,7 @@ export function useConversationState() {
     showNachbearbeitungModule,
     lastTranscriptUpdate,
     manualReset,
+    pendingVerifications,
     debounceTimerRef,
     hasProcessedState,
     markStateAsProcessed,
@@ -63,6 +81,8 @@ export function useConversationState() {
     setShowNachbearbeitungModule,
     setLastTranscriptUpdate,
     setManualReset,
+    addPendingVerification,
+    removePendingVerification,
     resetConversationState
   };
 }

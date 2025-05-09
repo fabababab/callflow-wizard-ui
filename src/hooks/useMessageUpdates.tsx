@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 interface MessageUpdatesProps {
   lastMessageUpdate: Date | null;
-  setLastTranscriptUpdate: (date: Date | string) => void;  // Accept both Date and string
+  setLastTranscriptUpdate: (date: Date | string) => void;
 }
 
 export function useMessageUpdates({
