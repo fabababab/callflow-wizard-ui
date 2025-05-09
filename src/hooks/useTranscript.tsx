@@ -50,10 +50,11 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Debug timers for state tracking
   const [debugLastStateChange, setDebugLastStateChange] = useState<string>("");
-
-  // Reset processed states when the scenario changes
+  
+  // Prevent full reset on scenario change - just reset conversation state, not messages
   useEffect(() => {
-    console.log("Resetting processed states due to scenario change:", activeScenario);
+    console.log("Scenario changed to:", activeScenario);
+    // Only reset conversation tracking state, not messages
     conversationState.resetConversationState();
   }, [activeScenario, conversationState]);
   
@@ -307,7 +308,7 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Reset the conversation
   const resetConversation = useCallback(() => {
-    console.log('Resetting conversation');
+    console.log('Manually resetting conversation');
     messageHandling.clearMessages();
     stateMachine.resetStateMachine();
     conversationState.resetConversationState();
@@ -332,51 +333,41 @@ export function useTranscript(activeScenario: ScenarioType) {
         
         // Clear previous state
         callState.setCallActiveState(true);
-        messageHandling.clearMessages();
-        conversationState.resetConversationState();
         
-        // Add initial system message
-        messageHandling.addSystemMessage('Call started');
-        
-        // Log state before transition
-        console.log('State before processStartCall:', {
-          currentState: stateMachine.currentState,
-          stateData: stateMachine.stateData
-        });
-        
-        // Use a proper delay to ensure UI state is updated
-        setTimeout(() => {
-          console.log('Triggering processStartCall');
-          const success = stateMachine.processStartCall();
-          console.log('Process start call result:', success);
+        // IMPORTANT: Only clear messages if this is the first time starting the call
+        // Don't clear messages when the call is already active to prevent duplications
+        if (messageHandling.messages.length === 0) {
+          messageHandling.addSystemMessage('Call started');
           
-          if (!success) {
-            console.log('Trying to process START_CALL event manually');
-            const manualSuccess = stateMachine.processSelection('START_CALL');
+          // Use a proper delay to ensure UI state is updated
+          setTimeout(() => {
+            console.log('Triggering processStartCall');
+            const success = stateMachine.processStartCall();
+            console.log('Process start call result:', success);
             
-            if (!manualSuccess) {
-              console.error('Failed to start call - both automatic and manual methods failed');
-              throw new Error('Failed to initialize call state');
+            if (!success) {
+              console.log('Trying to process START_CALL event manually');
+              const manualSuccess = stateMachine.processSelection('START_CALL');
+              
+              if (!manualSuccess) {
+                console.error('Failed to start call - both automatic and manual methods failed');
+                throw new Error('Failed to initialize call state');
+              }
             }
-          }
-          
-          // Log state after transition
-          console.log('State after transition:', {
-            currentState: stateMachine.currentState,
-            stateData: stateMachine.stateData
-          });
-          
-          // Mark initial state as processed after starting the call
-          conversationState.setIsInitialStateProcessed(true);
-          
-          // Dispatch event for successful call start
-          const startEvent = new CustomEvent('call-started', {
-            detail: { scenario: activeScenario }
-          });
-          window.dispatchEvent(startEvent);
-          
-        }, 500); // Slightly longer delay to ensure proper initialization
-        
+            
+            // Mark initial state as processed after starting the call
+            conversationState.setIsInitialStateProcessed(true);
+            
+            // Dispatch event for successful call start
+            const startEvent = new CustomEvent('call-started', {
+              detail: { scenario: activeScenario }
+            });
+            window.dispatchEvent(startEvent);
+            
+          }, 500);
+        } else {
+          console.log('Call is already initialized with messages, not clearing or re-initializing');
+        }
       } else {
         console.log('Ending call');
         callState.setCallActiveState(false);
@@ -415,7 +406,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     stateMachine.stateData,
     stateMachine.stateMachine,
     conversationState,
-    showNachbearbeitungSummary
+    showNachbearbeitungSummary,
+    messageHandling.messages.length
   ]);
 
   // Accept incoming call with improved state handling
@@ -423,6 +415,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     console.log('Accepting call:', callId);
     callState.setAcceptedCallId(callId);
     callState.setCallActiveState(true);
+    
+    // Only reset on explicit accept
     conversationState.resetConversationState();
     
     messageHandling.addSystemMessage(`Call accepted from ${callId}`);
@@ -453,7 +447,8 @@ export function useTranscript(activeScenario: ScenarioType) {
   const handleHangUpCall = useCallback(() => {
     callState.setCallActiveState(false);
     callState.setAcceptedCallId(null);
-    conversationState.resetConversationState();
+    
+    // Don't reset conversation state on hang up to preserve messages
     messageHandling.addSystemMessage('Call ended');
     
     toast({
@@ -493,6 +488,12 @@ export function useTranscript(activeScenario: ScenarioType) {
     // Clear any existing timer
     if (conversationState.debounceTimerRef.current) {
       clearTimeout(conversationState.debounceTimerRef.current);
+    }
+
+    // Skip processing if we've already processed this state
+    if (conversationState.hasProcessedState(stateMachine.currentState)) {
+      console.log(`Skipping already processed state: ${stateMachine.currentState}`);
+      return;
     }
 
     // Process state changes immediately for initial state without triggering toast
@@ -572,7 +573,9 @@ export function useTranscript(activeScenario: ScenarioType) {
     stateMachine.stateData,
     stateMachine.currentState,
     callState.callActive,
-    conversationState.isInitialStateProcessed
+    conversationState.isInitialStateProcessed,
+    conversationState.hasProcessedState,
+    conversationState
   ]);
 
   return {
@@ -597,3 +600,4 @@ export function useTranscript(activeScenario: ScenarioType) {
     debugLastStateChange, // Add debug info
   };
 }
+

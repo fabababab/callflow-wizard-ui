@@ -27,8 +27,9 @@ export function useConversationState() {
     });
   }, []);
 
-  // Reset conversation state
+  // Reset conversation state - but only reset the tracking, not erase messages
   const resetConversationState = useCallback(() => {
+    console.log("Resetting conversation state tracking (not messages)");
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
     setIsUserAction(false);

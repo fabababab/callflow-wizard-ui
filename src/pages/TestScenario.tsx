@@ -17,6 +17,7 @@ import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { Badge } from '@/components/ui/badge';
 import { SensitiveField } from '@/data/scenarioData';
 import { toast } from '@/components/ui/use-toast';
+// Fix the import to use default import
 import StateMachineSelector from '@/components/StateMachineSelector';
 
 // New interface to track selected state details for the modal
@@ -124,8 +125,7 @@ const TestScenario = () => {
         try {
           console.log('Loading state machine for scenario:', selectedStateMachine);
 
-          // Reset transcript and any active modules when scenario changes
-          transcript.resetConversation();
+          // Don't automatically reset transcript when scenario changes
           const machine = await loadStateMachine(selectedStateMachine);
           console.log('Loaded state machine:', machine);
           if (!machine) {
@@ -139,13 +139,7 @@ const TestScenario = () => {
           // Also load the JSON content for display
           setJsonContent(JSON.stringify(machine, null, 2));
 
-          // Reset any active call when changing scenarios
-          if (transcript.callActive) {
-            transcript.handleHangUpCall();
-          }
-
-          // Don't auto-initialize the state machine anymore
-          // Let the user explicitly start the call
+          // Don't auto-reset call when changing scenarios - let user control this
         } catch (error) {
           console.error("Failed to load state machine:", error);
           toast({
@@ -160,7 +154,7 @@ const TestScenario = () => {
       }
     }
     fetchStateMachine();
-  }, [selectedStateMachine, transcript]);
+  }, [selectedStateMachine]);
 
   // Add a new effect to monitor call state changes
   useEffect(() => {
