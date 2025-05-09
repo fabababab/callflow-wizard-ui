@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -16,6 +15,7 @@ import { FileJson, LayoutDashboard, Shield, AlertTriangle, Info, Database } from
 import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import { Button } from '@/components/ui/button';
 import { SensitiveField } from '@/data/scenarioData';
+import { Badge } from '@/components/ui/badge';
 
 // New interface to track selected state details for the modal
 interface SelectedStateDetails {
