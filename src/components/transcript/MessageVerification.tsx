@@ -37,13 +37,19 @@ const MessageVerification: React.FC<MessageVerificationProps> = ({
     }
   };
 
-  return (
-    <InlineChatVerification 
-      onVerify={handleInlineVerify}
-      isVerifying={false}
-      isVerified={isVerified}
-    />
-  );
+  // Only render the verification UI if not already verified
+  if (!isVerified) {
+    return (
+      <InlineChatVerification 
+        onVerify={handleInlineVerify}
+        isVerifying={false}
+        isVerified={isVerified}
+      />
+    );
+  }
+  
+  // If already verified, don't render anything
+  return null;
 };
 
 export default MessageVerification;

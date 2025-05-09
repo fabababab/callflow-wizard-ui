@@ -9,6 +9,7 @@ import MessageResponseOptions from './MessageResponseOptions';
 import AISuggestions from './AISuggestion';
 import MessageInlineModule from './MessageInlineModule';
 import InlineChatVerification from './InlineChatVerification';
+import MessageVerification from './MessageVerification';
 
 interface MessageProps {
   message: MessageInterface;
@@ -53,26 +54,6 @@ const Message: React.FC<MessageProps> = ({
     }
   };
 
-  // Inline verification handler - always verifies successfully
-  const handleInlineVerify = React.useCallback(() => {
-    if (message.requiresVerification && onVerifySystemCheck && !message.isVerified) {
-      console.log('Auto-verifying message:', message.id);
-      onVerifySystemCheck(message.id);
-    }
-  }, [message.id, message.requiresVerification, message.isVerified, onVerifySystemCheck]);
-  
-  // Auto-verify if required
-  React.useEffect(() => {
-    if (message.requiresVerification && !message.isVerified) {
-      // Short delay before auto-verification
-      const timer = setTimeout(() => {
-        handleInlineVerify();
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [message.requiresVerification, message.isVerified, handleInlineVerify]);
-  
   return (
     <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
       <div
@@ -99,14 +80,10 @@ const Message: React.FC<MessageProps> = ({
         
         {/* Display inline verification if required */}
         {message.requiresVerification && !message.isVerified && onVerifySystemCheck && (
-          <InlineChatVerification 
-            onVerify={(verified) => {
-              if (verified) {
-                onVerifySystemCheck(message.id);
-              }
-            }}
-            isVerifying={false}
+          <MessageVerification
+            messageId={message.id}
             isVerified={message.isVerified}
+            onVerify={onVerifySystemCheck}
           />
         )}
         
