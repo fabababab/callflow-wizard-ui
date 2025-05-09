@@ -95,7 +95,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     addSystemMessage: messageHandling.addSystemMessage
   });
   
-  // Use messages scrolling hook
+  // Use messages scrolling hook - now accepts Date or string type for lastTranscriptUpdate
   useMessagesScrolling({
     messagesEndRef,
     lastTranscriptUpdate: conversationState.lastTranscriptUpdate
