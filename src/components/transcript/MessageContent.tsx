@@ -43,6 +43,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
 
   // Handler for verification
   const handleVerify = (verified: boolean) => {
+    console.log(`Verification triggered for message ${messageId}, verified: ${verified}`);
     if (verified && onVerifySystemCheck) {
       onVerifySystemCheck(messageId);
     }
@@ -51,8 +52,8 @@ const MessageContent: React.FC<MessageContentProps> = ({
   const showInlineVerification = requiresVerification && !isVerified && sender === 'customer';
 
   return (
-    <>
-      <p className="text-sm whitespace-pre-wrap">{text}</p>
+    <div className="space-y-2">
+      <div className="text-sm whitespace-pre-wrap">{text}</div>
       
       {/* Display number matching visualization */}
       {numberInput && (
@@ -81,7 +82,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
           onValidate={handleValidate}
         />
       )}
-    </>
+    </div>
   );
 };
 

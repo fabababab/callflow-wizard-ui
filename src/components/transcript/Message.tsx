@@ -2,7 +2,6 @@
 import React from 'react';
 import type { MessageSender, Message as MessageInterface } from './MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
-import { AISuggestion } from './AISuggestion';
 import MessageHeader from './MessageHeader';
 import MessageContent from './MessageContent';
 import MessageResponseOptions from './MessageResponseOptions';
@@ -34,15 +33,12 @@ const Message: React.FC<MessageProps> = ({
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   const hasInlineModule = message.inlineModule !== undefined;
   
-  // Debug logging for response options
+  // Debug logging for verification status
   React.useEffect(() => {
-    if (hasResponseOptions) {
-      console.log('Message has response options:', {
-        messageId: message.id,
-        options: message.responseOptions
-      });
+    if (message.requiresVerification) {
+      console.log(`Message ${message.id} requires verification. Current status: ${message.isVerified ? 'Verified' : 'Not verified'}`);
     }
-  }, [message.id, message.responseOptions, hasResponseOptions]);
+  }, [message.id, message.requiresVerification, message.isVerified]);
   
   // Handler for inline module completion
   const handleInlineModuleComplete = (moduleId: string, result: any) => {
@@ -53,7 +49,7 @@ const Message: React.FC<MessageProps> = ({
   };
 
   return (
-    <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div className={`flex ${message.sender === 'agent' ? 'justify-end' : 'justify-start'} mb-4`} key={`message-${message.id}`}>
       <div
         className={`rounded-lg max-w-[85%] p-3 shadow-sm 
           ${message.sender === 'agent'

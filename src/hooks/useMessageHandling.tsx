@@ -71,6 +71,7 @@ export function useMessageHandling() {
 
   // Override the original handleVerifySystemCheck to ensure verificationBlocking is set to false
   const enhancedHandleVerifySystemCheck = (messageId: string) => {
+    console.log(`Enhanced verification check for message ${messageId}`);
     handleVerifySystemCheck(messageId);
     // Always set verification blocking to false
     setVerificationBlocking(false);

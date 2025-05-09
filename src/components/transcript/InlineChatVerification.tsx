@@ -1,13 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { FormValues, formSchema } from '../identity-validation/FormFields';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, CheckCircle, Loader, ShieldCheck, AlertCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { CheckCircle, Loader, ShieldCheck } from 'lucide-react';
 
 interface InlineChatVerificationProps {
   onVerify: (verified: boolean, data?: FormValues) => void;
@@ -22,7 +18,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [autoVerifyStarted, setAutoVerifyStarted] = useState(false);
-  const [showFailure, setShowFailure] = useState(false);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -30,11 +25,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     postalCode: '10115',
     policyNumber: '12345678',
   };
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues,
-  });
   
   // Auto-submit the form after a brief delay
   useEffect(() => {
@@ -56,7 +46,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     setIsValidating(true);
     setTimeout(() => {
       setIsValidating(false);
-      onVerify(true, form.getValues());
+      onVerify(true, defaultValues);
     }, 800);
   };
   
@@ -79,13 +69,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
         <ShieldCheck size={18} className="text-amber-600" />
         <p className="text-sm text-amber-700 font-medium">Customer Identity Verification</p>
       </div>
-      
-      {showFailure && (
-        <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3">
-          <AlertCircle className="h-4 w-4" />
-          <span>Verification failed. Please check your information.</span>
-        </div>
-      )}
       
       {isValidating ? (
         <div className="flex items-center justify-center h-16 gap-2 text-amber-700">
@@ -122,6 +105,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
               variant="outline" 
               size="sm"
               className="text-xs"
+              onClick={() => onVerify(false)}
             >
               Cancel
             </Button>
