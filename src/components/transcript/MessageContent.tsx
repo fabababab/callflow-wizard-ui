@@ -50,6 +50,13 @@ const MessageContent: React.FC<MessageContentProps> = ({
   };
 
   const showInlineVerification = requiresVerification && !isVerified && sender === 'customer';
+  
+  // Debug log to check verification state
+  React.useEffect(() => {
+    if (requiresVerification) {
+      console.log(`Message ${messageId} verification status - requiresVerification: ${requiresVerification}, isVerified: ${isVerified}, showInlineVerification: ${showInlineVerification}`);
+    }
+  }, [requiresVerification, isVerified, messageId, showInlineVerification]);
 
   return (
     <div className="space-y-2">

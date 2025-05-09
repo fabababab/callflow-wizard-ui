@@ -1,5 +1,4 @@
-
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -33,6 +32,11 @@ const TestScenario = () => {
   const activeScenario = customerScenario;
   const { currentState, error } = activeScenario;
   
+  // Add console.log to help debug the issue
+  useEffect(() => {
+    console.log("TestScenario re-rendering, checking for open dialogs");
+  }, []);
+  
   return (
     <div className="flex h-screen bg-background">
       <SidebarProvider defaultOpen={false}>
@@ -43,14 +47,11 @@ const TestScenario = () => {
             <div className="h-full">
               {/* Main content section with transcript panel as the main view */}
               {scenarioState.loadedStateMachine && (
-                <div className="h-full">
-                  {/* Directly embed the transcript panel without tabs */}
-                  <div className="h-full" ref={transcriptRef}>
+                <div className="h-full" ref={transcriptRef}>
                     <TranscriptPanel 
                       activeScenario={scenarioState.selectedStateMachine} 
                       jsonVisualization={jsonVisualization}
                     />
-                  </div>
                 </div>
               )}
 
@@ -65,7 +66,7 @@ const TestScenario = () => {
         </div>
       </SidebarProvider>
 
-      {/* Sensitive Field Details Dialog */}
+      {/* Sensitive Field Details Dialog - keep this one as it's needed */}
       <SensitiveFieldDetailsDialog 
         showSensitiveFieldDetails={scenarioState.showSensitiveFieldDetails} 
         handleCloseSensitiveDetails={scenarioState.handleCloseSensitiveDetails} 
