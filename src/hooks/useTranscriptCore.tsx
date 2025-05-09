@@ -25,7 +25,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   // Get the state machine data
   const stateMachine = useStateMachine(activeScenario);
   
-  // Get call state
+  // Get call state - use the consolidated hook
   const callState = useCallState();
   
   // Get conversation state
@@ -169,7 +169,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     };
   }, [messageHandling.addSystemMessage]);
 
-  // Add debug logging for scenario changes
+  // Add debug logging for state changes
   useEffect(() => {
     console.log('Active scenario changed:', activeScenario);
   }, [activeScenario]);
@@ -188,14 +188,14 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   return {
     // Combine properties and methods from all hooks
     ...messageHandling,
-    ...callState,
+    ...callState, // This now includes all call state methods
     lastTranscriptUpdate: conversationState.lastTranscriptUpdate,
     awaitingUserResponse: conversationState.awaitingUserResponse,
     messagesEndRef,
     currentState: stateMachine.currentState,
     stateData: stateMachine.stateData,
     lastStateChange: stateMachine.lastStateChange,
-    handleCall: conversationInitializer.handleCall,
+    handleCall: conversationInitializer.handleCall, // Use the initializer's handleCall
     handleAcceptCall: conversationInitializer.handleAcceptCall,
     handleHangUpCall: conversationInitializer.handleHangUpCall,
     resetConversation: conversationInitializer.resetConversation,

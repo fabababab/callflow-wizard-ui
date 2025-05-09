@@ -1,5 +1,5 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 export function useCallState() {
   // Basic call state
@@ -18,41 +18,64 @@ export function useCallState() {
   }, [isRecording]);
 
   // Update timer when call is active
-  const startTimer = useCallback(() => {
-    startTimeRef.current = Date.now();
-    timerRef.current = window.setInterval(() => {
-      const seconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = seconds % 60;
-      setElapsedTime(
-        `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
-      );
-    }, 1000);
+  useEffect(() => {
+    if (callActive) {
+      startTimeRef.current = Date.now();
+      timerRef.current = window.setInterval(() => {
+        const seconds = Math.floor((Date.now() - startTimeRef.current) / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        setElapsedTime(
+          `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`
+        );
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+        setElapsedTime('00:00');
+      }
+    }
 
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, [callActive]);
 
-  const stopTimer = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  // Method to start a call
+  const startCall = useCallback(() => {
+    setCallActive(true);
+  }, []);
+  
+  // Method to end a call
+  const endCall = useCallback(() => {
+    setCallActive(false);
+    setAcceptedCallId(null);
+  }, []);
+  
+  // Accept an incoming call
+  const acceptCall = useCallback((callId: string) => {
+    setAcceptedCallId(callId);
+    setCallActive(true);
+  }, []);
+  
+  // Toggle call state
+  const handleCall = useCallback(() => {
+    console.log('handleCall called, current callActive:', callActive);
+    if (callActive) {
+      endCall();
+    } else {
+      startCall();
     }
+  }, [callActive, endCall, startCall]);
+  
+  // Reset timer without ending call
+  const resetTimer = useCallback(() => {
+    startTimeRef.current = Date.now();
     setElapsedTime('00:00');
   }, []);
-
-  // Set call active state and start timer
-  const setCallActiveState = useCallback((active: boolean) => {
-    setCallActive(active);
-    if (active) {
-      startTimer();
-    } else {
-      stopTimer();
-    }
-  }, [startTimer, stopTimer]);
 
   return {
     isRecording,
@@ -60,7 +83,14 @@ export function useCallState() {
     elapsedTime,
     acceptedCallId,
     toggleRecording,
-    setCallActiveState,
-    setAcceptedCallId
+    setCallActive, // Direct setter
+    setAcceptedCallId,
+    startCall,
+    endCall,
+    acceptCall,
+    handleCall,
+    resetTimer
   };
 }
+
+export default useCallState;

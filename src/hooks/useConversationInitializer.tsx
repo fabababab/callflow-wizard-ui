@@ -39,7 +39,7 @@ export function useConversationInitializer({
     }
 
     console.log('Accepting call for scenario:', activeScenario);
-    callState.setCallActive(true);
+    callState.setCallActive(true); // Use direct setter from callState
   }, [activeScenario, callState, toast]);
 
   // Function to handle starting a call
@@ -65,7 +65,7 @@ export function useConversationInitializer({
     // Reset conversation state but don't clear messages
     conversationState.resetConversationState(false);
     
-    // Set call as active
+    // Set call as active - IMPORTANT - Use direct setter
     callState.setCallActive(true);
     
     console.log('Initializing conversation...');
@@ -119,7 +119,7 @@ export function useConversationInitializer({
           duration: 3000
         });
         
-        callState.setCallActive(false);
+        callState.setCallActive(false); // Use direct setter
       }
     }
     

@@ -53,6 +53,8 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
     'accountVerification'
   ];
 
+  console.log('TranscriptHeader: callActive =', callActive, 'elapsedTime =', elapsedTime);
+
   return (
     <div className="p-4 bg-white border-b">
       <div className="flex flex-col">
