@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { loadStateMachine, StateMachine, StateMachineState } from '@/utils/stateMachineLoader';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import TranscriptPanel from '@/components/TranscriptPanel'; 
+import TranscriptPanel from '@/components/TranscriptPanel';
 import { Button } from '@/components/ui/button';
 import { FileJson, LayoutDashboard, Shield, AlertTriangle, Info, Database, Loader2 } from 'lucide-react';
 import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
@@ -24,7 +24,6 @@ interface SelectedStateDetails {
   data: StateMachineState;
   sensitiveFields?: SensitiveField[];
 }
-
 const TestScenario = () => {
   const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>("testscenario");
@@ -34,7 +33,7 @@ const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // State for selected state details and sensitive fields
   const [selectedStateDetails, setSelectedStateDetails] = useState<SelectedStateDetails | null>(null);
   const [showSensitiveFieldDetails, setShowSensitiveFieldDetails] = useState<SensitiveField | null>(null);
@@ -45,7 +44,7 @@ const TestScenario = () => {
   // Choose the appropriate state machine based on the mode (always agent mode now)
   const customerScenario = useCustomerScenario();
   const physioCoverage = usePhysioCoverageStateMachine();
-  
+
   // Always use agent mode
   const activeScenario = customerScenario;
   const {
@@ -56,7 +55,7 @@ const TestScenario = () => {
   // Handle state selection from the visualizer
   const handleStateSelection = (state: string) => {
     console.log(`State selected in TestScenario: ${state}`);
-    
+
     // If we have a valid state machine, update the current state
     if (loadedStateMachine && loadedStateMachine.states[state]) {
       setJsonContent(JSON.stringify(loadedStateMachine.states[state], null, 2));
@@ -64,13 +63,12 @@ const TestScenario = () => {
       // Store the selected state details including any sensitive fields
       const stateData = loadedStateMachine.states[state];
       const sensitiveFields = stateData.meta?.sensitiveFields;
-      
       setSelectedStateDetails({
         id: state,
         data: stateData,
         sensitiveFields: sensitiveFields
       });
-      
+
       // Update dialog view mode to show the visualization with this state
       setDialogViewMode("visualization");
     }
@@ -95,9 +93,7 @@ const TestScenario = () => {
         setShowJsonDialog(customEvent.detail.visible);
       }
     };
-
     window.addEventListener('toggle-json-visualization', handleToggleJsonVisualization as EventListener);
-    
     return () => {
       window.removeEventListener('toggle-json-visualization', handleToggleJsonVisualization as EventListener);
     };
@@ -112,9 +108,7 @@ const TestScenario = () => {
         setSelectedStateMachine(newScenario);
       }
     };
-
     window.addEventListener('scenario-change', handleScenarioChange as EventListener);
-    
     return () => {
       window.removeEventListener('scenario-change', handleScenarioChange as EventListener);
     };
@@ -127,21 +121,17 @@ const TestScenario = () => {
         setIsLoading(true);
         try {
           console.log('Loading state machine for scenario:', selectedStateMachine);
-          
+
           // Reset transcript and any active modules when scenario changes
           transcript.resetConversation();
-          
           const machine = await loadStateMachine(selectedStateMachine);
           console.log('Loaded state machine:', machine);
-          
           if (!machine) {
             throw new Error('Failed to load state machine - received null or undefined');
           }
-          
           if (!machine.states || Object.keys(machine.states).length === 0) {
             throw new Error('State machine has no states defined');
           }
-          
           setLoadedStateMachine(machine);
 
           // Also load the JSON content for display
@@ -151,10 +141,9 @@ const TestScenario = () => {
           if (transcript.callActive) {
             transcript.handleHangUpCall();
           }
-          
+
           // Don't auto-initialize the state machine anymore
           // Let the user explicitly start the call
-          
         } catch (error) {
           console.error("Failed to load state machine:", error);
           toast({
@@ -168,7 +157,6 @@ const TestScenario = () => {
         }
       }
     }
-    
     fetchStateMachine();
   }, [selectedStateMachine, transcript]);
 
@@ -187,28 +175,22 @@ const TestScenario = () => {
       if (!loadedStateMachine) {
         throw new Error('No state machine loaded');
       }
-
       if (!transcript) {
         throw new Error('Transcript not initialized');
       }
-
       console.log('Call button clicked. Current state:', {
         callActive: transcript.callActive,
         currentState: transcript.currentState,
         loadedMachine: !!loadedStateMachine
       });
-
       transcript.handleCall();
-      
+
       // Add success toast
       toast({
         title: transcript.callActive ? "Call Started" : "Call Ended",
-        description: transcript.callActive 
-          ? `Started ${selectedStateMachine} scenario` 
-          : "Call has been ended",
+        description: transcript.callActive ? `Started ${selectedStateMachine} scenario` : "Call has been ended",
         duration: 3000
       });
-
     } catch (error) {
       console.error('Error handling call:', error);
       toast({
@@ -223,7 +205,9 @@ const TestScenario = () => {
   // Function to scroll to the transcript panel
   const scrollToTranscript = () => {
     if (transcriptRef.current) {
-      transcriptRef.current.scrollIntoView({ behavior: 'smooth' });
+      transcriptRef.current.scrollIntoView({
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -231,7 +215,6 @@ const TestScenario = () => {
   const handleViewModeToggle = (mode: "json" | "visualization") => {
     setDialogViewMode(mode);
   };
-
   return <div className="flex h-screen bg-background">
       <SidebarProvider defaultOpen={false}>
         <Sidebar collapsed={sidebarCollapsed} />
@@ -290,106 +273,72 @@ const TestScenario = () => {
               {selectedStateMachine} State Machine
             </DialogTitle>
             <DialogDescription>
-              {dialogViewMode === "json" 
-                ? "Complete JSON representation of the state machine flow" 
-                : "Visual representation of the state machine flow"}
+              {dialogViewMode === "json" ? "Complete JSON representation of the state machine flow" : "Visual representation of the state machine flow"}
             </DialogDescription>
           </DialogHeader>
           
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <Button 
-              variant={dialogViewMode === "json" ? "secondary" : "outline"} 
-              size="sm"
-              onClick={() => handleViewModeToggle("json")}
-              className="flex items-center gap-2"
-            >
+            <Button variant={dialogViewMode === "json" ? "secondary" : "outline"} size="sm" onClick={() => handleViewModeToggle("json")} className="flex items-center gap-2">
               <FileJson size={16} />
               JSON View
             </Button>
-            <Button 
-              variant={dialogViewMode === "visualization" ? "secondary" : "outline"} 
-              size="sm"
-              onClick={() => handleViewModeToggle("visualization")}
-              className="flex items-center gap-2"
-            >
+            <Button variant={dialogViewMode === "visualization" ? "secondary" : "outline"} size="sm" onClick={() => handleViewModeToggle("visualization")} className="flex items-center gap-2">
               <LayoutDashboard size={16} />
               Visualization
             </Button>
           </div>
           
           <div className="overflow-auto max-h-[60vh]">
-            {dialogViewMode === "json" ? (
-              <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+            {dialogViewMode === "json" ? <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
                 {jsonContent}
-              </pre>
-            ) : (
-              <div className="bg-white p-4 rounded-md">
-                <DecisionTreeVisualizer 
-                  stateMachine={loadedStateMachine} 
-                  currentState={currentState}
-                  onStateClick={handleStateSelection}
-                />
+              </pre> : <div className="bg-white p-4 rounded-md">
+                <DecisionTreeVisualizer stateMachine={loadedStateMachine} currentState={currentState} onStateClick={handleStateSelection} />
                 
                 {/* Display Selected State Details */}
-                {selectedStateDetails && (
-                  <div className="mt-6 border-t pt-4">
+                {selectedStateDetails && <div className="mt-6 border-t pt-4">
                     <h3 className="text-lg font-semibold mb-2">State: {selectedStateDetails.id}</h3>
                     
-                    {selectedStateDetails.data.meta?.systemMessage && (
-                      <div className="mb-3 p-2 rounded bg-blue-50 border border-blue-200">
+                    {selectedStateDetails.data.meta?.systemMessage && <div className="mb-3 p-2 rounded bg-blue-50 border border-blue-200">
                         <div className="flex items-center gap-1 text-blue-700 text-sm font-medium mb-1">
                           <Info size={16} />
                           <span>System Message</span>
                         </div>
                         <p className="text-sm">{selectedStateDetails.data.meta.systemMessage}</p>
-                      </div>
-                    )}
+                      </div>}
                     
-                    {selectedStateDetails.data.meta?.customerText && (
-                      <div className="mb-3 p-2 rounded bg-amber-50 border border-amber-200">
+                    {selectedStateDetails.data.meta?.customerText && <div className="mb-3 p-2 rounded bg-amber-50 border border-amber-200">
                         <div className="flex items-center gap-1 text-amber-700 text-sm font-medium mb-1">
                           <AlertTriangle size={16} />
                           <span>Customer Text</span>
                         </div>
                         <p className="text-sm">{selectedStateDetails.data.meta.customerText}</p>
-                      </div>
-                    )}
+                      </div>}
                     
-                    {selectedStateDetails.data.meta?.agentText && (
-                      <div className="mb-3 p-2 rounded bg-emerald-50 border border-emerald-200">
+                    {selectedStateDetails.data.meta?.agentText && <div className="mb-3 p-2 rounded bg-emerald-50 border border-emerald-200">
                         <div className="flex items-center gap-1 text-emerald-700 text-sm font-medium mb-1">
                           <Info size={16} />
                           <span>Agent Text</span>
                         </div>
                         <p className="text-sm">{selectedStateDetails.data.meta.agentText}</p>
-                      </div>
-                    )}
+                      </div>}
                     
                     {/* Display Module Information if present */}
-                    {selectedStateDetails.data.meta?.module && (
-                      <div className="mb-3 p-2 rounded bg-indigo-50 border border-indigo-200">
+                    {selectedStateDetails.data.meta?.module && <div className="mb-3 p-2 rounded bg-indigo-50 border border-indigo-200">
                         <div className="flex items-center gap-1 text-indigo-700 text-sm font-medium mb-1">
                           <Info size={16} />
                           <span>Module: {selectedStateDetails.data.meta.module.title}</span>
                         </div>
                         <p className="text-sm">Type: {selectedStateDetails.data.meta.module.type}</p>
-                      </div>
-                    )}
+                      </div>}
                     
                     {/* Display Sensitive Data Fields */}
-                    {selectedStateDetails.sensitiveFields && selectedStateDetails.sensitiveFields.length > 0 && (
-                      <div className="mb-3 p-2 rounded bg-yellow-50 border border-yellow-200">
+                    {selectedStateDetails.sensitiveFields && selectedStateDetails.sensitiveFields.length > 0 && <div className="mb-3 p-2 rounded bg-yellow-50 border border-yellow-200">
                         <div className="flex items-center gap-1 text-yellow-700 text-sm font-medium mb-1">
                           <Shield size={16} />
                           <span>Sensitive Data Detection</span>
                         </div>
                         <div className="space-y-2">
-                          {selectedStateDetails.sensitiveFields.map(field => (
-                            <div 
-                              key={field.id} 
-                              className="p-2 bg-white border rounded cursor-pointer hover:bg-yellow-100 transition-colors"
-                              onClick={() => handleSensitiveFieldClick(field)}
-                            >
+                          {selectedStateDetails.sensitiveFields.map(field => <div key={field.id} className="p-2 bg-white border rounded cursor-pointer hover:bg-yellow-100 transition-colors" onClick={() => handleSensitiveFieldClick(field)}>
                               <div className="flex justify-between">
                                 <span className="font-medium text-sm">{field.type}</span>
                                 <Badge variant="outline" className="text-xs">
@@ -399,15 +348,11 @@ const TestScenario = () => {
                               <div className="mt-1 text-sm">
                                 <strong>Value:</strong> {field.value}
                               </div>
-                            </div>
-                          ))}
+                            </div>)}
                         </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                      </div>}
+                  </div>}
+              </div>}
           </div>
         </DialogContent>
       </Dialog>
@@ -425,8 +370,7 @@ const TestScenario = () => {
             </DialogDescription>
           </DialogHeader>
           
-          {showSensitiveFieldDetails && (
-            <div className="space-y-4">
+          {showSensitiveFieldDetails && <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 bg-yellow-50 rounded-md border border-yellow-200">
                   <h4 className="text-sm font-medium text-yellow-800 mb-1">Customer Provided</h4>
@@ -440,11 +384,7 @@ const TestScenario = () => {
               </div>
               
               <div className="flex items-center justify-center">
-                {showSensitiveFieldDetails.value === showSensitiveFieldDetails.systemValue ? (
-                  <Badge className="bg-green-100 text-green-800 border-green-300">Match</Badge>
-                ) : (
-                  <Badge className="bg-red-100 text-red-800 border-red-300">No Match</Badge>
-                )}
+                {showSensitiveFieldDetails.value === showSensitiveFieldDetails.systemValue ? <Badge className="bg-green-100 text-green-800 border-green-300">Match</Badge> : <Badge className="bg-red-100 text-red-800 border-red-300">No Match</Badge>}
               </div>
               
               <div className="p-3 bg-gray-50 rounded-md border">
@@ -457,16 +397,11 @@ const TestScenario = () => {
               
               <div className="p-3 bg-gray-50 rounded-md border">
                 <h4 className="text-sm font-medium mb-1">Validation Status</h4>
-                <Badge 
-                  variant={showSensitiveFieldDetails.status === 'valid' ? 'default' : 
-                          showSensitiveFieldDetails.status === 'invalid' ? 'destructive' : 
-                          'outline'}
-                >
+                <Badge variant={showSensitiveFieldDetails.status === 'valid' ? 'default' : showSensitiveFieldDetails.status === 'invalid' ? 'destructive' : 'outline'}>
                   {showSensitiveFieldDetails.status.toUpperCase()}
                 </Badge>
               </div>
-            </div>
-          )}
+            </div>}
           
           <DialogFooter>
             <Button onClick={handleCloseSensitiveDetails}>Close</Button>
@@ -475,18 +410,7 @@ const TestScenario = () => {
       </Dialog>
 
       {/* Update the call button to use the new handler */}
-      <Button 
-        onClick={handleCallButton}
-        disabled={isLoading || !loadedStateMachine}
-        className="flex items-center gap-2"
-      >
-        {transcript.callActive ? (
-          <>End Call</>
-        ) : (
-          <>Start Call</>
-        )}
-      </Button>
+      
     </div>;
 };
-
 export default TestScenario;
