@@ -13,6 +13,7 @@ import { useConversationInitializer } from '@/hooks/useConversationInitializer';
 import { useResponseHandler } from '@/hooks/useResponseHandler';
 import { useStateChangeProcessor } from '@/hooks/useStateChangeProcessor';
 import { useToast } from '@/hooks/use-toast';
+import { ModuleType } from '@/types/modules';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
   const toast = useToast();
@@ -88,7 +89,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     
     if (moduleManager.activeModule) {
       // Only add system message if it's not the Nachbearbeitung module
-      if (moduleManager.activeModule.type !== "NACHBEARBEITUNG") {
+      if (moduleManager.activeModule.type !== ModuleType.NACHBEARBEITUNG) {
         messageHandling.addSystemMessage(`${moduleManager.activeModule.title} completed: ${result.verified ? "Success" : "Failed"}`);
       } else {
         // For Nachbearbeitung module, add a summary message

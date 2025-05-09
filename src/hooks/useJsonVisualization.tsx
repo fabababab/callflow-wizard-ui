@@ -1,8 +1,15 @@
 
-import { useState } from 'react';
-import { getStateMachineJson, loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
+import { useState, useEffect } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { useToast } from '@/hooks/use-toast';
+import { loadStateMachine, getStateJson, StateMachine } from '@/utils/stateMachineLoader';
+import { SensitiveField } from '@/data/scenarioData';
+
+// Interface to track selected state details
+export interface SelectedStateDetails {
+  id: string;
+  data: any;
+  sensitiveFields?: SensitiveField[];
+}
 
 export function useJsonVisualization(activeScenario: ScenarioType) {
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
@@ -10,54 +17,60 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
   const [isLoadingJson, setIsLoadingJson] = useState(false);
   const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
-  const [selectedState, setSelectedState] = useState<string | undefined>(undefined);
-  const { toast } = useToast();
+  const [selectedState, setSelectedState] = useState<SelectedStateDetails | null>(null);
 
-  // Function to load and show JSON dialog
-  const handleViewJson = async () => {
-    if (!activeScenario) return;
-    
-    setIsLoadingJson(true);
-    try {
-      // Load the state machine for visualization
-      const machine = await loadStateMachine(activeScenario);
-      setLoadedStateMachine(machine);
-      
-      // Get current state JSON or full state machine
-      const json = selectedState ? 
-        JSON.stringify(machine.states[selectedState], null, 2) :
-        await getStateMachineJson(activeScenario);
-      
-      setJsonContent(json);
-      setJsonDialogOpen(true);
-    } catch (error) {
-      console.error("Failed to load JSON:", error);
-      setJsonContent(JSON.stringify({ error: "Failed to load state machine JSON" }, null, 2));
-      toast({
-        title: "Error Loading JSON",
-        description: "Failed to load state machine visualization",
-        variant: "destructive",
-        duration: 3000
-      });
-    } finally {
-      setIsLoadingJson(false);
-    }
-  };
-
-  // Handle state selection from the visualizer
-  const handleStateSelection = (state: string) => {
-    console.log(`State selected: ${state}`);
-    setSelectedState(state);
-    
-    // Update JSON content to show the selected state
-    if (loadedStateMachine && loadedStateMachine.states[state]) {
-      setJsonContent(JSON.stringify(loadedStateMachine.states[state], null, 2));
-    }
-  };
-
-  // Toggle view mode between JSON and visualization
+  // Handle view mode toggle
   const handleViewModeToggle = (mode: "json" | "visualization") => {
     setDialogViewMode(mode);
+  };
+
+  // Handle state selection from visualization
+  const handleStateSelection = (state: string) => {
+    if (loadedStateMachine && loadedStateMachine.states[state]) {
+      setJsonContent(JSON.stringify(loadedStateMachine.states[state], null, 2));
+      
+      // Store the selected state details
+      const stateData = loadedStateMachine.states[state];
+      const sensitiveFields = stateData.meta?.sensitiveFields;
+      
+      setSelectedState({
+        id: state,
+        data: stateData,
+        sensitiveFields: sensitiveFields
+      });
+    }
+  };
+
+  // Load state machine when changing scenarios
+  useEffect(() => {
+    const loadVisualizationData = async () => {
+      setIsLoadingJson(true);
+      try {
+        const machine = await loadStateMachine(activeScenario);
+        setLoadedStateMachine(machine);
+        setJsonContent(JSON.stringify(machine, null, 2));
+      } catch (error) {
+        console.error("Failed to load JSON:", error);
+        setJsonContent(JSON.stringify({ error: "Failed to load state machine" }, null, 2));
+      } finally {
+        setIsLoadingJson(false);
+      }
+    };
+    
+    loadVisualizationData();
+  }, [activeScenario]);
+
+  // View JSON button handler
+  const handleViewJson = () => {
+    setIsLoadingJson(true);
+    
+    // Update JSON content with latest data
+    if (loadedStateMachine) {
+      setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
+    }
+    
+    setJsonDialogOpen(true);
+    setIsLoadingJson(false);
   };
 
   return {
@@ -66,10 +79,10 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
     jsonContent,
     isLoadingJson,
     dialogViewMode,
+    handleViewModeToggle,
     loadedStateMachine,
     selectedState,
-    handleViewJson,
     handleStateSelection,
-    handleViewModeToggle
+    handleViewJson
   };
 }
