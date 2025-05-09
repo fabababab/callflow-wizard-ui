@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Clock, FileText, MessageSquare, PhoneOff, Phone } from 'lucide-react';
+import { FileText, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { 
@@ -10,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue
 } from '@/components/ui/select';
+import CallControl from '@/components/TestScenario/CallControl';
 
 interface TranscriptHeaderProps {
   activeScenario: ScenarioType;
@@ -55,14 +57,15 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
     <div className="p-4 bg-white border-b">
       <div className="flex flex-col">
         <div className="flex items-center justify-center gap-4 mb-4">
-          {/* Timer section in rounded pill - only shown when call is active */}
-          {callActive && (
-            <div className="flex items-center gap-1 border rounded-full px-4 py-2 bg-white shadow-sm">
-              <Clock size={16} className="text-red-500" />
-              <span className="font-medium">{elapsedTime}</span>
-            </div>
-          )}
-
+          {/* Call control section with timer */}
+          <CallControl
+            callActive={callActive}
+            elapsedTime={elapsedTime}
+            onStartCall={handleCall}
+            onEndCall={handleHangUpCall}
+            onResetScenario={resetConversation}
+          />
+          
           {/* JSON Visualization button */}
           {viewJson && (
             <Button
@@ -76,28 +79,6 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
               <FileText size={20} />
             </Button>
           )}
-          
-          {/* Call control button */}
-          <Button 
-            variant={callActive ? "destructive" : "default"}
-            onClick={callActive ? handleHangUpCall : handleCall}
-            className={`flex items-center gap-2 h-12 px-8 py-2 rounded-xl border-2 border-black shadow-md ${
-              callActive ? "bg-red-500 hover:bg-red-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
-            }`}
-            size="lg"
-          >
-            {callActive ? (
-              <>
-                <PhoneOff size={20} />
-                <span>End Call</span>
-              </>
-            ) : (
-              <>
-                <Phone size={20} />
-                <span>Start Call</span>
-              </>
-            )}
-          </Button>
           
           {/* Chat button */}
           <Button 

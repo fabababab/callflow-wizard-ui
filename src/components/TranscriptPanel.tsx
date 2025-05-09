@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -83,8 +84,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         handleCall={transcript.handleCall}
         handleHangUpCall={transcript.handleHangUpCall}
         onSelectScenario={scenarioManagement.handleScenarioChange}
-        viewJson={jsonVisualization ? jsonVisualization.handleViewJson : undefined}
-        isLoadingJson={jsonVisualization ? jsonVisualization.isLoadingJson : false}
+        viewJson={jsonVisualization?.handleViewJson}
+        isLoadingJson={jsonVisualization?.isLoadingJson}
         resetConversation={transcript.resetConversation}
       />
       

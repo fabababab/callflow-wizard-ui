@@ -1,3 +1,4 @@
+
 // Hook for conversation initialization
 import { useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -28,7 +29,7 @@ export function useConversationInitializer({
   // Function to handle accepting a call
   const handleAcceptCall = useCallback(() => {
     if (!activeScenario) {
-      toast.toast({
+      toast({
         title: "No Scenario Selected",
         description: "Please select a scenario first.",
         variant: "destructive",
@@ -44,7 +45,7 @@ export function useConversationInitializer({
   // Function to handle starting a call
   const handleCall = useCallback(() => {
     if (!activeScenario) {
-      toast.toast({
+      toast({
         title: "No Scenario Selected",
         description: "Please select a scenario first.",
         variant: "destructive",
@@ -111,7 +112,7 @@ export function useConversationInitializer({
         console.error('Current state machine:', stateMachine.stateMachine);
         
         // Show error toast
-        toast.toast({
+        toast({
           title: "Failed to Start Call",
           description: "There was an error initializing the conversation.",
           variant: "destructive",
@@ -146,7 +147,7 @@ export function useConversationInitializer({
       console.log('Showing Nachbearbeitung summary...');
       showNachbearbeitungSummary();
     } else {
-      toast.toast({
+      toast({
         title: "Call Ended",
         description: "The call has been ended successfully.",
         duration: 3000
@@ -184,7 +185,7 @@ export function useConversationInitializer({
     setHasInitializedConversation(false);
     
     // Show toast
-    toast.toast({
+    toast({
       title: "Conversation Reset",
       description: "The conversation has been reset. Ready to start a new call.",
       duration: 3000
