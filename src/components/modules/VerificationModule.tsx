@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,9 +29,12 @@ const VerificationModule: React.FC<ModuleProps> = ({
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(fields);
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const isInlineDisplay = data?.isInline === true;
+  const initialRenderRef = useRef(true);
   
   useEffect(() => {
     console.log(`VerificationModule rendered - id: ${id}, isInline: ${isInlineDisplay}`);
+    // Only log on first render to reduce console noise
+    initialRenderRef.current = false;
   }, [id, isInlineDisplay]);
   
   const handleInputChange = (fieldId: string, value: string) => {
@@ -67,12 +70,9 @@ const VerificationModule: React.FC<ModuleProps> = ({
     }, 500);
   };
   
-  // We're disabling auto-verify for inline verification
-  // to fix the blinking issue
-  
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
-    ? "w-full ml-auto border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60 animate-in fade-in duration-300"
+    ? "w-full ml-auto border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60"
     : "w-full max-w-md border border-amber-200 shadow-md";
   
   return (
@@ -91,14 +91,14 @@ const VerificationModule: React.FC<ModuleProps> = ({
       
       <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-4"} space-y-3`}>
         {verificationStatus === 'success' && (
-          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3 animate-in fade-in duration-300">
+          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3">
             <CheckCircle className="h-4 w-4" />
             <span>Verification successful</span>
           </div>
         )}
         
         {verificationStatus === 'failed' && (
-          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3 animate-in fade-in duration-300">
+          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3">
             <AlertCircle className="h-4 w-4" />
             <span>Verification failed. Please check your information.</span>
           </div>
@@ -164,4 +164,4 @@ const VerificationModule: React.FC<ModuleProps> = ({
   );
 };
 
-export default VerificationModule;
+export default React.memo(VerificationModule);

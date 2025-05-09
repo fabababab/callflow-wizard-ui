@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import type { MessageSender, Message as MessageInterface } from './MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
 import MessageHeader from './MessageHeader';
@@ -40,13 +40,13 @@ const Message: React.FC<MessageProps> = ({
     }
   }, [message.id, message.requiresVerification, message.isVerified]);
   
-  // Handler for inline module completion
-  const handleInlineModuleComplete = (moduleId: string, result: any) => {
+  // Handler for inline module completion - memoize to avoid unnecessary re-renders
+  const handleInlineModuleComplete = useCallback((result: any) => {
     console.log(`Module completed for message ${message.id}`, result);
-    if (onModuleComplete) {
-      onModuleComplete(message.id, moduleId, result);
+    if (onModuleComplete && message.inlineModule) {
+      onModuleComplete(message.id, message.inlineModule.id, result);
     }
-  };
+  }, [message.id, message.inlineModule, onModuleComplete]);
 
   // Determine if message has verification features
   const hasVerificationFeatures = message.requiresVerification || message.isVerified || (message.sensitiveData && message.sensitiveData.length > 0);
@@ -100,12 +100,12 @@ const Message: React.FC<MessageProps> = ({
         </div>
       </div>
 
-      {/* Display inline module - now right-aligned with justify-end class */}
+      {/* Display inline module */}
       {hasInlineModule && message.inlineModule && (
-        <div className="w-full flex justify-end mb-4">
+        <div className="w-full flex justify-end mb-4" key={`module-${message.id}-${message.inlineModule.id}`}>
           <MessageInlineModule 
             moduleConfig={message.inlineModule}
-            onModuleComplete={(result) => handleInlineModuleComplete(message.inlineModule!.id, result)}
+            onModuleComplete={handleInlineModuleComplete}
           />
         </div>
       )}
@@ -113,4 +113,4 @@ const Message: React.FC<MessageProps> = ({
   );
 };
 
-export default Message;
+export default React.memo(Message);

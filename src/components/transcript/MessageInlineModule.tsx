@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { ModuleConfig } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 
@@ -21,9 +21,11 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       <InlineModuleDisplay 
         moduleConfig={moduleConfig}
         onComplete={handleModuleComplete}
+        key={moduleConfig.id} // Add a stable key to prevent unnecessary re-renders
       />
     </div>
   );
 };
 
-export default MessageInlineModule;
+// Use memo to prevent unnecessary re-renders
+export default memo(MessageInlineModule);

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
+  const hasRenderedRef = useRef(false);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -26,28 +27,30 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     policyNumber: '12345678',
   };
   
-  // Debug logging for verification rendering
+  // Debug logging for verification rendering - only on first render
   useEffect(() => {
-    console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying, "isValidating:", isValidating);
+    if (!hasRenderedRef.current) {
+      console.log("InlineChatVerification rendering - isVerified:", isVerified, "isVerifying:", isVerifying, "isValidating:", isValidating);
+      hasRenderedRef.current = true;
+    }
   }, [isVerified, isVerifying, isValidating]);
-  
-  // We remove the auto-submit functionality to prevent blinking
-  // Auto-verification will only happen when explicitly requested
   
   const handleVerifyClick = () => {
     console.log("Verify button clicked");
     setIsValidating(true);
+    
+    // Use a longer delay to prevent rapid state changes
     setTimeout(() => {
       setIsValidating(false);
       console.log("Manual verification complete, calling onVerify(true)");
       onVerify(true, defaultValues);
-    }, 800);
+    }, 1000);
   };
   
   // If already verified, show success state
   if (isVerified) {
     return (
-      <div className="p-2 bg-green-50 border-l-4 border-green-400 rounded-md mt-2 animate-in fade-in duration-300">
+      <div className="p-2 bg-green-50 border-l-4 border-green-400 rounded-md mt-2">
         <div className="flex items-center gap-1.5 text-green-700">
           <CheckCircle size={14} />
           <span className="text-xs font-medium">Identity Verified</span>
@@ -59,7 +62,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   
   return (
     <div 
-      className="p-3 bg-amber-50/60 border-l-4 border-amber-300 rounded-md animate-in fade-in slide-in-right duration-300 w-full" 
+      className="p-3 bg-amber-50/60 border-l-4 border-amber-300 rounded-md w-full" 
       data-testid="verification-form"
     >
       <div className="flex items-center gap-1.5 mb-2">
@@ -128,4 +131,4 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   );
 };
 
-export default InlineChatVerification;
+export default React.memo(InlineChatVerification);

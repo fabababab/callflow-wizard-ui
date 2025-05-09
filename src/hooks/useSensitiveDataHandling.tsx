@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Message } from '@/components/transcript/MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 
@@ -21,6 +21,7 @@ export function useSensitiveDataHandling(
   
   // Track if we're currently performing a verification
   const [isVerifying, setIsVerifying] = useState(false);
+  const lastVerifyTimeRef = useRef<number>(0);
 
   /**
    * Handle validation of sensitive data
@@ -32,9 +33,12 @@ export function useSensitiveDataHandling(
     notes?: string
   ) => {
     // Prevent multiple validation calls in quick succession
-    if (isVerifying) return;
+    const now = Date.now();
+    if (isVerifying || now - lastVerifyTimeRef.current < 1000) return;
     
     setIsVerifying(true);
+    lastVerifyTimeRef.current = now;
+    
     console.log(`Validating sensitive field ${fieldId} in message ${messageId} with status: ${status}`);
     
     setMessages(prevMessages => 
@@ -73,10 +77,10 @@ export function useSensitiveDataHandling(
       }));
     }
     
-    // Reset verifying state after a delay
+    // Reset verifying state after a longer delay to prevent rapid re-renders
     setTimeout(() => {
       setIsVerifying(false);
-    }, 500);
+    }, 1000);
     
     setLastMessageUpdate(new Date());
   }, [setMessages, setLastMessageUpdate, isVerifying]);
@@ -86,9 +90,12 @@ export function useSensitiveDataHandling(
    */
   const handleVerifySystemCheck = useCallback((messageId: string) => {
     // Prevent multiple verification calls in quick succession
-    if (isVerifying) return;
+    const now = Date.now();
+    if (isVerifying || now - lastVerifyTimeRef.current < 1000) return;
     
     setIsVerifying(true);
+    lastVerifyTimeRef.current = now;
+    
     console.log(`Verifying system check for message ${messageId} - inline only, no modals`);
     
     // Make sure verification blocking is set to false to avoid modals
@@ -108,7 +115,7 @@ export function useSensitiveDataHandling(
     // Reset verifying state after a delay
     setTimeout(() => {
       setIsVerifying(false);
-    }, 500);
+    }, 1000);
     
     setLastMessageUpdate(new Date());
   }, [setMessages, setLastMessageUpdate, setVerificationBlocking, isVerifying]);
