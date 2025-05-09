@@ -1,3 +1,4 @@
+
 // Core transcript hook functionality that composes other hooks
 import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
