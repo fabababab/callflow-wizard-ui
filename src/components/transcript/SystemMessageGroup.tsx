@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Message from './Message';
-import { MessageType } from './Message';
+import { MessageType } from '@/components/transcript/MessageTypes';
 
 interface SystemMessageGroupProps {
   messages: MessageType[];

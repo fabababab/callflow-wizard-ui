@@ -1,6 +1,7 @@
+
 import React from 'react';
 import Message from '../transcript/Message';
-import { MessageType } from '../transcript/Message';
+import { MessageType } from '../transcript/MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
 
 interface ChatMessagesProps {
@@ -62,7 +63,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           onVerifySystemCheck={onVerifySystemCheck}
           onValidateSensitiveData={onValidateSensitiveData}
           isAgentMode={isAgentMode}
-          onModuleComplete={(moduleId, result) => onModuleComplete && onModuleComplete(message.id, moduleId, result)}
+          onModuleComplete={onModuleComplete}
         />
       ))}
       <div ref={messagesEndRef} />

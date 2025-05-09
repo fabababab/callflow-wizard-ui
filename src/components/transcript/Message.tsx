@@ -8,10 +8,10 @@ import MessageContent from './MessageContent';
 import MessageResponseOptions from './MessageResponseOptions';
 import AISuggestions from './AISuggestion';
 import MessageInlineModule from './MessageInlineModule';
-import { Message as MessageType } from './MessageTypes';
+import { Message } from './MessageTypes';
 
 interface MessageProps {
-  message: MessageType;
+  message: Message;
   onAcceptSuggestion: (suggestionId: string, messageId: string) => void;
   onRejectSuggestion: (suggestionId: string, messageId: string) => void;
   onSelectResponse?: (response: string) => void;
@@ -110,6 +110,6 @@ const Message: React.FC<MessageProps> = ({
 };
 
 // Export MessageType type for other files to use
-export type { MessageType };
+export type { Message as MessageType };
 
 export default Message;

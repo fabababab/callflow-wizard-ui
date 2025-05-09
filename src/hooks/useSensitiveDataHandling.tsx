@@ -1,14 +1,12 @@
-
 import { useState, useCallback } from 'react';
-import Message from '@/components/transcript/Message';
-import { MessageType } from '@/components/transcript/Message';
+import { Message } from '@/components/transcript/MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 
 export function useSensitiveDataHandling(
-  messages: MessageType[],
-  setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>,
+  messages: Message[],
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
   setVerificationBlocking: React.Dispatch<React.SetStateAction<boolean>>,
-  setLastMessageUpdate: React.Dispatch<React.SetStateAction<Date>>
+  setLastMessageUpdate: React.Dispatch<React.SetStateAction<Date | null>>
 ) {
   const [sensitiveDataStats, setSensitiveDataStats] = useState<{
     total: number;
