@@ -205,26 +205,70 @@ export const scenarioCallData: Record<ScenarioType, {
       keyPoints: ['Customer completing studies soon', 'Needs to update insurance package']
     }
   },
-  'empty': {
+  'basicTutorial': {
     id: 9,
-    customerName: 'Empty Scenario',
-    phoneNumber: '+49 000 0000 0000',
-    waitTime: '0m 00s',
-    callType: 'Empty Template',
+    customerName: 'New User',
+    phoneNumber: '+49 000 1111 2222',
+    waitTime: '0m 20s',
+    callType: 'Tutorial',
     priority: 'low',
     expertise: 'General',
     matchScore: 100,
     caseHistory: [
       {
-        type: 'Empty',
+        type: 'New User',
         date: 'May 9, 2025',
-        description: 'Empty scenario template.'
+        description: 'First-time user tutorial.'
       }
     ],
     roboCallSummary: {
-      duration: '0m 00s',
+      duration: '3m 00s',
       sentiment: 'Neutral',
-      keyPoints: ['Empty scenario for custom workflows']
+      keyPoints: ['New user seeking guidance', 'Learning basic system functionality']
+    }
+  },
+  'customerSupport': {
+    id: 10,
+    customerName: 'Regular Customer',
+    phoneNumber: '+49 111 2222 3333',
+    waitTime: '1m 10s',
+    callType: 'General Inquiry',
+    priority: 'medium',
+    expertise: 'Customer Support',
+    matchScore: 92,
+    caseHistory: [
+      {
+        type: 'Support Inquiry',
+        date: 'May 8, 2025',
+        description: 'General questions about account features.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '2m 15s',
+      sentiment: 'Neutral',
+      keyPoints: ['Customer has general questions', 'Needs help with basic features']
+    }
+  },
+  'accountVerification': {
+    id: 11,
+    customerName: 'New Account Holder',
+    phoneNumber: '+49 222 3333 4444',
+    waitTime: '0m 45s',
+    callType: 'Verification',
+    priority: 'high',
+    expertise: 'Security',
+    matchScore: 97,
+    caseHistory: [
+      {
+        type: 'New Account',
+        date: 'May 9, 2025',
+        description: 'Account verification process.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '1m 30s',
+      sentiment: 'Positive',
+      keyPoints: ['New customer setting up account', 'Needs to complete verification']
     }
   }
 };

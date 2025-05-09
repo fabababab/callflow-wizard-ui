@@ -1,4 +1,3 @@
-
 // This is a major refactoring of the useTranscript hook to fix state transitions and response options
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -406,7 +405,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     });
     
     // Show the Nachbearbeitung module at the end of the call
-    if (!conversationState.showNachbearbeitingModule) {
+    if (!conversationState.showNachbearbeitungModule) {
       showNachbearbeitungSummary();
     }
   }, [callState, messageHandling.addSystemMessage, conversationState, showNachbearbeitungSummary, toast]);

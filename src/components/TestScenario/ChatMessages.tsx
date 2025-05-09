@@ -1,13 +1,14 @@
 
 import React from 'react';
 import Message, { Message as MessageType } from '../transcript/Message';
+import { ValidationStatus } from '@/data/scenarioData';
 
 interface ChatMessagesProps {
   messages: MessageType[];
   isAgentMode?: boolean;
   onSelectResponse?: (response: string) => void;
   onVerifySystemCheck?: (messageId: string) => void;
-  onValidateSensitiveData?: (messageId: string, fieldId: string, status: string, notes?: string) => void; 
+  onValidateSensitiveData?: (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => void; 
   messagesEndRef?: React.RefObject<HTMLDivElement>;
   onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
 }
