@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Button } from '@/components/ui/button';
-import { Shield, Phone, PhoneOff, RefreshCw, FileJson, AlignLeft, Layers, LayoutDashboard } from 'lucide-react';
+import { Shield, Phone, PhoneOff, RefreshCw, FileJson, AlignLeft, Layers, LayoutDashboard, Clock, Copy, MessageSquare } from 'lucide-react';
 import ChatMessages from '@/components/TestScenario/ChatMessages';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -35,6 +35,31 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [selectedState, setSelectedState] = useState<string | undefined>(undefined);
+  const [elapsedTime, setElapsedTime] = useState("00:00");
+
+  // Timer for call duration
+  useEffect(() => {
+    let timer: number | null = null;
+    let startTime: number | null = null;
+    
+    if (transcript.callActive) {
+      startTime = Date.now();
+      timer = window.setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime!) / 1000);
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = (elapsed % 60).toString().padStart(2, '0');
+        setElapsedTime(`${minutes}:${seconds}`);
+      }, 1000);
+    } else {
+      setElapsedTime("00:00");
+    }
+    
+    return () => {
+      if (timer) {
+        clearInterval(timer);
+      }
+    };
+  }, [transcript.callActive]);
 
   // Update summary when scenario changes
   useEffect(() => {
@@ -119,157 +144,139 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-slate-50">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            {/* Scenario selector */}
-            <ScenarioSelector activeScenario={activeScenario} onSelectScenario={handleScenarioChange} />
-            
-            {/* Reset button */}
-            <Button variant="outline" size="icon" onClick={transcript.resetConversation} title="Reset conversation">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+      <div className="p-4 bg-white border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-bold mb-2">Transcript</h2>
+            <div className="flex items-center gap-4">
+              {/* Scenario selector styled as a pill button */}
+              <div className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                {activeScenario || 'No scenario'}
+              </div>
+              
+              {/* Current state pill */}
+              {transcript.currentState && (
+                <div className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                  <span>State: {transcript.currentState}</span>
+                </div>
+              )}
+              
+              {/* Updated status indicator */}
+              <div className="text-blue-500 flex items-center gap-1 text-sm">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span>Updated</span>
+              </div>
+              
+              <span className="text-gray-500 text-sm">Agent call transcript</span>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            {/* JSON button */}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleViewJson} 
-              className="flex items-center gap-1"
-              disabled={isLoadingJson}
-            >
-              <FileJson className="h-4 w-4 mr-1" />
-              JSON
+          <div className="flex items-center gap-3">
+            {/* Timer */}
+            <div className="flex items-center gap-1 text-gray-700 mr-2">
+              <Clock size={18} />
+              <span>{elapsedTime}</span>
+            </div>
+            
+            {/* Copy button */}
+            <Button variant="outline" size="icon" className="h-9 w-9">
+              <Copy size={18} />
             </Button>
             
-            {/* Call button */}
+            {/* End Call button */}
             <Button 
-              size="sm" 
-              variant={transcript.callActive ? "destructive" : "default"}
-              onClick={transcript.handleCall}
-              className="min-w-[100px]"
+              variant="destructive"
+              onClick={transcript.callActive ? transcript.handleHangUpCall : transcript.handleCall}
+              className="flex items-center gap-1"
             >
               {transcript.callActive ? 
-                <>
-                  <PhoneOff className="h-3.5 w-3.5 mr-1" /> End Call
-                </> : 
-                <>
-                  <Phone className="h-3.5 w-3.5 mr-1" /> Start Call
-                </>
+                <>End Call</> : 
+                <>Start Call</>
               }
+            </Button>
+            
+            {/* Chat button */}
+            <Button variant="outline" size="icon" className="h-9 w-9">
+              <MessageSquare size={18} />
             </Button>
           </div>
         </div>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow flex flex-col">
-        <div className="border-b px-4">
-          <TabsList className="h-10">
-            <TabsTrigger value="chat" className="flex items-center gap-1">
-              <Layers className="h-4 w-4" />
-              <span>Chat View</span>
-            </TabsTrigger>
-            <TabsTrigger value="summary" className="flex items-center gap-1">
-              <AlignLeft className="h-4 w-4" />
-              <span>Text Summary</span>
-            </TabsTrigger>
-          </TabsList>
+      <div className="flex-grow overflow-auto relative">
+        <ScrollArea className="h-full p-4">
+          {/* Verification banner */}
+          {transcript.verificationBlocking && 
+            <Card className="mb-4 bg-amber-50 border border-amber-200 shadow-sm">
+              <div className="p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-amber-700">
+                  <Shield size={16} />
+                  <span className="text-sm font-medium">Verification required to continue</span>
+                </div>
+                <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
+                  Pending
+                </Badge>
+              </div>
+            </Card>
+          }
+          
+          {/* Chat messages */}
+          <ChatMessages
+            messages={transcript.messages}
+            onSelectResponse={transcript.handleSelectResponse}
+            onVerifySystemCheck={transcript.handleVerifySystemCheck}
+            onValidateSensitiveData={transcript.handleValidateSensitiveData}
+            messagesEndRef={transcript.messagesEndRef}
+            onModuleComplete={handleInlineModuleComplete}
+          />
+          
+          {/* Show module if active */}
+          {transcript.activeModule && (
+            <div className="mt-4 border rounded-lg overflow-hidden">
+              <ModuleContainer
+                moduleConfig={transcript.activeModule}
+                onClose={() => transcript.completeModule({ cancelled: true })}
+                onComplete={handleModuleComplete}
+                currentState={transcript.currentState}
+                stateData={transcript.stateData}
+              />
+            </div>
+          )}
+        </ScrollArea>
+      </div>
+      
+      {/* Scenario selection dropdown at bottom */}
+      <div className="border-t p-2 bg-gray-50">
+        <div className="flex items-center">
+          <ScenarioSelector 
+            activeScenario={activeScenario} 
+            onSelectScenario={handleScenarioChange}
+            className="text-sm"
+          />
+          
+          {/* Reset button */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={transcript.resetConversation} 
+            className="ml-2"
+            title="Reset conversation"
+          >
+            <RefreshCw className="h-4 w-4 mr-1" /> Reset
+          </Button>
+          
+          {/* JSON button */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleViewJson} 
+            className="ml-auto"
+            disabled={isLoadingJson}
+          >
+            <FileJson className="h-4 w-4 mr-1" /> View JSON
+          </Button>
         </div>
-        
-        <TabsContent value="chat" className="flex-grow overflow-auto p-0 m-0">
-          <ScrollArea className="flex-grow p-4">
-            {/* Verification banner */}
-            {transcript.verificationBlocking && 
-              <Card className="mb-4 bg-amber-50 border border-amber-200 shadow-sm">
-                <div className="p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-amber-700">
-                    <Shield size={16} />
-                    <span className="text-sm font-medium">Verification required to continue</span>
-                  </div>
-                  <Badge variant="outline" className="bg-amber-100 text-amber-700 border-amber-300">
-                    Pending
-                  </Badge>
-                </div>
-              </Card>
-            }
-            
-            {/* Chat messages */}
-            <ChatMessages
-              messages={transcript.messages}
-              onSelectResponse={transcript.handleSelectResponse}
-              onVerifySystemCheck={transcript.handleVerifySystemCheck}
-              onValidateSensitiveData={transcript.handleValidateSensitiveData}
-              messagesEndRef={transcript.messagesEndRef}
-              onModuleComplete={handleInlineModuleComplete}
-            />
-            
-            {/* Show module if active */}
-            {transcript.activeModule && (
-              <div className="mt-4 border rounded-lg overflow-hidden">
-                <ModuleContainer
-                  moduleConfig={transcript.activeModule}
-                  onClose={() => transcript.completeModule({ cancelled: true })}
-                  onComplete={handleModuleComplete}
-                  currentState={transcript.currentState}
-                  stateData={transcript.stateData}
-                />
-              </div>
-            )}
-          </ScrollArea>
-        </TabsContent>
-        
-        <TabsContent value="summary" className="flex-grow p-4 overflow-auto">
-          <Card>
-            <ScrollArea className="h-[calc(100vh-200px)] p-4">
-              <h3 className="text-lg font-semibold mb-2">Call Summary</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                {activeScenario ? `Scenario: ${activeScenario}` : 'No scenario selected'}
-              </p>
-              
-              <div className="space-y-4">
-                <div className="border-l-4 border-primary pl-4 py-2">
-                  <h4 className="font-medium">Conversation Overview</h4>
-                  <p className="text-sm mt-1">{conversationSummary}</p>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-2">Key Points</h4>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    <li>Customer identity was verified</li>
-                    <li>Customer's concern was acknowledged</li>
-                    <li>Relevant information was provided</li>
-                    <li>Follow-up actions were agreed upon</li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 className="font-medium mb-2">Agent Actions</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
-                      <span>Identity verification</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
-                      <span>Information provision</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
-                      <span>Issue resolution</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="bg-green-50 text-green-700">Completed</Badge>
-                      <span>Next steps explained</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScrollArea>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      </div>
       
       {/* JSON dialog with visualization toggle */}
       <Dialog open={jsonDialogOpen} onOpenChange={setJsonDialogOpen}>

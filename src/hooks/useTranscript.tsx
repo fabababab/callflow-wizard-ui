@@ -50,12 +50,15 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // Debug timers for state tracking
   const [debugLastStateChange, setDebugLastStateChange] = useState<string>("");
+  // Track if we've already initialized the conversation
+  const [hasInitializedConversation, setHasInitializedConversation] = useState(false);
   
   // Prevent full reset on scenario change - just reset conversation state, not messages
   useEffect(() => {
     console.log("Scenario changed to:", activeScenario);
     // Only reset conversation tracking state, not messages
-    conversationState.resetConversationState();
+    conversationState.resetConversationState(false);
+    setHasInitializedConversation(false);
   }, [activeScenario, conversationState]);
   
   // Handle module completion
@@ -249,6 +252,7 @@ export function useTranscript(activeScenario: ScenarioType) {
         title: "Cannot select response",
         description: "Please wait for the conversation to initialize first",
         variant: "destructive",
+        duration: 2000
       });
       return;
     }
@@ -287,6 +291,7 @@ export function useTranscript(activeScenario: ScenarioType) {
             title: "State Transition Failed",
             description: "Could not proceed to the next state. Try resetting the conversation.",
             variant: "destructive",
+            duration: 3000
           });
         } else {
           console.log("Successfully transitioned using DEFAULT path");
@@ -306,12 +311,13 @@ export function useTranscript(activeScenario: ScenarioType) {
     toast
   ]);
 
-  // Reset the conversation
+  // Reset the conversation - ONLY when explicitly requested by the user
   const resetConversation = useCallback(() => {
     console.log('Manually resetting conversation');
     messageHandling.clearMessages();
     stateMachine.resetStateMachine();
-    conversationState.resetConversationState();
+    conversationState.resetConversationState(true);
+    setHasInitializedConversation(false);
     
     toast({
       title: "Conversation Reset",
@@ -331,13 +337,23 @@ export function useTranscript(activeScenario: ScenarioType) {
           throw new Error('State machine not loaded');
         }
         
-        // Clear previous state
+        // Set call active state
         callState.setCallActiveState(true);
         
-        // IMPORTANT: Only clear messages if this is the first time starting the call
-        // Don't clear messages when the call is already active to prevent duplications
-        if (messageHandling.messages.length === 0) {
-          messageHandling.addSystemMessage('Call started');
+        // IMPORTANT: Only clear messages if this is a manual reset or first initialization
+        if (conversationState.manualReset || !hasInitializedConversation) {
+          if (messageHandling.messages.length > 0) {
+            console.log('Clearing existing messages due to manual reset or first initialization');
+          }
+          
+          // Add system message only if we don't already have messages
+          if (!hasInitializedConversation) {
+            messageHandling.addSystemMessage('Call started');
+            setHasInitializedConversation(true);
+          }
+          
+          // Reset the manual reset flag
+          conversationState.setManualReset(false);
           
           // Use a proper delay to ensure UI state is updated
           setTimeout(() => {
@@ -367,6 +383,17 @@ export function useTranscript(activeScenario: ScenarioType) {
           }, 500);
         } else {
           console.log('Call is already initialized with messages, not clearing or re-initializing');
+          
+          // Still need to trigger the state machine
+          setTimeout(() => {
+            if (!conversationState.isInitialStateProcessed) {
+              console.log('Processing start call for already initialized conversation');
+              stateMachine.processStartCall() || stateMachine.processSelection('START_CALL');
+              conversationState.setIsInitialStateProcessed(true);
+            } else {
+              console.log('Initial state already processed, not triggering state machine');
+            }
+          }, 100);
         }
       } else {
         console.log('Ending call');
@@ -407,7 +434,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     stateMachine.stateMachine,
     conversationState,
     showNachbearbeitungSummary,
-    messageHandling.messages.length
+    messageHandling.messages.length,
+    hasInitializedConversation,
   ]);
 
   // Accept incoming call with improved state handling
@@ -417,7 +445,8 @@ export function useTranscript(activeScenario: ScenarioType) {
     callState.setCallActiveState(true);
     
     // Only reset on explicit accept
-    conversationState.resetConversationState();
+    conversationState.resetConversationState(true);
+    setHasInitializedConversation(true);
     
     messageHandling.addSystemMessage(`Call accepted from ${callId}`);
     
@@ -598,6 +627,6 @@ export function useTranscript(activeScenario: ScenarioType) {
     ...moduleManager,
     getStateJson, // Add the JSON state getter
     debugLastStateChange, // Add debug info
+    hasInitializedConversation, // Expose initialization state
   };
 }
-

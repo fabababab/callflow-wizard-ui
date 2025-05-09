@@ -9,6 +9,7 @@ export function useConversationState() {
   const [awaitingUserResponse, setAwaitingUserResponse] = useState(false);
   const [showNachbearbeitungModule, setShowNachbearbeitungModule] = useState(false);
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
+  const [manualReset, setManualReset] = useState(false);
   
   // Ref for debouncing
   const debounceTimerRef = useRef<number | null>(null);
@@ -28,14 +29,15 @@ export function useConversationState() {
   }, []);
 
   // Reset conversation state - but only reset the tracking, not erase messages
-  const resetConversationState = useCallback(() => {
-    console.log("Resetting conversation state tracking (not messages)");
+  const resetConversationState = useCallback((shouldResetMessages = false) => {
+    console.log("Resetting conversation state tracking. Reset messages:", shouldResetMessages);
     setProcessedStates(new Set());
     setIsInitialStateProcessed(false);
     setIsUserAction(false);
     setAwaitingUserResponse(false);
     setShowNachbearbeitungModule(false);
     setLastTranscriptUpdate(new Date());
+    setManualReset(shouldResetMessages);
     
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -50,6 +52,7 @@ export function useConversationState() {
     awaitingUserResponse,
     showNachbearbeitungModule,
     lastTranscriptUpdate,
+    manualReset,
     debounceTimerRef,
     hasProcessedState,
     markStateAsProcessed,
@@ -58,6 +61,7 @@ export function useConversationState() {
     setAwaitingUserResponse,
     setShowNachbearbeitungModule,
     setLastTranscriptUpdate,
+    setManualReset,
     resetConversationState
   };
 }
