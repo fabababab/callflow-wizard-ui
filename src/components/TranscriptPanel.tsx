@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Button } from '@/components/ui/button';
-import { Shield, Phone, PhoneOff, RefreshCw, FileJson, AlignLeft, Layers } from 'lucide-react';
+import { Shield, Phone, PhoneOff, RefreshCw, FileJson, AlignLeft, Layers, LayoutDashboard } from 'lucide-react';
 import ChatMessages from '@/components/TestScenario/ChatMessages';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -13,8 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ScenarioSelector from './ScenarioSelector';
 import ModuleContainer from '@/components/modules/ModuleContainer';
 import { useConversationSummary } from '@/hooks/useConversationSummary';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { getStateMachineJson } from '@/utils/stateMachineLoader';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { getStateMachineJson, loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
+import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
@@ -31,6 +32,9 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   const [activeTab, setActiveTab] = useState<string>("chat");
   const [conversationSummary, setConversationSummary] = useState<string>("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
+  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
+  const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
+  const [selectedState, setSelectedState] = useState<string | undefined>(undefined);
 
   // Update summary when scenario changes
   useEffect(() => {
@@ -72,17 +76,33 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     transcript.handleInlineModuleComplete(messageId, moduleId, result);
   };
 
+  // Handle state selection from the visualizer
+  const handleStateSelection = (state: string) => {
+    console.log(`State selected: ${state}`);
+    setSelectedState(state);
+    
+    // Update JSON content to show the selected state
+    if (loadedStateMachine && loadedStateMachine.states[state]) {
+      setJsonContent(JSON.stringify(loadedStateMachine.states[state], null, 2));
+    }
+  };
+
   // Function to load and show JSON dialog
   const handleViewJson = async () => {
     if (!activeScenario) return;
     
     setIsLoadingJson(true);
     try {
+      // Load the state machine for visualization
+      const machine = await loadStateMachine(activeScenario);
+      setLoadedStateMachine(machine);
+      
       const json = transcript.currentState ? 
         transcript.getStateJson(transcript.currentState) :
         await getStateMachineJson(activeScenario);
       
       setJsonContent(json);
+      setSelectedState(transcript.currentState);
       setJsonDialogOpen(true);
     } catch (error) {
       console.error("Failed to load JSON:", error);
@@ -90,6 +110,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     } finally {
       setIsLoadingJson(false);
     }
+  };
+
+  // Toggle view mode between JSON and visualization
+  const handleViewModeToggle = (mode: "json" | "visualization") => {
+    setDialogViewMode(mode);
   };
   
   return (
@@ -177,7 +202,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
               onVerifySystemCheck={transcript.handleVerifySystemCheck}
               onValidateSensitiveData={transcript.handleValidateSensitiveData}
               messagesEndRef={transcript.messagesEndRef}
-              onModuleComplete={transcript.handleInlineModuleComplete}
+              onModuleComplete={handleInlineModuleComplete}
             />
             
             {/* Show module if active */}
@@ -246,7 +271,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         </TabsContent>
       </Tabs>
       
-      {/* JSON dialog */}
+      {/* JSON dialog with visualization toggle */}
       <Dialog open={jsonDialogOpen} onOpenChange={setJsonDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
@@ -258,11 +283,85 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                 </span>
               )}
             </DialogTitle>
+            <DialogDescription>
+              {dialogViewMode === "json" 
+                ? "Complete JSON representation of the state machine flow" 
+                : "Visual representation of the state machine flow"}
+            </DialogDescription>
           </DialogHeader>
+          
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Button 
+              variant={dialogViewMode === "json" ? "secondary" : "outline"} 
+              size="sm"
+              onClick={() => handleViewModeToggle("json")}
+              className="flex items-center gap-2"
+            >
+              <FileJson size={16} />
+              JSON View
+            </Button>
+            <Button 
+              variant={dialogViewMode === "visualization" ? "secondary" : "outline"} 
+              size="sm"
+              onClick={() => handleViewModeToggle("visualization")}
+              className="flex items-center gap-2"
+            >
+              <LayoutDashboard size={16} />
+              Visualization
+            </Button>
+          </div>
+          
           <div className="overflow-auto max-h-[60vh]">
-            <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
-              {jsonContent}
-            </pre>
+            {dialogViewMode === "json" ? (
+              <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
+                {jsonContent}
+              </pre>
+            ) : (
+              <div className="bg-white p-4 rounded-md">
+                <DecisionTreeVisualizer 
+                  stateMachine={loadedStateMachine} 
+                  currentState={selectedState}
+                  onStateClick={handleStateSelection}
+                />
+                
+                {/* Display Selected State Details */}
+                {selectedState && loadedStateMachine?.states[selectedState] && (
+                  <div className="mt-6 border-t pt-4">
+                    <h3 className="text-lg font-semibold mb-2">State: {selectedState}</h3>
+                    
+                    {loadedStateMachine.states[selectedState].meta?.systemMessage && (
+                      <div className="mb-3 p-2 rounded bg-blue-50 border border-blue-200">
+                        <div className="flex items-center gap-1 text-blue-700 text-sm font-medium mb-1">
+                          <Shield size={16} />
+                          <span>System Message</span>
+                        </div>
+                        <p className="text-sm">{loadedStateMachine.states[selectedState].meta?.systemMessage}</p>
+                      </div>
+                    )}
+                    
+                    {loadedStateMachine.states[selectedState].meta?.customerText && (
+                      <div className="mb-3 p-2 rounded bg-amber-50 border border-amber-200">
+                        <div className="flex items-center gap-1 text-amber-700 text-sm font-medium mb-1">
+                          <Shield size={16} />
+                          <span>Customer Text</span>
+                        </div>
+                        <p className="text-sm">{loadedStateMachine.states[selectedState].meta?.customerText}</p>
+                      </div>
+                    )}
+                    
+                    {loadedStateMachine.states[selectedState].meta?.agentText && (
+                      <div className="mb-3 p-2 rounded bg-emerald-50 border border-emerald-200">
+                        <div className="flex items-center gap-1 text-emerald-700 text-sm font-medium mb-1">
+                          <Shield size={16} />
+                          <span>Agent Text</span>
+                        </div>
+                        <p className="text-sm">{loadedStateMachine.states[selectedState].meta?.agentText}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

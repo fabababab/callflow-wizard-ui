@@ -1,7 +1,8 @@
 
 import React, { useEffect, useRef } from 'react';
-import { StateMachine } from '@/utils/stateMachineLoader';
-import { Shield } from 'lucide-react';
+import { StateMachine, StateMachineStatus } from '@/utils/stateMachineLoader';
+import { Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Badge } from './ui/badge';
 
 interface DecisionTreeVisualizerProps {
   stateMachine: StateMachine | null;
@@ -263,9 +264,44 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     }
     
   }, [stateMachine, currentState, onStateClick]);
+
+  // Convert status to appropriate style and icon
+  const getStatusBadge = (status?: StateMachineStatus) => {
+    switch(status) {
+      case 'stable':
+        return (
+          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 flex items-center gap-1">
+            <CheckCircle className="h-3 w-3" />
+            Stable
+          </Badge>
+        );
+      case 'beta':
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Beta
+          </Badge>
+        );
+      case 'in-development':
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            In Development
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
   
   return (
     <div className="decision-tree-visualizer w-full overflow-auto">
+      {stateMachine?.status && (
+        <div className="mb-4">
+          {getStatusBadge(stateMachine.status)}
+        </div>
+      )}
+      
       {!stateMachine ? (
         <div className="flex items-center justify-center h-64 text-gray-400">
           No state machine data available

@@ -1,6 +1,6 @@
 
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { stateMachines } from '@/data/stateMachines';
+import { stateMachines, StateMachineStatus } from '@/data/stateMachines';
 import { SensitiveField } from '@/data/scenarioData';
 import { ModuleConfig } from '@/types/modules';
 
@@ -14,8 +14,8 @@ export interface StateMachineState {
     action?: string;
     responseOptions?: string[];
     customerText?: string;
-    sensitiveFields?: SensitiveField[]; // Add support for sensitive data fields
-    module?: ModuleConfig; // Add support for module configuration
+    sensitiveFields?: SensitiveField[]; 
+    module?: ModuleConfig;
   };
   on?: Record<string, string>;
   nextState?: string;
@@ -30,6 +30,7 @@ export interface StateMachine {
   id?: string;
   initialState?: string;
   initial?: string;
+  status?: StateMachineStatus;
   states: {
     [key: string]: StateMachineState;
   };
@@ -39,9 +40,9 @@ export interface StateMachine {
 export async function getAvailableStateMachines(): Promise<ScenarioType[]> {
   const availableScenarios: ScenarioType[] = [];
   
-  // Filter state machines that are available (true in the stateMachines object)
+  // Filter state machines that are available
   for (const [key, value] of Object.entries(stateMachines)) {
-    if (value === true) {
+    if (value.available === true) {
       availableScenarios.push(key as ScenarioType);
     }
   }
@@ -49,9 +50,17 @@ export async function getAvailableStateMachines(): Promise<ScenarioType[]> {
   return availableScenarios;
 }
 
+// Get the status of a specific state machine
+export function getStateMachineStatus(scenario: ScenarioType): StateMachineStatus | null {
+  if (!stateMachines.hasOwnProperty(scenario)) {
+    return null;
+  }
+  return stateMachines[scenario].status;
+}
+
 // Check if a state machine exists for the given scenario
 export function hasStateMachine(scenario: ScenarioType): boolean {
-  return stateMachines.hasOwnProperty(scenario);
+  return stateMachines.hasOwnProperty(scenario) && stateMachines[scenario].available;
 }
 
 // Load the state machine for the given scenario
@@ -63,7 +72,14 @@ export async function loadStateMachine(scenario: ScenarioType): Promise<StateMac
   try {
     // Use dynamic import instead of require
     const module = await import(`../data/stateMachines/${scenario}.json`);
-    return module.default;
+    const machine = module.default;
+    
+    // Add status if not already present
+    if (!machine.status) {
+      machine.status = getStateMachineStatus(scenario);
+    }
+    
+    return machine;
   } catch (error) {
     console.error(`Error loading state machine:`, error);
     return null;
@@ -79,7 +95,14 @@ export async function getStateMachineJson(scenario: ScenarioType): Promise<strin
     
     // Use dynamic import instead of require
     const module = await import(`../data/stateMachines/${scenario}.json`);
-    return JSON.stringify(module.default, null, 2);
+    const machine = module.default;
+    
+    // Add status if not already present
+    if (!machine.status) {
+      machine.status = getStateMachineStatus(scenario);
+    }
+    
+    return JSON.stringify(machine, null, 2);
   } catch (error) {
     console.error(`Error loading state machine JSON:`, error);
     return JSON.stringify({ error: `Failed to load: ${error}` }, null, 2);
