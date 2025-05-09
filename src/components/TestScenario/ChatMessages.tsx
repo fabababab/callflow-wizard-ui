@@ -36,12 +36,16 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     );
   }
 
-  // Debug response options
-  const debugResponseOptions = messages
-    .filter(m => m.responseOptions && m.responseOptions.length > 0)
-    .map(m => `${m.id}: ${m.responseOptions?.join(', ')}`);
-  
-  console.log("Messages with response options:", debugResponseOptions);
+  // Debug response options to help diagnose issues
+  React.useEffect(() => {
+    const debugResponseOptions = messages
+      .filter(m => m.responseOptions && m.responseOptions.length > 0)
+      .map(m => `${m.id}: ${m.responseOptions?.join(', ')}`);
+    
+    console.log("Messages with response options:", debugResponseOptions);
+    console.log("Total messages:", messages.length);
+    console.log("Agent mode:", isAgentMode);
+  }, [messages, isAgentMode]);
   
   return (
     <div className="space-y-4 pb-4">

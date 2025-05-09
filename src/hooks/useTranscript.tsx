@@ -1,3 +1,4 @@
+
 // This is a major refactoring of the useTranscript hook to fix state transitions and response options
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -83,6 +84,7 @@ export function useTranscript(activeScenario: ScenarioType) {
     
     // For debugging purposes, track state changes
     setDebugLastStateChange(new Date().toISOString());
+    console.log(`State change detected: ${stateMachine.currentState} at ${new Date().toISOString()}`);
     
     // Prevent duplicate processing of the same state
     if (conversationState.hasProcessedState(stateMachine.currentState)) {
@@ -142,6 +144,8 @@ export function useTranscript(activeScenario: ScenarioType) {
         const effectiveResponseOptions = responseOptions.length > 0 
           ? responseOptions
           : extractTransitionsAsResponseOptions(stateMachine.currentState);
+        
+        console.log("Effective response options:", effectiveResponseOptions);
           
         messageHandling.addAgentMessage(
           stateMachine.stateData.meta.agentText, 
@@ -234,11 +238,16 @@ export function useTranscript(activeScenario: ScenarioType) {
 
   // This is our primary interaction method - updated to ensure explicit user action
   const handleSelectResponse = useCallback((response: string) => {
-    console.log('Selecting response:', response);
+    console.log('User selecting response:', response);
     
     // Only process if we're awaiting user response or at initial state
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
+      toast({
+        title: "Cannot select response",
+        description: "Please wait for the conversation to initialize first",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -277,6 +286,8 @@ export function useTranscript(activeScenario: ScenarioType) {
             description: "Could not proceed to the next state. Try resetting the conversation.",
             variant: "destructive",
           });
+        } else {
+          console.log("Successfully transitioned using DEFAULT path");
         }
       } else {
         console.log("Successfully transitioned to new state:", stateMachine.currentState);
