@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -54,7 +53,8 @@ const Index = () => {
       'verificationFlow', 
       'contractManagement', 
       'productInfo', 
-      'testscenario'
+      'testscenario',
+      'deutscheVersion'  // Added deutscheVersion to available scenarios
     ];
     
     // Randomly select 3 scenarios (or fewer if there aren't enough available)
@@ -84,7 +84,8 @@ const Index = () => {
       'accountHistory': 'Account History Review',
       'physioTherapy': 'Physiotherapy Coverage',
       'paymentReminder': 'Payment Reminder Dispute',
-      'insurancePackage': 'Insurance Package Update'
+      'insurancePackage': 'Insurance Package Update',
+      'deutscheVersion': 'Deutsche Version'
     };
     
     toast({
@@ -241,6 +242,7 @@ const Index = () => {
                 {scenario === 'verificationFlow' && 'Identity Verification'}
                 {scenario === 'contractManagement' && 'Contract Management'}
                 {scenario === 'productInfo' && 'Product Information'}
+                {scenario === 'deutscheVersion' && 'Deutsche Version'}
               </Button>
             ))}
           </div>
