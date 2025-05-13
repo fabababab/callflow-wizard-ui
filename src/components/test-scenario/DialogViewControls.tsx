@@ -21,7 +21,7 @@ const DialogViewControls: React.FC<DialogViewControlsProps> = ({
         className="flex items-center gap-2"
       >
         <FileJson size={16} />
-        JSON View
+        JSON File
       </Button>
       <Button 
         variant={dialogViewMode === "visualization" ? "secondary" : "outline"} 
