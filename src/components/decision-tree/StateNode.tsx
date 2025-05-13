@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ModuleType } from '@/types/modules';
+import { cn } from '@/lib/utils';
 
 interface StateNodeProps {
   state: string;
@@ -12,6 +13,7 @@ interface StateNodeProps {
   moduleType: ModuleType | null;
   onClick?: (state: string) => void;
   isPanning: boolean;
+  isSelected?: boolean;
 }
 
 const StateNode: React.FC<StateNodeProps> = ({
@@ -23,7 +25,8 @@ const StateNode: React.FC<StateNodeProps> = ({
   hasSensitiveData,
   moduleType,
   onClick,
-  isPanning
+  isPanning,
+  isSelected = false
 }) => {
   
   const handleClick = (e: React.MouseEvent) => {
@@ -35,6 +38,7 @@ const StateNode: React.FC<StateNodeProps> = ({
   
   // Get border color based on module type
   const getBorderColor = (): string => {
+    if (isSelected) return '#ec4899'; // Pink color for selected state
     if (hasSensitiveData) return '#eab308';
     
     if (moduleType) {
@@ -105,11 +109,37 @@ const StateNode: React.FC<StateNodeProps> = ({
     }
   };
   
+  // Truncate state name if too long
+  const displayStateName = (name: string) => {
+    if (name.length > 20) {
+      return name.substring(0, 18) + '...';
+    }
+    return name;
+  };
+  
   const cursor = isPanning ? 'grab' : 'pointer';
   const borderColor = getBorderColor();
+  const strokeWidth = isSelected ? 4 : (hasSensitiveData ? 3 : (moduleType ? 2 : 1));
   
   return (
     <g>
+      {/* Selection glow effect for selected state */}
+      {isSelected && (
+        <rect
+          x={x - 2}
+          y={y - 2}
+          width={nodeSize.width + 4}
+          height={nodeSize.height + 4}
+          rx={10}
+          ry={10}
+          fill="none"
+          stroke="#ec4899"
+          strokeWidth={1}
+          opacity={0.5}
+          filter="url(#glow)"
+        />
+      )}
+      
       {/* Node Rectangle */}
       <rect
         x={x}
@@ -120,7 +150,7 @@ const StateNode: React.FC<StateNodeProps> = ({
         ry={8}
         fill={isCurrentState ? '#2563eb' : '#f3f4f6'}
         stroke={borderColor}
-        strokeWidth={hasSensitiveData ? 3 : (moduleType ? 2 : 1)}
+        strokeWidth={strokeWidth}
         cursor={cursor}
         onClick={handleClick}
       />
@@ -136,7 +166,7 @@ const StateNode: React.FC<StateNodeProps> = ({
         cursor={cursor}
         onClick={handleClick}
       >
-        {state}
+        {displayStateName(state)}
       </text>
       
       {/* Module Type Icon */}

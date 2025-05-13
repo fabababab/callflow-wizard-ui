@@ -81,7 +81,7 @@ export function calculateStateLevels(
   return { levelInfo, stateLevel, maxLevel };
 }
 
-// Calculate positions for each state based on level info
+// Calculate positions for each state based on level info with improved spacing
 export function calculateStatePositions(
   levelInfo: LevelInfo,
   nodeSize: { width: number; height: number },
@@ -94,7 +94,8 @@ export function calculateStatePositions(
     const totalInLevel = levelStates.length;
     
     levelStates.forEach((state, index) => {
-      const spacing = 200;
+      // Increase spacing between nodes to prevent overlap
+      const spacing = 250; // Increased from 200
       const levelWidth = totalInLevel * spacing;
       const startX = Math.max(0, (1200 - levelWidth) / 2);
       const x = startX + index * spacing;
