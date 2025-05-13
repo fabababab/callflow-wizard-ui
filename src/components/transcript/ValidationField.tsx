@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, CheckCircle, XCircle, Shield } from 'lucide-react';
+import { AlertCircle, CheckCircle, XCircle, Shield, Database } from 'lucide-react';
 import { SensitiveField, ValidationStatus, SensitiveDataType } from '@/data/scenarioData';
 
 interface ValidationFieldProps {
@@ -22,7 +22,8 @@ const dataTypeLabels: Record<SensitiveDataType, string> = {
 
 const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) => {
   const [notes, setNotes] = useState(field.notes || '');
-  const [showNotes, setShowNotes] = useState(false);
+  const [showNotes, setShowNotes] = useState(!!field.notes);
+  const [showSystemDetails, setShowSystemDetails] = useState(false);
   
   // Get the appropriate color based on validation status
   const getStatusColor = (status: ValidationStatus) => {
@@ -57,6 +58,9 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNotes(e.target.value);
   };
+
+  // Determine if the customer value matches the system value
+  const isMatch = field.value === field.systemValue;
   
   return (
     <div className={`p-3 rounded-lg border ${getStatusColor(field.status)} mb-2`}>
@@ -76,8 +80,45 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
         <StatusIcon />
       </div>
       
-      <div className="bg-white/50 p-2 rounded border border-gray-200 mb-2">
-        <code className="text-sm font-mono">{field.value}</code>
+      <div className="space-y-2 mb-2">
+        {/* Customer provided value */}
+        <div className="space-y-1">
+          <div className="text-xs font-medium flex items-center gap-1">
+            <span>Customer Provided:</span>
+          </div>
+          <div className="bg-white/50 p-2 rounded border border-gray-200">
+            <code className="text-sm font-mono">{field.value}</code>
+          </div>
+        </div>
+        
+        {/* System value */}
+        <div className="space-y-1">
+          <div className="text-xs font-medium flex items-center gap-1">
+            <Database size={12} className="text-blue-600" />
+            <span>System Record:</span>
+            <span 
+              className="text-blue-600 underline cursor-pointer text-xs"
+              onClick={() => setShowSystemDetails(!showSystemDetails)}
+            >
+              {showSystemDetails ? "Hide source" : "Show source"}
+            </span>
+          </div>
+          <div className={`bg-white/70 p-2 rounded border ${isMatch ? 'border-green-300' : 'border-red-300'} flex items-center gap-2`}>
+            <code className="text-sm font-mono">{field.systemValue}</code>
+            {isMatch ? 
+              <Badge variant="outline" className="ml-auto text-xs bg-green-50 text-green-700 border-green-200">Match</Badge> :
+              <Badge variant="outline" className="ml-auto text-xs bg-red-50 text-red-700 border-red-200">Mismatch</Badge>
+            }
+          </div>
+        </div>
+        
+        {/* System source details - shown only when expanded */}
+        {showSystemDetails && (
+          <div className="bg-blue-50/50 p-2 rounded border border-blue-100 text-xs">
+            <p className="font-medium text-blue-800 mb-1">Source Details:</p>
+            <p className="text-blue-700">{field.source || "Unknown source"}</p>
+          </div>
+        )}
       </div>
       
       {field.status === 'pending' && (
@@ -105,7 +146,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
             variant="ghost"
             onClick={() => setShowNotes(!showNotes)}
           >
-            Add Notes
+            {notes ? "Edit Notes" : "Add Notes"}
           </Button>
         </div>
       )}

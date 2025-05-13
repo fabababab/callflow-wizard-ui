@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
