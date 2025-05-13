@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import { StateMachine, StateMachineStatus } from '@/utils/stateMachineLoader';
 import { Shield, AlertTriangle, CheckCircle, Info, FileText, ClipboardList, BookText } from 'lucide-react';
@@ -12,19 +11,73 @@ interface DecisionTreeVisualizerProps {
   zoomLevel?: number;
   centerOnState?: string | null;
   onCenter?: () => void;
+  isPanning?: boolean;
 }
 
 const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
   stateMachine,
   currentState,
   onStateClick,
-  zoomLevel = 100,
+  zoomLevel = 400, // Default to 400% zoom
   centerOnState = null,
-  onCenter
+  onCenter,
+  isPanning = false
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [statePositions, setStatePositions] = useState<{ [key: string]: { x: number, y: number } }>({});
+  const [viewBox, setViewBox] = useState<{ x: number, y: number, width: number, height: number }>({ x: 0, y: 0, width: 0, height: 0 });
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStart, setDragStart] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+  
+  // Setup panning event handlers
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    
+    const handleMouseDown = (e: MouseEvent) => {
+      if (!isPanning) return;
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    };
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !isPanning) return;
+      
+      const dx = (e.clientX - dragStart.x) * (viewBox.width / svg.clientWidth);
+      const dy = (e.clientY - dragStart.y) * (viewBox.height / svg.clientHeight);
+      
+      setViewBox(prev => ({
+        ...prev,
+        x: prev.x - dx,
+        y: prev.y - dy
+      }));
+      
+      setDragStart({ x: e.clientX, y: e.clientY });
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+    
+    // Cursor change based on panning mode
+    if (isPanning) {
+      svg.style.cursor = 'grab';
+    } else {
+      svg.style.cursor = 'default';
+    }
+    
+    // Add event listeners
+    svg.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      svg.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isPanning, isDragging, dragStart, viewBox]);
   
   useEffect(() => {
     if (!stateMachine || !svgRef.current) return;
@@ -102,8 +155,10 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
         rect.setAttribute('stroke-width', '1');
       }
       
-      rect.setAttribute('cursor', 'pointer');
-      rect.onclick = () => onStateClick && onStateClick(state);
+      rect.setAttribute('cursor', isPanning ? 'grab' : 'pointer');
+      if (!isPanning) {
+        rect.onclick = () => onStateClick && onStateClick(state);
+      }
       
       // Setup text
       text.setAttribute('x', (x + nodeSize.width / 2).toString());
@@ -112,9 +167,11 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       text.setAttribute('font-size', '14');
       text.setAttribute('font-family', 'sans-serif');
       text.setAttribute('fill', state === currentState ? 'white' : '#1f2937');
-      text.setAttribute('cursor', 'pointer');
+      text.setAttribute('cursor', isPanning ? 'grab' : 'pointer');
       text.textContent = state;
-      text.onclick = () => onStateClick && onStateClick(state);
+      if (!isPanning) {
+        text.onclick = () => onStateClick && onStateClick(state);
+      }
       
       g.appendChild(rect);
       g.appendChild(text);
@@ -330,9 +387,31 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     const viewBoxWidth = svgWidth / scaleFactor;
     const viewBoxHeight = svgHeight / scaleFactor;
     
+    // Calculate viewBox center based on zoom level and possibly center on a specific state
+    let viewBoxX = 0;
+    let viewBoxY = 0;
+    
+    const centerX = viewBoxWidth / 2;
+    const centerY = viewBoxHeight / 2;
+    
+    // Center on specific state if requested
+    if (centerOnState && newStatePositions[centerOnState]) {
+      const pos = newStatePositions[centerOnState];
+      viewBoxX = pos.x - centerX;
+      viewBoxY = pos.y - centerY;
+      
+      // Notify parent that we've centered (only do this once)
+      onCenter && onCenter();
+    }
+    
+    // Set the viewBox with the calculated values
+    const newViewBox = { x: viewBoxX, y: viewBoxY, width: viewBoxWidth, height: viewBoxHeight };
+    setViewBox(newViewBox);
+    
     // Set the initial viewBox
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
+    svg.setAttribute('viewBox', `${newViewBox.x} ${newViewBox.y} ${newViewBox.width} ${newViewBox.height}`);
     
     // Create marker for arrows
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
@@ -378,27 +457,15 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     // Store state positions for later use
     setStatePositions(newStatePositions);
     
-    // Calculate viewBox center based on zoom level and possibly center on a specific state
-    let viewBoxX = 0;
-    let viewBoxY = 0;
+  }, [stateMachine, currentState, onStateClick, zoomLevel, centerOnState, onCenter, isPanning]);
+  
+  // Update viewBox when it changes (for panning)
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
     
-    const centerX = viewBoxWidth / 2;
-    const centerY = viewBoxHeight / 2;
-    
-    // Center on specific state if requested
-    if (centerOnState && newStatePositions[centerOnState]) {
-      const pos = newStatePositions[centerOnState];
-      viewBoxX = pos.x - centerX;
-      viewBoxY = pos.y - centerY;
-      
-      // Notify parent that we've centered (only do this once)
-      onCenter && onCenter();
-    }
-    
-    // Set the viewBox with the calculated values
-    svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
-    
-  }, [stateMachine, currentState, onStateClick, zoomLevel, centerOnState, onCenter]);
+    svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.width} ${viewBox.height}`);
+  }, [viewBox]);
   
   // Convert status to appropriate style and icon
   const getStatusBadge = (status?: StateMachineStatus) => {
@@ -428,7 +495,10 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
   };
   
   return (
-    <div className="decision-tree-visualizer w-full overflow-auto" ref={containerRef}>
+    <div 
+      className={`decision-tree-visualizer w-full overflow-auto ${isPanning ? 'cursor-grab' : ''}`} 
+      ref={containerRef}
+    >
       {stateMachine?.status && (
         <div className="mb-4">
           {getStatusBadge(stateMachine.status)}

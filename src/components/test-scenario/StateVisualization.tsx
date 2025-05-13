@@ -5,7 +5,7 @@ import DecisionTreeVisualizer from '@/components/DecisionTreeVisualizer';
 import StateDetailsPanel from './StateDetailsPanel';
 import { SensitiveField } from '@/data/scenarioData';
 import { Button } from '@/components/ui/button';
-import { Minus, Plus, RotateCw } from 'lucide-react';
+import { Minus, Plus, RotateCw, MoveHorizontal } from 'lucide-react';
 
 interface SelectedStateDetails {
   id: string;
@@ -30,28 +30,35 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
   onSensitiveFieldClick,
   onJumpToState
 }) => {
-  // Add zoom control
-  const [zoomLevel, setZoomLevel] = useState<number>(100);
+  // Default zoom level is now 400% (4x)
+  const [zoomLevel, setZoomLevel] = useState<number>(400);
   const [centerOnCurrentState, setCenterOnCurrentState] = useState<boolean>(true);
+  const [isPanning, setIsPanning] = useState<boolean>(false);
   
   // Handle zoom in
   const handleZoomIn = () => {
-    if (zoomLevel < 200) {
-      setZoomLevel(prev => Math.min(prev + 25, 200));
+    if (zoomLevel < 600) {
+      setZoomLevel(prev => Math.min(prev + 50, 600));
     }
   };
   
   // Handle zoom out
   const handleZoomOut = () => {
-    if (zoomLevel > 50) {
-      setZoomLevel(prev => Math.max(prev - 25, 50));
+    if (zoomLevel > 100) {
+      setZoomLevel(prev => Math.max(prev - 50, 100));
     }
+  };
+  
+  // Toggle panning mode
+  const togglePanningMode = () => {
+    setIsPanning(!isPanning);
   };
   
   // Reset zoom and centering
   const handleResetView = () => {
-    setZoomLevel(100);
+    setZoomLevel(400); // Reset to default 400%
     setCenterOnCurrentState(true);
+    setIsPanning(false);
   };
   
   useEffect(() => {
@@ -65,14 +72,14 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
     <div className="bg-white rounded-md flex flex-col md:flex-row h-full overflow-hidden">
       {/* Left side: Decision Tree Visualization with zoom controls */}
       <div className="md:w-3/5 p-4 border-r flex flex-col">
-        {/* Zoom controls */}
+        {/* Zoom and pan controls */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-2">
             <Button 
               variant="outline" 
               size="sm"
               onClick={handleZoomOut}
-              disabled={zoomLevel <= 50}
+              disabled={zoomLevel <= 100}
               className="h-8 w-8 p-0"
             >
               <Minus className="h-4 w-4" />
@@ -82,10 +89,21 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
               variant="outline" 
               size="sm" 
               onClick={handleZoomIn}
-              disabled={zoomLevel >= 200}
+              disabled={zoomLevel >= 600}
               className="h-8 w-8 p-0"
             >
               <Plus className="h-4 w-4" />
+            </Button>
+            
+            {/* Pan button */}
+            <Button
+              variant={isPanning ? "default" : "outline"}
+              size="sm"
+              onClick={togglePanningMode}
+              className={`h-8 flex items-center gap-1 ml-2 ${isPanning ? 'bg-blue-600' : ''}`}
+            >
+              <MoveHorizontal className="h-4 w-4" />
+              <span className="hidden sm:inline">Pan</span>
             </Button>
           </div>
           
@@ -101,7 +119,7 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
         </div>
         
         {/* Decision Tree visualization with zoom and centering */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto relative">
           <DecisionTreeVisualizer 
             stateMachine={loadedStateMachine} 
             currentState={currentState} 
@@ -109,13 +127,14 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
             zoomLevel={zoomLevel}
             centerOnState={centerOnCurrentState ? currentState : null}
             onCenter={() => setCenterOnCurrentState(false)}
+            isPanning={isPanning}
           />
         </div>
       </div>
       
       {/* Right side: State Details Panel with fixed height and scrolling */}
       <div className="md:w-2/5 p-4 flex flex-col overflow-hidden">
-        <div className="overflow-auto" style={{ maxHeight: '100%' }}>
+        <div className="overflow-auto h-full">
           <StateDetailsPanel 
             selectedStateDetails={selectedStateDetails}
             onSensitiveFieldClick={onSensitiveFieldClick}

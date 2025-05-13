@@ -43,6 +43,16 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
     }
   };
   
+  // Handle sensitive field click
+  const handleSensitiveFieldClick = useCallback((field: SensitiveField) => {
+    // This would typically open a dialog or panel with sensitive field details
+    toast({
+      title: "Sensitive Field Selected",
+      description: `Selected field: ${field.name}`,
+      duration: 3000
+    });
+  }, [toast]);
+  
   // Handle jumping to a specific state
   const handleJumpToState = useCallback((stateId: string) => {
     if (!loadedStateMachine || !loadedStateMachine.states[stateId]) {
@@ -112,6 +122,7 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
     loadedStateMachine,
     selectedState,
     handleStateSelection,
+    handleSensitiveFieldClick,
     handleViewJson,
     handleJumpToState
   };
