@@ -1,23 +1,12 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useNotifications } from '@/contexts/NotificationsContext';
+import React from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, CheckCircle, AlertCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-interface VerificationField {
-  id: string;
-  label: string;
-  type: string;
-  value: string;
-  expectedValue?: string;
-  required: boolean;
-  verified?: boolean;
-}
+import { Shield } from 'lucide-react';
+import VerificationFields from './verification/VerificationFields';
+import VerificationStatus from './verification/VerificationStatus';
+import { useVerificationModule } from './verification/useVerificationModule';
 
 const VerificationModule = ({
   id, 
@@ -25,141 +14,23 @@ const VerificationModule = ({
   data, 
   onClose, 
   onComplete 
-}) => {
+}: ModuleProps) => {
   const fields = data?.fields || [];
-  const [verificationFields, setVerificationFields] = useState<VerificationField[]>(
-    fields.map(field => ({
-      ...field,
-      // Automatically set value to expected value if provided
-      value: field.expectedValue || field.value,
-      verified: true
-    }))
-  );
-  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const isInlineDisplay = data?.isInline === true;
-  const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const processingRef = useRef(false);
-  const hasShownToastRef = useRef(false);
-  const verificationCompleteRef = useRef(false);
-  const moduleInstanceId = useRef<string>(`verification-${id}-${Date.now()}`).current;
   
-  const { addNotification } = useNotifications();
-  
-  // Auto-verify on mount after a small delay
-  useEffect(() => {
-    if (!processingRef.current && !verificationCompleteRef.current) {
-      const timeout = setTimeout(() => {
-        handleVerify();
-      }, 800);
-      return () => clearTimeout(timeout);
-    }
-    
-    return () => {
-      if (completeTimeoutRef.current) {
-        clearTimeout(completeTimeoutRef.current);
-      }
-    };
-  }, []);
-  
-  const handleInputChange = (fieldId: string, value: string) => {
-    if (processingRef.current) return;
-    
-    setVerificationFields(prev => 
-      prev.map(field => 
-        field.id === fieldId 
-          ? { ...field, value, verified: true } 
-          : field
-      )
-    );
-  };
-  
-  const handleVerify = () => {
-    // Prevent multiple verifications
-    if (processingRef.current || verificationCompleteRef.current) return;
-    processingRef.current = true;
-    
-    console.log(`Processing verification for module ${id} with instance ID ${moduleInstanceId}`);
-    
-    // Always succeed
-    setVerificationStatus('success');
-    
-    // Show notification once
-    if (!hasShownToastRef.current) {
-      handleVerificationSuccess();
-      hasShownToastRef.current = true;
-    }
-    
-    // Mark verification as complete to prevent multiple calls
-    verificationCompleteRef.current = true;
-    
-    // Add a slight delay to show the success state before completing
-    completeTimeoutRef.current = setTimeout(() => {
-      if (onComplete) {
-        console.log(`VerificationModule ${id} completed with automatic success`);
-        onComplete({
-          verified: true,
-          fields: verificationFields.map(f => ({
-            id: f.id,
-            value: f.value,
-            verified: true
-          }))
-        });
-        
-        // Use a unique identifier for this verification event
-        const eventId = `module-${id}-${moduleInstanceId}-${Date.now()}`;
-        
-        // Dispatch a custom event to trigger state transition after verification
-        const completeEvent = new CustomEvent('verification-complete', {
-          detail: { 
-            success: true, 
-            moduleId: id,
-            instanceId: moduleInstanceId,
-            eventId: eventId
-          }
-        });
-        console.log(`Dispatching verification-complete event with ID: ${eventId}`);
-        window.dispatchEvent(completeEvent);
-        
-        // If verification was successful and this is inline, trigger flow continuation
-        // but only dispatch one event to continue the flow
-        if (isInlineDisplay) {
-          console.log(`Verification module ${id} successful, continuing flow...`);
-          
-          // Dispatch an event to continue the flow
-          const successEvent = new CustomEvent('verification-successful', {
-            detail: { 
-              moduleId: id,
-              instanceId: moduleInstanceId,
-              eventId: eventId 
-            }
-          });
-          console.log(`Dispatching verification-successful event with ID: ${eventId}`);
-          setTimeout(() => window.dispatchEvent(successEvent), 100);
-        }
-        
-        // Reset processing state after a longer delay to prevent rapid re-renders
-        setTimeout(() => {
-          processingRef.current = false;
-        }, 1000);
-      }
-    }, 1500);
-  };
-  
-  const handleVerificationSuccess = () => {
-    addNotification({
-      title: "Verification Successful", 
-      description: "Customer identity has been verified",
-      type: "success"
-    });
-  };
-  
-  const handleVerificationFailure = () => {
-    addNotification({ 
-      title: "Verification Failed", 
-      description: "Identity verification could not be completed",
-      type: "error"
-    });
-  };
+  const {
+    verificationFields,
+    verificationStatus,
+    isInlineDisplay: isInline,
+    processingRef,
+    handleInputChange,
+    handleVerify
+  } = useVerificationModule({
+    id,
+    fields,
+    isInline: isInlineDisplay,
+    onComplete
+  });
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
@@ -181,44 +52,14 @@ const VerificationModule = ({
       </CardHeader>
       
       <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-4"} space-y-3`}>
-        {verificationStatus === 'success' && (
-          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3 transition-opacity duration-300">
-            <CheckCircle className="h-4 w-4" />
-            <span>Verification successful</span>
-          </div>
-        )}
+        <VerificationStatus status={verificationStatus} />
         
-        {verificationStatus === 'failed' && (
-          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3 transition-opacity duration-300">
-            <AlertCircle className="h-4 w-4" />
-            <span>Verification failed. Please check your information.</span>
-          </div>
-        )}
-        
-        {/* For inline display, use a grid layout for fields */}
-        <div className={isInlineDisplay ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
-          {verificationFields.map(field => (
-            <div key={field.id} className="space-y-1">
-              <div className="flex justify-between">
-                <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
-                {field.verified !== undefined && (
-                  <Badge variant="default" className="text-xs py-0 h-5">
-                    <CheckCircle size={12} className="mr-1" />
-                    Verified
-                  </Badge>
-                )}
-              </div>
-              <Input
-                id={field.id}
-                type={field.type}
-                value={field.value || ''}
-                onChange={(e) => handleInputChange(field.id, e.target.value)}
-                className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
-                readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
-              />
-            </div>
-          ))}
-        </div>
+        <VerificationFields 
+          fields={verificationFields}
+          isInlineDisplay={isInlineDisplay}
+          isProcessing={Boolean(processingRef.current)}
+          onInputChange={handleInputChange}
+        />
       </CardContent>
       
       <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-amber-50 border-t py-2"}`}>
@@ -230,7 +71,7 @@ const VerificationModule = ({
               if (!processingRef.current && onClose) onClose();
             }}
             className="text-xs"
-            disabled={processingRef.current}
+            disabled={Boolean(processingRef.current)}
           >
             Cancel
           </Button>
@@ -242,7 +83,7 @@ const VerificationModule = ({
             size="sm"
             onClick={handleVerify}
             className={`text-xs ${isInlineDisplay ? "bg-amber-500 hover:bg-amber-600 text-white ml-auto" : ""}`}
-            disabled={processingRef.current || verificationCompleteRef.current}
+            disabled={Boolean(processingRef.current)}
           >
             Verify Identity
           </Button>
