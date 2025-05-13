@@ -1,6 +1,6 @@
 
 // Hook for handling user response selections
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResponseHandlerProps {
@@ -129,6 +129,42 @@ export function useResponseHandler({
     conversationState,
     toast
   ]);
+
+  // Add event listeners for verification completion events
+  useEffect(() => {
+    const handleVerificationComplete = (event: CustomEvent) => {
+      console.log("Verification complete event detected:", event.detail);
+      
+      // Add a short delay to ensure UI is updated
+      setTimeout(() => {
+        // System message about verification
+        messageHandling.addSystemMessage("Customer identity has been successfully verified.");
+        
+        // Get available responses for the current state
+        const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+        
+        // If there are response options, automatically pick the first one
+        if (responseOptions.length > 0) {
+          console.log("Auto-selecting response after verification:", responseOptions[0]);
+          
+          // Add a delay to make the flow feel more natural
+          setTimeout(() => {
+            handleSelectResponse(responseOptions[0]);
+          }, 1500);
+        }
+      }, 500);
+    };
+    
+    // Add event listener for verification complete
+    window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
+    window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
+      window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
+    };
+  }, [messageHandling, stateMachine.stateData, handleSelectResponse]);
 
   return {
     handleSelectResponse

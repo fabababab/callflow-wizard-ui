@@ -79,7 +79,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     setVerificationStatus('success');
     
     // Show toast notification
-    toast({
+    toast.toast({
       title: "Verification Successful",
       description: "Customer identity has been verified",
       duration: 2000
@@ -97,6 +97,12 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
             verified: true
           }))
         });
+        
+        // Dispatch a custom event to trigger state transition after verification
+        const event = new CustomEvent('verification-complete', {
+          detail: { success: true, moduleId: id }
+        });
+        window.dispatchEvent(event);
         
         // If verification was successful and this is inline, trigger flow continuation
         if (isInlineDisplay) {

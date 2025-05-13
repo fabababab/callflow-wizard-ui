@@ -67,11 +67,17 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       onVerify(true, defaultValues);
       
       // Show success toast
-      toast({
+      toast.toast({
         title: "Identity Verified",
         description: "Customer identity has been automatically verified",
         duration: 2000
       });
+      
+      // Dispatch a custom event to trigger state transition after verification
+      const event = new CustomEvent('verification-complete', {
+        detail: { success: true }
+      });
+      window.dispatchEvent(event);
       
       // Reset processing state after a delay
       setTimeout(() => {
