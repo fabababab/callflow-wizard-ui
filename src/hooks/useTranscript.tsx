@@ -8,5 +8,7 @@ export function useTranscript(activeScenario: ScenarioType) {
   const transcriptCore = useTranscriptCore(activeScenario);
   
   // Return all the functionality from the core hook
-  return transcriptCore;
+  return {
+    ...transcriptCore
+  };
 }

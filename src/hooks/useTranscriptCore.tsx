@@ -1,13 +1,16 @@
+
 // Primary transcript hook - composes all other hooks for managing the transcript
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
 import { useConversationState } from '@/hooks/useConversationState';
 import { useConversationInitializer } from '@/hooks/useConversationInitializer';
 import { useResponseHandler } from '@/hooks/useResponseHandler';
-import { useStateMachine } from '@/hooks/useStateMachine';
-import { ScenarioType, scenarioData } from '@/components/ScenarioSelector';
+// Import StateMachine type from utils to avoid name conflict
+import { StateMachine as StateMachineType } from '@/utils/stateMachineLoader';
+import { ScenarioType, scenarioCallData } from '@/components/ScenarioSelector';
 import { ModuleConfig } from '@/types/modules';
 import { useNotifications } from '@/contexts/NotificationsContext';
+import { useToast } from '@/hooks/use-toast';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
   // Initialize state for call and conversation
@@ -17,11 +20,30 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const [moduleResult, setModuleResult] = useState<any>(null);
   const [stateData, setStateData] = useState<any>(null);
   const [currentState, setCurrentState] = useState<string>('');
+  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   const { addNotification } = useNotifications();
+  const { toast } = useToast();
   
   // Initialize refs
   const nachbearbeitungSummaryRef = useRef<HTMLDialogElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const stateMachineRef = useRef<any>(null);
+  
+  // Function to show the Nachbearbeitung summary
+  const showNachbearbeitungSummary = useCallback((state?: string) => {
+    if (nachbearbeitungSummaryRef.current) {
+      console.log("Showing Nachbearbeitung summary");
+      addSystemMessage(`Call completed in state: ${state || stateMachine.currentState}. Please complete after-call work.`);
+      nachbearbeitungSummaryRef.current.showModal();
+    } else {
+      console.warn("Nachbearbeitung summary ref not available");
+      addNotification({
+        title: "Nachbearbeitung Unavailable",
+        description: "The after-call summary is not available at this time.",
+        type: "warning"
+      });
+    }
+  }, [addSystemMessage, stateMachine?.currentState, addNotification]);
   
   // Initialize smaller focused hooks
   const callState = { callActive, setCallActive };
@@ -30,7 +52,6 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     sensitiveDataStats,
     verificationBlocking,
     lastMessageUpdate,
-    messagesEndRef,
     addMessage,
     addSystemMessage,
     addAgentMessage,
@@ -67,7 +88,8 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     },
     callState,
     setHasInitializedConversation,
-    showNachbearbeitungSummary
+    showNachbearbeitungSummary,
+    toast
   });
   
   const responseHandler = useResponseHandler({
@@ -75,7 +97,8 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling: {
       addAgentMessage
     },
-    conversationState
+    conversationState,
+    toast
   });
   
   // Load state machine on scenario change
@@ -87,22 +110,6 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   useEffect(() => {
     conversationInitializer.resetConversation();
   }, [activeScenario, conversationInitializer]);
-  
-  // Function to show the Nachbearbeitung summary
-  const showNachbearbeitungSummary = (state?: string) => {
-    if (nachbearbeitungSummaryRef.current) {
-      console.log("Showing Nachbearbeitung summary");
-      addSystemMessage(`Call completed in state: ${state || stateMachine.currentState}. Please complete after-call work.`);
-      nachbearbeitungSummaryRef.current.showModal();
-    } else {
-      console.warn("Nachbearbeitung summary ref not available");
-      addNotification({
-        title: "Nachbearbeitung Unavailable",
-        description: "The after-call summary is not available at this time.",
-        type: "warning"
-      });
-    }
-  };
   
   // Function to complete a module
   const completeModule = useCallback((result: any) => {
@@ -149,6 +156,14 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     console.log("Resetting conversation");
     conversationInitializer.resetConversation();
   };
+
+  // Update transcript when messages update
+  useEffect(() => {
+    if (lastMessageUpdate) {
+      console.log("Message update detected, updating transcript:", lastMessageUpdate);
+      setLastTranscriptUpdate(new Date());
+    }
+  }, [lastMessageUpdate]);
   
   return {
     // State and refs
@@ -167,6 +182,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messagesEndRef,
     nachbearbeitungSummaryRef,
     stateMachineRef,
+    lastTranscriptUpdate,
     
     // Message handling
     messages,
@@ -210,13 +226,55 @@ function useStateMachine(activeScenario: ScenarioType, actions: any) {
   
   const loadStateMachine = useCallback((scenario: ScenarioType) => {
     console.log(`Loading state machine for scenario: ${scenario}`);
-    const scenarioConfig = scenarioData[scenario];
+    const scenarioConfig = scenarioCallData[scenario];
     if (!scenarioConfig) {
       console.error(`No scenario data found for scenario: ${scenario}`);
       return;
     }
     
-    stateMachineRef.current = new StateMachine(scenarioConfig.initialState, scenarioConfig.states, actions);
+    // Create a new instance of StateMachineType (renamed from StateMachine to avoid conflict)
+    const StateMachine = class {
+      currentState: string;
+      states: any;
+      actions: any;
+      stateData: any;
+      
+      constructor(initialState: string, states: any, actions: any) {
+        this.currentState = initialState;
+        this.states = states;
+        this.actions = actions;
+        this.stateData = null;
+      }
+      
+      initialize() {
+        this.stateData = this.states[this.currentState];
+        if (this.actions?.setStateData) {
+          this.actions.setStateData(this.stateData);
+        }
+        if (this.actions?.setCurrentState) {
+          this.actions.setCurrentState(this.currentState);
+        }
+      }
+      
+      transition(newState: string) {
+        if (!this.states[newState]) {
+          console.error(`Invalid state: ${newState}`);
+          return;
+        }
+        
+        this.currentState = newState;
+        this.stateData = this.states[newState];
+        
+        if (this.actions?.setStateData) {
+          this.actions.setStateData(this.stateData);
+        }
+        if (this.actions?.setCurrentState) {
+          this.actions.setCurrentState(newState);
+        }
+      }
+    };
+    
+    stateMachineRef.current = new StateMachine('start', scenarioConfig.states, actions);
     
     // Initialize the state machine
     stateMachineRef.current.initialize();
