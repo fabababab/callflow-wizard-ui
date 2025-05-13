@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Message } from '@/components/transcript/MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
+import { useToast } from '@/hooks/use-toast';
 
 export function useSensitiveDataHandling(
   messages: Message[],
@@ -19,6 +20,8 @@ export function useSensitiveDataHandling(
     invalid: 0,
   });
   
+  const { toast } = useToast();
+  
   // Track if we're currently performing a verification
   const [isVerifying, setIsVerifying] = useState(false);
   const lastVerifyTimeRef = useRef<number>(0);
@@ -30,7 +33,7 @@ export function useSensitiveDataHandling(
   const handleValidateSensitiveData = useCallback((
     messageId: string, 
     fieldId: string, 
-    status: ValidationStatus, 
+    status: ValidationStatus = 'valid', // Default to valid
     notes?: string
   ) => {
     // Prevent multiple validation calls in quick succession
@@ -54,7 +57,7 @@ export function useSensitiveDataHandling(
             if (field.id === fieldId) {
               return {
                 ...field,
-                status,
+                status: 'valid', // Always mark as valid
                 notes,
               } as SensitiveField;
             }
@@ -64,38 +67,39 @@ export function useSensitiveDataHandling(
           return {
             ...message,
             sensitiveData: updatedSensitiveData,
+            isVerified: true, // Always mark the message as verified
           };
         })
       );
       
-      // Update aggregate stats
-      if (status === 'valid') {
-        setSensitiveDataStats(prev => ({
-          ...prev,
-          valid: prev.valid + 1,
-        }));
-      } else if (status === 'invalid') {
-        setSensitiveDataStats(prev => ({
-          ...prev,
-          invalid: prev.invalid + 1,
-        }));
-      }
+      // Always increase valid count
+      setSensitiveDataStats(prev => ({
+        ...prev,
+        valid: prev.valid + 1,
+      }));
+      
+      // Show success toast
+      toast({
+        title: "Field Validated",
+        description: "Sensitive information has been validated",
+        duration: 1500
+      });
       
       // Use a longer delay before allowing new verifications to prevent flickering
       setTimeout(() => {
         setIsVerifying(false);
         processingRef.current = false;
-      }, 1500);
+      }, 1000);
       
       // Delay the message update notification to avoid rapid UI changes
       setTimeout(() => {
         setLastMessageUpdate(new Date());
       }, 100);
     }, 50);
-  }, [setMessages, setLastMessageUpdate, isVerifying]);
+  }, [setMessages, setLastMessageUpdate, isVerifying, toast]);
 
   /**
-   * Handle verification of system checks - No auto verification
+   * Handle verification of system checks - Always auto verify
    */
   const handleVerifySystemCheck = useCallback((messageId: string) => {
     // Prevent multiple verification calls in quick succession
@@ -106,7 +110,7 @@ export function useSensitiveDataHandling(
     setIsVerifying(true);
     lastVerifyTimeRef.current = now;
     
-    console.log(`Verifying system check for message ${messageId} - inline only, no modals`);
+    console.log(`Verifying system check for message ${messageId} - auto verification enabled`);
     
     // Make sure verification blocking is set to false to avoid modals
     setVerificationBlocking(false);
@@ -124,6 +128,13 @@ export function useSensitiveDataHandling(
         })
       );
       
+      // Show success toast
+      toast({
+        title: "System Check Verified",
+        description: "Verification completed successfully",
+        duration: 1500
+      });
+      
       // Reset verifying state after a longer delay
       setTimeout(() => {
         setIsVerifying(false);
@@ -133,9 +144,9 @@ export function useSensitiveDataHandling(
         setTimeout(() => {
           setLastMessageUpdate(new Date());
         }, 100);
-      }, 1500);
+      }, 1000);
     }, 50);
-  }, [setMessages, setLastMessageUpdate, setVerificationBlocking, isVerifying]);
+  }, [setMessages, setLastMessageUpdate, setVerificationBlocking, isVerifying, toast]);
 
   return {
     sensitiveDataStats,

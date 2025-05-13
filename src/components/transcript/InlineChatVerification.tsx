@@ -4,6 +4,7 @@ import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle, Loader, ShieldCheck, AlertCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface InlineChatVerificationProps {
   onVerify: (verified: boolean, data?: FormValues) => void;
@@ -20,6 +21,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   const [verificationFailed, setVerificationFailed] = useState(false);
   const verificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
+  const { toast } = useToast();
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -28,6 +30,17 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     policyNumber: '12345678',
   };
   
+  // Auto-verify on mount
+  useEffect(() => {
+    if (!isVerified && !isVerifying && !isProcessingRef.current) {
+      // Add a slight delay to make the verification process visible
+      const timeout = setTimeout(() => {
+        handleVerifyClick();
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isVerified, isVerifying]);
+
   // Clear timeout on unmount
   useEffect(() => {
     return () => {
@@ -42,14 +55,23 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     if (isProcessingRef.current || isValidating) return;
     
     isProcessingRef.current = true;
-    console.log("Verify button clicked");
+    console.log("Verify button clicked or auto-triggered");
     setIsValidating(true);
     
-    // Use a longer delay to prevent rapid state changes
+    // Use a delay to show the verification process
     verificationTimeoutRef.current = setTimeout(() => {
       setIsValidating(false);
       console.log("Manual verification complete, calling onVerify(true)");
+      
+      // Always succeed with verification
       onVerify(true, defaultValues);
+      
+      // Show success toast
+      toast({
+        title: "Identity Verified",
+        description: "Customer identity has been automatically verified",
+        duration: 2000
+      });
       
       // Reset processing state after a delay
       setTimeout(() => {

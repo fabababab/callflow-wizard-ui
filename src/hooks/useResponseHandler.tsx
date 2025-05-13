@@ -30,7 +30,7 @@ export function useResponseHandler({
     // Only process if we're awaiting user response or at initial state
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
-      toast.toast({
+      toast({
         title: "Cannot select response",
         description: "Please wait for the conversation to initialize first",
         variant: "destructive",
@@ -39,8 +39,12 @@ export function useResponseHandler({
       return;
     }
     
+    // Special case for "Verify customer identity first" option - auto-continue
+    const isVerifyIdentityOption = response.toLowerCase().includes('verify') && 
+                                  response.toLowerCase().includes('identity');
+    
     // Show toast notification for response selection
-    toast.toast({
+    toast({
       title: "Response Selected",
       description: response,
       duration: 2000,
@@ -74,7 +78,7 @@ export function useResponseHandler({
         
         if (!defaultSuccess) {
           console.error('Both specific and DEFAULT transitions failed');
-          toast.toast({
+          toast({
             title: "State Transition Failed",
             description: "Could not proceed to the next state. Try resetting the conversation.",
             variant: "destructive",
@@ -88,13 +92,38 @@ export function useResponseHandler({
         console.log("New state data:", stateMachine.stateData);
       }
       
+      // For verification flows, ensure we continue automatically if needed
+      if (isVerifyIdentityOption) {
+        console.log("Identity verification was selected, setting up auto-continue...");
+        
+        // Use a slightly longer delay to allow verification UI to show up
+        setTimeout(() => {
+          // Add verification message to chat
+          messageHandling.addSystemMessage("Customer identity has been automatically verified.");
+          
+          // Wait for verification modal to complete
+          setTimeout(() => {
+            console.log("Continuing flow after identity verification");
+            
+            // Get available responses
+            const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+            
+            if (responseOptions.length > 0) {
+              // Pick the first available response option to continue the flow
+              handleSelectResponse(responseOptions[0]);
+            }
+          }, 2000);
+        }, 2000);
+      }
+      
       console.log('===== RESPONSE SELECTION COMPLETE =====');
     }, 100);
     
   }, [
     conversationState.awaitingUserResponse, 
     conversationState.isInitialStateProcessed, 
-    messageHandling.addAgentMessage, 
+    messageHandling.addAgentMessage,
+    messageHandling.addSystemMessage, 
     stateMachine.processSelection, 
     stateMachine.currentState,
     conversationState,

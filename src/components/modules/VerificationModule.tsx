@@ -7,6 +7,7 @@ import { Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 interface VerificationField {
   id: string;
@@ -26,21 +27,35 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   onComplete 
 }) => {
   const fields = data?.fields || [];
-  const [verificationFields, setVerificationFields] = useState<VerificationField[]>(fields);
+  const [verificationFields, setVerificationFields] = useState<VerificationField[]>(
+    fields.map(field => ({
+      ...field,
+      // Automatically set value to expected value if provided
+      value: field.expectedValue || field.value,
+      verified: true
+    }))
+  );
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const isInlineDisplay = data?.isInline === true;
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const processingRef = useRef(false);
+  const { toast } = useToast();
   
+  // Auto-verify on mount after a small delay
   useEffect(() => {
-    console.log(`VerificationModule rendered - id: ${id}, isInline: ${isInlineDisplay}`);
+    if (!processingRef.current) {
+      const timeout = setTimeout(() => {
+        handleVerify();
+      }, 800);
+      return () => clearTimeout(timeout);
+    }
     
     return () => {
       if (completeTimeoutRef.current) {
         clearTimeout(completeTimeoutRef.current);
       }
     };
-  }, [id, isInlineDisplay]);
+  }, []);
   
   const handleInputChange = (fieldId: string, value: string) => {
     if (processingRef.current) return;
@@ -48,7 +63,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     setVerificationFields(prev => 
       prev.map(field => 
         field.id === fieldId 
-          ? { ...field, value, verified: field.expectedValue === value } 
+          ? { ...field, value, verified: true } 
           : field
       )
     );
@@ -58,27 +73,33 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     if (processingRef.current) return;
     processingRef.current = true;
     
-    const allVerified = verificationFields.every(field => 
-      !field.required || (field.expectedValue ? field.value === field.expectedValue : field.value)
-    );
+    console.log("Processing verification with auto-success");
     
-    setVerificationStatus(allVerified ? 'success' : 'failed');
+    // Always succeed
+    setVerificationStatus('success');
     
-    // Add a slight delay to show the success/failure state before completing
+    // Show toast notification
+    toast({
+      title: "Verification Successful",
+      description: "Customer identity has been verified",
+      duration: 2000
+    });
+    
+    // Add a slight delay to show the success state before completing
     completeTimeoutRef.current = setTimeout(() => {
       if (onComplete) {
-        console.log(`VerificationModule ${id} completed with result:`, { verified: allVerified });
+        console.log(`VerificationModule ${id} completed with automatic success`);
         onComplete({
-          verified: allVerified,
+          verified: true,
           fields: verificationFields.map(f => ({
             id: f.id,
             value: f.value,
-            verified: f.expectedValue ? f.value === f.expectedValue : true
+            verified: true
           }))
         });
         
         // If verification was successful and this is inline, trigger flow continuation
-        if (allVerified && isInlineDisplay) {
+        if (isInlineDisplay) {
           console.log("Verification successful, continuing flow...");
           // Dispatch an event to continue the flow
           const event = new CustomEvent('verification-successful', {
@@ -136,8 +157,9 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
               <div className="flex justify-between">
                 <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
                 {field.verified !== undefined && (
-                  <Badge variant={field.verified ? "default" : "destructive"} className="text-xs py-0 h-5">
-                    {field.verified ? "Verified" : "Failed"}
+                  <Badge variant="default" className="text-xs py-0 h-5">
+                    <CheckCircle size={12} className="mr-1" />
+                    Verified
                   </Badge>
                 )}
               </div>
@@ -146,8 +168,8 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
                 type={field.type}
                 value={field.value || ''}
                 onChange={(e) => handleInputChange(field.id, e.target.value)}
-                className={`${field.verified === false ? "border-red-300" : ""} text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
-                readOnly={isInlineDisplay} // Make fields readonly for inline display
+                className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
+                readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
               />
             </div>
           ))}
