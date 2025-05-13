@@ -1,4 +1,3 @@
-
 // Primary transcript hook - composes all other hooks for managing the transcript
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
@@ -22,7 +21,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const [currentState, setCurrentState] = useState<string>('');
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   const { addNotification } = useNotifications();
-  const { toast } = useToast();
+  const toastAPI = useToast();
   
   // Initialize refs
   const nachbearbeitungSummaryRef = useRef<HTMLDialogElement>(null);
@@ -89,7 +88,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     callState,
     setHasInitializedConversation,
     showNachbearbeitungSummary,
-    toast
+    toast: toastAPI,
   });
   
   const responseHandler = useResponseHandler({
