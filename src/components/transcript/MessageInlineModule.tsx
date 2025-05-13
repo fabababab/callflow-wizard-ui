@@ -23,13 +23,13 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   const getModuleIcon = () => {
     switch(moduleConfig.type) {
       case ModuleType.VERIFICATION:
-        return <Shield className="h-4 w-4" />;
+        return <Shield className="h-4 w-4 text-amber-600" />;
       case ModuleType.INFORMATION:
-        return <Info className="h-4 w-4" />;
+        return <Info className="h-4 w-4 text-amber-600" />;
       case ModuleType.CONTRACT:
-        return <FileText className="h-4 w-4" />;
+        return <FileText className="h-4 w-4 text-amber-600" />;
       default:
-        return <Info className="h-4 w-4" />;
+        return <Info className="h-4 w-4 text-amber-600" />;
     }
   };
   
@@ -122,29 +122,18 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     onModuleComplete(result);
   };
 
-  // Module header color based on type  
+  // Module header color based on type - make everything amber/yellow
   const getHeaderClass = () => {
-    switch(moduleConfig.type) {
-      case ModuleType.VERIFICATION:
-        return "bg-blue-50 border-blue-200";
-      case ModuleType.INFORMATION:
-        return "bg-indigo-50 border-indigo-200";
-      case ModuleType.CONTRACT:
-        return "bg-purple-50 border-purple-200";
-      case ModuleType.NACHBEARBEITUNG:
-        return "bg-amber-50 border-amber-200";
-      default:
-        return "bg-gray-50 border-gray-200";
-    }
+    return "bg-amber-50 border-amber-200";
   };
   
   return (
     <div className="ml-auto mt-2 w-full max-w-[85%] transition-all duration-300">
-      <div className={`rounded-lg overflow-hidden border ${getHeaderClass()}`}>
-        <div className="p-2 border-b border-inherit flex items-center justify-between">
+      <div className={`rounded-lg overflow-hidden border border-amber-200 shadow-sm ${getHeaderClass()}`}>
+        <div className="p-2 border-b border-amber-200 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             {getModuleIcon()}
-            <span className="font-medium text-sm">{moduleConfig.title}</span>
+            <span className="font-medium text-sm text-amber-700">{moduleConfig.title}</span>
           </div>
           {completed && (
             <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
@@ -154,7 +143,13 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
         </div>
         
         <InlineModuleDisplay 
-          moduleConfig={moduleConfig}
+          moduleConfig={{
+            ...moduleConfig,
+            data: {
+              ...moduleConfig.data,
+              isInline: true // Ensure inline display is enabled
+            }
+          }}
           onComplete={handleModuleComplete}
           key={moduleConfig.id} // Add a stable key to prevent unnecessary re-renders
         />

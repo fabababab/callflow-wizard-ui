@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { loadStateMachine, StateMachine } from '@/utils/stateMachineLoader';
 import { SensitiveField } from '@/data/scenarioData';
+import { useToast } from '@/hooks/use-toast';
 
 // Interface to track selected state details
 export interface SelectedStateDetails {
@@ -18,6 +19,7 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
   const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [selectedState, setSelectedState] = useState<SelectedStateDetails | null>(null);
+  const { toast } = useToast();
 
   // Handle view mode toggle
   const handleViewModeToggle = (mode: "json" | "visualization") => {
@@ -40,6 +42,33 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
       });
     }
   };
+  
+  // Handle jumping to a specific state
+  const handleJumpToState = useCallback((stateId: string) => {
+    if (!loadedStateMachine || !loadedStateMachine.states[stateId]) {
+      toast({
+        title: "State not found",
+        description: `Could not find state: ${stateId}`,
+        duration: 3000
+      });
+      return;
+    }
+    
+    // Trigger a custom event that the state machine can listen to
+    const event = new CustomEvent('jump-to-state', {
+      detail: { stateId }
+    });
+    window.dispatchEvent(event);
+    
+    // Close the dialog
+    setJsonDialogOpen(false);
+    
+    toast({
+      title: "Navigating to State",
+      description: `Loaded state: ${stateId}`,
+      duration: 2000
+    });
+  }, [loadedStateMachine, toast]);
 
   // Load state machine when changing scenarios
   useEffect(() => {
@@ -83,6 +112,7 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
     loadedStateMachine,
     selectedState,
     handleStateSelection,
-    handleViewJson
+    handleViewJson,
+    handleJumpToState
   };
 }

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -73,7 +72,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   };
   
   return (
-    <div className="flex flex-col h-full">
+    <div className="h-full flex flex-col bg-white relative">
       {/* Header with call control */}
       <TranscriptHeader 
         activeScenario={activeScenario}
@@ -88,45 +87,45 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         resetConversation={transcript.resetConversation}
       />
       
-      {/* Main content area with messages */}
-      <div className="flex-grow overflow-auto relative">
-        <ScrollArea className="h-full p-4">
-          {/* Chat messages */}
-          <ChatMessages
-            messages={transcript.messages}
-            onSelectResponse={transcript.handleSelectResponse}
-            onVerifySystemCheck={transcript.handleVerifySystemCheck}
-            onValidateSensitiveData={transcript.handleValidateSensitiveData}
-            messagesEndRef={transcript.messagesEndRef}
-            onModuleComplete={handleInlineModuleComplete}
-          />
-          
-          {/* Active module display */}
-          <ModuleDisplay 
-            activeModule={transcript.activeModule}
-            currentState={transcript.currentState}
-            stateData={transcript.stateData}
-            onModuleComplete={handleModuleComplete}
-            completeModule={transcript.completeModule}
-          />
-        </ScrollArea>
+      {/* Transcript Area */}
+      <div 
+        className="flex-1 overflow-y-auto p-4 bg-gray-50/50"
+        ref={transcript.messagesEndRef}
+      >
+        {/* Chat messages */}
+        <ChatMessages
+          messages={transcript.messages}
+          onSelectResponse={transcript.handleSelectResponse}
+          onVerifySystemCheck={transcript.handleVerifySystemCheck}
+          onValidateSensitiveData={transcript.handleValidateSensitiveData}
+          messagesEndRef={transcript.messagesEndRef}
+          onModuleComplete={handleInlineModuleComplete}
+        />
+        
+        {/* Active module display */}
+        <ModuleDisplay 
+          activeModule={transcript.activeModule}
+          currentState={transcript.currentState}
+          stateData={transcript.stateData}
+          onModuleComplete={handleModuleComplete}
+          completeModule={transcript.completeModule}
+        />
       </div>
       
-      {/* JSON visualization dialog */}
-      {jsonVisualization && (
-        <JsonVisualizationDialog 
-          open={jsonVisualization.jsonDialogOpen}
-          onOpenChange={jsonVisualization.setJsonDialogOpen}
-          dialogViewMode={jsonVisualization.dialogViewMode}
-          handleViewModeToggle={jsonVisualization.handleViewModeToggle}
-          jsonContent={jsonVisualization.jsonContent}
-          loadedStateMachine={jsonVisualization.loadedStateMachine}
-          currentState={transcript.currentState}
-          activeScenario={activeScenario}
-          selectedState={jsonVisualization.selectedState}
-          onStateClick={jsonVisualization.handleStateSelection}
-        />
-      )}
+      {/* JSON Visualization Dialog with Jump to State functionality */}
+      <JsonVisualizationDialog
+        open={jsonVisualization.jsonDialogOpen}
+        onOpenChange={jsonVisualization.setJsonDialogOpen}
+        dialogViewMode={jsonVisualization.dialogViewMode}
+        handleViewModeToggle={jsonVisualization.handleViewModeToggle}
+        jsonContent={jsonVisualization.jsonContent}
+        loadedStateMachine={jsonVisualization.loadedStateMachine}
+        currentState={transcript.currentState || ""}
+        activeScenario={activeScenario}
+        selectedState={jsonVisualization.selectedState}
+        onStateClick={jsonVisualization.handleStateSelection}
+        onJumpToState={jsonVisualization.handleJumpToState}
+      />
     </div>
   );
 }

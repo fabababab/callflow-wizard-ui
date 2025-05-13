@@ -1,9 +1,8 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { loadStateMachine, getInitialState, getNextState, getStateData, StateMachine, StateMachineState } from '@/utils/stateMachineLoader';
 
-export function useStateMachine(scenario: ScenarioType) {
+export function useStateMachine(scenarioType: ScenarioType) {
   const [stateMachine, setStateMachine] = useState<StateMachine | null>(null);
   const [currentState, setCurrentState] = useState<string>('');
   const [stateData, setStateData] = useState<StateMachineState | null>(null);
@@ -14,7 +13,7 @@ export function useStateMachine(scenario: ScenarioType) {
   // Load the state machine when scenario changes
   useEffect(() => {
     async function fetchStateMachine() {
-      if (!scenario) {
+      if (!scenarioType) {
         setError("No scenario specified");
         setIsLoading(false);
         return;
@@ -24,12 +23,12 @@ export function useStateMachine(scenario: ScenarioType) {
       setError(null);
       
       try {
-        console.log(`Loading state machine for scenario: ${scenario}`);
-        const machine = await loadStateMachine(scenario);
+        console.log(`Loading state machine for scenario: ${scenarioType}`);
+        const machine = await loadStateMachine(scenarioType);
         
         if (!machine) {
-          console.error(`Failed to load state machine for scenario: ${scenario}`);
-          setError(`Failed to load state machine for scenario: ${scenario}`);
+          console.error(`Failed to load state machine for scenario: ${scenarioType}`);
+          setError(`Failed to load state machine for scenario: ${scenarioType}`);
           setIsLoading(false);
           return;
         }
@@ -62,7 +61,7 @@ export function useStateMachine(scenario: ScenarioType) {
     }
     
     fetchStateMachine();
-  }, [scenario]);
+  }, [scenarioType]);
   
   // Process user selection to update state
   const processSelection = useCallback((selection: string): boolean => {
@@ -148,6 +147,37 @@ export function useStateMachine(scenario: ScenarioType) {
     setLastStateChange(new Date());
     
     console.log(`State machine reset to initial state: ${initialState}`);
+  }, [stateMachine]);
+  
+  // Add event listener for jump-to-state events
+  useEffect(() => {
+    const handleJumpToState = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && customEvent.detail.stateId) {
+        const targetState = customEvent.detail.stateId;
+        console.log(`Jumping to state: ${targetState}`);
+        
+        // Only proceed if the state machine and specified state exists
+        if (stateMachine && stateMachine.states[targetState]) {
+          // Update the current state directly
+          setCurrentState(targetState);
+          
+          // Get the state data for the new state
+          const newStateData = stateMachine.states[targetState];
+          setStateData(newStateData);
+          
+          // Trigger state change event (needed to update UI and process the new state)
+          const now = new Date();
+          setLastStateChange(now);
+        }
+      }
+    };
+    
+    window.addEventListener('jump-to-state', handleJumpToState);
+    
+    return () => {
+      window.removeEventListener('jump-to-state', handleJumpToState);
+    };
   }, [stateMachine]);
   
   return {

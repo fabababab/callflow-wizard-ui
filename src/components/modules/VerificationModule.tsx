@@ -80,16 +80,6 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     // Always succeed
     setVerificationStatus('success');
     
-    // Toast notification commented out for now - will be re-integrated later
-    // if (!hasShownToastRef.current) {
-    //   toast({
-    //     title: "Verification Successful",
-    //     description: "Customer identity has been verified",
-    //     duration: 2000
-    //   });
-    //   hasShownToastRef.current = true;
-    // }
-    
     // Add a slight delay to show the success state before completing
     completeTimeoutRef.current = setTimeout(() => {
       if (onComplete && !hasDispatchedEventRef.current) {

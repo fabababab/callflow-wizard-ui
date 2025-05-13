@@ -17,6 +17,7 @@ interface StateVisualizationProps {
   onStateClick: (state: string) => void;
   selectedStateDetails: SelectedStateDetails | null;
   onSensitiveFieldClick: (field: SensitiveField) => void;
+  onJumpToState?: (stateId: string) => void;
 }
 
 const StateVisualization: React.FC<StateVisualizationProps> = ({
@@ -24,7 +25,8 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
   currentState,
   onStateClick,
   selectedStateDetails,
-  onSensitiveFieldClick
+  onSensitiveFieldClick,
+  onJumpToState
 }) => {
   return (
     <div className="bg-white rounded-md flex flex-col md:flex-row">
@@ -42,6 +44,7 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
         <StateDetailsPanel 
           selectedStateDetails={selectedStateDetails}
           onSensitiveFieldClick={onSensitiveFieldClick}
+          onJumpToState={onJumpToState}
         />
       </div>
     </div>

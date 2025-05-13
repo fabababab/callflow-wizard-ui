@@ -1,190 +1,246 @@
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Info, ChevronDown, ChevronUp, Link, Calculator, FileText, Edit } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Info, ArrowRight, Download, BookOpen, List, FileText } from 'lucide-react';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { useToast } from '@/hooks/use-toast';
 
-interface InfoSection {
-  title: string;
-  items: { label: string; value: string }[];
-}
-
-const InformationModule: React.FC<ModuleProps> = ({ 
+const InformationModule: React.FC<ModuleProps> = memo(({ 
   id, 
   title, 
   data, 
   onClose, 
   onComplete 
 }) => {
+  const [expanded, setExpanded] = useState(false);
   const isInlineDisplay = data?.isInline === true;
-  const message = data?.message || '';
-  const sections = data?.sections || [];
-  const note = data?.note || '';
-  const [calculatorOpen, setCalculatorOpen] = useState(false);
+  const { toast } = useToast();
   
-  const handleAcknowledge = () => {
-    if (onComplete) {
-      onComplete({
-        acknowledged: true,
-        viewedSections: sections.map((section: InfoSection) => section.title)
-      });
+  // Handle module completion
+  const handleComplete = () => {
+    console.log(`InformationModule ${id} completed`);
+    onComplete({ 
+      acknowledged: true,
+      timestamp: new Date().toISOString()
+    });
+    
+    toast({
+      title: "Information Reviewed",
+      description: "You've successfully reviewed the information",
+      duration: 2000
+    });
+  };
+  
+  // Get the type of information being displayed
+  const infoType = data?.infoType || 'general';
+  
+  // Determine which icon to show based on infoType
+  const getInfoIcon = () => {
+    switch(infoType) {
+      case 'document':
+        return <FileText className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-amber-500`} />;
+      case 'overview':
+        return <List className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-amber-500`} />;
+      case 'policy':
+        return <BookOpen className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-amber-500`} />;
+      default:
+        return <Info className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-amber-500`} />;
     }
-    if (onClose) onClose();
   };
   
-  const handleCalculator = () => {
-    setCalculatorOpen(!calculatorOpen);
-    // Dispatch an event so other components can react to this action
-    const event = new CustomEvent('calculator-action', {
-      detail: { opened: !calculatorOpen, moduleId: id }
-    });
-    window.dispatchEvent(event);
+  // Generate content based on infoType
+  const getInfoContent = () => {
+    switch(infoType) {
+      case 'document':
+        return (
+          <div className="space-y-3">
+            <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-md">
+              <h3 className="text-sm font-medium mb-2 text-amber-800">Versicherungspolice - Document Structure</h3>
+              <ul className="text-xs space-y-2 text-amber-700">
+                <li className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Policy Details</strong>: Basic information about your insurance policy including policy number and effective dates
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Coverage Summary</strong>: Overview of what is covered under your policy
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Premium Information</strong>: Details about your premium amount and payment schedule
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Terms & Conditions</strong>: Important policy terms and conditions
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div className="flex justify-end">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="text-xs flex items-center gap-1"
+                onClick={() => toast({
+                  title: "Document Downloaded",
+                  description: "The document was downloaded successfully",
+                  duration: 2000
+                })}
+              >
+                <Download className="h-3 w-3" />
+                Download Document
+              </Button>
+            </div>
+          </div>
+        );
+      case 'overview':
+        return (
+          <div className="space-y-3">
+            <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-md">
+              <h3 className="text-sm font-medium mb-2 text-amber-800">Insurance Package Overview</h3>
+              <ul className="text-xs space-y-2 text-amber-700">
+                <li className="flex items-start gap-2">
+                  <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Basic Coverage</strong>: Health insurance with standard coverage for medical visits and emergencies
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Additional Benefits</strong>: Coverage for physiotherapy, dental, and vision care
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Premium</strong>: €149,50 per month with annual adjustment based on usage
+                  </span>
+                </li>
+              </ul>
+            </div>
+            {expanded && (
+              <div className="p-3 bg-amber-50/30 border border-amber-100 rounded-md mt-2">
+                <h4 className="text-sm font-medium mb-1 text-amber-800">Detailed Benefits</h4>
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-amber-100/50">
+                      <th className="p-1 text-left border border-amber-200">Benefit</th>
+                      <th className="p-1 text-left border border-amber-200">Coverage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="p-1 border border-amber-200">Doctor Visits</td>
+                      <td className="p-1 border border-amber-200">100%</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1 border border-amber-200">Hospital Stays</td>
+                      <td className="p-1 border border-amber-200">100%</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1 border border-amber-200">Prescription Drugs</td>
+                      <td className="p-1 border border-amber-200">80%</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1 border border-amber-200">Dental Care</td>
+                      <td className="p-1 border border-amber-200">70% up to €1000/year</td>
+                    </tr>
+                    <tr>
+                      <td className="p-1 border border-amber-200">Vision Care</td>
+                      <td className="p-1 border border-amber-200">€200 every 2 years</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="text-xs"
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? 'Show Less' : 'Show More Details'}
+              </Button>
+              <Button 
+                size="sm" 
+                variant="secondary"
+                className="text-xs"
+                onClick={() => handleComplete()}
+              >
+                Acknowledge
+              </Button>
+            </div>
+          </div>
+        );
+      default:
+        return (
+          <div className="space-y-3">
+            <p className="text-sm text-amber-700">
+              {data?.content || "Please review this important information about your insurance coverage."}
+            </p>
+            <Button 
+              size="sm" 
+              variant="secondary"
+              className="text-xs"
+              onClick={() => handleComplete()}
+            >
+              Acknowledge
+            </Button>
+          </div>
+        );
+    }
   };
   
-  const handleEdit = () => {
-    // Dispatch an edit event for this information
-    const event = new CustomEvent('edit-information', {
-      detail: { moduleId: id, data }
-    });
-    window.dispatchEvent(event);
-  };
-  
-  const handleViewContract = () => {
-    // Dispatch an event to show contract details
-    const event = new CustomEvent('view-contract', {
-      detail: { moduleId: id, data }
-    });
-    window.dispatchEvent(event);
-  };
-  
+  // Card styling with yellowish theme
   const cardClassName = isInlineDisplay
-    ? "w-full border-l-4 border-indigo-300 border-r border-t border-b border-indigo-200 shadow-sm rounded-md bg-indigo-50/60"
-    : "w-full max-w-md border border-indigo-200 shadow-md";
-
+    ? "w-full ml-auto border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60 transition-all duration-300"
+    : "w-full max-w-md border border-amber-200 shadow-md transition-all duration-300";
+  
   return (
-    <Card className={cardClassName}>
-      <CardHeader className={`${isInlineDisplay ? "bg-transparent py-2 pb-0" : "bg-indigo-50 border-b border-indigo-100"}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Info className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-indigo-600`} />
-            <CardTitle className={`${isInlineDisplay ? "text-indigo-700 text-sm" : "text-indigo-900"}`}>
-              {title || 'Information'}
-            </CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-7 w-7 p-0" 
-              onClick={handleCalculator} 
-              title="Open Calculator"
-            >
-              <Calculator className="h-4 w-4 text-indigo-600" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-7 w-7 p-0" 
-              onClick={handleEdit} 
-              title="Edit Information"
-            >
-              <Edit className="h-4 w-4 text-indigo-600" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-7 w-7 p-0" 
-              onClick={handleViewContract} 
-              title="View Contract"
-            >
-              <FileText className="h-4 w-4 text-indigo-600" />
-            </Button>
-          </div>
+    <Card className={cardClassName} data-testid={`information-module-${id}`}>
+      <CardHeader className={`${isInlineDisplay ? "bg-transparent py-2 pb-0" : "bg-amber-50 border-b border-amber-100 py-3"}`}>
+        <div className="flex items-center gap-2">
+          {getInfoIcon()}
+          <CardTitle className={`${isInlineDisplay ? "text-amber-700 text-sm" : "text-amber-900 text-base"}`}>
+            {title || 'Important Information'}
+          </CardTitle>
         </div>
-        {message && (
-          <CardDescription className={`text-xs ${isInlineDisplay ? "text-indigo-600/70" : ""}`}>
-            {message}
-          </CardDescription>
-        )}
+        <CardDescription className={`text-xs ${isInlineDisplay ? "text-amber-600/70" : ""}`}>
+          {data?.description || "Please review this information carefully"}
+        </CardDescription>
       </CardHeader>
       
-      <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-6"} space-y-4`}>
-        {/* Calculator section that appears when calculator button is clicked */}
-        {calculatorOpen && (
-          <div className="border border-indigo-200 rounded-md p-3 bg-white mb-4">
-            <h4 className="font-medium text-sm text-indigo-800 mb-2">Insurance Calculator</h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">Base Premium</label>
-                <input type="number" className="w-full p-1 border rounded text-sm" defaultValue="100" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-gray-700">Coverage Level</label>
-                <select className="w-full p-1 border rounded text-sm">
-                  <option value="basic">Basic</option>
-                  <option value="standard">Standard</option>
-                  <option value="premium">Premium</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-3 text-right">
-              <Button size="sm" className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs">Calculate</Button>
-            </div>
-          </div>
-        )}
-        
-        {sections.length === 0 ? (
-          <p className="text-center text-gray-500 py-4">Keine Informationen verfügbar</p>
-        ) : (
-          sections.map((section: InfoSection, index: number) => (
-            <div key={index} className="space-y-2">
-              <h3 className={`font-medium ${isInlineDisplay ? "text-sm text-indigo-800" : "text-base"}`}>
-                {section.title}
-              </h3>
-              <div className="space-y-1">
-                {section.items.map((item, itemIndex) => (
-                  <div 
-                    key={itemIndex} 
-                    className="grid grid-cols-2 gap-2 text-sm border-b border-indigo-100/50 pb-1"
-                  >
-                    <span className="font-medium text-gray-700">{item.label}</span>
-                    <span className="text-gray-600">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
-        
-        {note && (
-          <div className="mt-2 bg-blue-50 border border-blue-100 rounded-md p-2">
-            <div className="flex items-start gap-2">
-              <Info className="h-4 w-4 text-blue-600 mt-0.5" />
-              <p className="text-xs text-blue-700">{note}</p>
-            </div>
-          </div>
-        )}
+      <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-4"}`}>
+        {getInfoContent()}
       </CardContent>
       
-      <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-indigo-100/50" : "bg-gray-50 border-t"}`}>
-        <Button 
-          variant="outline" 
-          onClick={onClose}
-          className={isInlineDisplay ? "text-xs" : ""}
-        >
-          Schließen
-        </Button>
-        <Button 
-          onClick={handleAcknowledge}
-          className={isInlineDisplay ? "text-xs bg-indigo-500 hover:bg-indigo-600 text-white" : ""}
-        >
-          Verstanden
-        </Button>
-      </CardFooter>
+      {!isInlineDisplay && (
+        <CardFooter className="bg-gray-50 border-t py-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={onClose}
+            className="text-xs"
+          >
+            Close
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
-};
+});
+
+InformationModule.displayName = 'InformationModule';
 
 export default InformationModule;

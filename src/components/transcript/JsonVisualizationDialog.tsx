@@ -24,6 +24,7 @@ interface JsonVisualizationDialogProps {
   activeScenario: ScenarioType;
   selectedState: SelectedStateDetails | null;
   onStateClick: (state: string) => void;
+  onJumpToState?: (stateId: string) => void;
 }
 
 const JsonVisualizationDialog: React.FC<JsonVisualizationDialogProps> = ({
@@ -37,6 +38,7 @@ const JsonVisualizationDialog: React.FC<JsonVisualizationDialogProps> = ({
   activeScenario,
   selectedState,
   onStateClick,
+  onJumpToState
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,6 +72,7 @@ const JsonVisualizationDialog: React.FC<JsonVisualizationDialogProps> = ({
               onStateClick={onStateClick}
               selectedStateDetails={selectedState}
               onSensitiveFieldClick={() => {}} // This will be handled at a higher level
+              onJumpToState={onJumpToState}
             />
           )}
         </div>
