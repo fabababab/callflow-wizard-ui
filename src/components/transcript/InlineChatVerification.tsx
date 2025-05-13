@@ -23,6 +23,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   const isProcessingRef = useRef(false);
   const { toast } = useToast();
   const hasShownToastRef = useRef(false);
+  const verificationCompleteRef = useRef(false);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -33,7 +34,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   
   // Auto-verify on mount
   useEffect(() => {
-    if (!isVerified && !isVerifying && !isProcessingRef.current) {
+    if (!isVerified && !isVerifying && !isProcessingRef.current && !verificationCompleteRef.current) {
       // Add a slight delay to make the verification process visible
       const timeout = setTimeout(() => {
         handleVerifyClick();
@@ -52,8 +53,8 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   }, []);
   
   const handleVerifyClick = () => {
-    // Prevent multiple clicks
-    if (isProcessingRef.current || isValidating) return;
+    // Prevent multiple clicks or processing if verification is already complete
+    if (isProcessingRef.current || isValidating || verificationCompleteRef.current) return;
     
     isProcessingRef.current = true;
     console.log("Verify button clicked or auto-triggered");
@@ -64,12 +65,15 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       setIsValidating(false);
       console.log("Manual verification complete, calling onVerify(true)");
       
+      // Mark verification as complete
+      verificationCompleteRef.current = true;
+      
       // Always succeed with verification
       onVerify(true, defaultValues);
       
       // Show success toast only once
       if (!hasShownToastRef.current) {
-        toast({
+        toast.toast({
           title: "Identity Verified",
           description: "Customer identity has been automatically verified",
           duration: 2000
@@ -78,9 +82,15 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       }
       
       // Dispatch a custom event to trigger state transition after verification
+      // Include a unique timestamp as part of the event data
+      const eventId = `inline-verification-${Date.now()}`;
       const event = new CustomEvent('verification-complete', {
-        detail: { success: true }
+        detail: { 
+          success: true,
+          eventId: eventId
+        }
       });
+      console.log("Dispatching verification-complete event with ID:", eventId);
       window.dispatchEvent(event);
       
       // Reset processing state after a delay
@@ -166,7 +176,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
               size="sm"
               className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7 px-3 py-0"
               onClick={handleVerifyClick}
-              disabled={isProcessingRef.current || isValidating}
+              disabled={isProcessingRef.current || isValidating || verificationCompleteRef.current}
             >
               Verify
             </Button>

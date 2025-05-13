@@ -1,3 +1,4 @@
+
 // Hook for handling user response selections
 import { useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -131,31 +132,53 @@ export function useResponseHandler({
     toast
   ]);
 
-  // Track which verification events we've already processed
+  // Track which verification events we've already processed with more robust tracking
   const processedVerificationEventsRef = useRef<Set<string>>(new Set());
+  
+  // Track the last time we processed a verification event
+  const lastVerificationTimeRef = useRef<number>(0);
+  const VERIFICATION_COOLDOWN_MS = 3000; // 3 seconds cooldown between verification events
   
   // Add event listeners for verification completion events
   useEffect(() => {
     const handleVerificationComplete = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const eventId = `${customEvent.type}-${customEvent.detail?.moduleId || 'inline'}-${Date.now()}`;
+      const now = Date.now();
       
-      if (processedVerificationEventsRef.current.has(eventId)) {
-        console.log("Skipping duplicate verification event:", eventId);
+      // Create a unique event identifier with more details
+      const moduleId = customEvent.detail?.moduleId || 'inline';
+      const eventId = `${customEvent.type}-${moduleId}-${Math.floor(now / 1000)}`; // Round to seconds for deduping
+      
+      // Check if we've already processed this event or if we're in cooldown period
+      if (processedVerificationEventsRef.current.has(eventId) || 
+          (now - lastVerificationTimeRef.current) < VERIFICATION_COOLDOWN_MS) {
+        console.log("Skipping duplicate/throttled verification event:", eventId);
         return;
       }
       
-      console.log("Verification complete event detected:", customEvent.detail);
-      processedVerificationEventsRef.current.add(eventId);
+      console.log("Verification complete event detected:", customEvent.detail, "with ID:", eventId);
       
+      // Mark this event as processed and update the last verification time
+      processedVerificationEventsRef.current.add(eventId);
+      lastVerificationTimeRef.current = now;
+      
+      // Add a small delay for UI updates
       setTimeout(() => {
+        // Add verified message - but only if we haven't shown it already
         messageHandling.addSystemMessage("Customer identity has been successfully verified.");
+        
+        // Get available responses for the current state
         const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+        
+        // Only trigger auto-response once after verification
         if (responseOptions.length > 0) {
-          console.log("Auto-selecting response after verification:", responseOptions[0]);
+          console.log("Auto-selecting first response after verification:", responseOptions[0]);
+          
+          // Single delayed auto-selection to ensure state machine has time to update
           setTimeout(() => {
             if (typeof handleSelectResponse === 'function') {
-                handleSelectResponse(responseOptions[0]);
+              console.log("Executing auto-selection after verification");
+              handleSelectResponse(responseOptions[0]);
             }
           }, 1500);
         }

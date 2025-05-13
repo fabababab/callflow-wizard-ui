@@ -40,11 +40,13 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const processingRef = useRef(false);
   const hasShownToastRef = useRef(false);
+  const verificationCompleteRef = useRef(false);
+  const moduleInstanceId = useRef<string>(`verification-${id}-${Date.now()}`).current;
   const { toast } = useToast();
   
   // Auto-verify on mount after a small delay
   useEffect(() => {
-    if (!processingRef.current) {
+    if (!processingRef.current && !verificationCompleteRef.current) {
       const timeout = setTimeout(() => {
         handleVerify();
       }, 800);
@@ -71,23 +73,27 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   };
   
   const handleVerify = () => {
-    if (processingRef.current) return;
+    // Prevent multiple verifications
+    if (processingRef.current || verificationCompleteRef.current) return;
     processingRef.current = true;
     
-    console.log("Processing verification with auto-success");
+    console.log(`Processing verification for module ${id} with instance ID ${moduleInstanceId}`);
     
     // Always succeed
     setVerificationStatus('success');
     
     // Show toast notification once
     if (!hasShownToastRef.current) {
-      toast({
+      toast.toast({
         title: "Verification Successful",
         description: "Customer identity has been verified",
         duration: 2000
       });
       hasShownToastRef.current = true;
     }
+    
+    // Mark verification as complete to prevent multiple calls
+    verificationCompleteRef.current = true;
     
     // Add a slight delay to show the success state before completing
     completeTimeoutRef.current = setTimeout(() => {
@@ -102,20 +108,36 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
           }))
         });
         
+        // Use a unique identifier for this verification event
+        const eventId = `module-${id}-${moduleInstanceId}-${Date.now()}`;
+        
         // Dispatch a custom event to trigger state transition after verification
-        const event = new CustomEvent('verification-complete', {
-          detail: { success: true, moduleId: id }
+        const completeEvent = new CustomEvent('verification-complete', {
+          detail: { 
+            success: true, 
+            moduleId: id,
+            instanceId: moduleInstanceId,
+            eventId: eventId
+          }
         });
-        window.dispatchEvent(event);
+        console.log(`Dispatching verification-complete event with ID: ${eventId}`);
+        window.dispatchEvent(completeEvent);
         
         // If verification was successful and this is inline, trigger flow continuation
+        // but only dispatch one event to continue the flow
         if (isInlineDisplay) {
-          console.log("Verification successful, continuing flow...");
+          console.log(`Verification module ${id} successful, continuing flow...`);
+          
           // Dispatch an event to continue the flow
-          const event = new CustomEvent('verification-successful', {
-            detail: { moduleId: id }
+          const successEvent = new CustomEvent('verification-successful', {
+            detail: { 
+              moduleId: id,
+              instanceId: moduleInstanceId,
+              eventId: eventId 
+            }
           });
-          window.dispatchEvent(event);
+          console.log(`Dispatching verification-successful event with ID: ${eventId}`);
+          setTimeout(() => window.dispatchEvent(successEvent), 100);
         }
         
         // Reset processing state after a longer delay to prevent rapid re-renders
@@ -207,7 +229,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
             size="sm"
             onClick={handleVerify}
             className={`text-xs ${isInlineDisplay ? "bg-amber-500 hover:bg-amber-600 text-white ml-auto" : ""}`}
-            disabled={processingRef.current}
+            disabled={processingRef.current || verificationCompleteRef.current}
           >
             Verify Identity
           </Button>
