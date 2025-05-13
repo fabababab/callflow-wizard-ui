@@ -6,6 +6,11 @@ import StateDetailsPanel from './StateDetailsPanel';
 import { SensitiveField } from '@/data/scenarioData';
 import { Button } from '@/components/ui/button';
 import { Minus, Plus, RotateCw } from 'lucide-react';
+import { 
+  ResizablePanelGroup, 
+  ResizablePanel, 
+  ResizableHandle 
+} from '@/components/ui/resizable';
 
 interface SelectedStateDetails {
   id: string;
@@ -30,8 +35,8 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
   onSensitiveFieldClick,
   onJumpToState
 }) => {
-  // Default zoom level is now 400% (4x)
-  const [zoomLevel, setZoomLevel] = useState<number>(400);
+  // Default zoom level changed to 200% (2x)
+  const [zoomLevel, setZoomLevel] = useState<number>(200);
   const [centerOnCurrentState, setCenterOnCurrentState] = useState<boolean>(true);
   
   // Handle zoom in
@@ -50,7 +55,7 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
   
   // Reset zoom and centering
   const handleResetView = () => {
-    setZoomLevel(400); // Reset to default 400%
+    setZoomLevel(200); // Reset to default 200%
     setCenterOnCurrentState(true);
   };
   
@@ -66,67 +71,76 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
     (selectedStateDetails?.id || currentState) : null;
     
   return (
-    <div className="bg-white rounded-md flex flex-col md:flex-row h-full overflow-hidden">
-      {/* Left side: Decision Tree Visualization with zoom controls */}
-      <div className="md:w-3/5 p-4 border-r flex flex-col">
-        {/* Zoom controls */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleZoomOut}
-              disabled={zoomLevel <= 100}
-              className="h-8 w-8 p-0"
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium">{zoomLevel}%</span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleZoomIn}
-              disabled={zoomLevel >= 600}
-              className="h-8 w-8 p-0"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+    <div className="bg-white rounded-md flex flex-col h-full overflow-hidden">
+      <ResizablePanelGroup direction="horizontal" className="h-full">
+        {/* Left side: Decision Tree Visualization with zoom controls - now narrower */}
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="p-4 flex flex-col h-full">
+            {/* Zoom controls */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleZoomOut}
+                  disabled={zoomLevel <= 100}
+                  className="h-8 w-8 p-0"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium">{zoomLevel}%</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleZoomIn}
+                  disabled={zoomLevel >= 600}
+                  className="h-8 w-8 p-0"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetView}
+                className="h-8 flex items-center gap-1"
+              >
+                <RotateCw className="h-3 w-3" />
+                <span>Reset View</span>
+              </Button>
+            </div>
+            
+            {/* Decision Tree visualization with zoom and centering */}
+            <div className="flex-1 overflow-auto relative">
+              <DecisionTreeVisualizer 
+                stateMachine={loadedStateMachine} 
+                currentState={currentState} 
+                onStateClick={onStateClick}
+                zoomLevel={zoomLevel}
+                centerOnState={stateToCenter}
+                onCenter={() => setCenterOnCurrentState(false)}
+                isPanning={true}
+              />
+            </div>
           </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetView}
-            className="h-8 flex items-center gap-1"
-          >
-            <RotateCw className="h-3 w-3" />
-            <span>Reset View</span>
-          </Button>
-        </div>
+        </ResizablePanel>
         
-        {/* Decision Tree visualization with zoom and centering */}
-        <div className="flex-1 overflow-auto relative">
-          <DecisionTreeVisualizer 
-            stateMachine={loadedStateMachine} 
-            currentState={currentState} 
-            onStateClick={onStateClick}
-            zoomLevel={zoomLevel}
-            centerOnState={stateToCenter}
-            onCenter={() => setCenterOnCurrentState(false)}
-          />
-        </div>
-      </div>
-      
-      {/* Right side: State Details Panel with fixed height and scrolling */}
-      <div className="md:w-2/5 p-4 flex flex-col overflow-hidden">
-        <div className="overflow-auto h-full">
-          <StateDetailsPanel 
-            selectedStateDetails={selectedStateDetails}
-            onSensitiveFieldClick={onSensitiveFieldClick}
-            onJumpToState={onJumpToState}
-          />
-        </div>
-      </div>
+        <ResizableHandle withHandle />
+        
+        {/* Right side: State Details Panel with equal width */}
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="p-4 flex flex-col overflow-hidden h-full">
+            <div className="overflow-auto h-full">
+              <StateDetailsPanel 
+                selectedStateDetails={selectedStateDetails}
+                onSensitiveFieldClick={onSensitiveFieldClick}
+                onJumpToState={onJumpToState}
+              />
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
