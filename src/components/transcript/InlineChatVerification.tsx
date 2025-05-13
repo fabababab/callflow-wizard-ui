@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,15 @@ import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { SensitiveField } from '@/data/scenarioData';
 import { cn } from '@/lib/utils';
 
+// Add missing properties to SensitiveField if needed
+interface EnhancedSensitiveField extends SensitiveField {
+  label?: string;
+  placeholder?: string;
+}
+
 interface InlineChatVerificationProps {
   messageId: string;
-  sensitiveFields: SensitiveField[];
+  sensitiveFields: EnhancedSensitiveField[];
   onVerificationComplete: (messageId: string, result: { verified: boolean }) => void;
   onCancel: () => void;
   autoVerify?: boolean;
@@ -84,7 +91,7 @@ const InlineChatVerification = ({
   const handleVerificationSuccess = () => {
     console.log('Verification successful for message:', messageId);
     
-    // Replace toast call with notification
+    // Add notification
     addNotification({
       title: "Verification Successful",
       description: "Identity verification completed successfully",
@@ -101,7 +108,7 @@ const InlineChatVerification = ({
   const handleVerificationCancel = () => {
     console.log('Verification cancelled for message:', messageId);
     
-    // Replace toast call with notification
+    // Add notification
     addNotification({
       title: "Verification Cancelled",
       description: "Identity verification process was cancelled",
@@ -122,10 +129,10 @@ const InlineChatVerification = ({
       <CardContent className="space-y-4">
         {sensitiveFields.map((field) => (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.id}>{field.label}</Label>
+            <Label htmlFor={field.id}>{field.label || field.id}</Label>
             <Input
               id={field.id}
-              placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+              placeholder={field.placeholder || `Enter ${field.label || field.id.toLowerCase()}`}
               value={fieldValues[field.id] || ''}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               disabled={isVerifying || isVerified}

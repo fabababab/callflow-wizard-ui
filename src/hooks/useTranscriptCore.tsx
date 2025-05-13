@@ -59,17 +59,16 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     conversationState
   });
 
-  // Use state change processor
+  // Use state change processor - removed toast prop
   const stateChangeProcessor = useStateChangeProcessor({
     stateMachine,
     messageHandling,
     conversationState,
     transitionExtractor,
-    callState,
-    // Removed toast prop here
+    callState
   });
 
-  // Use conversation initializer
+  // Use conversation initializer - removed toast prop
   const conversationInitializer = useConversationInitializer({
     activeScenario,
     conversationState,
@@ -77,7 +76,6 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling,
     callState,
     setHasInitializedConversation: () => {}, // Will be replaced by useScenarioChangeEffect
-    // Removed toast prop here
     showNachbearbeitungSummary
   });
 

@@ -7,6 +7,11 @@ import { nanoid } from 'nanoid';
 import { ModuleConfig } from '@/types/modules';
 import { useNotifications } from '@/contexts/NotificationsContext';
 
+// Extend the Message type to include highlightSensitiveData
+interface ExtendedMessage extends Omit<Message, 'id' | 'timestamp'> {
+  highlightSensitiveData?: boolean;
+}
+
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastMessageUpdate, setLastMessageUpdate] = useState<Date>(new Date());
@@ -43,7 +48,7 @@ export function useMessageHandling() {
     return [];
   }, []);
   
-  const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
+  const addMessage = useCallback((message: ExtendedMessage) => {
     const newMessage: Message = {
       ...message,
       id: nanoid(),

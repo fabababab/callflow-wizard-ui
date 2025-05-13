@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,7 +83,7 @@ const VerificationModule = ({
     // Always succeed
     setVerificationStatus('success');
     
-    // Show toast notification once
+    // Show notification once
     if (!hasShownToastRef.current) {
       handleVerificationSuccess();
       hasShownToastRef.current = true;
@@ -220,7 +221,7 @@ const VerificationModule = ({
         </div>
       </CardContent>
       
-      <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-gray-50 border-t py-2"}`}>
+      <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-amber-50 border-t py-2"}`}>
         {!isInlineDisplay && (
           <Button 
             variant="outline" 

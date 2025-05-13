@@ -14,7 +14,6 @@ interface ConversationInitializerProps {
   messageHandling: any;
   callState: any;
   setHasInitializedConversation: (value: boolean) => void;
-  toast: ReturnType<typeof useToast>;
   showNachbearbeitungSummary: () => void;
 }
 
@@ -26,9 +25,10 @@ export function useConversationInitializer(props: ConversationInitializerProps) 
     messageHandling,
     callState,
     setHasInitializedConversation,
-    toast,
     showNachbearbeitungSummary
   } = props;
+  
+  const toast = useToast();
 
   // Use the smaller focused hooks
   const { handleAcceptCall } = useCallAcceptance({

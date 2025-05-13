@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type NotificationType = "info" | "success" | "warning" | "error";
+export type NotificationType = "info" | "success" | "warning" | "error" | "destructive";
 
 export interface Notification {
   id: string;
