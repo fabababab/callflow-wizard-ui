@@ -1,4 +1,3 @@
-
 import React, { useCallback, memo } from 'react';
 import type { MessageSender, Message as MessageInterface } from './MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
@@ -16,7 +15,7 @@ interface MessageProps {
   onValidateSensitiveData?: (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => void;
   onVerifySystemCheck?: (messageId: string) => void;
   isAgentMode?: boolean;
-  onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
+  onModuleComplete?: (messageId: string, moduleId: string, result: Record<string, unknown>) => void;
 }
 
 const Message: React.FC<MessageProps> = ({ 
@@ -34,7 +33,7 @@ const Message: React.FC<MessageProps> = ({
   const hasInlineModule = message.inlineModule !== undefined;
   
   // Handler for inline module completion - memoize to avoid unnecessary re-renders
-  const handleInlineModuleComplete = useCallback((result: any) => {
+  const handleInlineModuleComplete = useCallback((result: Record<string, unknown>) => {
     console.log(`Module completed for message ${message.id}`, result);
     if (onModuleComplete && message.inlineModule) {
       onModuleComplete(message.id, message.inlineModule.id, result);

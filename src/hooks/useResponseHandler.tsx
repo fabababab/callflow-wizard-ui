@@ -1,4 +1,3 @@
-
 // Hook for handling user response selections
 import { useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -126,12 +125,8 @@ export function useResponseHandler({
     }, 100);
     
   }, [
-    conversationState.awaitingUserResponse, 
-    conversationState.isInitialStateProcessed, 
-    messageHandling.addAgentMessage,
-    messageHandling.addSystemMessage, 
-    stateMachine.processSelection, 
-    stateMachine.currentState,
+    stateMachine,
+    messageHandling,
     conversationState,
     toast
   ]);
@@ -141,47 +136,40 @@ export function useResponseHandler({
   
   // Add event listeners for verification completion events
   useEffect(() => {
-    const handleVerificationComplete = (event: CustomEvent) => {
-      // Generate a unique ID for this verification event
-      const eventId = `${event.type}-${event.detail?.moduleId || 'inline'}-${Date.now()}`;
+    const handleVerificationComplete = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const eventId = `${customEvent.type}-${customEvent.detail?.moduleId || 'inline'}-${Date.now()}`;
       
-      // Skip if we've already processed this verification event
       if (processedVerificationEventsRef.current.has(eventId)) {
         console.log("Skipping duplicate verification event:", eventId);
         return;
       }
       
-      console.log("Verification complete event detected:", event.detail);
+      console.log("Verification complete event detected:", customEvent.detail);
       processedVerificationEventsRef.current.add(eventId);
       
-      // Add a short delay to ensure UI is updated
       setTimeout(() => {
-        // System message about verification
         messageHandling.addSystemMessage("Customer identity has been successfully verified.");
-        
-        // Get available responses for the current state
         const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
-        
-        // If there are response options, automatically pick the first one
         if (responseOptions.length > 0) {
           console.log("Auto-selecting response after verification:", responseOptions[0]);
-          
-          // Add a delay to make the flow feel more natural
           setTimeout(() => {
-            handleSelectResponse(responseOptions[0]);
+            if (typeof handleSelectResponse === 'function') {
+                handleSelectResponse(responseOptions[0]);
+            }
           }, 1500);
         }
       }, 500);
     };
     
     // Add event listener for verification complete
-    window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
-    window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
+    window.addEventListener('verification-complete', handleVerificationComplete);
+    window.addEventListener('verification-successful', handleVerificationComplete);
     
-    // Cleanup
+    // Clean up listener on unmount
     return () => {
-      window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
-      window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
+      window.removeEventListener('verification-complete', handleVerificationComplete);
+      window.removeEventListener('verification-successful', handleVerificationComplete);
     };
   }, [messageHandling, stateMachine.stateData, handleSelectResponse]);
 

@@ -1,4 +1,3 @@
-
 // Hook for processing state changes
 import { useCallback } from 'react';
 import { detectSensitiveData } from '@/data/scenarioData';
@@ -24,6 +23,12 @@ export function useStateChangeProcessor({
 }: StateChangeProcessorProps) {
 
   const processStateChange = useCallback(() => {
+    // Clear any existing timers first
+    if (conversationState.debounceTimerRef.current) {
+      clearTimeout(conversationState.debounceTimerRef.current);
+      conversationState.debounceTimerRef.current = null;
+    }
+
     // If not active or already processed, skip
     if (!callState.callActive || !stateMachine.stateData) {
       console.log('Skipping state change processing: call not active or no state data', {
@@ -32,26 +37,8 @@ export function useStateChangeProcessor({
       });
       return;
     }
-
-    // Prevent duplicate processing of the same state
-    if (conversationState.hasProcessedState(stateMachine.currentState)) {
-      console.log(`State ${stateMachine.currentState} already processed, skipping message updates`);
-      return;
-    }
     
-    console.log('===== PROCESSING STATE CHANGE =====');
-    console.log(`Processing state change for state: ${stateMachine.currentState}`);
-    console.log('State data:', stateMachine.stateData);
-    
-    // Clear any existing debounce timer
-    if (conversationState.debounceTimerRef.current) {
-      clearTimeout(conversationState.debounceTimerRef.current);
-    }
-    
-    // Log the current state transitions for debugging
-    transitionExtractor.logStateTransitions(stateMachine.currentState);
-    
-    // Do immediate processing for initial state to avoid delays
+    // Special handling for initial states
     if (stateMachine.currentState && 
         (stateMachine.currentState === 'start' || 
          stateMachine.currentState === 'initial' || 
@@ -60,15 +47,35 @@ export function useStateChangeProcessor({
       processStateChangeInternal();
       return;
     }
+
+    // Prevent duplicate processing of the same state - check before setting timeout
+    if (conversationState.hasProcessedState(stateMachine.currentState)) {
+      console.log(`State ${stateMachine.currentState} already processed, skipping message updates`);
+      return;
+    }
     
-    // Debounce the state processing to prevent rapid fire updates
+    console.log('===== QUEUING STATE CHANGE PROCESSING =====');
+    console.log(`Queueing state change processing for state: ${stateMachine.currentState}`);
+    console.log('State data to be processed:', stateMachine.stateData);
+    
+    // Set new timer
     conversationState.debounceTimerRef.current = window.setTimeout(() => {
       processStateChangeInternal();
     }, 300); // 300ms debounce
     
     function processStateChangeInternal() {
+      // Guard against processing already handled states (double check after timeout)
+      if (stateMachine.currentState && conversationState.hasProcessedState(stateMachine.currentState)) {
+        console.log(`State ${stateMachine.currentState} already processed after debounce, skipping`);
+        return;
+      }
+
+      console.log('===== PROCESSING STATE CHANGE (INTERNAL) =====');
       console.log('Debounce complete, actually processing state change:', stateMachine.currentState);
       console.log('State data for processing:', stateMachine.stateData);
+      
+      // Log the current state transitions for debugging
+      transitionExtractor.logStateTransitions(stateMachine.currentState);
       
       // When state changes, check for messages to display
       if (stateMachine.stateData.meta?.systemMessage) {
@@ -102,12 +109,14 @@ export function useStateChangeProcessor({
         }
         
         // If sensitive data was detected, show toast notification
-        if (sensitiveData && sensitiveData.length > 0) {
+        if (sensitiveData && sensitiveData.length > 0 && 
+            !conversationState.hasShownToastFor(stateMachine.currentState)) {
           toast.toast({
             title: "Sensitive Data Detected",
             description: "Please verify the detected information before proceeding.",
             duration: 3000
           });
+          conversationState.markToastShown(stateMachine.currentState);
         }
       }
       
@@ -150,15 +159,18 @@ export function useStateChangeProcessor({
       }
       
       // Mark this state as processed to prevent duplicate messages
-      conversationState.markStateAsProcessed(stateMachine.currentState);
+      if (stateMachine.currentState) {
+        conversationState.markStateAsProcessed(stateMachine.currentState);
+      }
       conversationState.setLastTranscriptUpdate(new Date());
       
       // Reset user action flag
       conversationState.setIsUserAction(false);
       
-      console.log('===== STATE CHANGE PROCESSING COMPLETE =====');
+      console.log('===== STATE CHANGE PROCESSING COMPLETE (INTERNAL) =====');
     }
   }, [
+    stateMachine.stateMachine, // Added dependency
     stateMachine.stateData, 
     stateMachine.currentState, 
     callState.callActive, 
