@@ -70,6 +70,10 @@ export function useStateChangeProcessor({
       console.log('Debounce complete, actually processing state change:', stateMachine.currentState);
       console.log('State data for processing:', stateMachine.stateData);
       
+      // Mark this state as processed FIRST to prevent race conditions
+      // This prevents duplicate messages if processStateChange is called rapidly
+      conversationState.markStateAsProcessed(stateMachine.currentState);
+      
       // When state changes, check for messages to display
       if (stateMachine.stateData.meta?.systemMessage && !stateMachine.stateData.meta?.module) {
         console.log(`Adding system message: ${stateMachine.stateData.meta.systemMessage}`);
@@ -159,8 +163,6 @@ export function useStateChangeProcessor({
         });
       }
       
-      // Mark this state as processed to prevent duplicate messages
-      conversationState.markStateAsProcessed(stateMachine.currentState);
       conversationState.setLastTranscriptUpdate(new Date());
       
       // Reset user action flag
@@ -182,3 +184,4 @@ export function useStateChangeProcessor({
     processStateChange
   };
 }
+

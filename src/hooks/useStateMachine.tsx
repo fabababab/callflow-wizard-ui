@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { loadStateMachine, getInitialState, getNextState, getStateData, StateMachine, StateMachineState } from '@/utils/stateMachineLoader';
@@ -9,6 +10,7 @@ export function useStateMachine(scenarioType: ScenarioType) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [lastStateChange, setLastStateChange] = useState<Date | null>(null);
+  const [processingTransition, setProcessingTransition] = useState<boolean>(false);
   
   // Load the state machine when scenario changes
   useEffect(() => {
@@ -70,51 +72,64 @@ export function useStateMachine(scenarioType: ScenarioType) {
       return false;
     }
     
-    console.log(`Processing selection: "${selection}" from state: ${currentState}`);
-    
-    // Get next state based on selection
-    const nextState = getNextState(stateMachine, currentState, selection);
-    
-    if (!nextState) {
-      console.warn(`No transition found for selection: "${selection}" from state: ${currentState}`);
-      // Try DEFAULT transition as fallback
-      const defaultTransition = getNextState(stateMachine, currentState, "DEFAULT");
-      
-      if (defaultTransition) {
-        console.log(`Using DEFAULT transition to state: ${defaultTransition}`);
-        
-        // Update current state
-        setCurrentState(defaultTransition);
-        
-        // Get data for new state
-        const nextStateData = getStateData(stateMachine, defaultTransition);
-        console.log(`Next state data (from DEFAULT):`, nextStateData);
-        setStateData(nextStateData);
-        
-        // Update last state change timestamp
-        setLastStateChange(new Date());
-        
-        return true;
-      }
-      
+    // Prevent concurrent transitions
+    if (processingTransition) {
+      console.warn(`Ignoring selection "${selection}" - another transition is already in progress`);
       return false;
     }
     
-    console.log(`Transitioning to state: ${nextState}`);
+    setProcessingTransition(true);
     
-    // Update current state
-    setCurrentState(nextState);
-    
-    // Get data for new state
-    const nextStateData = getStateData(stateMachine, nextState);
-    console.log(`Next state data:`, nextStateData);
-    setStateData(nextStateData);
-    
-    // Update last state change timestamp
-    setLastStateChange(new Date());
-    
-    return true;
-  }, [stateMachine, currentState]);
+    try {
+      console.log(`Processing selection: "${selection}" from state: ${currentState}`);
+      
+      // Get next state based on selection
+      const nextState = getNextState(stateMachine, currentState, selection);
+      
+      if (!nextState) {
+        console.warn(`No transition found for selection: "${selection}" from state: ${currentState}`);
+        // Try DEFAULT transition as fallback
+        const defaultTransition = getNextState(stateMachine, currentState, "DEFAULT");
+        
+        if (defaultTransition) {
+          console.log(`Using DEFAULT transition to state: ${defaultTransition}`);
+          
+          // Update current state
+          setCurrentState(defaultTransition);
+          
+          // Get data for new state
+          const nextStateData = getStateData(stateMachine, defaultTransition);
+          console.log(`Next state data (from DEFAULT):`, nextStateData);
+          setStateData(nextStateData);
+          
+          // Update last state change timestamp
+          setLastStateChange(new Date());
+          
+          return true;
+        }
+        
+        return false;
+      }
+      
+      console.log(`Transitioning to state: ${nextState}`);
+      
+      // Update current state
+      setCurrentState(nextState);
+      
+      // Get data for new state
+      const nextStateData = getStateData(stateMachine, nextState);
+      console.log(`Next state data:`, nextStateData);
+      setStateData(nextStateData);
+      
+      // Update last state change timestamp
+      setLastStateChange(new Date());
+      
+      return true;
+    } finally {
+      // Reset processing flag
+      setProcessingTransition(false);
+    }
+  }, [stateMachine, currentState, processingTransition]);
   
   // Start the call process - shorthand for initiating with a START_CALL event
   const processStartCall = useCallback((): boolean => {
@@ -189,6 +204,7 @@ export function useStateMachine(scenarioType: ScenarioType) {
     processSelection,
     processStartCall,
     resetStateMachine,
-    lastStateChange
+    lastStateChange,
+    processingTransition
   };
 }
