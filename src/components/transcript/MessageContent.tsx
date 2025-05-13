@@ -42,10 +42,10 @@ const MessageContent: React.FC<MessageContentProps> = memo(({
   };
 
   // Handler for verification
-  const handleVerificationComplete = (msgId: string, result: { verified: boolean }) => {
-    console.log(`Verification triggered for message ${msgId}, verified: ${result.verified}`);
-    if (result.verified && onVerifySystemCheck) {
-      onVerifySystemCheck(msgId);
+  const handleVerify = (verified: boolean) => {
+    console.log(`Verification triggered for message ${messageId}, verified: ${verified}`);
+    if (verified && onVerifySystemCheck) {
+      onVerifySystemCheck(messageId);
     }
   };
 
@@ -69,10 +69,9 @@ const MessageContent: React.FC<MessageContentProps> = memo(({
       {showInlineVerification && onVerifySystemCheck && (
         <div className="mt-2 w-full transition-all duration-300" data-testid="inline-verification">
           <InlineChatVerification 
-            messageId={messageId}
-            sensitiveFields={sensitiveData || []}
-            onVerificationComplete={handleVerificationComplete}
-            onCancel={() => console.log("Verification cancelled")}
+            onVerify={handleVerify}
+            isVerifying={false}
+            isVerified={isVerified}
           />
         </div>
       )}

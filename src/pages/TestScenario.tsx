@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -11,25 +10,19 @@ import { useScenarioState } from '@/hooks/useScenarioState';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
-import { useLocation } from 'react-router-dom';
-import { SensitiveField } from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 
 const TestScenario = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
   const transcriptRef = useRef<HTMLDivElement>(null);
-  const location = useLocation();
-  
-  // Get scenario from location state if available
-  const scenarioFromLocation = location.state?.scenario || "testscenario";
   
   // State management for scenarios, states, and visualization
-  const scenarioState = useScenarioState(scenarioFromLocation);
+  const scenarioState = useScenarioState("testscenario");
 
   // Use the useJsonVisualization hook for JSON view functionality
   const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);
 
-  // Use the useTranscript hook with the loaded state machine object
-  const transcript = useTranscript(scenarioState.loadedStateMachine);
+  // Use the useTranscript hook for the active scenario
+  const transcript = useTranscript(scenarioState.selectedStateMachine);
 
   // Choose the appropriate state machine
   const customerScenario = useCustomerScenario();
@@ -39,18 +32,11 @@ const TestScenario = () => {
   const activeScenario = customerScenario;
   const { currentState, error } = activeScenario;
   
-  // Handle showing sensitive field details
-  const [showSensitiveFieldDetails, setShowSensitiveFieldDetails] = useState<SensitiveField | null>(null);
-  
-  const handleCloseSensitiveDetails = () => {
-    setShowSensitiveFieldDetails(null);
-  };
-  
-  // Log changes to help debug the component
+  // Add console.log to help debug the issue
   useEffect(() => {
-    console.log("TestScenario re-rendering with scenario:", scenarioFromLocation);
-    console.log("Loaded state machine:", scenarioState.loadedStateMachine);
-  }, [scenarioFromLocation, scenarioState.loadedStateMachine]);
+    console.log("TestScenario re-rendering, checking for sensitive field details:", 
+      scenarioState.showSensitiveFieldDetails ? "Open" : "Closed");
+  }, [scenarioState.showSensitiveFieldDetails]);
   
   return (
     <div className="flex h-screen bg-background">
@@ -81,11 +67,11 @@ const TestScenario = () => {
         </div>
       </SidebarProvider>
 
-      {/* Sensitive Field Details Dialog */}
-      {showSensitiveFieldDetails && (
+      {/* Sensitive Field Details Dialog - this is the only dialog we should keep */}
+      {scenarioState.showSensitiveFieldDetails && (
         <SensitiveFieldDetailsDialog 
-          showSensitiveFieldDetails={showSensitiveFieldDetails} 
-          handleCloseSensitiveDetails={handleCloseSensitiveDetails} 
+          showSensitiveFieldDetails={scenarioState.showSensitiveFieldDetails} 
+          handleCloseSensitiveDetails={scenarioState.handleCloseSensitiveDetails} 
         />
       )}
     </div>

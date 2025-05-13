@@ -33,7 +33,7 @@ export function useSensitiveDataHandling(
   const handleValidateSensitiveData = useCallback((
     messageId: string, 
     fieldId: string, 
-    status: ValidationStatus = 'verified', // Default to verified
+    status: ValidationStatus = 'valid', // Default to valid
     notes?: string
   ) => {
     // Prevent multiple validation calls in quick succession
@@ -57,9 +57,9 @@ export function useSensitiveDataHandling(
             if (field.id === fieldId) {
               return {
                 ...field,
-                status: 'verified' as ValidationStatus, // Always mark as verified
+                status: 'valid', // Always mark as valid
                 notes,
-              };
+              } as SensitiveField;
             }
             return field;
           });

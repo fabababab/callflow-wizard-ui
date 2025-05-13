@@ -52,7 +52,7 @@ const IdentityValidation = () => {
         toast({
           title: "Verification Failed",
           description: "The provided details do not match our records.",
-          variant: "error"
+          variant: "destructive",
         });
         
         // Show AI suggestion after failed validation

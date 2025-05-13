@@ -3,13 +3,12 @@ import { useState, useCallback } from 'react';
 import { Message } from '@/components/transcript/MessageTypes';
 import { ModuleConfig } from '@/types/modules';
 import { SensitiveField } from '@/data/scenarioData';
-import { nanoid } from 'nanoid';
 
 export function useMessageAdders(
   messages: Message[],
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
   sensitiveDataStats: { total: number; valid: number; invalid: number },
-  setLastMessageUpdate: React.Dispatch<React.SetStateAction<Date>>
+  setLastMessageUpdate: React.Dispatch<React.SetStateAction<Date | null>>
 ) {
   const setSensitiveDataStats = useState<{
     total: number;
@@ -20,13 +19,13 @@ export function useMessageAdders(
   /**
    * Add a system message to the transcript
    */
-  const addSystemMessage = useCallback((text: string, options?: { responseOptions?: string[], systemType?: 'info' | 'warning' | 'error' | 'success' }) => {
+  const addSystemMessage = useCallback((text: string, options?: { responseOptions?: string[] }) => {
     const newMessage: Message = {
-      id: nanoid(),
+      id: Date.now().toString(),
       text,
       sender: 'system',
       timestamp: new Date(),
-      systemType: options?.systemType || 'info',
+      systemType: 'info',
       responseOptions: options?.responseOptions
     };
 
@@ -40,17 +39,15 @@ export function useMessageAdders(
   const addAgentMessage = useCallback((
     text: string, 
     suggestions: any[] = [], 
-    responseOptions?: string[],
-    requiresVerification?: boolean
+    responseOptions?: string[]
   ) => {
     const newMessage: Message = {
-      id: nanoid(),
+      id: Date.now().toString(),
       text,
       sender: 'agent',
       timestamp: new Date(),
       suggestions: suggestions.length > 0 ? suggestions : undefined,
-      responseOptions,
-      requiresVerification
+      responseOptions
     };
 
     setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -63,17 +60,15 @@ export function useMessageAdders(
   const addCustomerMessage = useCallback((
     text: string, 
     sensitiveData?: SensitiveField[], 
-    responseOptions?: string[],
-    requiresVerification?: boolean
+    responseOptions?: string[]
   ) => {
     const newMessage: Message = {
-      id: nanoid(),
+      id: Date.now().toString(),
       text,
       sender: 'customer',
       timestamp: new Date(),
       sensitiveData,
-      responseOptions,
-      requiresVerification
+      responseOptions
     };
 
     // Update aggregate stats for sensitive data
@@ -93,7 +88,7 @@ export function useMessageAdders(
    */
   const addInlineModuleMessage = useCallback((text: string, moduleConfig: ModuleConfig) => {
     const newMessage: Message = {
-      id: nanoid(),
+      id: Date.now().toString(),
       text,
       sender: 'system',
       timestamp: new Date(),

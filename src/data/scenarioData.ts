@@ -1,11 +1,9 @@
-
 import { nanoid } from 'nanoid';
 
 // Define sensitive data validation types
 export type SensitiveDataType = 'insurance_number' | 'customer_id' | 'bank_account' | 'date_of_birth' | 'address';
 
-// Updated ValidationStatus to match the expected type in SensitiveFieldDetailsDialog
-export type ValidationStatus = 'pending' | 'verified' | 'rejected';
+export type ValidationStatus = 'pending' | 'valid' | 'invalid';
 
 export type SensitiveField = {
   id: string;
