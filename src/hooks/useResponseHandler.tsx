@@ -33,7 +33,7 @@ export function useResponseHandler({
     // Only process if we're awaiting user response or at initial state
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
-      toast({
+      toast.toast({
         title: "Cannot select response",
         description: "Please wait for the conversation to initialize first",
         variant: "destructive",
@@ -48,7 +48,7 @@ export function useResponseHandler({
     
     // Show toast notification for response selection (only once per unique response)
     if (!responseToastShownRef.current[response]) {
-      toast({
+      toast.toast({
         title: "Response Selected",
         description: response,
         duration: 2000,
@@ -84,7 +84,7 @@ export function useResponseHandler({
         
         if (!defaultSuccess) {
           console.error('Both specific and DEFAULT transitions failed');
-          toast({
+          toast.toast({
             title: "State Transition Failed",
             description: "Could not proceed to the next state. Try resetting the conversation.",
             variant: "destructive",
