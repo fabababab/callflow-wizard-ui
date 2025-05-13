@@ -14,6 +14,7 @@ export function useNachbearbeitungHandler(completeModule: (result: any) => void)
       title: 'Call Summary',
       type: ModuleType.NACHBEARBEITUNG,
       data: {
+        isInline: true, // Set to display inline instead of modal
         summaryPoints: [
           { id: '1', text: 'Customer identity was verified', checked: false, important: true },
           { id: '2', text: 'Customer issue was addressed', checked: false, important: true },
@@ -34,11 +35,11 @@ export function useNachbearbeitungHandler(completeModule: (result: any) => void)
       });
       window.dispatchEvent(event);
       
-      // Toast notification commented out for now - will be re-integrated later
-      // toast({
-      //   title: "Call Summary Module",
-      //   description: "Please complete the call summary checklist",
-      // });
+      toast({
+        title: "Call Summary Module",
+        description: "Please complete the call summary checklist",
+        duration: 3000
+      });
     }, 300);
   }, [completeModule, toast]);
 

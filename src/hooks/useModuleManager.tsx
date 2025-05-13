@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import { StateMachine, StateMachineState } from '@/utils/stateMachineLoader';
+import { useToast } from '@/hooks/use-toast';
 
 export function useModuleManager(
   stateMachine: StateMachine | null,
@@ -11,6 +12,7 @@ export function useModuleManager(
   const [activeModule, setActiveModule] = useState<ModuleConfig | null>(null);
   const [moduleHistory, setModuleHistory] = useState<ModuleConfig[]>([]);
   const processedModuleIds = useRef<Set<string>>(new Set());
+  const { toast } = useToast();
   
   // Handle custom module trigger events
   useEffect(() => {
@@ -33,6 +35,13 @@ export function useModuleManager(
             }
             return prev;
           });
+          
+          // Show toast for module activation
+          toast({
+            title: `${moduleConfig.title}`,
+            description: "Interactive module has been activated",
+            duration: 3000
+          });
         } else {
           console.log(`Module ${moduleConfig.id} already shown, skipping`);
         }
@@ -44,7 +53,7 @@ export function useModuleManager(
     return () => {
       window.removeEventListener('module-trigger', handleModuleTrigger);
     };
-  }, []);
+  }, [toast]);
   
   // Check for module triggers when state changes
   useEffect(() => {
@@ -58,8 +67,14 @@ export function useModuleManager(
       
       // Only process if not already shown (prevent duplicate modules)
       if (!processedModuleIds.current.has(moduleConfig.id)) {
-        // Skip verification modules as they're shown inline
-        if (moduleConfig.type !== ModuleType.VERIFICATION) {
+        // For verification, information, contract, and other modules we want to show inline,
+        // don't set as active module since they'll be shown inline with messages
+        const shouldBeInline = moduleConfig.data?.isInline === true || 
+                              moduleConfig.type === ModuleType.VERIFICATION ||
+                              moduleConfig.type === ModuleType.INFORMATION ||
+                              moduleConfig.type === ModuleType.CONTRACT;
+        
+        if (!shouldBeInline) {
           setActiveModule(moduleConfig);
         }
         
@@ -102,6 +117,13 @@ export function useModuleManager(
       });
       window.dispatchEvent(event);
       setActiveModule(null);
+      
+      // Show toast for module completion
+      toast({
+        title: "Module Completed",
+        description: `${activeModule.title} has been completed successfully`,
+        duration: 2000
+      });
     }
   };
 

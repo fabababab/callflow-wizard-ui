@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -10,11 +11,12 @@ import { useScenarioState } from '@/hooks/useScenarioState';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
-import { toast } from "@/hooks/use-toast";
+import { useToast } from '@/hooks/use-toast';
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
   
   // State management for scenarios, states, and visualization
   const scenarioState = useScenarioState("deutscheVersion");
@@ -42,7 +44,7 @@ const TestScenario = () => {
         duration: 3000
       });
     }
-  }, [scenarioState.loadedStateMachine]);
+  }, [scenarioState.loadedStateMachine, toast]);
   
   return (
     <div className="flex h-screen bg-background">

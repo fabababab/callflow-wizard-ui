@@ -9,6 +9,7 @@ interface ModuleContainerProps {
   onComplete: (result: any) => void;
   currentState?: string;
   stateData?: any;
+  isInline?: boolean; // Added explicit prop for inline display
 }
 
 const ModuleContainer: React.FC<ModuleContainerProps> = memo(({ 
@@ -16,7 +17,8 @@ const ModuleContainer: React.FC<ModuleContainerProps> = memo(({
   onClose,
   onComplete,
   currentState,
-  stateData
+  stateData,
+  isInline = false // Default to modal display
 }) => {
   if (!moduleConfig) return null;
   
@@ -28,12 +30,13 @@ const ModuleContainer: React.FC<ModuleContainerProps> = memo(({
   }
   
   // Check if this module should be displayed inline (not in a modal)
-  const isInlineDisplay = moduleConfig.data?.isInline === true;
+  // Either from explicit prop or from module config
+  const shouldDisplayInline = isInline || moduleConfig.data?.isInline === true;
   
-  console.log(`Rendering module ${moduleConfig.id} - isInline: ${isInlineDisplay}`);
+  console.log(`Rendering module ${moduleConfig.id} - isInline: ${shouldDisplayInline}`);
   
   // If it's inline, just render the component without modal wrapper
-  if (isInlineDisplay) {
+  if (shouldDisplayInline) {
     return (
       <div className="w-full mx-auto">
         <ModuleComponent

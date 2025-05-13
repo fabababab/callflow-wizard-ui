@@ -2,6 +2,7 @@
 import React, { memo, useRef, useEffect } from 'react';
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
+import { useToast } from '@/hooks/use-toast';
 
 interface MessageInlineModuleProps {
   moduleConfig: ModuleConfig;
@@ -13,6 +14,18 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   onModuleComplete
 }) => {
   const completedRef = useRef(false);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Notify about the inline module being displayed (for non-verification types)
+    if (moduleConfig.type !== ModuleType.VERIFICATION) {
+      toast({
+        title: `${moduleConfig.title}`,
+        description: "Please complete this interactive module",
+        duration: 3000
+      });
+    }
+  }, [moduleConfig, toast]);
   
   const handleModuleComplete = (result: any) => {
     // Prevent duplicate completions
@@ -42,25 +55,39 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       window.dispatchEvent(verificationEvent);
     }
     
+    // For other module types, dispatch their specific events
+    if (moduleConfig.type === ModuleType.CONTRACT) {
+      const contractEvent = new CustomEvent('contract-module-complete', {
+        detail: { 
+          moduleId: moduleConfig.id,
+          result
+        }
+      });
+      window.dispatchEvent(contractEvent);
+    }
+    
+    if (moduleConfig.type === ModuleType.INFORMATION) {
+      const infoEvent = new CustomEvent('information-module-complete', {
+        detail: { 
+          moduleId: moduleConfig.id,
+          result
+        }
+      });
+      window.dispatchEvent(infoEvent);
+    }
+    
+    if (moduleConfig.type === ModuleType.NACHBEARBEITUNG) {
+      const nachbearbeitungEvent = new CustomEvent('nachbearbeitung-complete', {
+        detail: { 
+          moduleId: moduleConfig.id,
+          result
+        }
+      });
+      window.dispatchEvent(nachbearbeitungEvent);
+    }
+    
     onModuleComplete(result);
   };
-  
-  // Listen for verification success events
-  useEffect(() => {
-    const handleVerificationSuccess = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      if (customEvent.detail && customEvent.detail.moduleId === moduleConfig.id) {
-        console.log(`Received verification success event for module ${moduleConfig.id}`);
-        // Will be handled by the regular complete flow
-      }
-    };
-    
-    window.addEventListener('verification-successful', handleVerificationSuccess);
-    
-    return () => {
-      window.removeEventListener('verification-successful', handleVerificationSuccess);
-    };
-  }, [moduleConfig.id]);
   
   return (
     <div className="ml-auto mt-2 w-full max-w-[85%] transition-all duration-300">

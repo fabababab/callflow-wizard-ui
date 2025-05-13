@@ -93,7 +93,7 @@ const Message: React.FC<MessageProps> = ({
         </div>
       </div>
 
-      {/* Display inline module */}
+      {/* Display inline module - now works for all module types */}
       {hasInlineModule && message.inlineModule && (
         <div 
           className="w-full flex justify-end mb-4 transition-all duration-300" 
