@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StateMachine, StateMachineStatus } from '@/utils/stateMachineLoader';
 import { Shield, AlertTriangle, CheckCircle, Info, FileText, ClipboardList, BookText } from 'lucide-react';
 import { Badge } from './ui/badge';
@@ -9,14 +9,22 @@ interface DecisionTreeVisualizerProps {
   stateMachine: StateMachine | null;
   currentState?: string;
   onStateClick?: (state: string) => void;
+  zoomLevel?: number;
+  centerOnState?: string | null;
+  onCenter?: () => void;
 }
 
 const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
   stateMachine,
   currentState,
-  onStateClick
+  onStateClick,
+  zoomLevel = 100,
+  centerOnState = null,
+  onCenter
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [statePositions, setStatePositions] = useState<{ [key: string]: { x: number, y: number } }>({});
   
   useEffect(() => {
     if (!stateMachine || !svgRef.current) return;
@@ -26,9 +34,9 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     
     const states = Object.keys(stateMachine.states);
     const initialState = stateMachine.initial || stateMachine.initialState || 'start';
-    const statePositions: { [key: string]: { x: number, y: number } } = {};
     const nodeSize = { width: 150, height: 40 };
     const levelHeight = 80;
+    const newStatePositions: { [key: string]: { x: number, y: number } } = {};
     
     // Function to create nodes
     const createNode = (state: string, level: number, position: number, totalInLevel: number): SVGGElement => {
@@ -43,7 +51,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       const x = startX + position * spacing;
       const y = level * levelHeight + 50;
       
-      statePositions[state] = { x: x + nodeSize.width / 2, y: y + nodeSize.height / 2 };
+      newStatePositions[state] = { x: x + nodeSize.width / 2, y: y + nodeSize.height / 2 };
       
       const hasSensitiveData = stateMachine.states[state]?.meta?.sensitiveFields && 
                               stateMachine.states[state]?.meta?.sensitiveFields?.length > 0;
@@ -77,6 +85,12 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
             rect.setAttribute('stroke', '#8b5cf6');
             break;
           case ModuleType.NACHBEARBEITUNG:
+            rect.setAttribute('stroke', '#f59e0b');
+            break;
+          case ModuleType.FRANCHISE:
+            rect.setAttribute('stroke', '#f59e0b');
+            break;
+          case ModuleType.INSURANCE_MODEL:
             rect.setAttribute('stroke', '#f59e0b');
             break;
           default:
@@ -141,6 +155,17 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
             iconPath = `M${iconX + iconSize/4},${iconY} h${iconSize/2} v${iconSize/6} h-${iconSize/2} z M${iconX},${iconY + iconSize/6} h${iconSize} v${iconSize*5/6} h-${iconSize} z M${iconX + iconSize/4},${iconY + iconSize/2} h${iconSize/2} M${iconX + iconSize/4},${iconY + iconSize*2/3} h${iconSize/2}`;
             iconFill = '#f59e0b';
             break;
+          case ModuleType.FRANCHISE:
+            // Money icon path (simplified dollar sign)
+            iconPath = `M${iconX + iconSize/2},${iconY} v${iconSize} M${iconX + iconSize/4},${iconY + iconSize/3} h${iconSize/2} M${iconX + iconSize/4},${iconY + iconSize*2/3} h${iconSize/2}`;
+            iconFill = '#f59e0b';
+            break;
+          case ModuleType.INSURANCE_MODEL:
+            // Insurance/shield icon
+            iconPath = `M${iconX},${iconY} l${iconSize/2},${iconSize/4} l${iconSize/2},-${iconSize/4} v${iconSize*0.7} 
+              a${iconSize/2},${iconSize/2} 0 0 1 -${iconSize/2},${iconSize/3} a${iconSize/2},${iconSize/2} 0 0 1 -${iconSize/2},-${iconSize/3} v-${iconSize*0.7} z`;
+            iconFill = '#f59e0b';
+            break;
           default:
             // Generic module icon
             iconPath = `M${iconX},${iconY} h${iconSize} v${iconSize} h-${iconSize} z`;
@@ -183,8 +208,8 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       
-      const from = statePositions[fromState];
-      const to = statePositions[toState];
+      const from = newStatePositions[fromState];
+      const to = newStatePositions[toState];
       
       if (from && to) {
         // Calculate path
@@ -300,7 +325,12 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     const svgWidth = Math.max(1200, maxStatesInLevel * 200);
     const svgHeight = Math.max(600, numLevels * levelHeight + 100);
     
-    svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+    // Apply zoom level to SVG viewBox
+    const scaleFactor = zoomLevel / 100;
+    const viewBoxWidth = svgWidth / scaleFactor;
+    const viewBoxHeight = svgHeight / scaleFactor;
+    
+    // Set the initial viewBox
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
     
@@ -345,8 +375,31 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       }
     }
     
-  }, [stateMachine, currentState, onStateClick]);
-
+    // Store state positions for later use
+    setStatePositions(newStatePositions);
+    
+    // Calculate viewBox center based on zoom level and possibly center on a specific state
+    let viewBoxX = 0;
+    let viewBoxY = 0;
+    
+    const centerX = viewBoxWidth / 2;
+    const centerY = viewBoxHeight / 2;
+    
+    // Center on specific state if requested
+    if (centerOnState && newStatePositions[centerOnState]) {
+      const pos = newStatePositions[centerOnState];
+      viewBoxX = pos.x - centerX;
+      viewBoxY = pos.y - centerY;
+      
+      // Notify parent that we've centered (only do this once)
+      onCenter && onCenter();
+    }
+    
+    // Set the viewBox with the calculated values
+    svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+    
+  }, [stateMachine, currentState, onStateClick, zoomLevel, centerOnState, onCenter]);
+  
   // Convert status to appropriate style and icon
   const getStatusBadge = (status?: StateMachineStatus) => {
     if (status === StateMachineStatus.PRODUCTION) {
@@ -375,7 +428,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
   };
   
   return (
-    <div className="decision-tree-visualizer w-full overflow-auto">
+    <div className="decision-tree-visualizer w-full overflow-auto" ref={containerRef}>
       {stateMachine?.status && (
         <div className="mb-4">
           {getStatusBadge(stateMachine.status)}
@@ -432,7 +485,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 bg-[#f3f4f6] border-2 border-[#f59e0b] rounded-sm"></div>
           <ClipboardList className="h-3 w-3 text-amber-500" />
-          <span>Nachbearbeitung</span>
+          <span>Module</span>
         </div>
       </div>
     </div>
