@@ -48,7 +48,7 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
     // This would typically open a dialog or panel with sensitive field details
     toast({
       title: "Sensitive Field Selected",
-      description: `Selected field: ${field.name}`,
+      description: `Selected field: ${field.id || 'Unknown field'}`,
       duration: 3000
     });
   }, [toast]);
