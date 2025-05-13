@@ -33,6 +33,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStart, setDragStart] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
   const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [isBackgroundDrag, setIsBackgroundDrag] = useState<boolean>(false);
   
   // Update selected state when centerOnState changes
   useEffect(() => {
@@ -55,36 +56,51 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     if (!svg) return;
     
     const handleMouseDown = (e: MouseEvent) => {
-      if (!isPanning) return;
-      setIsDragging(true);
-      setDragStart({ x: e.clientX, y: e.clientY });
+      // Only start dragging if the click was on the background or panning mode is enabled
+      const isClickOnNode = (e.target as Element).tagName === 'rect' || 
+                            (e.target as Element).tagName === 'text' ||
+                            (e.target as Element).tagName === 'path';
+      
+      if (isPanning || !isClickOnNode) {
+        setIsDragging(true);
+        setIsBackgroundDrag(!isClickOnNode);
+        setDragStart({ x: e.clientX, y: e.clientY });
+        
+        // Set cursor to grabbing when starting to drag
+        if (!isClickOnNode) {
+          svg.style.cursor = 'grabbing';
+        }
+      }
     };
     
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !isPanning) return;
+      if (!isDragging) return;
       
-      const dx = (e.clientX - dragStart.x) * (viewBox.width / svg.clientWidth);
-      const dy = (e.clientY - dragStart.y) * (viewBox.height / svg.clientHeight);
-      
-      setViewBox(prev => ({
-        ...prev,
-        x: prev.x - dx,
-        y: prev.y - dy
-      }));
-      
-      setDragStart({ x: e.clientX, y: e.clientY });
+      // Only perform panning if in panning mode or clicking on background
+      if (isPanning || isBackgroundDrag) {
+        const dx = (e.clientX - dragStart.x) * (viewBox.width / svg.clientWidth);
+        const dy = (e.clientY - dragStart.y) * (viewBox.height / svg.clientHeight);
+        
+        setViewBox(prev => ({
+          ...prev,
+          x: prev.x - dx,
+          y: prev.y - dy
+        }));
+        
+        setDragStart({ x: e.clientX, y: e.clientY });
+      }
     };
     
     const handleMouseUp = () => {
+      if (isDragging && isBackgroundDrag) {
+        svg.style.cursor = 'grab';
+      }
       setIsDragging(false);
+      setIsBackgroundDrag(false);
     };
     
-    // Cursor change based on panning mode
-    if (isPanning) {
-      svg.style.cursor = 'grab';
-    } else {
-      svg.style.cursor = 'default';
-    }
+    // Cursor change based on panning mode - now always grab for background
+    svg.style.cursor = 'grab';
     
     // Add event listeners
     svg.addEventListener('mousedown', handleMouseDown);
@@ -96,7 +112,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isPanning, isDragging, dragStart, viewBox]);
+  }, [isPanning, isDragging, isBackgroundDrag, dragStart, viewBox]);
   
   // Recalculate and update the tree visualization when stateMachine, currentState, or zoom changes
   useEffect(() => {
@@ -276,7 +292,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
             const strokeWidth = isSelectedNode ? 4 : (hasSensitiveData ? 3 : (moduleType ? 2 : 1));
             nodeRect.setAttribute('stroke', borderColor);
             nodeRect.setAttribute('stroke-width', String(strokeWidth));
-            nodeRect.setAttribute('cursor', isPanning ? 'grab' : 'pointer');
+            nodeRect.setAttribute('cursor', 'pointer');
             
             // Create node text
             const nodeText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -286,7 +302,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
             nodeText.setAttribute('font-size', '14');
             nodeText.setAttribute('font-family', 'sans-serif');
             nodeText.setAttribute('fill', isCurrentStateNode ? 'white' : '#1f2937');
-            nodeText.setAttribute('cursor', isPanning ? 'grab' : 'pointer');
+            nodeText.setAttribute('cursor', 'pointer');
             
             // Truncate state name if too long
             let displayName = stateId;
@@ -335,7 +351,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
                 iconPath.setAttribute('fill', 'none');
                 iconPath.setAttribute('stroke', iconFill);
                 iconPath.setAttribute('stroke-width', '1.5');
-                iconPath.setAttribute('cursor', isPanning ? 'grab' : 'pointer');
+                iconPath.setAttribute('cursor', 'pointer');
                 
                 nodeGroup.appendChild(iconPath);
               }
@@ -354,15 +370,16 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
               shieldPath.setAttribute('fill', '#eab308');
               shieldPath.setAttribute('stroke', '#854d0e');
               shieldPath.setAttribute('stroke-width', '1');
-              shieldPath.setAttribute('cursor', isPanning ? 'grab' : 'pointer');
+              shieldPath.setAttribute('cursor', 'pointer');
               
               nodeGroup.appendChild(shieldPath);
             }
             
             // Add click handler
-            if (!isPanning) {
-              nodeGroup.onclick = () => handleStateClick(stateId);
-            }
+            nodeGroup.onclick = (e) => {
+              e.stopPropagation(); // Stop event propagation to prevent background drag
+              handleStateClick(stateId);
+            };
             
             svg.appendChild(nodeGroup);
           } catch (error) {
@@ -383,7 +400,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       console.error('Error in tree visualization:', error);
     }
     
-  }, [stateMachine, currentState, zoomLevel, centerOnState, isPanning, selectedState]);
+  }, [stateMachine, currentState, zoomLevel, centerOnState, selectedState]);
   
   // Update viewBox when it changes (for panning)
   useEffect(() => {
@@ -395,7 +412,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
   
   return (
     <div 
-      className={`decision-tree-visualizer w-full overflow-auto ${isPanning ? 'cursor-grab' : ''}`}
+      className="decision-tree-visualizer w-full overflow-auto"
     >
       {stateMachine?.status && (
         <div className="mb-4">
