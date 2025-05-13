@@ -171,7 +171,7 @@ const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({
                   </div>
                   <div className="flex items-center">
                     <span className="text-xs bg-gray-200 px-2 py-1 rounded-md">
-                      → {target}
+                      → {String(target)}
                     </span>
                   </div>
                 </div>

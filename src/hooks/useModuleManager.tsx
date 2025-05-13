@@ -23,7 +23,10 @@ export function useModuleManager(
         
         // Check if we've already processed this module
         if (!processedModuleIds.current.has(moduleConfig.id)) {
-          setActiveModule(moduleConfig);
+          // Only set as active if explicitly not inline
+          if (moduleConfig.data?.isInline === false) {
+            setActiveModule(moduleConfig);
+          }
           
           // Add to processed modules
           processedModuleIds.current.add(moduleConfig.id);
@@ -67,13 +70,10 @@ export function useModuleManager(
       
       // Only process if not already shown (prevent duplicate modules)
       if (!processedModuleIds.current.has(moduleConfig.id)) {
-        // For verification, information, contract, and other modules we want to show inline,
-        // don't set as active module since they'll be shown inline with messages
-        const shouldBeInline = moduleConfig.data?.isInline === true || 
-                              moduleConfig.type === ModuleType.VERIFICATION ||
-                              moduleConfig.type === ModuleType.INFORMATION ||
-                              moduleConfig.type === ModuleType.CONTRACT;
+        // Always treat modules as inline by default, unless explicitly set to not be inline
+        const shouldBeInline = moduleConfig.data?.isInline !== false;
         
+        // Only set as active module if it should NOT be inline
         if (!shouldBeInline) {
           setActiveModule(moduleConfig);
         }
@@ -91,9 +91,6 @@ export function useModuleManager(
       } else {
         console.log(`Module ${moduleConfig.id} already shown, skipping`);
       }
-    } else {
-      // No module trigger in this state
-      // Don't clear active module here to avoid modules disappearing
     }
   }, [currentState, stateData, stateMachine]);
 

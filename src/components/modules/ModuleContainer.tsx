@@ -42,7 +42,10 @@ const ModuleContainer: React.FC<ModuleContainerProps> = memo(({
         <ModuleComponent
           id={moduleConfig.id}
           title={moduleConfig.title}
-          data={moduleConfig.data}
+          data={{
+            ...moduleConfig.data,
+            isInline: true // Force inline mode in the component
+          }}
           onClose={onClose}
           onComplete={onComplete}
           currentState={currentState}

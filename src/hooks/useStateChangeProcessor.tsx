@@ -71,7 +71,7 @@ export function useStateChangeProcessor({
       console.log('State data for processing:', stateMachine.stateData);
       
       // When state changes, check for messages to display
-      if (stateMachine.stateData.meta?.systemMessage) {
+      if (stateMachine.stateData.meta?.systemMessage && !stateMachine.stateData.meta?.module) {
         console.log(`Adding system message: ${stateMachine.stateData.meta.systemMessage}`);
         messageHandling.addSystemMessage(stateMachine.stateData.meta.systemMessage);
       }
@@ -136,17 +136,27 @@ export function useStateChangeProcessor({
       if (stateMachine.stateData.meta?.module) {
         console.log(`Module trigger found in state:`, stateMachine.stateData.meta.module);
         
-        // Special handling for verification modules - make them inline
-        if (stateMachine.stateData.meta.module.type === ModuleType.VERIFICATION) {
-          // Add inline verification module
-          messageHandling.addInlineModuleMessage(
-            `Please verify the following information:`,
-            stateMachine.stateData.meta.module
-          );
-        } else {
-          // Add a system message about the module if not already shown
-          messageHandling.addSystemMessage(`Opening ${stateMachine.stateData.meta.module.title}`);
+        // Handle all modules as inline by default
+        const moduleConfig = stateMachine.stateData.meta.module;
+        
+        // Only add system message for module if we haven't already displayed it inline
+        if (stateMachine.stateData.meta?.systemMessage) {
+          console.log(`Adding system message for module: ${stateMachine.stateData.meta.systemMessage}`);
+          messageHandling.addSystemMessage(stateMachine.stateData.meta.systemMessage);
         }
+        
+        // For all modules, display them inline in the chat
+        messageHandling.addInlineModuleMessage(
+          moduleConfig.title || "Interactive Module", 
+          moduleConfig
+        );
+        
+        // Show toast for module activation
+        toast.toast({
+          title: `${moduleConfig.title}`,
+          description: "Interactive module has been activated",
+          duration: 3000
+        });
       }
       
       // Mark this state as processed to prevent duplicate messages

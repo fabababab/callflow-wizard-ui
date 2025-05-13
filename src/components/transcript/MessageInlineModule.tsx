@@ -1,8 +1,10 @@
 
-import React, { memo, useRef, useEffect } from 'react';
+import React, { memo, useRef, useEffect, useState } from 'react';
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 import { useToast } from '@/hooks/use-toast';
+import { Shield, Calculator, FileText, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface MessageInlineModuleProps {
   moduleConfig: ModuleConfig;
@@ -14,23 +16,47 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   onModuleComplete
 }) => {
   const completedRef = useRef(false);
+  const [completed, setCompleted] = useState(false);
   const { toast } = useToast();
   
-  useEffect(() => {
-    // Notify about the inline module being displayed (for non-verification types)
-    if (moduleConfig.type !== ModuleType.VERIFICATION) {
-      toast({
-        title: `${moduleConfig.title}`,
-        description: "Please complete this interactive module",
-        duration: 3000
-      });
+  // Get appropriate icon based on module type
+  const getModuleIcon = () => {
+    switch(moduleConfig.type) {
+      case ModuleType.VERIFICATION:
+        return <Shield className="h-4 w-4" />;
+      case ModuleType.INFORMATION:
+        return <Info className="h-4 w-4" />;
+      case ModuleType.CONTRACT:
+        return <FileText className="h-4 w-4" />;
+      default:
+        return <Info className="h-4 w-4" />;
     }
+  };
+  
+  useEffect(() => {
+    // Notify about the inline module being displayed with appropriate message based on type
+    let description = "Please complete this interactive module";
+    
+    if (moduleConfig.type === ModuleType.VERIFICATION) {
+      description = "Please verify the customer information";
+    } else if (moduleConfig.type === ModuleType.CONTRACT) {
+      description = "View and manage contract details";
+    } else if (moduleConfig.type === ModuleType.INFORMATION) {
+      description = "Important customer information available";
+    }
+    
+    toast({
+      title: `${moduleConfig.title}`,
+      description,
+      duration: 3000
+    });
   }, [moduleConfig, toast]);
   
   const handleModuleComplete = (result: any) => {
     // Prevent duplicate completions
     if (completedRef.current) return;
     completedRef.current = true;
+    setCompleted(true);
     
     console.log(`Module ${moduleConfig.id} completed with result:`, result);
     
@@ -86,16 +112,53 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       window.dispatchEvent(nachbearbeitungEvent);
     }
     
+    // Show completion toast
+    toast({
+      title: "Module Completed",
+      description: `${moduleConfig.title} has been completed successfully`,
+      duration: 2000
+    });
+    
     onModuleComplete(result);
+  };
+
+  // Module header color based on type  
+  const getHeaderClass = () => {
+    switch(moduleConfig.type) {
+      case ModuleType.VERIFICATION:
+        return "bg-blue-50 border-blue-200";
+      case ModuleType.INFORMATION:
+        return "bg-indigo-50 border-indigo-200";
+      case ModuleType.CONTRACT:
+        return "bg-purple-50 border-purple-200";
+      case ModuleType.NACHBEARBEITUNG:
+        return "bg-amber-50 border-amber-200";
+      default:
+        return "bg-gray-50 border-gray-200";
+    }
   };
   
   return (
     <div className="ml-auto mt-2 w-full max-w-[85%] transition-all duration-300">
-      <InlineModuleDisplay 
-        moduleConfig={moduleConfig}
-        onComplete={handleModuleComplete}
-        key={moduleConfig.id} // Add a stable key to prevent unnecessary re-renders
-      />
+      <div className={`rounded-lg overflow-hidden border ${getHeaderClass()}`}>
+        <div className="p-2 border-b border-inherit flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            {getModuleIcon()}
+            <span className="font-medium text-sm">{moduleConfig.title}</span>
+          </div>
+          {completed && (
+            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+              Completed
+            </span>
+          )}
+        </div>
+        
+        <InlineModuleDisplay 
+          moduleConfig={moduleConfig}
+          onComplete={handleModuleComplete}
+          key={moduleConfig.id} // Add a stable key to prevent unnecessary re-renders
+        />
+      </div>
     </div>
   );
 };
