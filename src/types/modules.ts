@@ -8,6 +8,7 @@ export enum ModuleType {
   CONTRACT_MANAGEMENT = 'CONTRACT_MANAGEMENT',
   QUIZ = 'QUIZ',
   FRANCHISE = 'FRANCHISE',
+  INSURANCE_MODEL = 'INSURANCE_MODEL', // New module type
 }
 
 // Interface for module configuration
@@ -16,4 +17,15 @@ export interface ModuleConfig {
   type: ModuleType;
   title: string;
   data?: any;
+}
+
+// Base interface for module props
+export interface ModuleProps {
+  id: string;
+  title: string;
+  data?: any;
+  onClose: () => void;
+  onComplete: (result: any) => void;
+  currentState?: string;
+  stateData?: any;
 }

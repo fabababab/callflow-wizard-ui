@@ -12,6 +12,8 @@ import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { ModuleType } from '@/types/modules';
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
@@ -46,6 +48,52 @@ const TestScenario = () => {
     }
   }, [scenarioState.loadedStateMachine, toast]);
   
+  // Demo function to trigger franchise module
+  const triggerFranchiseModule = () => {
+    const franchiseModule = {
+      id: 'franchise-demo',
+      type: ModuleType.FRANCHISE,
+      title: 'Franchise Übersicht',
+      data: {
+        currentFranchise: 300,
+        franchiseUsed: 180,
+        isInline: true, // Make it display inline
+        usageHistory: [
+          { year: '2024', used: 180, total: 300, claims: 2 },
+          { year: '2023', used: 450, total: 500, claims: 5 },
+          { year: '2022', used: 300, total: 300, claims: 3 },
+          { year: '2021', used: 220, total: 300, claims: 2 }
+        ]
+      }
+    };
+    
+    // Add system message and inline module
+    transcript.addSystemMessage("Here is your franchise overview:");
+    setTimeout(() => {
+      transcript.addInlineModuleMessage("Franchise information", franchiseModule);
+    }, 300);
+  };
+  
+  // Demo function to trigger insurance model module
+  const triggerInsuranceModelModule = () => {
+    const insuranceModelModule = {
+      id: 'insurance-model-demo',
+      type: ModuleType.INSURANCE_MODEL,
+      title: 'Versicherungsmodell',
+      data: {
+        currentModel: 'standard',
+        coverageUtilization: 65,
+        isInline: true // Make it display inline
+      }
+    };
+    
+    // Add system message and inline module
+    transcript.addSystemMessage("Here is your insurance model overview:");
+    setTimeout(() => {
+      transcript.addInlineModuleMessage("Insurance model information", insuranceModelModule);
+    }, 300);
+  };
+  
   return (
     <div className="flex h-screen bg-background">
       <SidebarProvider defaultOpen={false}>
@@ -61,6 +109,22 @@ const TestScenario = () => {
                     activeScenario={scenarioState.selectedStateMachine} 
                     jsonVisualization={jsonVisualization}
                   />
+                  
+                  {/* Demo buttons for triggering modules */}
+                  <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-10 flex gap-2">
+                    <Button 
+                      className="bg-amber-600 hover:bg-amber-700 text-white"
+                      onClick={triggerFranchiseModule}
+                    >
+                      Show Franchise Module
+                    </Button>
+                    <Button 
+                      className="bg-amber-600 hover:bg-amber-700 text-white"
+                      onClick={triggerInsuranceModelModule}
+                    >
+                      Show Insurance Model
+                    </Button>
+                  </div>
                 </div>
               )}
 
