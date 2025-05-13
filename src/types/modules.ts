@@ -1,11 +1,11 @@
 
-
 export enum ModuleType {
   VERIFICATION = 'verification',
   INFORMATION = 'information',
   NACHBEARBEITUNG = 'nachbearbeitung',
   CONTRACT = 'contract',
-  CONTRACT_MANAGEMENT = 'contract_management'
+  CONTRACT_MANAGEMENT = 'contract_management',
+  QUIZ = 'quiz'
 }
 
 export interface ModuleConfig {
@@ -24,4 +24,3 @@ export interface ModuleProps {
   currentState?: string;
   stateData?: any;
 }
-
