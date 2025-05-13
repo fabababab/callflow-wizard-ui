@@ -27,17 +27,23 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
   onSensitiveFieldClick
 }) => {
   return (
-    <div className="bg-white p-4 rounded-md">
-      <DecisionTreeVisualizer 
-        stateMachine={loadedStateMachine} 
-        currentState={currentState} 
-        onStateClick={onStateClick} 
-      />
+    <div className="bg-white rounded-md flex flex-col md:flex-row">
+      {/* Left side: Decision Tree Visualization */}
+      <div className="md:w-3/5 p-4 border-r">
+        <DecisionTreeVisualizer 
+          stateMachine={loadedStateMachine} 
+          currentState={currentState} 
+          onStateClick={onStateClick} 
+        />
+      </div>
       
-      <StateDetailsPanel 
-        selectedStateDetails={selectedStateDetails}
-        onSensitiveFieldClick={onSensitiveFieldClick}
-      />
+      {/* Right side: State Details Panel */}
+      <div className="md:w-2/5 p-4 overflow-auto max-h-[600px]">
+        <StateDetailsPanel 
+          selectedStateDetails={selectedStateDetails}
+          onSensitiveFieldClick={onSensitiveFieldClick}
+        />
+      </div>
     </div>
   );
 };

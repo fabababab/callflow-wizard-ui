@@ -40,24 +40,25 @@ const JsonVisualizationDialog: React.FC<JsonVisualizationDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-background">
-        <DialogHeader>
-          <DialogTitle>
-            {activeScenario} State Machine
-          </DialogTitle>
-          <DialogDescription>
-            {dialogViewMode === "json" ? 
-              "Complete JSON representation of the state machine flow" : 
-              "Visual representation of the state machine flow"}
-          </DialogDescription>
+      <DialogContent className="max-w-[90vw] max-h-[90vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-background">
+        <DialogHeader className="flex flex-row items-center justify-between">
+          <div>
+            <DialogTitle>
+              {activeScenario} State Machine
+            </DialogTitle>
+            <DialogDescription>
+              {dialogViewMode === "json" ? 
+                "Complete JSON representation of the state machine flow" : 
+                "Visual representation of the state machine flow"}
+            </DialogDescription>
+          </div>
+          <DialogViewControls 
+            dialogViewMode={dialogViewMode}
+            handleViewModeToggle={handleViewModeToggle}
+          />
         </DialogHeader>
         
-        <DialogViewControls 
-          dialogViewMode={dialogViewMode}
-          handleViewModeToggle={handleViewModeToggle}
-        />
-        
-        <div className="overflow-auto max-h-[60vh]">
+        <div className="overflow-auto max-h-[70vh] mt-4">
           {dialogViewMode === "json" ? (
             <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
               {jsonContent}

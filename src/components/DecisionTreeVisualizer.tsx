@@ -1,7 +1,9 @@
+
 import React, { useEffect, useRef } from 'react';
 import { StateMachine, StateMachineStatus } from '@/utils/stateMachineLoader';
-import { Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, Info, FileText, ClipboardList, BookText } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { ModuleType } from '@/types/modules';
 
 interface DecisionTreeVisualizerProps {
   stateMachine: StateMachine | null;
@@ -46,6 +48,9 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       const hasSensitiveData = stateMachine.states[state]?.meta?.sensitiveFields && 
                               stateMachine.states[state]?.meta?.sensitiveFields?.length > 0;
       
+      const hasModule = stateMachine.states[state]?.meta?.module;
+      const moduleType = hasModule ? stateMachine.states[state]?.meta?.module?.type : null;
+      
       // Setup rectangle
       rect.setAttribute('x', x.toString());
       rect.setAttribute('y', y.toString());
@@ -54,8 +59,35 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       rect.setAttribute('rx', '8');
       rect.setAttribute('ry', '8');
       rect.setAttribute('fill', state === currentState ? '#2563eb' : '#f3f4f6');
-      rect.setAttribute('stroke', hasSensitiveData ? '#eab308' : '#d1d5db');
-      rect.setAttribute('stroke-width', hasSensitiveData ? '3' : '1');
+      
+      // Border color changes based on properties
+      if (hasSensitiveData) {
+        rect.setAttribute('stroke', '#eab308');
+        rect.setAttribute('stroke-width', '3');
+      } else if (hasModule) {
+        // Different border colors for different module types
+        switch(moduleType) {
+          case ModuleType.VERIFICATION:
+            rect.setAttribute('stroke', '#3b82f6');
+            break;
+          case ModuleType.INFORMATION:
+            rect.setAttribute('stroke', '#22c55e');
+            break;
+          case ModuleType.CONTRACT:
+            rect.setAttribute('stroke', '#8b5cf6');
+            break;
+          case ModuleType.NACHBEARBEITUNG:
+            rect.setAttribute('stroke', '#f59e0b');
+            break;
+          default:
+            rect.setAttribute('stroke', '#6b7280');
+        }
+        rect.setAttribute('stroke-width', '2');
+      } else {
+        rect.setAttribute('stroke', '#d1d5db');
+        rect.setAttribute('stroke-width', '1');
+      }
+      
       rect.setAttribute('cursor', 'pointer');
       rect.onclick = () => onStateClick && onStateClick(state);
       
@@ -72,6 +104,57 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
       
       g.appendChild(rect);
       g.appendChild(text);
+      
+      // Add icons based on state properties
+      
+      // If state has a module, add a module type icon
+      if (hasModule) {
+        const moduleIcon = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const iconSize = 16;
+        const iconX = x + nodeSize.width - 40;
+        const iconY = y + 10;
+        
+        let iconPath = '';
+        let iconFill = '#6b7280';
+        
+        // Different icons and colors for different module types
+        switch(moduleType) {
+          case ModuleType.VERIFICATION:
+            // Shield icon path
+            iconPath = `M${iconX},${iconY} l${iconSize/2},${iconSize/4} l${iconSize/2},-${iconSize/4} v${iconSize*0.7} 
+              a${iconSize/2},${iconSize/2} 0 0 1 -${iconSize/2},${iconSize/3} a${iconSize/2},${iconSize/2} 0 0 1 -${iconSize/2},-${iconSize/3} v-${iconSize*0.7} z`;
+            iconFill = '#3b82f6';
+            break;
+          case ModuleType.INFORMATION:
+            // Info icon path (circle with i)
+            iconPath = `M${iconX + iconSize/2},${iconY + iconSize/2} m-${iconSize/2},0 a${iconSize/2},${iconSize/2} 0 1,1 ${iconSize},0 a${iconSize/2},${iconSize/2} 0 1,1 -${iconSize},0 
+              M${iconX + iconSize/2},${iconY + iconSize/4} v${iconSize/10} M${iconX + iconSize/2},${iconY + iconSize/2} v${iconSize/3}`;
+            iconFill = '#22c55e';
+            break;
+          case ModuleType.CONTRACT:
+            // Document icon path
+            iconPath = `M${iconX},${iconY} h${iconSize} v${iconSize} h-${iconSize} z M${iconX + iconSize/4},${iconY + iconSize/3} h${iconSize/2} M${iconX + iconSize/4},${iconY + iconSize/2} h${iconSize/2} M${iconX + iconSize/4},${iconY + iconSize*2/3} h${iconSize/2}`;
+            iconFill = '#8b5cf6';
+            break;
+          case ModuleType.NACHBEARBEITUNG:
+            // Clipboard icon path
+            iconPath = `M${iconX + iconSize/4},${iconY} h${iconSize/2} v${iconSize/6} h-${iconSize/2} z M${iconX},${iconY + iconSize/6} h${iconSize} v${iconSize*5/6} h-${iconSize} z M${iconX + iconSize/4},${iconY + iconSize/2} h${iconSize/2} M${iconX + iconSize/4},${iconY + iconSize*2/3} h${iconSize/2}`;
+            iconFill = '#f59e0b';
+            break;
+          default:
+            // Generic module icon
+            iconPath = `M${iconX},${iconY} h${iconSize} v${iconSize} h-${iconSize} z`;
+            iconFill = '#6b7280';
+        }
+        
+        moduleIcon.setAttribute('d', iconPath);
+        moduleIcon.setAttribute('fill', 'none');
+        moduleIcon.setAttribute('stroke', iconFill);
+        moduleIcon.setAttribute('stroke-width', '1.5');
+        moduleIcon.setAttribute('cursor', 'pointer');
+        
+        g.appendChild(moduleIcon);
+      }
       
       // Add a shield icon for states with sensitive data
       if (hasSensitiveData) {
@@ -311,21 +394,45 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
         ></svg>
       )}
       
-      <div className="mt-4 flex items-center gap-2 text-sm text-gray-500 border-t pt-4">
-        <div className="flex items-center gap-1">
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-gray-500 border-t pt-4">
+        <div className="flex items-center gap-1 mr-2">
           <div className="w-3 h-3 bg-[#f3f4f6] border border-[#d1d5db] rounded-sm"></div>
           <span>Regular State</span>
         </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 mr-2">
           <div className="w-3 h-3 bg-[#2563eb] border border-[#2563eb] rounded-sm"></div>
           <span>Current State</span>
         </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 mr-2">
           <div className="w-3 h-3 bg-[#f3f4f6] border-2 border-[#eab308] rounded-sm"></div>
           <Shield className="h-3 w-3 text-yellow-500" />
-          <span>Contains Sensitive Data</span>
+          <span>Sensitive Data</span>
+        </div>
+        
+        <div className="flex items-center gap-1 mr-2">
+          <div className="w-3 h-3 bg-[#f3f4f6] border-2 border-[#3b82f6] rounded-sm"></div>
+          <Shield className="h-3 w-3 text-blue-500" />
+          <span>Verification</span>
+        </div>
+        
+        <div className="flex items-center gap-1 mr-2">
+          <div className="w-3 h-3 bg-[#f3f4f6] border-2 border-[#22c55e] rounded-sm"></div>
+          <Info className="h-3 w-3 text-green-500" />
+          <span>Information</span>
+        </div>
+        
+        <div className="flex items-center gap-1 mr-2">
+          <div className="w-3 h-3 bg-[#f3f4f6] border-2 border-[#8b5cf6] rounded-sm"></div>
+          <FileText className="h-3 w-3 text-purple-500" />
+          <span>Contract</span>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 bg-[#f3f4f6] border-2 border-[#f59e0b] rounded-sm"></div>
+          <ClipboardList className="h-3 w-3 text-amber-500" />
+          <span>Nachbearbeitung</span>
         </div>
       </div>
     </div>
