@@ -2,16 +2,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/SidebarTrigger';
+import SidebarTrigger from '@/components/SidebarTrigger';
 import { Bell, Settings, Home, Phone, FileText } from 'lucide-react';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { Badge } from '@/components/ui/badge';
 
 const Header = () => {
   const navigate = useNavigate();
-  const { notifications, showNotificationsModal, setShowNotificationsModal } = useNotifications();
-  
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { notifications, addNotification, unreadCount } = useNotifications();
+  const [showNotificationsModal, setShowNotificationsModal] = React.useState(false);
   
   return (
     <header className="border-b bg-background h-14 px-4 flex items-center justify-between">

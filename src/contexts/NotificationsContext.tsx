@@ -20,6 +20,8 @@ interface NotificationsContextType {
   markAllAsRead: () => void;
   removeNotification: (id: string) => void;
   clearAll: () => void;
+  showNotificationsModal: boolean;
+  setShowNotificationsModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
@@ -39,6 +41,7 @@ interface NotificationsProviderProps {
 export function NotificationsProvider({ children }: NotificationsProviderProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [showNotificationsModal, setShowNotificationsModal] = useState<boolean>(false);
 
   useEffect(() => {
     // Update unread count whenever notifications change
@@ -91,6 +94,8 @@ export function NotificationsProvider({ children }: NotificationsProviderProps) 
         markAllAsRead,
         removeNotification,
         clearAll,
+        showNotificationsModal,
+        setShowNotificationsModal
       }}
     >
       {children}

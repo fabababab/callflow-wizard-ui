@@ -23,7 +23,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     svg.innerHTML = '';
     
     const states = Object.keys(stateMachine.states);
-    const initialState = stateMachine.initial || stateMachine.initialState || 'start';
+    const initialState = stateMachine.initial || 'start';
     const statePositions: { [key: string]: { x: number, y: number } } = {};
     const nodeSize = { width: 150, height: 40 };
     const levelHeight = 80;

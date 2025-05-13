@@ -27,9 +27,9 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
   // Get the appropriate color based on validation status
   const getStatusColor = (status: ValidationStatus) => {
     switch (status) {
-      case 'valid':
+      case 'verified':
         return 'bg-green-100 border-green-300 text-green-700';
-      case 'invalid':
+      case 'rejected':
         return 'bg-red-100 border-red-300 text-red-700';
       default:
         return 'bg-yellow-100 border-yellow-300 text-yellow-700';
@@ -39,9 +39,9 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
   // Get the appropriate icon based on validation status
   const StatusIcon = () => {
     switch (field.status) {
-      case 'valid':
+      case 'verified':
         return <CheckCircle size={16} className="text-green-600" />;
-      case 'invalid':
+      case 'rejected':
         return <XCircle size={16} className="text-red-600" />;
       default:
         return <AlertCircle size={16} className="text-yellow-600" />;
@@ -64,7 +64,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
         <div className="flex items-center gap-2">
           <Shield size={16} />
           <span className="font-medium">{dataTypeLabels[field.type] || field.type}</span>
-          <Badge variant={field.status === 'pending' ? 'outline' : field.status === 'valid' ? 'default' : 'destructive'} className="text-xs">
+          <Badge variant={field.status === 'pending' ? 'outline' : field.status === 'verified' ? 'default' : 'destructive'} className="text-xs">
             {field.status.toUpperCase()}
           </Badge>
           {field.requiresVerification && (
@@ -86,7 +86,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
             size="sm" 
             variant="outline" 
             className="bg-green-100 hover:bg-green-200 text-green-700 border-green-300"
-            onClick={() => handleValidate('valid')}
+            onClick={() => handleValidate('verified')}
           >
             <CheckCircle size={14} className="mr-1" />
             Valid
@@ -95,7 +95,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
             size="sm" 
             variant="outline"
             className="bg-red-100 hover:bg-red-200 text-red-700 border-red-300"
-            onClick={() => handleValidate('invalid')}
+            onClick={() => handleValidate('rejected')}
           >
             <XCircle size={14} className="mr-1" />
             Invalid

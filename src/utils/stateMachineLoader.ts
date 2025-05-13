@@ -1,6 +1,12 @@
-
 import { ScenarioType } from "@/components/ScenarioSelector";
 import testScenarioData from "@/data/stateMachines/testscenario.json";
+
+// Define StateMachineStatus enum
+export enum StateMachineStatus {
+  DEVELOPMENT = 'DEVELOPMENT',
+  TESTING = 'TESTING',
+  PRODUCTION = 'PRODUCTION'
+}
 
 // Type definition for state machine states
 export interface StateMachineState {
@@ -15,21 +21,23 @@ export interface StateMachineState {
   };
   on?: Record<string, string>;
   nextState?: string;
+  requiresVerification?: boolean;
 }
 
 // Type definition for a state machine
 export interface StateMachine {
   id: string;
   initial: string;
+  initialState?: string; // Adding this for backward compatibility
   states: Record<string, StateMachineState>;
-  status?: 'DEVELOPMENT' | 'TESTING' | 'PRODUCTION';
+  status?: StateMachineStatus;
 }
 
 /**
  * Gets the initial state from a state machine
  */
 export const getInitialState = (stateMachine: StateMachine): string => {
-  return stateMachine.initial;
+  return stateMachine.initial || stateMachine.initialState || 'start';
 };
 
 /**

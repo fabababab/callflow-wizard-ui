@@ -5,7 +5,24 @@ import { cn } from '@/lib/utils';
 import { NavLink } from 'react-router-dom';
 import { Home, Phone, Users, Clock, ChevronLeft, BarChart2, ListChecks, AlarmClock, FileText, HelpCircle, Settings, User, Menu } from 'lucide-react';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useMobile } from '@/hooks/use-mobile';
+
+// Create a hook to check if we're on mobile
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(
+    window.innerWidth < 768
+  );
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+};
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -13,7 +30,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   
   // In mobile view, sidebar should be controlled by the context
   const effectiveCollapsed = isMobile ? !sidebarOpen : collapsed;
