@@ -1,4 +1,3 @@
-
 export enum ModuleType {
   VERIFICATION = 'verification',
   INFORMATION = 'information',
@@ -23,4 +22,13 @@ export interface ModuleProps {
   onComplete?: (result: any) => void;
   currentState?: string;
   stateData?: any;
+}
+
+// Export the ContractDetails type
+export interface ContractDetails {
+  policyNumber: string;
+  startDate: string;
+  endDate: string;
+  premium: string;
+  coverageType: string;
 }

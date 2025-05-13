@@ -3,18 +3,13 @@ import React, { useState, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Check, Calculator, Edit, Download } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-interface ContractDetails {
-  policyNumber: string;
-  startDate: string;
-  endDate: string;
-  premium: string;
-  coverageType: string;
-}
+// Import the new components
+import CalculatorComponent from './contract/CalculatorComponent';
+import ContractDetailsComponent, { ContractDetails } from './contract/ContractDetailsComponent';
+import ActionButtons from './contract/ActionButtons';
 
 const ContractModule: React.FC<ModuleProps> = memo(({ 
   id, 
@@ -59,69 +54,6 @@ const ContractModule: React.FC<ModuleProps> = memo(({
     }));
   };
   
-  // Simple calculator component
-  const CalculatorComponent = () => {
-    const [amount, setAmount] = useState("1000");
-    const [years, setYears] = useState("1");
-    const [rate, setRate] = useState("2.5");
-    
-    const calculateInterest = () => {
-      const principal = parseFloat(amount);
-      const time = parseFloat(years);
-      const interestRate = parseFloat(rate) / 100;
-      
-      if (isNaN(principal) || isNaN(time) || isNaN(interestRate)) {
-        return "Please enter valid numbers";
-      }
-      
-      const interest = principal * interestRate * time;
-      const total = principal + interest;
-      
-      return `Interest: €${interest.toFixed(2)}\nTotal: €${total.toFixed(2)}`;
-    };
-    
-    return (
-      <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-md space-y-2 my-3">
-        <h4 className="text-sm font-medium text-amber-800 flex items-center gap-2">
-          <Calculator className="h-4 w-4" />
-          Payment Calculator
-        </h4>
-        <div className="grid grid-cols-1 gap-2">
-          <div>
-            <Label htmlFor="amount">Amount (€)</Label>
-            <Input 
-              id="amount" 
-              value={amount} 
-              onChange={(e) => setAmount(e.target.value)} 
-              type="text" 
-            />
-          </div>
-          <div>
-            <Label htmlFor="years">Years</Label>
-            <Input 
-              id="years" 
-              value={years} 
-              onChange={(e) => setYears(e.target.value)} 
-              type="text" 
-            />
-          </div>
-          <div>
-            <Label htmlFor="rate">Interest Rate (%)</Label>
-            <Input 
-              id="rate" 
-              value={rate} 
-              onChange={(e) => setRate(e.target.value)} 
-              type="text" 
-            />
-          </div>
-        </div>
-        <div className="mt-2 p-2 bg-white rounded border border-amber-100 font-mono text-xs whitespace-pre-line">
-          {calculateInterest()}
-        </div>
-      </div>
-    );
-  };
-  
   // Card styling with yellowish theme
   const cardClassName = isInlineDisplay
     ? "w-full ml-auto border-l-4 border-amber-300 border-r border-t border-b border-amber-200 shadow-sm rounded-md bg-amber-50/60 transition-all duration-300"
@@ -142,86 +74,21 @@ const ContractModule: React.FC<ModuleProps> = memo(({
       </CardHeader>
       
       <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-4"} space-y-3`}>
-        {/* Contract Details Section */}
-        <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-md">
-          <h3 className="text-sm font-medium mb-2 text-amber-800 flex items-center justify-between">
-            <span>Contract Details</span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-6 text-xs text-amber-700"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              <Edit className="h-3 w-3 mr-1" />
-              {isEditing ? 'View' : 'Edit'}
-            </Button>
-          </h3>
-          
-          {isEditing ? (
-            <div className="space-y-2">
-              {Object.entries(contractDetails).map(([key, value]) => (
-                <div key={key} className="grid grid-cols-1 gap-1">
-                  <Label htmlFor={key} className="text-xs capitalize">{key.replace(/([A-Z])/g, ' $1')}</Label>
-                  <Input 
-                    id={key}
-                    value={value}
-                    onChange={(e) => handleFieldChange(key as keyof ContractDetails, e.target.value)}
-                    className="text-xs h-7 border-amber-200"
-                  />
-                </div>
-              ))}
-              <div className="flex justify-end pt-1">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-xs"
-                  onClick={() => setIsEditing(false)}
-                >
-                  <Check className="h-3 w-3 mr-1" />
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {Object.entries(contractDetails).map(([key, value]) => (
-                <div key={key} className="flex justify-between text-xs border-b border-amber-100 pb-1 last:border-0 last:pb-0">
-                  <span className="text-amber-700 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                  <span className="font-medium">{value}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Contract Details Section - now uses the ContractDetailsComponent */}
+        <ContractDetailsComponent 
+          contractDetails={contractDetails}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+          handleFieldChange={handleFieldChange}
+        />
         
-        {/* Calculator Toggle */}
-        <div className="flex justify-between">
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="text-xs flex items-center gap-1"
-            onClick={() => setShowCalculator(!showCalculator)}
-          >
-            <Calculator className="h-3 w-3" />
-            {showCalculator ? 'Hide Calculator' : 'Payment Calculator'}
-          </Button>
-          
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="text-xs flex items-center gap-1"
-            onClick={() => toast({
-              title: "Contract Downloaded",
-              description: "The contract was downloaded successfully",
-              duration: 2000
-            })}
-          >
-            <Download className="h-3 w-3" />
-            Download Contract
-          </Button>
-        </div>
+        {/* Action Buttons - now uses the ActionButtons component */}
+        <ActionButtons 
+          showCalculator={showCalculator}
+          setShowCalculator={setShowCalculator}
+        />
         
-        {/* Calculator Section */}
+        {/* Calculator Section - now uses the CalculatorComponent */}
         {showCalculator && <CalculatorComponent />}
         
         {/* Contract Summary */}
