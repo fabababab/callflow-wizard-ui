@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 interface VerificationField {
   id: string;
@@ -42,8 +41,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const hasShownToastRef = useRef(false);
   const verificationCompleteRef = useRef(false);
   const moduleInstanceId = useRef<string>(`verification-${id}-${Date.now()}`).current;
-  const { toast } = useToast();
-  
+
   // Auto-verify on mount after a small delay
   useEffect(() => {
     if (!processingRef.current && !verificationCompleteRef.current) {
@@ -84,7 +82,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     
     // Show toast notification once
     if (!hasShownToastRef.current) {
-      toast.toast({
+      toast({
         title: "Verification Successful",
         description: "Customer identity has been verified",
         duration: 2000

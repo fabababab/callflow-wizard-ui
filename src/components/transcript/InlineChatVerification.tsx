@@ -4,7 +4,7 @@ import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle, Loader, ShieldCheck, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
 interface InlineChatVerificationProps {
   onVerify: (verified: boolean, data?: FormValues) => void;
@@ -21,7 +21,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   const [verificationFailed, setVerificationFailed] = useState(false);
   const verificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
-  const { toast } = useToast();
   const hasShownToastRef = useRef(false);
   const verificationCompleteRef = useRef(false);
   
@@ -73,7 +72,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       
       // Show success toast only once
       if (!hasShownToastRef.current) {
-        toast.toast({
+        toast({
           title: "Identity Verified",
           description: "Customer identity has been automatically verified",
           duration: 2000
