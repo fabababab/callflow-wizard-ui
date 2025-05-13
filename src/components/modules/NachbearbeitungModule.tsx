@@ -32,13 +32,13 @@ const NachbearbeitungModule: React.FC<ModuleProps> = ({
     important: index < 2 // First two points marked as important
   })) || [
     { id: '1', text: 'Studium abgeschlossen', checked: true, important: true },
-    { id: '2', text: 'Franchise von 2'500 auf 1'000 CHF reduziert', checked: true, important: true },
+    { id: '2', text: 'Franchise von 2500 auf 1000 CHF reduziert', checked: true, important: true },
     { id: '3', text: 'Bleibt im Telmed-Modell', checked: false, important: true },
     { id: '4', text: 'Änderung ab nächstem Monat', checked: false, important: false }
   ];
   
   // Use provided summary or default
-  const initialNotes = data?.summary || 'Kunde hat nach Studienabschluss Franchise von CHF 2'500.– auf CHF 1'000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet.';
+  const initialNotes = data?.summary || 'Kunde hat nach Studienabschluss Franchise von CHF 2500.– auf CHF 1000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet.';
   
   const [notes, setNotes] = useState(initialNotes);
   const [points, setPoints] = useState<CallSummaryPoint[]>(initialPoints);
