@@ -42,9 +42,9 @@ const TranscriptFooter: React.FC<TranscriptFooterProps> = ({
         {/* JSON button */}
         <Button 
           variant="ghost" 
-          size="sm" 
+          size="default" 
           onClick={viewJson} 
-          className="ml-auto flex items-center"
+          className="ml-auto flex items-center h-10"
           disabled={isLoadingJson}
         >
           <FileText className="h-4 w-4 mr-1" /> View JSON

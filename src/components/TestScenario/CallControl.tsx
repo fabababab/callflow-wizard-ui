@@ -31,8 +31,8 @@ const CallControl: React.FC<CallControlProps> = ({
       {!callActive ? (
         <Button 
           onClick={onStartCall} 
-          className="flex items-center gap-2 h-12 px-8 py-2 rounded-xl border-2 border-black shadow-md bg-blue-600 hover:bg-blue-700 text-white"
-          size="lg"
+          className="flex items-center gap-2 h-10 px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
+          size="default"
         >
           <PhoneCall size={20} />
           Start Call
@@ -41,8 +41,8 @@ const CallControl: React.FC<CallControlProps> = ({
         <Button 
           onClick={onEndCall} 
           variant="destructive"
-          className="flex items-center gap-2 h-12 px-8 py-2 rounded-xl border-2 border-black shadow-md"
-          size="lg"
+          className="flex items-center gap-2 h-10 px-6 py-2 rounded-xl"
+          size="default"
         >
           <PhoneOff size={20} />
           End Call
