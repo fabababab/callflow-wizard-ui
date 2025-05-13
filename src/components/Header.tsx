@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Bell, Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,11 +21,14 @@ import {
   DialogTrigger,
   DialogClose
 } from '@/components/ui/dialog';
+import NotificationBadge from './notifications/NotificationBadge';
+import NotificationsModal from './notifications/NotificationsModal';
 
 const Header = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [scenario, setScenario] = useState<ScenarioType | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const handleSelectScenario = (selectedScenario: ScenarioType) => {
     setScenario(selectedScenario);
@@ -115,9 +117,19 @@ const Header = () => {
           </DialogContent>
         </Dialog>
 
-        <Button variant="ghost" size="icon" className="text-callflow-text">
-          <Bell size={20} />
+        {/* Notifications Bell with Modal */}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="text-callflow-text relative"
+          onClick={() => setNotificationsOpen(true)}
+        >
+          <NotificationBadge />
         </Button>
+        <NotificationsModal 
+          open={notificationsOpen} 
+          onOpenChange={setNotificationsOpen} 
+        />
         
         <Button variant="ghost" size="icon" className="text-callflow-text">
           <Settings size={20} />

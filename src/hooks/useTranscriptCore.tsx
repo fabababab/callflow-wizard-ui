@@ -11,46 +11,40 @@ import { ModuleConfig } from '@/types/modules';
 import { useNotifications } from '@/contexts/NotificationsContext';
 import { useToast } from '@/hooks/use-toast';
 
-export function useTranscriptCore(activeScenario: ScenarioType) {
-  // Initialize state for call and conversation
+// Define a more specific type for actions if possible, or use Record<string, Function>
+interface StateMachineActions {
+  addSystemMessage: (text: string, options?: { responseOptions?: string[] }) => void;
+  addAgentMessage: (text: string) => void;
+  addCustomerMessage: (text: string, options?: { highlightSensitiveData?: boolean }) => void;
+  addInlineModuleMessage: (text: string, inlineModule: ModuleConfig) => void;
+  setActiveModule: (module: ModuleConfig | null) => void;
+  setModuleResult: (result: any) => void; // Kept as any for now
+  setStateData: (data: Record<string, any> | null) => void; // Changed to Record<string, any> | null
+  setCurrentState: (state: string) => void;
+}
+
+export function useTranscriptCore(initialStateMachine: StateMachineType | null) {
   const [callActive, setCallActive] = useState(false);
   const [hasInitializedConversation, setHasInitializedConversation] = useState(false);
   const [activeModule, setActiveModule] = useState<ModuleConfig | null>(null);
-  const [moduleResult, setModuleResult] = useState<any>(null);
-  const [stateData, setStateData] = useState<any>(null);
+  const [moduleResult, setModuleResult] = useState<any>(null); // Kept as any
+  const [stateData, setStateData] = useState<Record<string, any> | null>(null); // Changed to Record<string, any> | null
   const [currentState, setCurrentState] = useState<string>('');
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   const { addNotification } = useNotifications();
   const toastAPI = useToast();
   
-  // Initialize refs
   const nachbearbeitungSummaryRef = useRef<HTMLDialogElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const stateMachineRef = useRef<any>(null);
+  // const messagesEndRef = useRef<HTMLDivElement>(null); // This is returned by useMessageHandling
+  // const stateMachineRef = useRef<StateMachineType | null>(null); // No longer needed directly here
   
-  // Function to show the Nachbearbeitung summary - defined before it's used
-  const showNachbearbeitungSummary = useCallback((state?: string) => {
-    if (nachbearbeitungSummaryRef.current) {
-      console.log("Showing Nachbearbeitung summary");
-      addSystemMessage(`Call completed in state: ${state || stateMachine.currentState}. Please complete after-call work.`);
-      nachbearbeitungSummaryRef.current.showModal();
-    } else {
-      console.warn("Nachbearbeitung summary ref not available");
-      addNotification({
-        title: "Nachbearbeitung Unavailable",
-        description: "The after-call summary is not available at this time.",
-        type: "warning"
-      });
-    }
-  }, [addNotification]);
-  
-  // Initialize smaller focused hooks
-  const callState = { callActive, setCallActive };
+  // Initialize messageHandling first as it doesn't depend on stateMachineHook
   const {
     messages,
     sensitiveDataStats,
     verificationBlocking,
-    lastMessageUpdate,
+    lastMessageUpdate: messageHookLastUpdate,
+    messagesEndRef,
     addMessage,
     addSystemMessage,
     addAgentMessage,
@@ -64,23 +58,44 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     scanSensitiveFields,
     resetSensitiveDataStats
   } = useMessageHandling();
-  
-  const conversationState = useConversationState();
-  const stateMachine = useStateMachineInternal(activeScenario, {
+
+  // Now initialize stateMachineHook as showNachbearbeitungSummary depends on it
+  const stateMachineHook = useStateMachineInternal(initialStateMachine, {
     addSystemMessage,
     addAgentMessage,
     addCustomerMessage,
     addInlineModuleMessage,
     setActiveModule,
     setModuleResult,
-    setStateData,
-    setCurrentState
+    setStateData: (data) => setStateData(data),
+    setCurrentState: (state) => setCurrentState(state)
   });
   
+  // showNachbearbeitungSummary can now safely access stateMachineHook.currentState
+  const showNachbearbeitungSummary = useCallback((finalState?: string) => {
+    if (nachbearbeitungSummaryRef.current) {
+      console.log("Showing Nachbearbeitung summary");
+      const displayState = finalState || stateMachineHook.currentState || "unknown";
+      addSystemMessage(`Call completed in state: ${displayState}. Please complete after-call work.`);
+      nachbearbeitungSummaryRef.current.showModal();
+    } else {
+      console.warn("Nachbearbeitung summary ref not available");
+      addNotification({
+        title: "Nachbearbeitung Unavailable",
+        description: "The after-call summary is not available at this time.",
+        type: "warning"
+      });
+    }
+  }, [addNotification, nachbearbeitungSummaryRef, stateMachineHook.currentState, addSystemMessage]);
+  
+  const callState = { callActive, setCallActive };
+  const conversationState = useConversationState();
+  const scenarioIdForInitializer = initialStateMachine?.id as ScenarioType | undefined;
+
   const conversationInitializer = useConversationInitializer({
-    activeScenario,
+    activeScenario: scenarioIdForInitializer, 
     conversationState,
-    stateMachine,
+    stateMachine: stateMachineHook.stateMachineInstance,
     messageHandling: {
       addSystemMessage,
       clearMessages
@@ -92,79 +107,76 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   });
   
   const responseHandler = useResponseHandler({
-    stateMachine,
+    stateMachine: stateMachineHook.stateMachineInstance,
     messageHandling: {
       addAgentMessage
     },
     conversationState
   });
   
-  // Load state machine on scenario change
   useEffect(() => {
-    stateMachine.loadStateMachine(activeScenario);
-  }, [activeScenario, stateMachine]);
+    if (scenarioIdForInitializer) {
+      conversationInitializer.resetConversation();
+    }
+  }, [scenarioIdForInitializer, conversationInitializer]);
   
-  // Reset conversation state on scenario change
-  useEffect(() => {
-    conversationInitializer.resetConversation();
-  }, [activeScenario, conversationInitializer]);
-  
-  // Function to complete a module
-  const completeModule = useCallback((result: any) => {
+  const completeModule = useCallback((result: any) => { 
     console.log('Module completed with result:', result);
     setModuleResult(result);
     setActiveModule(null);
-    
-    // Add a system message indicating the module is complete
     addSystemMessage(`Module completed with result: ${JSON.stringify(result)}`);
-    
-    // Dispatch custom event for module completion
     const event = new CustomEvent('module-complete', {
       detail: { result }
     });
     window.dispatchEvent(event);
-    
-    // Optionally transition to the next state based on the module result
     if (result?.nextState) {
       console.log(`Transitioning to next state: ${result.nextState}`);
-      stateMachine.transition(result.nextState);
+      stateMachineHook.transitionTo(result.nextState);
     }
-  }, [setModuleResult, setActiveModule, addSystemMessage, stateMachine]);
+  }, [setModuleResult, setActiveModule, addSystemMessage, stateMachineHook]);
   
-  // Handle module completion
   const handleModuleComplete = useCallback((result: Record<string, unknown>) => {
     console.log('Module completed with result:', result);
     completeModule(result);
   }, [completeModule]);
   
-  // Handle call functionality
   const handleCall = () => {
     console.log("Starting call");
     conversationInitializer.handleCall();
   };
   
-  // Handle hang up call functionality
   const handleHangUpCall = () => {
     console.log("Hanging up call");
     conversationInitializer.handleHangUpCall();
   };
   
-  // Reset conversation
   const resetConversation = () => {
     console.log("Resetting conversation");
-    conversationInitializer.resetConversation();
+    if (scenarioIdForInitializer) { 
+        conversationInitializer.resetConversation();
+    }
   };
 
-  // Update transcript when messages update
   useEffect(() => {
-    if (lastMessageUpdate) {
-      console.log("Message update detected, updating transcript:", lastMessageUpdate);
+    if (messageHookLastUpdate) {
+      console.log("Message update detected, updating transcript:", messageHookLastUpdate);
       setLastTranscriptUpdate(new Date());
     }
-  }, [lastMessageUpdate]);
+  }, [messageHookLastUpdate]);
+  
+  useEffect(() => {
+    if (stateMachineHook.stateData) {
+      setStateData(stateMachineHook.stateData);
+    }
+  }, [stateMachineHook.stateData]);
+
+  useEffect(() => {
+    if (stateMachineHook.currentState) {
+      setCurrentState(stateMachineHook.currentState);
+    }
+  }, [stateMachineHook.currentState]);
   
   return {
-    // State and refs
     callActive,
     setCallActive,
     hasInitializedConversation,
@@ -177,16 +189,15 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     setStateData,
     currentState,
     setCurrentState,
-    messagesEndRef,
+    messagesEndRef, // Return from useMessageHandling
     nachbearbeitungSummaryRef,
-    stateMachineRef,
+    // stateMachineRef, // No longer directly returned
     lastTranscriptUpdate,
     
-    // Message handling
     messages,
     sensitiveDataStats,
     verificationBlocking,
-    lastMessageUpdate,
+    lastMessageUpdate: messageHookLastUpdate, // Return renamed variable
     addMessage,
     addSystemMessage,
     addAgentMessage,
@@ -200,105 +211,90 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     scanSensitiveFields,
     resetSensitiveDataStats,
     
-    // Conversation control
     handleCall,
     handleHangUpCall,
     resetConversation,
     handleSelectResponse: responseHandler.handleSelectResponse,
     
-    // Module handling
     completeModule,
     handleModuleComplete,
     
-    // State machine
-    stateMachine: stateMachine.stateMachine,
-    loadStateMachine: stateMachine.loadStateMachine
+    stateMachine: stateMachineHook.stateMachineInstance,
+    loadStateMachine: stateMachineHook.loadStateMachine,
+    transitionTo: stateMachineHook.transitionTo,
   };
 }
 
-// Internal hook for managing state machine
-function useStateMachineInternal(activeScenario: ScenarioType, actions: any) {
-  const stateMachineRef = useRef<any>(null);
-  const [stateData, setStateData] = useState<any>(null);
-  const [currentState, setCurrentState] = useState<string>('');
-  
-  const loadStateMachine = useCallback((scenario: ScenarioType) => {
-    console.log(`Loading state machine for scenario: ${scenario}`);
-    const scenarioConfig = scenarioCallData[scenario];
-    if (!scenarioConfig) {
-      console.error(`No scenario data found for scenario: ${scenario}`);
+function useStateMachineInternal(initialStateMachine: StateMachineType | null, actions: StateMachineActions) {
+  const stateMachineInstanceRef = useRef<StateMachineType | null>(null); 
+  const [currentInternalStateData, setCurrentInternalStateData] = useState<Record<string, any> | null>(null); 
+  const [currentInternalStateName, setCurrentInternalStateName] = useState<string>('');
+
+  const initializeOrUpdateStateMachine = useCallback((sm: StateMachineType | null) => {
+    if (!sm || !sm.initial || !sm.states) {
+      console.warn("useStateMachineInternal: Provided state machine is null or invalid.");
+      stateMachineInstanceRef.current = null;
+      setCurrentInternalStateData(null);
+      setCurrentInternalStateName('');
+      actions.setStateData(null);
+      actions.setCurrentState('');
       return;
     }
+    console.log(`useStateMachineInternal: Initializing/Updating state machine with ID: ${sm.id}`);
+    stateMachineInstanceRef.current = sm;
     
-    // Create a new instance of StateMachineType (renamed from StateMachine to avoid conflict)
-    const StateMachine = class {
-      currentState: string;
-      states: any;
-      actions: any;
-      stateData: any;
-      
-      constructor(initialState: string, states: any, actions: any) {
-        this.currentState = initialState;
-        this.states = states;
-        this.actions = actions;
-        this.stateData = null;
-      }
-      
-      initialize() {
-        this.stateData = this.states[this.currentState];
-        if (this.actions?.setStateData) {
-          this.actions.setStateData(this.stateData);
-        }
-        if (this.actions?.setCurrentState) {
-          this.actions.setCurrentState(this.currentState);
-        }
-      }
-      
-      transition(newState: string) {
-        if (!this.states[newState]) {
-          console.error(`Invalid state: ${newState}`);
-          return;
-        }
-        
-        this.currentState = newState;
-        this.stateData = this.states[newState];
-        
-        if (this.actions?.setStateData) {
-          this.actions.setStateData(this.stateData);
-        }
-        if (this.actions?.setCurrentState) {
-          this.actions.setCurrentState(newState);
-        }
-      }
-    };
+    const initialStateName = sm.initial;
+    const initialStateData = sm.states[initialStateName]?.meta; 
+
+    if (initialStateName && typeof initialStateData === 'object' && initialStateData !== null) {
+      setCurrentInternalStateName(initialStateName);
+      setCurrentInternalStateData(initialStateData);
+      actions.setCurrentState(initialStateName);
+      actions.setStateData(initialStateData);
+    } else {
+      console.error(`useStateMachineInternal: Could not find initial state '${initialStateName}' or its data (must be an object) in the provided state machine.`);
+      setCurrentInternalStateName('');
+      setCurrentInternalStateData(null);
+      actions.setCurrentState('');
+      actions.setStateData(null);
+    }
+  }, [actions]);
+
+  useEffect(() => {
+    initializeOrUpdateStateMachine(initialStateMachine);
+  }, [initialStateMachine, initializeOrUpdateStateMachine]);
+
+  const transitionTo = useCallback((newStateName: string) => {
+    if (!stateMachineInstanceRef.current || !stateMachineInstanceRef.current.states) {
+      console.error("useStateMachineInternal: State machine not initialized or has no states.");
+      return;
+    }
+    const sm = stateMachineInstanceRef.current;
+    if (!sm.states[newStateName]) {
+      console.error(`useStateMachineInternal: Invalid state to transition to: ${newStateName}`);
+      return;
+    }
+    console.log(`useStateMachineInternal: Transitioning to state: ${newStateName}`);
+    const newStateData = sm.states[newStateName].meta; 
+    setCurrentInternalStateName(newStateName);
     
-    stateMachineRef.current = new StateMachine('start', scenarioConfig.states, actions);
-    
-    // Initialize the state machine
-    stateMachineRef.current.initialize();
-    
-    // Set initial state data
-    setStateData(stateMachineRef.current.stateData);
-    setCurrentState(stateMachineRef.current.currentState);
+    if (typeof newStateData === 'object' && newStateData !== null) {
+      setCurrentInternalStateData(newStateData);
+      actions.setStateData(newStateData);
+    } else {
+      console.warn(`useStateMachineInternal: Meta data for state '${newStateName}' is not an object or is null. Setting state data to null.`);
+      setCurrentInternalStateData(null);
+      actions.setStateData(null);
+    }
+    actions.setCurrentState(newStateName);
+
   }, [actions]);
   
-  const transition = useCallback((newState: string) => {
-    console.log(`Transitioning to state: ${newState}`);
-    if (!stateMachineRef.current) {
-      console.error("State machine not initialized");
-      return;
-    }
-    
-    stateMachineRef.current.transition(newState);
-    setStateData(stateMachineRef.current.stateData);
-    setCurrentState(stateMachineRef.current.currentState);
-  }, []);
-  
   return {
-    stateMachine: stateMachineRef.current,
-    loadStateMachine,
-    transition,
-    stateData,
-    currentState
+    stateMachineInstance: stateMachineInstanceRef.current,
+    loadStateMachine: initializeOrUpdateStateMachine,
+    transitionTo,
+    stateData: currentInternalStateData,
+    currentState: currentInternalStateName
   };
 }
