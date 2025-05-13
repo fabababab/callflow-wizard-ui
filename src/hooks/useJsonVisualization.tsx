@@ -16,7 +16,7 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonContent, setJsonContent] = useState("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
-  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("json");
+  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("visualization");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [selectedState, setSelectedState] = useState<SelectedStateDetails | null>(null);
   const { toast } = useToast();
@@ -24,6 +24,11 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
   // Handle view mode toggle
   const handleViewModeToggle = (mode: "json" | "visualization") => {
     setDialogViewMode(mode);
+    
+    // When switching to JSON view, ensure we show the full state machine
+    if (mode === "json" && loadedStateMachine) {
+      setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
+    }
   };
 
   // Handle state selection from visualization
@@ -31,8 +36,6 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
     console.log(`State selected: ${state}`);
     
     if (loadedStateMachine && loadedStateMachine.states[state]) {
-      setJsonContent(JSON.stringify(loadedStateMachine.states[state], null, 2));
-      
       // Store the selected state details
       const stateData = loadedStateMachine.states[state];
       const sensitiveFields = stateData.meta?.sensitiveFields;
@@ -110,7 +113,7 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
   const handleViewJson = () => {
     setIsLoadingJson(true);
     
-    // Update JSON content with latest data
+    // Always show the full state machine JSON when opening the dialog
     if (loadedStateMachine) {
       setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
     }

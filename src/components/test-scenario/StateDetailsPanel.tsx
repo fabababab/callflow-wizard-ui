@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Shield, Info, FileText, ClipboardList, BookText, ArrowRight } from 'lucide-react';
+import { Shield, Info, FileText, ClipboardList, BookText, ArrowRight, Code } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -125,6 +125,10 @@ const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({
               Sensitive Data
             </TabsTrigger>
           )}
+          <TabsTrigger value="json" className="data-[state=active]:bg-white rounded-none">
+            <Code className="h-3 w-3 mr-1" />
+            JSON
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="info" className="m-0 p-4 focus-visible:outline-none focus-visible:ring-0">
@@ -253,6 +257,19 @@ const StateDetailsPanel: React.FC<StateDetailsPanelProps> = ({
             </div>
           </TabsContent>
         )}
+        
+        {/* New JSON Tab */}
+        <TabsContent value="json" className="m-0 p-4 focus-visible:outline-none focus-visible:ring-0">
+          <div className="bg-slate-100 p-3 rounded-md">
+            <div className="flex items-center gap-1 text-slate-700 text-sm font-medium mb-2">
+              <Code size={16} />
+              <span>Raw State Data</span>
+            </div>
+            <pre className="text-xs bg-white p-3 rounded border overflow-auto max-h-80">
+              {JSON.stringify(selectedStateDetails.data, null, 2)}
+            </pre>
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
