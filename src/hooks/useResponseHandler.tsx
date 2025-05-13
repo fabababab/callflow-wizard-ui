@@ -22,6 +22,7 @@ export function useResponseHandler({
   // Add refs to track verification states
   const verificationHandledRef = useRef<Record<string, boolean>>({});
   const verificationInProgressRef = useRef(false);
+  const moduleCompletionTrackerRef = useRef<Record<string, boolean>>({});
   
   // This is our primary interaction method - updated to ensure explicit user action
   const handleSelectResponse = useCallback((response: string) => {
@@ -104,8 +105,13 @@ export function useResponseHandler({
         console.log("New state data:", stateMachine.stateData);
       }
       
+      // Check if this state has an inline module that needs auto-completion
+      const hasInlineModule = stateMachine.stateData?.meta?.module?.data?.isInline === true;
+      const moduleId = stateMachine.stateData?.meta?.module?.id;
+      const moduleType = stateMachine.stateData?.meta?.module?.type;
+      
       // For verification flows, ensure we continue automatically if needed
-      if (isVerifyIdentityOption) {
+      if (isVerifyIdentityOption || (hasInlineModule && moduleType === 'verification')) {
         console.log("Identity verification was selected, setting up auto-continue...");
         
         if (!verificationInProgressRef.current) {
@@ -134,6 +140,11 @@ export function useResponseHandler({
             }, 1500);
           }, 1500);
         }
+      }
+      // For information or contract modules, we want to wait for user action
+      else if (hasInlineModule && (moduleType === 'information' || moduleType === 'contract')) {
+        console.log(`Inline ${moduleType} module detected:`, moduleId);
+        // These modules won't auto-continue, user will need to click buttons
       }
       
       console.log('===== RESPONSE SELECTION COMPLETE =====');
@@ -194,15 +205,54 @@ export function useResponseHandler({
         }
       }, 500);
     };
+
+    // Handle non-verification module completions (information, contracts)
+    const handleModuleComplete = (event: CustomEvent) => {
+      const moduleId = event.detail?.moduleId || '';
+      const moduleType = event.detail?.moduleType || '';
+      const currentState = stateMachine.currentState;
+      const eventId = `module-complete-${moduleId}-${currentState}`;
+      
+      // Skip if already processed
+      if (moduleCompletionTrackerRef.current[eventId]) {
+        console.log("Skipping duplicate module completion event:", eventId);
+        return;
+      }
+      
+      console.log(`Module ${moduleType} (${moduleId}) completion detected:`, event.detail);
+      moduleCompletionTrackerRef.current[eventId] = true;
+      
+      // Add a short delay to ensure UI is updated
+      setTimeout(() => {
+        // System message about completion
+        const moduleTypeLabel = moduleType.charAt(0).toUpperCase() + moduleType.slice(1);
+        messageHandling.addSystemMessage(`${moduleTypeLabel} module completed.`);
+        
+        // Get available responses for the current state
+        const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+        
+        // If there are response options, automatically pick the first one after a delay
+        if (responseOptions.length > 0) {
+          console.log("Auto-selecting response after module completion:", responseOptions[0]);
+          
+          // Add a delay to make the flow feel more natural
+          setTimeout(() => {
+            handleSelectResponse(responseOptions[0]);
+          }, 2000);
+        }
+      }, 500);
+    };
     
-    // Add event listener for verification complete
+    // Add event listeners for all relevant events
     window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
     window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
+    window.addEventListener('module-complete', handleModuleComplete as EventListener);
     
     // Cleanup
     return () => {
       window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
       window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
+      window.removeEventListener('module-complete', handleModuleComplete as EventListener);
     };
   }, [messageHandling, stateMachine.stateData, stateMachine.currentState, handleSelectResponse]);
 

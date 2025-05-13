@@ -1,5 +1,6 @@
 
 import React, { useEffect, memo, useState } from 'react';
+import { CheckCircle } from 'lucide-react';
 import NumberInputDisplay from './NumberInputDisplay';
 import SensitiveDataSection from './SensitiveDataSection';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';

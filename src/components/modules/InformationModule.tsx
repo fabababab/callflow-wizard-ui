@@ -26,6 +26,7 @@ const InformationModule: React.FC<ModuleProps> = ({
 }) => {
   const infoBlocks = data?.blocks || [];
   const [expandedBlocks, setExpandedBlocks] = useState<string[]>([]);
+  const isInlineDisplay = data?.isInline === true;
   
   const toggleBlockExpansion = (blockId: string) => {
     setExpandedBlocks(prev => 
@@ -85,19 +86,25 @@ const InformationModule: React.FC<ModuleProps> = ({
     }
   };
   
+  const cardClassName = isInlineDisplay
+    ? "w-full border-l-4 border-indigo-300 border-r border-t border-b border-indigo-200 shadow-sm rounded-md bg-indigo-50/60"
+    : "w-full max-w-md border border-indigo-200 shadow-md";
+
   return (
-    <Card className="w-full max-w-md border border-indigo-200 shadow-md">
-      <CardHeader className="bg-indigo-50 border-b border-indigo-100">
+    <Card className={cardClassName}>
+      <CardHeader className={`${isInlineDisplay ? "bg-transparent py-2 pb-0" : "bg-indigo-50 border-b border-indigo-100"}`}>
         <div className="flex items-center gap-2">
-          <Info className="h-5 w-5 text-indigo-600" />
-          <CardTitle className="text-indigo-900">{title || 'Important Information'}</CardTitle>
+          <Info className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-indigo-600`} />
+          <CardTitle className={`${isInlineDisplay ? "text-indigo-700 text-sm" : "text-indigo-900"}`}>
+            {title || 'Important Information'}
+          </CardTitle>
         </div>
-        <CardDescription>
+        <CardDescription className={`text-xs ${isInlineDisplay ? "text-indigo-600/70" : ""}`}>
           Please review the following information
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-6"} space-y-4`}>
         {infoBlocks.length === 0 ? (
           <p className="text-center text-gray-500 py-4">No information available</p>
         ) : (
@@ -114,7 +121,9 @@ const InformationModule: React.FC<ModuleProps> = ({
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       {styles.icon}
-                      <h3 className={`font-medium ${styles.text}`}>{block.title}</h3>
+                      <h3 className={`font-medium ${styles.text} ${isInlineDisplay ? "text-sm" : ""}`}>
+                        {block.title}
+                      </h3>
                     </div>
                     
                     {block.hasDetails && (
@@ -159,11 +168,18 @@ const InformationModule: React.FC<ModuleProps> = ({
         )}
       </CardContent>
       
-      <CardFooter className="flex justify-between bg-gray-50 border-t">
-        <Button variant="outline" onClick={onClose}>
+      <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-indigo-100/50" : "bg-gray-50 border-t"}`}>
+        <Button 
+          variant="outline" 
+          onClick={onClose}
+          className={isInlineDisplay ? "text-xs" : ""}
+        >
           Close
         </Button>
-        <Button onClick={handleAcknowledge}>
+        <Button 
+          onClick={handleAcknowledge}
+          className={isInlineDisplay ? "text-xs bg-indigo-500 hover:bg-indigo-600 text-white" : ""}
+        >
           I Understand
         </Button>
       </CardFooter>

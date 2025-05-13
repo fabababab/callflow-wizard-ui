@@ -138,6 +138,7 @@
           "title": "Contract Management",
           "type": "contract",
           "data": {
+            "isInline": true,
             "contracts": [
               {
                 "id": "contract-1",
@@ -192,9 +193,58 @@
         ]
       },
       "on": {
-        "I can see your health insurance policy is active until the end of this year. Is there anything specific you'd like to know about it?": "update_phone",
-        "Your health insurance basic plan is active and valid through December 31, 2025. Would you like to make any changes to your coverage?": "update_phone",
-        "I've confirmed that your health insurance policy is active. I also see you have a pending dental coverage addon. Would you like to review the details of either of these policies?": "update_phone",
+        "I can see your health insurance policy is active until the end of this year. Is there anything specific you'd like to know about it?": "information_screen",
+        "Your health insurance basic plan is active and valid through December 31, 2025. Would you like to make any changes to your coverage?": "information_screen",
+        "I've confirmed that your health insurance policy is active. I also see you have a pending dental coverage addon. Would you like to review the details of either of these policies?": "information_screen",
+        "DEFAULT": "information_screen"
+      }
+    },
+    "information_screen": {
+      "meta": {
+        "agentText": "Before we update your contact information, I'd like to share some important updates about our services that may affect your coverage.",
+        "customerText": "That's good to know, what are the updates?",
+        "module": {
+          "id": "information-module-1",
+          "title": "Important Policy Updates",
+          "type": "information",
+          "data": {
+            "isInline": true,
+            "blocks": [
+              {
+                "id": "info-1",
+                "title": "New Online Portal",
+                "content": "We've launched a new online portal to manage your insurance policies. You can access it at insurance.example.com.",
+                "type": "info",
+                "hasDetails": true,
+                "detailsContent": "The new portal includes features like document upload, instant chat support, and claim tracking. Your current login credentials will work for the new system."
+              },
+              {
+                "id": "info-2",
+                "title": "Coverage Enhancement",
+                "content": "Starting next month, all basic health plans will include telemedicine consultations at no additional cost.",
+                "type": "success",
+                "link": "https://example.com/telemedicine",
+                "linkText": "Learn about telemedicine benefits"
+              },
+              {
+                "id": "info-3",
+                "title": "Policy Renewal Reminder",
+                "content": "Your health insurance policy will auto-renew 30 days before the expiration date. Please ensure your payment information is up to date.",
+                "type": "warning"
+              }
+            ]
+          }
+        },
+        "responseOptions": [
+          "Thank you for reviewing this information. Now, let's update your phone number as requested.",
+          "Now that you're aware of these updates, let's proceed with updating your contact information.",
+          "Thanks for your attention to these important updates. Let's now update your phone number."
+        ]
+      },
+      "on": {
+        "Thank you for reviewing this information. Now, let's update your phone number as requested.": "update_phone",
+        "Now that you're aware of these updates, let's proceed with updating your contact information.": "update_phone",
+        "Thanks for your attention to these important updates. Let's now update your phone number.": "update_phone",
         "DEFAULT": "update_phone"
       }
     },

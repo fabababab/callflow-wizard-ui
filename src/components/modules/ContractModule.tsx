@@ -29,6 +29,7 @@ const ContractModule: React.FC<ModuleProps> = ({
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [showDialog, setShowDialog] = useState(false);
   const [dialogAction, setDialogAction] = useState<'view' | 'edit' | 'cancel'>('view');
+  const isInlineDisplay = data?.isInline === true;
   
   const handleContractAction = (contract: Contract, action: 'view' | 'edit' | 'cancel') => {
     setSelectedContract(contract);
@@ -70,28 +71,34 @@ const ContractModule: React.FC<ModuleProps> = ({
         return <Badge>{status}</Badge>;
     }
   };
+
+  const cardClassName = isInlineDisplay
+    ? "w-full border-l-4 border-blue-300 border-r border-t border-b border-blue-200 shadow-sm rounded-md bg-blue-50/60"
+    : "w-full max-w-md border border-blue-200 shadow-md";
   
   return (
     <>
-      <Card className="w-full max-w-md border border-blue-200 shadow-md">
-        <CardHeader className="bg-blue-50 border-b border-blue-100">
+      <Card className={cardClassName}>
+        <CardHeader className={`${isInlineDisplay ? "bg-transparent py-2 pb-0" : "bg-blue-50 border-b border-blue-100"}`}>
           <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-600" />
-            <CardTitle className="text-blue-900">{title || 'Contract Overview'}</CardTitle>
+            <FileText className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-blue-600`} />
+            <CardTitle className={`${isInlineDisplay ? "text-blue-700 text-sm" : "text-blue-900"}`}>
+              {title || 'Contract Overview'}
+            </CardTitle>
           </div>
-          <CardDescription>
+          <CardDescription className={`text-xs ${isInlineDisplay ? "text-blue-600/70" : ""}`}>
             Review and manage your contracts
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="pt-6 space-y-4">
+        <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-6"} space-y-4`}>
           {contracts.length === 0 ? (
             <p className="text-center text-gray-500 py-4">No contracts available</p>
           ) : (
             contracts.map((contract: Contract) => (
               <div key={contract.id} className="border rounded-md p-3 hover:bg-gray-50">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-medium">{contract.name}</h3>
+                  <h3 className={`font-medium ${isInlineDisplay ? "text-sm" : ""}`}>{contract.name}</h3>
                   {getStatusBadge(contract.status)}
                 </div>
                 <p className="text-sm text-gray-500 mb-3">{contract.type}</p>
@@ -104,6 +111,7 @@ const ContractModule: React.FC<ModuleProps> = ({
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleContractAction(contract, 'view')}
+                    className={isInlineDisplay ? "text-xs" : ""}
                   >
                     View Details
                   </Button>
@@ -111,13 +119,14 @@ const ContractModule: React.FC<ModuleProps> = ({
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleContractAction(contract, 'edit')}
+                    className={isInlineDisplay ? "text-xs" : ""}
                   >
                     <Edit className="h-4 w-4 mr-1" /> Edit
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className={`text-red-600 hover:text-red-700 hover:bg-red-50 ${isInlineDisplay ? "text-xs" : ""}`}
                     onClick={() => handleContractAction(contract, 'cancel')}
                   >
                     <X className="h-4 w-4 mr-1" /> Cancel
@@ -128,8 +137,12 @@ const ContractModule: React.FC<ModuleProps> = ({
           )}
         </CardContent>
         
-        <CardFooter className="flex justify-end bg-gray-50 border-t">
-          <Button variant="outline" onClick={onClose}>
+        <CardFooter className={`flex justify-end ${isInlineDisplay ? "py-2 bg-transparent border-t border-blue-100/50" : "bg-gray-50 border-t"}`}>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className={isInlineDisplay ? "text-xs" : ""}
+          >
             Close
           </Button>
         </CardFooter>

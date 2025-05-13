@@ -1,6 +1,6 @@
 
 import React, { memo, useRef, useEffect } from 'react';
-import { ModuleConfig } from '@/types/modules';
+import { ModuleConfig, ModuleType } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 
 interface MessageInlineModuleProps {
@@ -20,6 +20,28 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     completedRef.current = true;
     
     console.log(`Module ${moduleConfig.id} completed with result:`, result);
+    
+    // Dispatch a generic module completion event
+    const event = new CustomEvent('module-complete', {
+      detail: { 
+        moduleId: moduleConfig.id,
+        moduleType: moduleConfig.type,
+        result
+      }
+    });
+    window.dispatchEvent(event);
+    
+    // For verification modules, also dispatch the specific verification event
+    if (moduleConfig.type === ModuleType.VERIFICATION && result.verified === true) {
+      const verificationEvent = new CustomEvent('verification-successful', {
+        detail: { 
+          moduleId: moduleConfig.id,
+          success: true
+        }
+      });
+      window.dispatchEvent(verificationEvent);
+    }
+    
     onModuleComplete(result);
   };
   
