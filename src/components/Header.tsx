@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Bell, Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
+import { Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +22,7 @@ import {
   DialogTrigger,
   DialogClose
 } from '@/components/ui/dialog';
+import NotificationPanel from './NotificationPanel';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -115,9 +116,8 @@ const Header = () => {
           </DialogContent>
         </Dialog>
 
-        <Button variant="ghost" size="icon" className="text-callflow-text">
-          <Bell size={20} />
-        </Button>
+        {/* Replace Bell button with our NotificationPanel */}
+        <NotificationPanel />
         
         <Button variant="ghost" size="icon" className="text-callflow-text">
           <Settings size={20} />
