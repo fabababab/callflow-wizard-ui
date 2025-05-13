@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { ScenarioType } from "@/components/ScenarioSelector";
 import { StateMachine } from "@/utils/stateMachineLoader";
+import { SensitiveField } from "@/components/test-scenario/SensitiveFieldDetailsDialog";
 
 interface SelectedStateDetails {
   id: string;
   data: any;
-  sensitiveFields?: any[];
+  sensitiveFields?: SensitiveField[];
 }
 
 export function useJsonVisualization(scenarioType: ScenarioType) {

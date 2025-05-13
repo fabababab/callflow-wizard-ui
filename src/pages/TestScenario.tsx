@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -12,9 +12,10 @@ import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
 import { useLocation } from 'react-router-dom';
+import { SensitiveField } from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 
 const TestScenario = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   
@@ -37,6 +38,13 @@ const TestScenario = () => {
   // Always use agent mode
   const activeScenario = customerScenario;
   const { currentState, error } = activeScenario;
+  
+  // Handle showing sensitive field details
+  const [showSensitiveFieldDetails, setShowSensitiveFieldDetails] = useState<SensitiveField | null>(null);
+  
+  const handleCloseSensitiveDetails = () => {
+    setShowSensitiveFieldDetails(null);
+  };
   
   // Log changes to help debug the component
   useEffect(() => {
@@ -73,11 +81,11 @@ const TestScenario = () => {
         </div>
       </SidebarProvider>
 
-      {/* Sensitive Field Details Dialog - this is the only dialog we should keep */}
-      {scenarioState.showSensitiveFieldDetails && (
+      {/* Sensitive Field Details Dialog */}
+      {showSensitiveFieldDetails && (
         <SensitiveFieldDetailsDialog 
-          showSensitiveFieldDetails={scenarioState.showSensitiveFieldDetails} 
-          handleCloseSensitiveDetails={scenarioState.handleCloseSensitiveDetails} 
+          showSensitiveFieldDetails={showSensitiveFieldDetails} 
+          handleCloseSensitiveDetails={handleCloseSensitiveDetails} 
         />
       )}
     </div>

@@ -14,6 +14,7 @@ export interface StateMachineState {
     module?: any;
   };
   on?: Record<string, string>;
+  nextState?: string;
 }
 
 // Type definition for a state machine
@@ -21,7 +22,52 @@ export interface StateMachine {
   id: string;
   initial: string;
   states: Record<string, StateMachineState>;
+  status?: 'DEVELOPMENT' | 'TESTING' | 'PRODUCTION';
 }
+
+/**
+ * Gets the initial state from a state machine
+ */
+export const getInitialState = (stateMachine: StateMachine): string => {
+  return stateMachine.initial;
+};
+
+/**
+ * Gets the next state based on the current state and selection
+ */
+export const getNextState = (stateMachine: StateMachine, currentState: string, selection: string): string | null => {
+  if (!stateMachine.states[currentState] || !stateMachine.states[currentState].on) {
+    return null;
+  }
+  
+  return stateMachine.states[currentState].on?.[selection] || null;
+};
+
+/**
+ * Gets the data for a specific state
+ */
+export const getStateData = (stateMachine: StateMachine, stateName: string): StateMachineState | null => {
+  if (!stateMachine.states[stateName]) {
+    return null;
+  }
+  
+  return stateMachine.states[stateName];
+};
+
+/**
+ * Checks if a state machine exists
+ */
+export const hasStateMachine = (scenario: ScenarioType): boolean => {
+  // For now, only check if it's the test scenario
+  return scenario === 'testscenario';
+};
+
+/**
+ * Gets the JSON representation of a state machine
+ */
+export const getStateMachineJson = (stateMachine: StateMachine): string => {
+  return JSON.stringify(stateMachine, null, 2);
+};
 
 /**
  * Loads a state machine for a given scenario

@@ -1,209 +1,107 @@
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Home, 
-  PhoneCall, 
-  Users, 
-  BarChart3, 
-  ClipboardList, 
-  Settings, 
-  HelpCircle, 
-  HeadphonesIcon,
-  FileText,
-  AlertCircle,
-  User,
-  Beaker,
-  ChevronRight
-} from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
-import {
-  Sidebar as ShadcnSidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-  useSidebar
-} from '@/components/ui/sidebar';
-import SidebarTrigger from './SidebarTrigger';
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { NavLink } from 'react-router-dom';
+import { Home, Phone, Users, Clock, ChevronLeft, BarChart2, ListChecks, AlarmClock, FileText, HelpCircle, Settings, User, Menu } from 'lucide-react';
+import { useSidebar } from '@/components/ui/sidebar';
+import { useMobile } from '@/hooks/use-mobile';
 
 interface SidebarProps {
   collapsed?: boolean;
 }
 
-const Sidebar = ({ collapsed = true }: SidebarProps) => {
-  const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
-  const [isHovered, setIsHovered] = useState(false);
-  const { setOpen } = useSidebar();
-
-  // Set sidebar state based on props and hover
-  useEffect(() => {
-    setOpen(!collapsed || isHovered);
-  }, [collapsed, isHovered, setOpen]);
+const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
+  const { open: sidebarOpen, setOpen: setSidebarOpen } = useSidebar();
+  const isMobile = useMobile();
+  
+  // In mobile view, sidebar should be controlled by the context
+  const effectiveCollapsed = isMobile ? !sidebarOpen : collapsed;
+  
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setSidebarOpen(!sidebarOpen);
+    }
+  };
 
   return (
-    <div 
-      className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <ShadcnSidebar 
-        className="w-60 h-screen transition-all duration-300" 
-        variant="sidebar" 
-        collapsible="icon"
-      >
-        <SidebarContent className="flex flex-col h-full">
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Dashboard" isActive={isActive('/dashboard')} asChild>
-                    <Link to="/dashboard">
-                      <Home size={20} />
-                      <span>Dashboard</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Test Scenario" isActive={isActive('/test-scenario')} asChild>
-                    <Link to="/test-scenario">
-                      <Beaker size={20} />
-                      <span>Test Scenario</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Calls" isActive={isActive('/calls')} asChild>
-                    <Link to="/calls">
-                      <PhoneCall size={20} />
-                      <span>Calls</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Contacts" isActive={isActive('/contacts')} asChild>
-                    <Link to="/contacts">
-                      <Users size={20} />
-                      <span>Contacts</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarSeparator />
-
-          <SidebarGroup>
-            <SidebarGroupLabel>Call Center</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Current Queue" isActive={isActive('/queue')} asChild>
-                    <Link to="/queue">
-                      <HeadphonesIcon size={20} />
-                      <span>Queue</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Call History" isActive={isActive('/call-history')} asChild>
-                    <Link to="/call-history">
-                      <FileText size={20} />
-                      <span>Call History</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Escalations" isActive={isActive('/escalations')} asChild>
-                    <Link to="/escalations">
-                      <AlertCircle size={20} />
-                      <span>Escalations</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarSeparator />
-
-          <SidebarGroup>
-            <SidebarGroupLabel>Analytics</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Reports" isActive={isActive('/reports')} asChild>
-                    <Link to="/reports">
-                      <ClipboardList size={20} />
-                      <span>Reports</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Statistics" isActive={isActive('/stats')} asChild>
-                    <Link to="/stats">
-                      <BarChart3 size={20} />
-                      <span>Statistics</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarSeparator />
-          
-          <SidebarGroup className="mt-auto">
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Profile" isActive={isActive('/profile')} asChild>
-                    <Link to="/profile">
-                      <User size={20} />
-                      <span>Profile</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Settings" isActive={isActive('/settings')} asChild>
-                    <Link to="/settings">
-                      <Settings size={20} />
-                      <span>Settings</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton tooltip="Help & Support" isActive={isActive('/help')} asChild>
-                    <Link to="/help">
-                      <HelpCircle size={20} />
-                      <span>Help & Support</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </ShadcnSidebar>
-
-      {/* Sidebar expand trigger - only visible when collapsed */}
-      {collapsed && !isHovered && (
-        <div className="absolute top-1/2 -right-3 transform -translate-y-1/2 z-50">
-          <button 
-            className="flex items-center justify-center w-6 h-12 bg-white rounded-r-md shadow-md border border-l-0 border-gray-200"
-            aria-label="Expand sidebar"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
+    <aside 
+      className={cn(
+        "bg-sidebar border-r transition-all duration-300 h-screen z-10",
+        effectiveCollapsed ? "w-[70px]" : "w-[240px]",
+        isMobile && !sidebarOpen && "w-0 border-r-0"
       )}
-    </div>
+    >
+      <div className="flex flex-col h-full">
+        {/* Mobile menu trigger */}
+        {isMobile && (
+          <div className="p-4 flex justify-between items-center">
+            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+              <Menu />
+            </Button>
+          </div>
+        )}
+        
+        {/* Logo area */}
+        <div className={cn(
+          "flex items-center px-4 h-14",
+          effectiveCollapsed && "justify-center"
+        )}>
+          {!effectiveCollapsed && <h1 className="text-xl font-semibold">Call Center</h1>}
+        </div>
+        
+        {/* Navigation links */}
+        <nav className="flex-1 py-4">
+          <ul className="space-y-1 px-2">
+            <NavItem icon={<Home />} to="/dashboard" label="Dashboard" collapsed={effectiveCollapsed} />
+            <NavItem icon={<Phone />} to="/test-scenario" label="Test Scenario" collapsed={effectiveCollapsed} />
+            <NavItem icon={<Phone />} to="/calls" label="Calls" collapsed={effectiveCollapsed} />
+            <NavItem icon={<Users />} to="/contacts" label="Contacts" collapsed={effectiveCollapsed} />
+            <NavItem icon={<AlarmClock />} to="/queue" label="Queue" collapsed={effectiveCollapsed} />
+            <NavItem icon={<Clock />} to="/call-history" label="Call History" collapsed={effectiveCollapsed} />
+            <NavItem icon={<BarChart2 />} to="/reports" label="Reports" collapsed={effectiveCollapsed} />
+            <NavItem icon={<BarChart2 />} to="/stats" label="Statistics" collapsed={effectiveCollapsed} />
+            <NavItem icon={<ListChecks />} to="/escalations" label="Escalations" collapsed={effectiveCollapsed} />
+          </ul>
+        </nav>
+        
+        {/* Bottom actions */}
+        <div className="mt-auto py-4 border-t">
+          <ul className="space-y-1 px-2">
+            <NavItem icon={<User />} to="/profile" label="Profile" collapsed={effectiveCollapsed} />
+            <NavItem icon={<Settings />} to="/settings" label="Settings" collapsed={effectiveCollapsed} />
+            <NavItem icon={<HelpCircle />} to="/help" label="Help" collapsed={effectiveCollapsed} />
+          </ul>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+interface NavItemProps {
+  icon: React.ReactNode;
+  to: string;
+  label: string;
+  collapsed: boolean;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ icon, to, label, collapsed }) => {
+  return (
+    <li>
+      <NavLink 
+        to={to} 
+        className={({ isActive }) => cn(
+          "flex items-center py-2 px-3 rounded-md text-sm transition-colors",
+          isActive 
+            ? "bg-primary/10 text-primary" 
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          collapsed && "justify-center"
+        )}
+      >
+        <span className="flex-shrink-0">{icon}</span>
+        {!collapsed && <span className="ml-3">{label}</span>}
+      </NavLink>
+    </li>
   );
 };
 
