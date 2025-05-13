@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, memo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,6 @@ import { Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
 
 interface VerificationField {
   id: string;
@@ -18,7 +18,7 @@ interface VerificationField {
   verified?: boolean;
 }
 
-const VerificationModule: React.FC<ModuleProps> = memo(({ 
+const VerificationModule = ({
   id, 
   title, 
   data, 
@@ -41,7 +41,9 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const hasShownToastRef = useRef(false);
   const verificationCompleteRef = useRef(false);
   const moduleInstanceId = useRef<string>(`verification-${id}-${Date.now()}`).current;
-
+  
+  const { addNotification } = useNotifications();
+  
   // Auto-verify on mount after a small delay
   useEffect(() => {
     if (!processingRef.current && !verificationCompleteRef.current) {
@@ -82,11 +84,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     
     // Show toast notification once
     if (!hasShownToastRef.current) {
-      toast({
-        title: "Verification Successful",
-        description: "Customer identity has been verified",
-        duration: 2000
-      });
+      handleVerificationSuccess();
       hasShownToastRef.current = true;
     }
     
@@ -144,6 +142,22 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
         }, 1000);
       }
     }, 1500);
+  };
+  
+  const handleVerificationSuccess = () => {
+    addNotification({
+      title: "Verification Successful", 
+      description: "Customer identity has been verified",
+      type: "success"
+    });
+  };
+  
+  const handleVerificationFailure = () => {
+    addNotification({ 
+      title: "Verification Failed", 
+      description: "Identity verification could not be completed",
+      type: "error"
+    });
   };
   
   // Use different styling for inline vs modal display
@@ -235,7 +249,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
       </CardFooter>
     </Card>
   );
-});
+};
 
 VerificationModule.displayName = 'VerificationModule';
 

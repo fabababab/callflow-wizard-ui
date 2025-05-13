@@ -12,7 +12,7 @@ import { useModuleManager } from '@/hooks/useModuleManager';
 import { useConversationInitializer } from '@/hooks/useConversationInitializer';
 import { useResponseHandler } from '@/hooks/useResponseHandler';
 import { useStateChangeProcessor } from '@/hooks/useStateChangeProcessor';
-import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/contexts/NotificationsContext';
 import { ModuleType } from '@/types/modules';
 import { useDebugLogging } from '@/hooks/useDebugLogging';
 import { useModuleCompletionEvents } from '@/hooks/useModuleCompletionEvents';
@@ -22,7 +22,7 @@ import { useMessageUpdates } from '@/hooks/useMessageUpdates';
 import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
-  const toast = useToast();
+  const { addNotification } = useNotifications();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the message handling functionality
@@ -56,8 +56,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const responseHandler = useResponseHandler({
     stateMachine,
     messageHandling,
-    conversationState,
-    toast
+    conversationState
   });
 
   // Use state change processor
@@ -67,7 +66,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     conversationState,
     transitionExtractor,
     callState,
-    toast
+    // Removed toast prop here
   });
 
   // Use conversation initializer
@@ -78,7 +77,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling,
     callState,
     setHasInitializedConversation: () => {}, // Will be replaced by useScenarioChangeEffect
-    toast,
+    // Removed toast prop here
     showNachbearbeitungSummary
   });
 

@@ -5,13 +5,14 @@ import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
 import { useSensitiveDataHandling } from '@/hooks/useSensitiveDataHandling';
 import { nanoid } from 'nanoid';
 import { ModuleConfig } from '@/types/modules';
-import { useMessageAdders } from '@/hooks/useMessageAdders';
+import { useNotifications } from '@/contexts/NotificationsContext';
 
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastMessageUpdate, setLastMessageUpdate] = useState<Date>(new Date());
-  const [verificationBlocking, setVerificationBlocking] = useState(false); // We'll keep this but never use it
+  const [verificationBlocking, setVerificationBlocking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { addNotification } = useNotifications();
   
   // Initialize sensitive data stats
   const initialSensitiveDataStats = {
@@ -21,7 +22,7 @@ export function useMessageHandling() {
   };
   const [sensitiveDataStats, setSensitiveDataStats] = useState(initialSensitiveDataStats);
   
-  // Get sensitive data handlers - make sure it returns all required functions
+  // Get sensitive data handlers
   const {
     sensitiveDataStats: hookSensitiveDataStats,
     handleValidateSensitiveData,
@@ -29,27 +30,19 @@ export function useMessageHandling() {
     isVerifying
   } = useSensitiveDataHandling(messages, setMessages, () => {}, setLastMessageUpdate);
   
-  // Get message adders
-  const {
-    addSystemMessage,
-    addAgentMessage,
-    addCustomerMessage,
-    addInlineModuleMessage
-  } = useMessageAdders(messages, setMessages, sensitiveDataStats, setLastMessageUpdate);
-
+  // Reset sensitive data stats
+  const resetSensitiveDataStats = useCallback(() => {
+    console.log("Resetting sensitive data stats");
+    setSensitiveDataStats(initialSensitiveDataStats);
+  }, [initialSensitiveDataStats]);
+  
   // Scan sensitive fields functionality
   const scanSensitiveFields = useCallback((text: string, messageId: string) => {
     console.log(`Scanning for sensitive data in message ${messageId}`);
     // Implementation would go here - simplified version
     return [];
   }, []);
-
-  // Reset sensitive data stats
-  const resetSensitiveDataStats = useCallback(() => {
-    console.log("Resetting sensitive data stats");
-    setSensitiveDataStats(initialSensitiveDataStats);
-  }, [initialSensitiveDataStats]);
-
+  
   const addMessage = useCallback((message: Omit<Message, 'id' | 'timestamp'>) => {
     const newMessage: Message = {
       ...message,
@@ -63,6 +56,48 @@ export function useMessageHandling() {
       scanSensitiveFields(newMessage.text, newMessage.id);
     }
   }, [scanSensitiveFields]);
+  
+  const addSystemMessage = useCallback((text: string, options?: { responseOptions?: string[] }) => {
+    console.log(`Adding system message: ${text}`);
+    addMessage({
+      text,
+      sender: 'system',
+      responseOptions: options?.responseOptions || [],
+    });
+    
+    // Also add notification for system messages
+    addNotification({
+      title: "System Message",
+      description: text,
+      type: "info"
+    });
+  }, [addMessage, addNotification]);
+  
+  const addAgentMessage = useCallback((text: string) => {
+    console.log(`Adding agent message: ${text}`);
+    addMessage({
+      text,
+      sender: 'agent'
+    });
+  }, [addMessage]);
+  
+  const addCustomerMessage = useCallback((text: string, options?: { highlightSensitiveData?: boolean }) => {
+    console.log(`Adding customer message: ${text}`);
+    addMessage({
+      text,
+      sender: 'customer',
+      highlightSensitiveData: options?.highlightSensitiveData
+    });
+  }, [addMessage]);
+  
+  const addInlineModuleMessage = useCallback((text: string, inlineModule: ModuleConfig) => {
+    console.log(`Adding inline module message: ${text}`);
+    addMessage({
+      text,
+      sender: 'system',
+      inlineModule
+    });
+  }, [addMessage]);
 
   /**
    * Clear all messages from the transcript
@@ -105,6 +140,13 @@ export function useMessageHandling() {
     );
     
     setLastMessageUpdate(new Date());
+    
+    // Add notification for inline module completion
+    addNotification({
+      title: "Module Completed",
+      description: `${moduleId} module completed ${result?.verified ? "successfully" : "unsuccessfully"}`,
+      type: result?.verified ? "success" : "warning"
+    });
   };
 
   // Override the original handleVerifySystemCheck to ensure verificationBlocking is never true

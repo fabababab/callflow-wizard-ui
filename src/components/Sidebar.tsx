@@ -13,7 +13,8 @@ import {
   AlertCircle,
   User,
   Beaker,
-  ChevronRight
+  ChevronRight,
+  Bell
 } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import {
@@ -29,6 +30,8 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import SidebarTrigger from './SidebarTrigger';
+import NotificationBadge from './notifications/NotificationBadge';
+import { useNotifications } from '@/contexts/NotificationsContext';
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -39,6 +42,7 @@ const Sidebar = ({ collapsed = true }: SidebarProps) => {
   const isActive = (path: string) => location.pathname === path;
   const [isHovered, setIsHovered] = useState(false);
   const { setOpen } = useSidebar();
+  const { unreadCount } = useNotifications();
 
   // Set sidebar state based on props and hover
   useEffect(() => {
@@ -90,6 +94,25 @@ const Sidebar = ({ collapsed = true }: SidebarProps) => {
                     <Link to="/contacts">
                       <Users size={20} />
                       <span>Contacts</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton tooltip="Notifications" isActive={isActive('/notifications')} asChild>
+                    <Link to="/notifications" className="relative">
+                      {collapsed || !isHovered ? (
+                        <NotificationBadge />
+                      ) : (
+                        <>
+                          <Bell size={20} />
+                          <span>Notifications</span>
+                          {unreadCount > 0 && (
+                            <span className="ml-auto bg-red-500 text-white text-xs rounded-full h-5 min-w-5 flex items-center justify-center">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
+                        </>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
