@@ -40,6 +40,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const processingRef = useRef(false);
   const hasShownToastRef = useRef(false);
+  const hasDispatchedEventRef = useRef(false);
   const { toast } = useToast();
   
   // Auto-verify on mount after a small delay
@@ -91,7 +92,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     
     // Add a slight delay to show the success state before completing
     completeTimeoutRef.current = setTimeout(() => {
-      if (onComplete) {
+      if (onComplete && !hasDispatchedEventRef.current) {
         console.log(`VerificationModule ${id} completed with automatic success`);
         onComplete({
           verified: true,
@@ -102,21 +103,14 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
           }))
         });
         
-        // Dispatch a custom event to trigger state transition after verification
+        // Mark that we've dispatched the event to prevent duplicates
+        hasDispatchedEventRef.current = true;
+        
+        // Dispatch a single custom event to trigger state transition after verification
         const event = new CustomEvent('verification-complete', {
           detail: { success: true, moduleId: id }
         });
         window.dispatchEvent(event);
-        
-        // If verification was successful and this is inline, trigger flow continuation
-        if (isInlineDisplay) {
-          console.log("Verification successful, continuing flow...");
-          // Dispatch an event to continue the flow
-          const event = new CustomEvent('verification-successful', {
-            detail: { moduleId: id }
-          });
-          window.dispatchEvent(event);
-        }
         
         // Reset processing state after a longer delay to prevent rapid re-renders
         setTimeout(() => {

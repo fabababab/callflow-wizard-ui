@@ -21,6 +21,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   const [verificationFailed, setVerificationFailed] = useState(false);
   const verificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
+  const hasDispatchedEventRef = useRef(false);
   const { toast } = useToast();
   const hasShownToastRef = useRef(false);
   
@@ -77,11 +78,14 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
         hasShownToastRef.current = true;
       }
       
-      // Dispatch a custom event to trigger state transition after verification
-      const event = new CustomEvent('verification-complete', {
-        detail: { success: true }
-      });
-      window.dispatchEvent(event);
+      // Dispatch a custom event to trigger state transition after verification - only once
+      if (!hasDispatchedEventRef.current) {
+        const event = new CustomEvent('verification-complete', {
+          detail: { success: true }
+        });
+        window.dispatchEvent(event);
+        hasDispatchedEventRef.current = true;
+      }
       
       // Reset processing state after a delay
       setTimeout(() => {

@@ -19,6 +19,10 @@ export function useResponseHandler({
   // Track if we've shown a response selection toast
   const responseToastShownRef = useRef<Record<string, boolean>>({});
   
+  // Add refs to track verification states
+  const verificationHandledRef = useRef<Record<string, boolean>>({});
+  const verificationInProgressRef = useRef(false);
+  
   // This is our primary interaction method - updated to ensure explicit user action
   const handleSelectResponse = useCallback((response: string) => {
     console.log('===== RESPONSE SELECTION BEGIN =====');
@@ -102,24 +106,32 @@ export function useResponseHandler({
       if (isVerifyIdentityOption) {
         console.log("Identity verification was selected, setting up auto-continue...");
         
-        // Use a slightly longer delay to allow verification UI to show up
-        setTimeout(() => {
-          // Add verification message to chat
-          messageHandling.addSystemMessage("Customer identity has been automatically verified.");
+        if (!verificationInProgressRef.current) {
+          verificationInProgressRef.current = true;
           
-          // Wait for verification modal to complete
+          // Use a slightly longer delay to allow verification UI to show up
           setTimeout(() => {
-            console.log("Continuing flow after identity verification");
-            
-            // Get available responses
-            const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
-            
-            if (responseOptions.length > 0) {
-              // Pick the first available response option to continue the flow
-              handleSelectResponse(responseOptions[0]);
+            // Add verification message to chat only if not already handled
+            if (!verificationHandledRef.current[stateMachine.currentState]) {
+              messageHandling.addSystemMessage("Customer identity has been automatically verified.");
+              verificationHandledRef.current[stateMachine.currentState] = true;
             }
-          }, 2000);
-        }, 2000);
+            
+            // Wait for verification modal to complete
+            setTimeout(() => {
+              console.log("Continuing flow after identity verification");
+              verificationInProgressRef.current = false;
+              
+              // Get available responses
+              const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+              
+              if (responseOptions.length > 0) {
+                // Pick the first available response option to continue the flow
+                handleSelectResponse(responseOptions[0]);
+              }
+            }, 1500);
+          }, 1500);
+        }
       }
       
       console.log('===== RESPONSE SELECTION COMPLETE =====');
@@ -142,22 +154,26 @@ export function useResponseHandler({
   // Add event listeners for verification completion events
   useEffect(() => {
     const handleVerificationComplete = (event: CustomEvent) => {
-      // Generate a unique ID for this verification event
-      const eventId = `${event.type}-${event.detail?.moduleId || 'inline'}-${Date.now()}`;
+      // Generate a unique ID for this verification event based on state
+      const eventId = `${event.type}-${event.detail?.moduleId || 'inline'}-${stateMachine.currentState}`;
       
       // Skip if we've already processed this verification event
-      if (processedVerificationEventsRef.current.has(eventId)) {
+      if (processedVerificationEventsRef.current.has(eventId) || verificationInProgressRef.current) {
         console.log("Skipping duplicate verification event:", eventId);
         return;
       }
       
       console.log("Verification complete event detected:", event.detail);
       processedVerificationEventsRef.current.add(eventId);
+      verificationInProgressRef.current = true;
       
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
-        // System message about verification
-        messageHandling.addSystemMessage("Customer identity has been successfully verified.");
+        // System message about verification - only show once per state
+        if (!verificationHandledRef.current[stateMachine.currentState]) {
+          messageHandling.addSystemMessage("Customer identity has been successfully verified.");
+          verificationHandledRef.current[stateMachine.currentState] = true;
+        }
         
         // Get available responses for the current state
         const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
@@ -168,8 +184,11 @@ export function useResponseHandler({
           
           // Add a delay to make the flow feel more natural
           setTimeout(() => {
+            verificationInProgressRef.current = false;
             handleSelectResponse(responseOptions[0]);
-          }, 1500);
+          }, 1000);
+        } else {
+          verificationInProgressRef.current = false;
         }
       }, 500);
     };
@@ -183,7 +202,7 @@ export function useResponseHandler({
       window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
       window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
     };
-  }, [messageHandling, stateMachine.stateData, handleSelectResponse]);
+  }, [messageHandling, stateMachine.stateData, stateMachine.currentState, handleSelectResponse]);
 
   return {
     handleSelectResponse
