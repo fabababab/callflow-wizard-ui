@@ -6,6 +6,7 @@ import NachbearbeitungModule from './NachbearbeitungModule';
 import ContractModule from './ContractModule';
 import ContractManagementModule from './ContractManagementModule';
 import QuizModule from './QuizModule';
+import FranchiseModule from './FranchiseModule';
 
 // This file serves as a registry to map module types to their respective components
 const ModuleRegistry = {
@@ -15,6 +16,7 @@ const ModuleRegistry = {
   [ModuleType.CONTRACT]: ContractModule,
   [ModuleType.CONTRACT_MANAGEMENT]: ContractManagementModule,
   [ModuleType.QUIZ]: QuizModule,
+  [ModuleType.FRANCHISE]: FranchiseModule,
 };
 
 export default ModuleRegistry;

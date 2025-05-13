@@ -1,34 +1,19 @@
+
+// Define available module types
 export enum ModuleType {
-  VERIFICATION = 'verification',
-  INFORMATION = 'information',
-  NACHBEARBEITUNG = 'nachbearbeitung',
-  CONTRACT = 'contract',
-  CONTRACT_MANAGEMENT = 'contract_management',
-  QUIZ = 'quiz'
+  VERIFICATION = 'VERIFICATION',
+  INFORMATION = 'INFORMATION',
+  NACHBEARBEITUNG = 'NACHBEARBEITUNG',
+  CONTRACT = 'CONTRACT',
+  CONTRACT_MANAGEMENT = 'CONTRACT_MANAGEMENT',
+  QUIZ = 'QUIZ',
+  FRANCHISE = 'FRANCHISE',
 }
 
+// Interface for module configuration
 export interface ModuleConfig {
   id: string;
-  title: string;
   type: ModuleType;
-  data?: any;
-}
-
-export interface ModuleProps {
-  id: string;
   title: string;
   data?: any;
-  onClose?: () => void;
-  onComplete?: (result: any) => void;
-  currentState?: string;
-  stateData?: any;
-}
-
-// Export the ContractDetails type
-export interface ContractDetails {
-  policyNumber: string;
-  startDate: string;
-  endDate: string;
-  premium: string;
-  coverageType: string;
 }
