@@ -65,5 +65,10 @@ export const stateMachines: Record<ScenarioType, StateMachineConfig> = {
     status: StateMachineStatus.PRODUCTION,
     available: true,
     description: 'Scenario for updating insurance packages after major life changes'
+  },
+  'deutscheVersion': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Deutsche Version mit Versicherungsanpassung nach Studienabschluss'
   }
 };

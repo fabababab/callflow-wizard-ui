@@ -13,7 +13,8 @@ export type ScenarioType =
   'accountHistory' |
   'physioTherapy' |
   'paymentReminder' |
-  'insurancePackage';
+  'insurancePackage' |
+  'deutscheVersion';
 
 // Define and export the scenarioCallData object that Dashboard.tsx is looking for
 export const scenarioCallData: Record<ScenarioType, {
@@ -256,6 +257,28 @@ export const scenarioCallData: Record<ScenarioType, {
       sentiment: 'Interested',
       keyPoints: ['Customer asking about product features', 'Comparing different options']
     }
+  },
+  'deutscheVersion': {
+    id: 11,
+    customerName: 'Markus Weber',
+    phoneNumber: '+41 78 123 4567',
+    waitTime: '0m 20s',
+    callType: 'Versicherungsanpassung',
+    priority: 'medium',
+    expertise: 'Versicherung',
+    matchScore: 94,
+    caseHistory: [
+      {
+        type: 'Vertragsänderung',
+        date: 'Mai 12, 2025',
+        description: 'Kunde hat Studium abgeschlossen und fragt nach Anpassungen.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '1m 30s',
+      sentiment: 'Neutral',
+      keyPoints: ['Studium abgeschlossen', 'Frage nach Versicherungsanpassungen', 'Überprüfung der Franchise']
+    }
   }
 };
 
@@ -275,7 +298,8 @@ const ScenarioSelector = ({
     'testscenario',
     'verificationFlow',
     'contractManagement',
-    'productInfo'
+    'productInfo',
+    'deutscheVersion'
   ];
 
   return (
@@ -296,6 +320,7 @@ const ScenarioSelector = ({
                 {scenario === 'verificationFlow' ? 'Identity Verification' :
                  scenario === 'contractManagement' ? 'Contract Management' :
                  scenario === 'productInfo' ? 'Product Information' :
+                 scenario === 'deutscheVersion' ? 'Deutsche Version' :
                  'Test Scenario'}
               </SelectItem>
             ))}

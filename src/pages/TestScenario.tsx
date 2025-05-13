@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -16,7 +17,7 @@ const TestScenario = () => {
   const transcriptRef = useRef<HTMLDivElement>(null);
   
   // State management for scenarios, states, and visualization
-  const scenarioState = useScenarioState("testscenario");
+  const scenarioState = useScenarioState("deutscheVersion"); // Changed default to deutscheVersion
 
   // Use the useJsonVisualization hook for JSON view functionality
   const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);

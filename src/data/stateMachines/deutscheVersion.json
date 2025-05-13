@@ -1,0 +1,310 @@
+
+{
+  "id": "deutscheVersion",
+  "initialState": "start",
+  "status": "PRODUCTION",
+  "states": {
+    "start": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Guten Tag, hier ist der Kundendienst. Wie kann ich Ihnen helfen?",
+        "systemMessage": "Ein Kunde ruft an. Bitte identifizieren Sie den Kunden zuerst.",
+        "sensitiveFields": [
+          {
+            "id": "dob",
+            "type": "date_of_birth",
+            "value": "23.05.1985",
+            "status": "pending",
+            "requiresVerification": true,
+            "systemValue": "23.05.1985",
+            "source": "Customer Profile"
+          },
+          {
+            "id": "address",
+            "type": "address",
+            "value": "Schmiedgasse 14, 8003 Zürich",
+            "status": "pending",
+            "requiresVerification": true,
+            "systemValue": "Schmiedgasse 14, 8003 Zürich",
+            "source": "Customer Registration Form"
+          }
+        ],
+        "module": {
+          "id": "identity_verification",
+          "type": "VERIFICATION",
+          "title": "Kundenidentifikation erforderlich",
+          "data": {
+            "message": "Bitte identifizieren Sie den Kunden zuerst, in dem Sie diese beiden Informationen abfragen:",
+            "fields": [
+              {
+                "id": "dob",
+                "label": "Geburtsdatum",
+                "expectedValue": "23.05.1985",
+                "required": true
+              },
+              {
+                "id": "address",
+                "label": "Adresse",
+                "expectedValue": "Schmiedgasse 14, 8003 Zürich",
+                "required": true
+              }
+            ],
+            "isInline": true
+          }
+        }
+      },
+      "on": {
+        "verification-success": "customer_issue",
+        "DEFAULT": "start"
+      }
+    },
+    "customer_issue": {
+      "stateType": "customer",
+      "meta": {
+        "customerText": "Guten Tag. Ich habe mein Studium abgeschlossen und wollte fragen, ob sich etwas an meiner Versicherung ändert und ob eine Anpassung von Franchise oder Modell für mich sinnvoll ist.",
+        "systemMessage": "Der Kunde hat sein Studium abgeschlossen und fragt nach möglichen Versicherungsanpassungen.",
+        "module": {
+          "id": "insurance_info",
+          "type": "INFORMATION",
+          "title": "Kundeninformationen",
+          "data": {
+            "message": "Studium abgeschlossen; fragt, ob sich etwas an der Versicherung ändert und ob eine Anpassung von Franchise oder Modell sinnvoll ist.",
+            "sections": [
+              {
+                "title": "Aktuell",
+                "items": [
+                  { "label": "Modell", "value": "Tel-Med" },
+                  { "label": "Franchise", "value": "2'500 CHF" },
+                  { "label": "Prämie", "value": "200.-" }
+                ]
+              },
+              {
+                "title": "Mögliche Anpassungen zum Studiumsabschluss",
+                "items": [
+                  { "label": "Franchise", "value": "Oft gewählt, um Prämien tief zu halten. Könnte gesenkt werden, falls mehr medizinische Leistungen erwartet werden oder um Risiko zu senken." },
+                  { "label": "Modellwechsel", "value": "Kann man wechseln zu Hausarzt oder freie Arztwahl. Je nachdem wie flexibel er sein will." }
+                ]
+              }
+            ],
+            "isInline": true
+          }
+        }
+      },
+      "on": {
+        "DEFAULT": "options"
+      }
+    },
+    "options": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Danke für die Information. Ich kann Ihnen gerne mehr Informationen zu den verschiedenen Optionen geben.",
+        "responseOptions": [
+          "Mehr Informationen zu Modellen",
+          "Mehr Informationen zu Franchise"
+        ]
+      },
+      "on": {
+        "Mehr Informationen zu Modellen": "moreModels",
+        "Mehr Informationen zu Franchise": "notAsked",
+        "DEFAULT": "options"
+      }
+    },
+    "notAsked": {
+      "stateType": "system",
+      "meta": {
+        "systemMessage": "Fehlermeldung: Das wurde vom Kunden nicht gefragt.",
+        "responseOptions": ["Mehr Informationen zu Modellen"]
+      },
+      "on": {
+        "Mehr Informationen zu Modellen": "moreModels",
+        "DEFAULT": "notAsked"
+      }
+    },
+    "moreModels": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Hier sind die verschiedenen Modelle, die wir anbieten:",
+        "module": {
+          "id": "models_info",
+          "type": "INFORMATION",
+          "title": "Versicherungsmodelle",
+          "data": {
+            "message": "Verfügbare Versicherungsmodelle:",
+            "sections": [
+              {
+                "title": "Modelle",
+                "items": [
+                  { "label": "1. Standardmodell", "value": "Freie Arztwahl, keine Einschränkungen. Ca. CHF 290–330/Monat" },
+                  { "label": "2. Hausarztmodell", "value": "Immer zuerst zum gewählten Hausarzt. Ca. CHF 240–270/Monat" },
+                  { "label": "3. Telmed-Modell", "value": "Zuerst telefonische Beratung. Ca. CHF 220–250/Monat" },
+                  { "label": "4. HMO-Modell", "value": "Nur bestimmte Gesundheitszentren. Ca. CHF 230–260/Monat" }
+                ]
+              }
+            ],
+            "isInline": true
+          }
+        }
+      },
+      "on": {
+        "DEFAULT": "modelOptions"
+      }
+    },
+    "modelOptions": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Haben Sie Interesse an einem bestimmten Modell oder möchten Sie mehr über die Franchiseoptionen erfahren?",
+        "responseOptions": [
+          "Keine Änderung gewünscht aber was würde Franchisenänderung ausmachen?",
+          "Wechsel zum Standardmodell",
+          "Wechsel zum Hausarztmodell",
+          "Wechsel zum HMO-Modell"
+        ]
+      },
+      "on": {
+        "Keine Änderung gewünscht aber was würde Franchisenänderung ausmachen?": "moreFranchise",
+        "Wechsel zum Standardmodell": "notAskedModel",
+        "Wechsel zum Hausarztmodell": "notAskedModel",
+        "Wechsel zum HMO-Modell": "notAskedModel",
+        "DEFAULT": "modelOptions"
+      }
+    },
+    "notAskedModel": {
+      "stateType": "system",
+      "meta": {
+        "systemMessage": "Fehlermeldung: Das wurde vom Kunden nicht gefragt.",
+        "responseOptions": ["Mehr Informationen zu den Franchisenänderungen"]
+      },
+      "on": {
+        "Mehr Informationen zu den Franchisenänderungen": "moreFranchise",
+        "DEFAULT": "notAskedModel"
+      }
+    },
+    "moreFranchise": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Hier sehen Sie die Auswirkungen unterschiedlicher Franchisehöhen auf Ihre monatliche Prämie:",
+        "module": {
+          "id": "franchise_info",
+          "type": "INFORMATION",
+          "title": "Auswirkungen Änderung Franchise",
+          "data": {
+            "message": "Übersicht der Franchiseoptionen und Prämien:",
+            "sections": [
+              {
+                "title": "Franchise & Prämie",
+                "items": [
+                  { "label": "CHF 300", "value": "CHF 400" },
+                  { "label": "CHF 500", "value": "CHF 360" },
+                  { "label": "CHF 1'000", "value": "CHF 310" },
+                  { "label": "CHF 1'500", "value": "CHF 270" },
+                  { "label": "CHF 2'000", "value": "CHF 240" },
+                  { "label": "CHF 2'500", "value": "CHF 220" }
+                ]
+              }
+            ],
+            "note": "Info: Wenn Arztkosten weniger als ca. 2000.- erwartet werden, spart man mit einer hohen Franchise meistens.",
+            "isInline": true
+          }
+        }
+      },
+      "on": {
+        "DEFAULT": "franchiseOptions"
+      }
+    },
+    "franchiseOptions": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Welche Franchise würden Sie bevorzugen?",
+        "responseOptions": [
+          "CHF 300",
+          "CHF 500",
+          "CHF 1000",
+          "CHF 1500",
+          "CHF 2000",
+          "CHF 2500"
+        ]
+      },
+      "on": {
+        "CHF 300": "notDecided",
+        "CHF 500": "notDecided",
+        "CHF 1000": "changeFranchise",
+        "CHF 1500": "notDecided",
+        "CHF 2000": "notDecided",
+        "CHF 2500": "notDecided",
+        "DEFAULT": "franchiseOptions"
+      }
+    },
+    "notDecided": {
+      "stateType": "system",
+      "meta": {
+        "systemMessage": "Fehlermeldung: Das wurde vom Kunden nicht entschieden.",
+        "responseOptions": ["Franchise 1000"]
+      },
+      "on": {
+        "Franchise 1000": "changeFranchise",
+        "DEFAULT": "notDecided"
+      }
+    },
+    "changeFranchise": {
+      "stateType": "system",
+      "meta": {
+        "systemMessage": "Franchise wurde für das nächste Jahr auf 1000.- angepasst"
+      },
+      "on": {
+        "DEFAULT": "conclusion"
+      }
+    },
+    "conclusion": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Sehr gut. Ich habe die Änderung Ihrer Franchise auf 1000 CHF für das kommende Jahr eingetragen. Die neue Prämie beträgt 310 CHF pro Monat. Haben Sie noch weitere Anliegen?",
+        "responseOptions": [
+          "Nein, das war alles. Vielen Dank für Ihre Hilfe."
+        ]
+      },
+      "on": {
+        "Nein, das war alles. Vielen Dank für Ihre Hilfe.": "goodbye",
+        "DEFAULT": "conclusion"
+      }
+    },
+    "goodbye": {
+      "stateType": "customer",
+      "meta": {
+        "customerText": "Nein, das war alles. Vielen Dank für Ihre Hilfe."
+      },
+      "on": {
+        "DEFAULT": "endcall"
+      }
+    },
+    "endcall": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Gerne. Ich wünsche Ihnen noch einen schönen Tag. Auf Wiederhören!",
+        "module": {
+          "id": "nachbearbeitung_summary",
+          "type": "NACHBEARBEITUNG",
+          "title": "Nachbearbeitung",
+          "data": {
+            "summary": "Kunde hat nach Studienabschluss Franchise von CHF 2'500.– auf CHF 1'000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet.",
+            "points": [
+              "Studium abgeschlossen",
+              "Franchise von 2'500 auf 1'000 CHF reduziert",
+              "Bleibt im Telmed-Modell",
+              "Änderung ab nächstem Monat"
+            ],
+            "isInline": true
+          }
+        }
+      },
+      "on": {
+        "DEFAULT": "end"
+      }
+    },
+    "end": {
+      "stateType": "system",
+      "meta": {
+        "systemMessage": "Der Call wurde beendet."
+      }
+    }
+  }
+}
