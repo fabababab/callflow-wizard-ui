@@ -37,12 +37,13 @@ export function useResponseHandler({
     // Only process if we're awaiting user response or at initial state
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
-      toast.toast({
-        title: "Cannot select response",
-        description: "Please wait for the conversation to initialize first",
-        variant: "destructive",
-        duration: 2000
-      });
+      // Toast notification commented out for now - will be re-integrated later
+      // toast.toast({
+      //   title: "Cannot select response",
+      //   description: "Please wait for the conversation to initialize first",
+      //   variant: "destructive",
+      //   duration: 2000
+      // });
       return;
     }
     
@@ -50,15 +51,15 @@ export function useResponseHandler({
     const isVerifyIdentityOption = response.toLowerCase().includes('verify') && 
                                   response.toLowerCase().includes('identity');
     
-    // Show toast notification for response selection (only once per unique response)
-    if (!responseToastShownRef.current[response]) {
-      toast.toast({
-        title: "Response Selected",
-        description: response,
-        duration: 2000,
-      });
-      responseToastShownRef.current[response] = true;
-    }
+    // Toast notification commented out for now - will be re-integrated later
+    // if (!responseToastShownRef.current[response]) {
+    //   toast.toast({
+    //     title: "Response Selected",
+    //     description: response,
+    //     duration: 2000,
+    //   });
+    //   responseToastShownRef.current[response] = true;
+    // }
     
     // Set the user action flag
     conversationState.setIsUserAction(true);
@@ -88,12 +89,13 @@ export function useResponseHandler({
         
         if (!defaultSuccess) {
           console.error('Both specific and DEFAULT transitions failed');
-          toast.toast({
-            title: "State Transition Failed",
-            description: "Could not proceed to the next state. Try resetting the conversation.",
-            variant: "destructive",
-            duration: 3000
-          });
+          // Toast notification commented out for now - will be re-integrated later
+          // toast.toast({
+          //   title: "State Transition Failed",
+          //   description: "Could not proceed to the next state. Try resetting the conversation.",
+          //   variant: "destructive",
+          //   duration: 3000
+          // });
         } else {
           console.log("Successfully transitioned using DEFAULT path to:", stateMachine.currentState);
         }

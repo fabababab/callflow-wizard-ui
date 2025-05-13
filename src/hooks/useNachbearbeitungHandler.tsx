@@ -34,11 +34,11 @@ export function useNachbearbeitungHandler(completeModule: (result: any) => void)
       });
       window.dispatchEvent(event);
       
-      // Show toast notification
-      toast({
-        title: "Call Summary Module",
-        description: "Please complete the call summary checklist",
-      });
+      // Toast notification commented out for now - will be re-integrated later
+      // toast({
+      //   title: "Call Summary Module",
+      //   description: "Please complete the call summary checklist",
+      // });
     }, 300);
   }, [completeModule, toast]);
 

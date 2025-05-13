@@ -44,16 +44,19 @@ const IdentityValidation = () => {
       ) {
         setIsValidated(true);
         setShowValidationSuccess(true);
-        toast({
-          title: "Identity Verified",
-          description: "Customer identity has been successfully verified.",
-        });
+        
+        // Toast notification commented out for now - will be re-integrated later
+        // toast({
+        //   title: "Identity Verified",
+        //   description: "Customer identity has been successfully verified.",
+        // });
       } else {
-        toast({
-          title: "Verification Failed",
-          description: "The provided details do not match our records.",
-          variant: "destructive",
-        });
+        // Toast notification commented out for now - will be re-integrated later
+        // toast({
+        //   title: "Verification Failed",
+        //   description: "The provided details do not match our records.",
+        //   variant: "destructive",
+        // });
         
         // Show AI suggestion after failed validation
         setTimeout(() => {
@@ -72,10 +75,11 @@ const IdentityValidation = () => {
     };
     setFormValues(updatedValues);
     
-    toast({
-      title: "Suggestion Applied",
-      description: "Customer details have been updated from system records.",
-    });
+    // Toast notification commented out for now - will be re-integrated later
+    // toast({
+    //   title: "Suggestion Applied",
+    //   description: "Customer details have been updated from system records.",
+    // });
     
     // Auto-validate after applying suggestion
     setTimeout(() => {
@@ -85,10 +89,12 @@ const IdentityValidation = () => {
   
   const handleRejectSuggestion = () => {
     setShowSuggestion(false);
-    toast({
-      title: "Suggestion Rejected",
-      description: "Please continue with manual verification.",
-    });
+    
+    // Toast notification commented out for now - will be re-integrated later
+    // toast({
+    //   title: "Suggestion Rejected",
+    //   description: "Please continue with manual verification.",
+    // });
   };
   
   return (
