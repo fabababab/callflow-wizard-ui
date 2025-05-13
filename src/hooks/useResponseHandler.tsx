@@ -38,13 +38,13 @@ export function useResponseHandler({
     // Only process if we're awaiting user response or at initial state
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
-      // Toast notification commented out for now - will be re-integrated later
-      // toast.toast({
-      //   title: "Cannot select response",
-      //   description: "Please wait for the conversation to initialize first",
-      //   variant: "destructive",
-      //   duration: 2000
-      // });
+      // Show toast notification for better user feedback
+      toast({
+        title: "Bitte warten",
+        description: "Die Konversation wird initialisiert",
+        variant: "destructive",
+        duration: 2000
+      });
       return;
     }
     
@@ -52,15 +52,15 @@ export function useResponseHandler({
     const isVerifyIdentityOption = response.toLowerCase().includes('verify') && 
                                   response.toLowerCase().includes('identity');
     
-    // Toast notification commented out for now - will be re-integrated later
-    // if (!responseToastShownRef.current[response]) {
-    //   toast.toast({
-    //     title: "Response Selected",
-    //     description: response,
-    //     duration: 2000,
-    //   });
-    //   responseToastShownRef.current[response] = true;
-    // }
+    // Show toast for selection feedback
+    if (!responseToastShownRef.current[response]) {
+      toast({
+        title: "Auswahl getroffen",
+        description: response,
+        duration: 2000,
+      });
+      responseToastShownRef.current[response] = true;
+    }
     
     // Set the user action flag
     conversationState.setIsUserAction(true);
@@ -90,13 +90,12 @@ export function useResponseHandler({
         
         if (!defaultSuccess) {
           console.error('Both specific and DEFAULT transitions failed');
-          // Toast notification commented out for now - will be re-integrated later
-          // toast.toast({
-          //   title: "State Transition Failed",
-          //   description: "Could not proceed to the next state. Try resetting the conversation.",
-          //   variant: "destructive",
-          //   duration: 3000
-          // });
+          toast({
+            title: "Fehler bei der Statusänderung",
+            description: "Konnte nicht zum nächsten Status übergehen. Versuchen Sie, die Konversation zurückzusetzen.",
+            variant: "destructive",
+            duration: 3000
+          });
         } else {
           console.log("Successfully transitioned using DEFAULT path to:", stateMachine.currentState);
         }
@@ -121,7 +120,7 @@ export function useResponseHandler({
           setTimeout(() => {
             // Add verification message to chat only if not already handled
             if (!verificationHandledRef.current[stateMachine.currentState]) {
-              messageHandling.addSystemMessage("Customer identity has been automatically verified.");
+              messageHandling.addSystemMessage("Kundenidentität wurde automatisch verifiziert.");
               verificationHandledRef.current[stateMachine.currentState] = true;
             }
             
@@ -184,7 +183,7 @@ export function useResponseHandler({
       setTimeout(() => {
         // System message about verification - only show once per state
         if (!verificationHandledRef.current[stateMachine.currentState]) {
-          messageHandling.addSystemMessage("Customer identity has been successfully verified.");
+          messageHandling.addSystemMessage("Kundenidentität wurde erfolgreich verifiziert.");
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
         
@@ -225,8 +224,15 @@ export function useResponseHandler({
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
         // System message about completion
-        const moduleTypeLabel = moduleType.charAt(0).toUpperCase() + moduleType.slice(1);
-        messageHandling.addSystemMessage(`${moduleTypeLabel} module completed.`);
+        const moduleTypeLabels: Record<string, string> = {
+          'information': 'Informations',
+          'nachbearbeitung': 'Nachbearbeitungs',
+          'verification': 'Verifizierungs',
+          'contract': 'Vertrags'
+        };
+        
+        const moduleTypeLabel = moduleTypeLabels[moduleType.toLowerCase()] || moduleType.charAt(0).toUpperCase() + moduleType.slice(1);
+        messageHandling.addSystemMessage(`${moduleTypeLabel}modul abgeschlossen.`);
         
         // Get available responses for the current state
         const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];

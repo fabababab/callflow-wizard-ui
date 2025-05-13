@@ -24,16 +24,24 @@ const NachbearbeitungModule: React.FC<ModuleProps> = ({
   onClose, 
   onComplete 
 }) => {
-  const summaryPoints: CallSummaryPoint[] = data?.summaryPoints || [
-    { id: '1', text: 'Customer identification was verified', checked: false, important: true },
-    { id: '2', text: 'Customer inquiry was addressed', checked: false, important: true },
-    { id: '3', text: 'Relevant information was provided to customer', checked: false, important: true },
-    { id: '4', text: 'Customer was informed about next steps', checked: false, important: false },
-    { id: '5', text: 'Customer was offered additional assistance', checked: false, important: false }
+  // Use provided summary points or default ones
+  const initialPoints = data?.points?.map((point: string, index: number) => ({
+    id: `${index + 1}`,
+    text: point,
+    checked: index < 2, // First two points checked by default
+    important: index < 2 // First two points marked as important
+  })) || [
+    { id: '1', text: 'Studium abgeschlossen', checked: true, important: true },
+    { id: '2', text: 'Franchise von 2'500 auf 1'000 CHF reduziert', checked: true, important: true },
+    { id: '3', text: 'Bleibt im Telmed-Modell', checked: false, important: true },
+    { id: '4', text: 'Änderung ab nächstem Monat', checked: false, important: false }
   ];
   
-  const [notes, setNotes] = useState('');
-  const [points, setPoints] = useState<CallSummaryPoint[]>(summaryPoints);
+  // Use provided summary or default
+  const initialNotes = data?.summary || 'Kunde hat nach Studienabschluss Franchise von CHF 2'500.– auf CHF 1'000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet.';
+  
+  const [notes, setNotes] = useState(initialNotes);
+  const [points, setPoints] = useState<CallSummaryPoint[]>(initialPoints);
   const [submitted, setSubmitted] = useState(false);
   
   const handleCheckPoint = (pointId: string) => {
@@ -64,33 +72,35 @@ const NachbearbeitungModule: React.FC<ModuleProps> = ({
       }
     } else {
       // Could display an error message here
-      alert('Please check all required summary points before completing');
+      alert('Bitte markieren Sie alle erforderlichen Punkte, bevor Sie abschließen');
     }
   };
   
+  const isInline = data?.isInline === true;
+  
   return (
-    <Card className="w-full border border-blue-200 shadow-md">
+    <Card className={`w-full shadow-md ${isInline ? 'border-blue-200' : 'border'}`}>
       <CardHeader className="bg-blue-50 border-b border-blue-100">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-blue-600" />
-          <CardTitle className="text-blue-900">{title || 'Call Nachbearbeitung'}</CardTitle>
+          <CardTitle className="text-blue-900">{title || 'Nachbearbeitung'}</CardTitle>
         </div>
         <CardDescription>
-          Please review and confirm the call summary before completing
+          Bitte überprüfen und bestätigen Sie die Zusammenfassung des Gesprächs
         </CardDescription>
       </CardHeader>
       
-      <ScrollArea className="max-h-[400px]">
+      <ScrollArea className={`${isInline ? 'max-h-[300px]' : 'max-h-[400px]'}`}>
         <CardContent className="pt-6 space-y-4">
           {submitted && (
             <div className="bg-green-50 p-3 rounded-md flex items-center gap-2 text-green-700 mb-4">
               <Check className="h-5 w-5" />
-              <span>Call summary completed successfully</span>
+              <span>Zusammenfassung erfolgreich abgeschlossen</span>
             </div>
           )}
           
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700">Call Summary Points</h3>
+            <h3 className="text-sm font-semibold text-gray-700">Gesprächszusammenfassung</h3>
             {points.map(point => (
               <div key={point.id} className="flex items-start space-x-2">
                 <Checkbox 
@@ -116,10 +126,10 @@ const NachbearbeitungModule: React.FC<ModuleProps> = ({
           <Separator />
           
           <div className="space-y-2">
-            <Label htmlFor="notes" className="text-sm font-medium">Additional Notes</Label>
+            <Label htmlFor="notes" className="text-sm font-medium">Zusätzliche Notizen</Label>
             <Textarea
               id="notes"
-              placeholder="Enter any additional notes about the call..."
+              placeholder="Geben Sie zusätzliche Notizen zum Gespräch ein..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="min-h-[100px]"
@@ -130,7 +140,7 @@ const NachbearbeitungModule: React.FC<ModuleProps> = ({
       
       <CardFooter className="flex justify-between bg-gray-50 border-t p-4">
         <Button variant="outline" onClick={onClose}>
-          Cancel
+          Abbrechen
         </Button>
         <Button 
           onClick={handleSubmit}
@@ -138,7 +148,7 @@ const NachbearbeitungModule: React.FC<ModuleProps> = ({
           disabled={submitted}
         >
           <ClipboardCheck className="h-4 w-4 mr-2" />
-          Complete Call Summary
+          Zusammenfassung abschließen
         </Button>
       </CardFooter>
     </Card>

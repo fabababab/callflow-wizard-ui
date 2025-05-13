@@ -11,13 +11,14 @@ import { useScenarioState } from '@/hooks/useScenarioState';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
+import { toast } from "@/hooks/use-toast";
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
   const transcriptRef = useRef<HTMLDivElement>(null);
   
   // State management for scenarios, states, and visualization
-  const scenarioState = useScenarioState("deutscheVersion"); // Changed default to deutscheVersion
+  const scenarioState = useScenarioState("deutscheVersion");
 
   // Use the useJsonVisualization hook for JSON view functionality
   const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);
@@ -33,11 +34,16 @@ const TestScenario = () => {
   const activeScenario = customerScenario;
   const { currentState, error } = activeScenario;
   
-  // Add console.log to help debug the issue
+  // Add notification when scenario is loaded
   useEffect(() => {
-    console.log("TestScenario re-rendering, checking for sensitive field details:", 
-      scenarioState.showSensitiveFieldDetails ? "Open" : "Closed");
-  }, [scenarioState.showSensitiveFieldDetails]);
+    if (scenarioState.loadedStateMachine) {
+      toast({
+        title: "Deutsche Version geladen",
+        description: "Szenario zum Thema Versicherungsanpassung nach Studienabschluss",
+        duration: 3000
+      });
+    }
+  }, [scenarioState.loadedStateMachine]);
   
   return (
     <div className="flex h-screen bg-background">

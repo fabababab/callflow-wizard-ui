@@ -11,6 +11,7 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 interface StateMachineSelectorProps {
   activeStateMachine: ScenarioType;
@@ -34,6 +35,22 @@ const StateMachineSelector = React.memo(({
     }
   };
 
+  // Format the display name of a state machine
+  const formatStateMachineName = (stateMachine: string) => {
+    // Special case for the deutsche version
+    if (stateMachine === 'deutscheVersion') {
+      return (
+        <div className="flex items-center">
+          <span>Deutsche Version</span>
+          <Badge variant="outline" className="ml-2 text-xs bg-blue-50">DE</Badge>
+        </div>
+      );
+    }
+    
+    // Default formatting for other state machines
+    return stateMachine.charAt(0).toUpperCase() + stateMachine.slice(1).replace(/([A-Z])/g, ' $1');
+  };
+
   return (
     <div className="flex flex-col space-y-1.5">
       <Label htmlFor="stateMachine">State Machine</Label>
@@ -55,7 +72,7 @@ const StateMachineSelector = React.memo(({
           <SelectGroup>
             {availableStateMachines.map((stateMachine) => (
               <SelectItem key={stateMachine} value={stateMachine}>
-                {stateMachine.charAt(0).toUpperCase() + stateMachine.slice(1)}
+                {formatStateMachineName(stateMachine)}
               </SelectItem>
             ))}
           </SelectGroup>
