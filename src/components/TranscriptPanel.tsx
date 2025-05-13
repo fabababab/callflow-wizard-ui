@@ -54,12 +54,12 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 
   // Scroll to bottom whenever messages are updated
   useEffect(() => {
-    if (transcript.messagesEndRef.current) {
+    if (transcript.messagesEndRef && transcript.messagesEndRef.current) {
       transcript.messagesEndRef.current.scrollIntoView({
         behavior: 'smooth'
       });
     }
-  }, [transcript.lastTranscriptUpdate]);
+  }, [transcript.lastTranscriptUpdate, transcript.messagesEndRef]);
   
   // Handle module completion
   const handleModuleComplete = (result: Record<string, unknown>) => {

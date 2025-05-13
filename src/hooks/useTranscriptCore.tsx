@@ -29,7 +29,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stateMachineRef = useRef<any>(null);
   
-  // Function to show the Nachbearbeitung summary
+  // Function to show the Nachbearbeitung summary - defined before it's used
   const showNachbearbeitungSummary = useCallback((state?: string) => {
     if (nachbearbeitungSummaryRef.current) {
       console.log("Showing Nachbearbeitung summary");
@@ -43,7 +43,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
         type: "warning"
       });
     }
-  }, [addSystemMessage, stateMachine?.currentState, addNotification]);
+  }, [addNotification]);
   
   // Initialize smaller focused hooks
   const callState = { callActive, setCallActive };
@@ -67,7 +67,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   } = useMessageHandling();
   
   const conversationState = useConversationState();
-  const stateMachine = useStateMachine(activeScenario, {
+  const stateMachine = useStateMachineInternal(activeScenario, {
     addSystemMessage,
     addAgentMessage,
     addCustomerMessage,
@@ -97,8 +97,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling: {
       addAgentMessage
     },
-    conversationState,
-    toast
+    conversationState
   });
   
   // Load state machine on scenario change
@@ -219,7 +218,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
 }
 
 // Internal hook for managing state machine
-function useStateMachine(activeScenario: ScenarioType, actions: any) {
+function useStateMachineInternal(activeScenario: ScenarioType, actions: any) {
   const stateMachineRef = useRef<any>(null);
   const [stateData, setStateData] = useState<any>(null);
   const [currentState, setCurrentState] = useState<string>('');
