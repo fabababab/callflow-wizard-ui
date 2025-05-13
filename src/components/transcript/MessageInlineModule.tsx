@@ -3,8 +3,9 @@ import React, { memo, useRef, useEffect, useState } from 'react';
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Calculator, FileText, Info } from 'lucide-react';
+import { Shield, Calculator, FileText, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface MessageInlineModuleProps {
   moduleConfig: ModuleConfig;
@@ -17,6 +18,7 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
 }) => {
   const completedRef = useRef(false);
   const [completed, setCompleted] = useState(false);
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const { toast } = useToast();
   
   // Get appropriate icon based on module type
@@ -127,6 +129,51 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     return "bg-amber-50 border-amber-200";
   };
   
+  // Format configuration data for display
+  const formatConfigValue = (value: any): string => {
+    if (value === null || value === undefined) return 'Not set';
+    if (typeof value === 'object') return JSON.stringify(value, null, 2);
+    return String(value);
+  };
+  
+  // Render configuration details in a readable format
+  const renderConfigDetails = () => {
+    if (!moduleConfig.data) return <p className="text-xs text-gray-500">No configuration data available</p>;
+    
+    // Extract keys but filter out any keys we don't want to show
+    const keysToExclude = ['isInline'];
+    const configKeys = Object.keys(moduleConfig.data).filter(key => !keysToExclude.includes(key));
+    
+    if (configKeys.length === 0) return <p className="text-xs text-gray-500">No configuration data available</p>;
+    
+    return (
+      <div className="text-xs space-y-1 bg-amber-50/50 p-2 rounded-md">
+        {configKeys.map(key => (
+          <div key={key} className="grid grid-cols-[1fr,2fr] gap-2">
+            <div className="font-medium text-amber-700">{key}:</div>
+            <div className="text-gray-700 break-words">
+              {typeof moduleConfig.data[key] === 'object' ? (
+                <pre className="whitespace-pre-wrap text-[10px] bg-white p-1 rounded border border-amber-100">
+                  {JSON.stringify(moduleConfig.data[key], null, 2)}
+                </pre>
+              ) : (
+                formatConfigValue(moduleConfig.data[key])
+              )}
+            </div>
+          </div>
+        ))}
+        <div className="grid grid-cols-[1fr,2fr] gap-2">
+          <div className="font-medium text-amber-700">moduleType:</div>
+          <div className="text-gray-700">{moduleConfig.type}</div>
+        </div>
+        <div className="grid grid-cols-[1fr,2fr] gap-2">
+          <div className="font-medium text-amber-700">moduleId:</div>
+          <div className="text-gray-700">{moduleConfig.id}</div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="ml-auto mt-2 w-full max-w-[85%] transition-all duration-300">
       <div className={`rounded-lg overflow-hidden border border-amber-200 shadow-sm ${getHeaderClass()}`}>
@@ -135,11 +182,13 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
             {getModuleIcon()}
             <span className="font-medium text-sm text-amber-700">{moduleConfig.title}</span>
           </div>
-          {completed && (
-            <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-              Completed
-            </span>
-          )}
+          <div className="flex items-center gap-1">
+            {completed && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                Completed
+              </span>
+            )}
+          </div>
         </div>
         
         <InlineModuleDisplay 
@@ -153,6 +202,27 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
           onComplete={handleModuleComplete}
           key={moduleConfig.id} // Add a stable key to prevent unnecessary re-renders
         />
+        
+        {/* Collapsible Configuration Details Section */}
+        <Collapsible 
+          open={isConfigOpen} 
+          onOpenChange={setIsConfigOpen}
+          className="border-t border-amber-200"
+        >
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="w-full flex items-center justify-between p-2 h-auto text-xs text-amber-700 hover:bg-amber-100/50"
+            >
+              <span>Configuration Details</span>
+              {isConfigOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="p-2 bg-white/50">
+            {renderConfigDetails()}
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
