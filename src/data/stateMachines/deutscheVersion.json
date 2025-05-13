@@ -5,10 +5,9 @@
   "status": "PRODUCTION",
   "states": {
     "start": {
-      "stateType": "agent",
       "meta": {
+        "systemMessage": "Anruf mit Kunde initiiert.",
         "agentText": "Guten Tag, hier ist der Kundendienst. Wie kann ich Ihnen helfen?",
-        "systemMessage": "Ein Kunde ruft an. Bitte identifizieren Sie den Kunden zuerst.",
         "sensitiveFields": [
           {
             "id": "dob",
@@ -28,6 +27,11 @@
             "systemValue": "Schmiedgasse 14, 8003 Zürich",
             "source": "Customer Registration Form"
           }
+        ],
+        "responseOptions": [
+          "Bitte identifizieren Sie sich zuerst. Können Sie mir Ihr Geburtsdatum und Ihre Adresse nennen?",
+          "Guten Tag! Bevor wir beginnen, muss ich Ihre Identität verifizieren. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre aktuelle Adresse nennen?",
+          "Willkommen bei unserem Kundendienst! Um Ihre Anfrage zu bearbeiten, benötige ich vorab Ihre Identifikation. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre Adresse mitteilen?"
         ],
         "module": {
           "id": "identity_verification",
@@ -54,578 +58,63 @@
         }
       },
       "on": {
-        "verification-success": "customer_inquiry_selection",
-        "DEFAULT": "start"
+        "Bitte identifizieren Sie sich zuerst. Können Sie mir Ihr Geburtsdatum und Ihre Adresse nennen?": "identity_verification",
+        "Guten Tag! Bevor wir beginnen, muss ich Ihre Identität verifizieren. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre aktuelle Adresse nennen?": "identity_verification",
+        "Willkommen bei unserem Kundendienst! Um Ihre Anfrage zu bearbeiten, benötige ich vorab Ihre Identifikation. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre Adresse mitteilen?": "identity_verification",
+        "DEFAULT": "identity_verification"
       }
     },
-    "customer_inquiry_selection": {
-      "stateType": "customer",
+    "identity_verification": {
       "meta": {
-        "customerText": "Guten Tag. Ich hätte ein paar Fragen zu meinen Versicherungsoptionen.",
-        "systemMessage": "Der Kunde hat mehrere Anfragen. Fragen Sie, womit Sie helfen können.",
+        "customerText": "Mein Geburtsdatum ist der 23. Mai 1985 und ich wohne in der Schmiedgasse 14, 8003 Zürich.",
         "responseOptions": [
-          "Wie kann ich Ihnen mit Ihren Versicherungsoptionen helfen?",
-          "Gerne, was möchten Sie wissen?",
-          "Um welche Art von Versicherung geht es?"
+          "Vielen Dank für die Verifizierung. Wie kann ich Ihnen heute helfen?",
+          "Danke für die Informationen. Ihre Identität wurde bestätigt. Was kann ich für Sie tun?",
+          "Perfekt, vielen Dank! Ihre Identität ist nun bestätigt. Womit kann ich Ihnen heute behilflich sein?"
         ]
       },
       "on": {
-        "DEFAULT": "agent_inquiry_response"
+        "Vielen Dank für die Verifizierung. Wie kann ich Ihnen heute helfen?": "customer_inquiry",
+        "Danke für die Informationen. Ihre Identität wurde bestätigt. Was kann ich für Sie tun?": "customer_inquiry",
+        "Perfekt, vielen Dank! Ihre Identität ist nun bestätigt. Womit kann ich Ihnen heute behilflich sein?": "customer_inquiry",
+        "DEFAULT": "customer_inquiry"
       }
     },
-    "agent_inquiry_response": {
-      "stateType": "agent",
+    "customer_inquiry": {
       "meta": {
-        "agentText": "Wie kann ich Ihnen mit Ihren Versicherungsoptionen helfen?",
+        "customerText": "Ich hätte ein paar Fragen zu meinen Versicherungsoptionen. Ich habe nämlich gerade mein Studium abgeschlossen und bin mir nicht sicher, ob sich etwas an meiner Versicherung ändert.",
         "responseOptions": [
-          "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen",
-          "Ich möchte wissen, ob ich meine Franchise ändern kann",
-          "Ich habe Fragen zu den Versicherungsmodellen"
+          "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen gerne mit Ihren Versicherungsoptionen helfen. Was möchten Sie genau wissen?",
+          "Gratulation zum Abschluss! Ja, nach dem Studium gibt es einige wichtige Änderungen zu beachten. Der Studentenrabatt entfällt, was zu einer höheren Grundprämie führen kann. Möchten Sie konkrete Anpassungsoptionen besprechen?",
+          "Zum Studienabschluss gratuliere ich! Da Sie nun eine neue Lebensphase beginnen, ist es sinnvoll, Ihre Versicherung zu überprüfen. Möchten Sie wissen, welche spezifischen Aspekte sich ändern könnten?"
         ]
       },
       "on": {
-        "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen": "customer_issue",
-        "Ich möchte wissen, ob ich meine Franchise ändern kann": "franchise_inquiry",
-        "Ich habe Fragen zu den Versicherungsmodellen": "model_inquiry",
-        "DEFAULT": "customer_issue"
+        "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen gerne mit Ihren Versicherungsoptionen helfen. Was möchten Sie genau wissen?": "customer_options_request",
+        "Gratulation zum Abschluss! Ja, nach dem Studium gibt es einige wichtige Änderungen zu beachten. Der Studentenrabatt entfällt, was zu einer höheren Grundprämie führen kann. Möchten Sie konkrete Anpassungsoptionen besprechen?": "customer_options_request",
+        "Zum Studienabschluss gratuliere ich! Da Sie nun eine neue Lebensphase beginnen, ist es sinnvoll, Ihre Versicherung zu überprüfen. Möchten Sie wissen, welche spezifischen Aspekte sich ändern könnten?": "customer_options_request",
+        "DEFAULT": "customer_options_request"
       }
     },
-    "franchise_inquiry": {
-      "stateType": "customer",
+    "customer_options_request": {
       "meta": {
-        "customerText": "Ich möchte wissen, ob ich meine Franchise ändern kann und welche Optionen ich habe.",
-        "systemMessage": "Der Kunde fragt nach Franchiseoptionen."
-      },
-      "on": {
-        "DEFAULT": "franchise_response"
-      }
-    },
-    "franchise_response": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Ja, Sie können Ihre Franchise ändern. Die Änderung gilt jeweils ab dem 1. Januar des Folgejahres. Möchten Sie die verfügbaren Franchiseoptionen sehen?",
+        "customerText": "Ich würde gerne wissen, ob ich meine Franchise anpassen sollte und ob mein aktuelles Telmed-Modell immer noch das richtige für mich ist.",
         "responseOptions": [
-          "Ja bitte, zeigen Sie mir die Optionen",
-          "Wann ist die Frist für Änderungen?",
-          "Wie wirkt sich die Franchise auf meine Prämie aus?"
+          "Gerne erkläre ich Ihnen die Optionen. Sie haben aktuell eine Franchise von CHF 2'500 im Telmed-Modell. Möchten Sie zuerst mehr über die verschiedenen Franchiseoptionen oder über die Versicherungsmodelle erfahren?",
+          "Nach dem Studium könnte es sinnvoll sein, Ihre Franchise zu überdenken. Mit einem höheren Einkommen möchten viele Absolventen ihr Risiko reduzieren. Das Telmed-Modell ist kosteneffizient, aber es gibt auch andere Optionen. Womit sollen wir beginnen?",
+          "Basierend auf Ihrer Situation als frischer Absolvent würde ich empfehlen: Bleiben Sie im Telmed-Modell, da es kostengünstig ist, aber erwägen Sie eine Senkung der Franchise auf 1000 CHF. Dies bietet ein gutes Gleichgewicht zwischen monatlicher Prämie und Risiko. Wie klingt das für Sie?"
         ]
       },
       "on": {
-        "Ja bitte, zeigen Sie mir die Optionen": "moreFranchise",
-        "Wann ist die Frist für Änderungen?": "deadline_info",
-        "Wie wirkt sich die Franchise auf meine Prämie aus?": "premium_impact",
-        "DEFAULT": "moreFranchise"
+        "Gerne erkläre ich Ihnen die Optionen. Sie haben aktuell eine Franchise von CHF 2'500 im Telmed-Modell. Möchten Sie zuerst mehr über die verschiedenen Franchiseoptionen oder über die Versicherungsmodelle erfahren?": "customer_franchise_inquiry",
+        "Nach dem Studium könnte es sinnvoll sein, Ihre Franchise zu überdenken. Mit einem höheren Einkommen möchten viele Absolventen ihr Risiko reduzieren. Das Telmed-Modell ist kosteneffizient, aber es gibt auch andere Optionen. Womit sollen wir beginnen?": "customer_franchise_inquiry",
+        "Basierend auf Ihrer Situation als frischer Absolvent würde ich empfehlen: Bleiben Sie im Telmed-Modell, da es kostengünstig ist, aber erwägen Sie eine Senkung der Franchise auf 1000 CHF. Dies bietet ein gutes Gleichgewicht zwischen monatlicher Prämie und Risiko. Wie klingt das für Sie?": "customer_franchise_inquiry",
+        "DEFAULT": "customer_franchise_inquiry"
       }
     },
-    "deadline_info": {
-      "stateType": "agent",
+    "customer_franchise_inquiry": {
       "meta": {
-        "agentText": "Die Frist für Franchiseänderungen ist der 30. November für das Folgejahr. Sie können Ihre Entscheidung bis dahin jederzeit ändern. Möchten Sie die verfügbaren Franchiseoptionen sehen?",
-        "responseOptions": [
-          "Ja, zeigen Sie mir die Optionen",
-          "Nein danke, ich habe noch andere Fragen"
-        ]
-      },
-      "on": {
-        "Ja, zeigen Sie mir die Optionen": "moreFranchise",
-        "Nein danke, ich habe noch andere Fragen": "other_questions",
-        "DEFAULT": "moreFranchise"
-      }
-    },
-    "premium_impact": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Die Franchise beeinflusst direkt Ihre Monatsprämie: Je höher die Franchise, desto niedriger die Prämie. Allerdings müssen Sie bei höherer Franchise mehr Selbstbehalt bezahlen, bevor die Versicherung übernimmt. Soll ich Ihnen die konkreten Zahlen zeigen?",
-        "responseOptions": [
-          "Ja, zeigen Sie mir die Zahlen",
-          "Ich verstehe. Was empfehlen Sie mir?"
-        ]
-      },
-      "on": {
-        "Ja, zeigen Sie mir die Zahlen": "moreFranchise",
-        "Ich verstehe. Was empfehlen Sie mir?": "recommendation",
-        "DEFAULT": "moreFranchise"
-      }
-    },
-    "model_inquiry": {
-      "stateType": "customer",
-      "meta": {
-        "customerText": "Ich habe Fragen zu den verschiedenen Versicherungsmodellen. Welche gibt es und was sind die Unterschiede?",
-        "systemMessage": "Der Kunde fragt nach Versicherungsmodellen."
-      },
-      "on": {
-        "DEFAULT": "model_overview"
-      }
-    },
-    "model_overview": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Wir bieten verschiedene Versicherungsmodelle an. Möchten Sie einen Überblick über alle Modelle sehen?",
-        "responseOptions": [
-          "Ja, zeigen Sie mir alle Modelle",
-          "Welches ist das günstigste Modell?",
-          "Was ist der Unterschied zwischen Telmed und Hausarzt?"
-        ]
-      },
-      "on": {
-        "Ja, zeigen Sie mir alle Modelle": "moreModels",
-        "Welches ist das günstigste Modell?": "cheapest_model",
-        "Was ist der Unterschied zwischen Telmed und Hausarzt?": "telmed_vs_hausarzt",
-        "DEFAULT": "moreModels"
-      }
-    },
-    "telmed_vs_hausarzt": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Der Hauptunterschied liegt im ersten Kontakt: Bei Telmed rufen Sie zuerst eine medizinische Beratung an, die entscheidet, ob Sie zum Arzt müssen. Bei Hausarzt gehen Sie direkt zu Ihrem gewählten Hausarzt. Telmed ist etwas günstiger, aber weniger flexibel. Möchten Sie trotzdem alle Modelle im Detail sehen?",
-        "responseOptions": [
-          "Ja, zeigen Sie mir alle Modelle",
-          "Welches würden Sie für mich empfehlen?",
-          "Ich habe eine andere Frage zu meiner Versicherung"
-        ]
-      },
-      "on": {
-        "Ja, zeigen Sie mir alle Modelle": "moreModels",
-        "Welches würden Sie für mich empfehlen?": "model_recommendation",
-        "Ich habe eine andere Frage zu meiner Versicherung": "other_questions",
-        "DEFAULT": "moreModels"
-      }
-    },
-    "cheapest_model": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Das günstigste Modell ist in der Regel das Telmed-Modell, bei dem Sie vor jedem Arztbesuch zunächst eine telemedizinische Beratung kontaktieren müssen. Es bietet durchschnittlich 10-15% Rabatt gegenüber dem Standardmodell. Möchten Sie mehr Details dazu?",
-        "responseOptions": [
-          "Ja, mehr Details zum Telmed-Modell",
-          "Zeigen Sie mir alle Modelle im Vergleich",
-          "Wie kann ich zu diesem Modell wechseln?"
-        ]
-      },
-      "on": {
-        "Ja, mehr Details zum Telmed-Modell": "telmed_details",
-        "Zeigen Sie mir alle Modelle im Vergleich": "moreModels",
-        "Wie kann ich zu diesem Modell wechseln?": "model_switch",
-        "DEFAULT": "moreModels"
-      }
-    },
-    "telmed_details": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Beim Telmed-Modell kontaktieren Sie vor jedem Arztbesuch unsere medizinische Hotline unter 0800 123 456. Die medizinischen Fachpersonen beraten Sie und entscheiden, ob ein Arztbesuch nötig ist. Dies spart Kosten und ist besonders für Menschen geeignet, die selten zum Arzt gehen. Möchten Sie zu diesem Modell wechseln?",
-        "responseOptions": [
-          "Ja, ich möchte wechseln",
-          "Nein, ich möchte andere Optionen prüfen",
-          "Ich habe noch Fragen zur Franchise"
-        ]
-      },
-      "on": {
-        "Ja, ich möchte wechseln": "model_switch",
-        "Nein, ich möchte andere Optionen prüfen": "moreModels",
-        "Ich habe noch Fragen zur Franchise": "moreFranchise",
-        "DEFAULT": "model_switch"
-      }
-    },
-    "model_switch": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Ich kann den Wechsel zum Telmed-Modell für Sie veranlassen. Der Wechsel wird zum nächsten Monatsersten wirksam. Möchten Sie gleichzeitig auch Ihre Franchise anpassen?",
-        "responseOptions": [
-          "Ja, ich möchte auch die Franchise ändern",
-          "Nein, nur das Modell wechseln",
-          "Ich möchte erst noch über die Studiumsabschluss-Anpassungen sprechen"
-        ]
-      },
-      "on": {
-        "Ja, ich möchte auch die Franchise ändern": "moreFranchise",
-        "Nein, nur das Modell wechseln": "confirm_model_only",
-        "Ich möchte erst noch über die Studiumsabschluss-Anpassungen sprechen": "customer_issue",
-        "DEFAULT": "confirm_model_only"
-      }
-    },
-    "confirm_model_only": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Ich habe den Wechsel zum Telmed-Modell für Sie eingeleitet. Sie erhalten in den nächsten Tagen eine Bestätigung per Post. Haben Sie noch weitere Fragen?",
-        "responseOptions": [
-          "Nein danke, das war alles",
-          "Ja, ich möchte über meinen Studiumsabschluss sprechen",
-          "Ja, ich habe noch Fragen zu Zusatzversicherungen"
-        ]
-      },
-      "on": {
-        "Nein danke, das war alles": "goodbye",
-        "Ja, ich möchte über meinen Studiumsabschluss sprechen": "customer_issue",
-        "Ja, ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "DEFAULT": "goodbye"
-      }
-    },
-    "model_recommendation": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Basierend auf Ihrem Profil würde ich das Telmed-Modell empfehlen. Es bietet ein gutes Gleichgewicht zwischen Kosteneinsparungen und Flexibilität. Sie müssen zuerst telefonisch Kontakt aufnehmen, bevor Sie zum Arzt gehen, sparen aber etwa 15% bei der Prämie. Möchten Sie zu diesem Modell wechseln?",
-        "responseOptions": [
-          "Ja, das klingt gut",
-          "Was sind die anderen Optionen?",
-          "Ich möchte lieber über mein Studienende sprechen"
-        ]
-      },
-      "on": {
-        "Ja, das klingt gut": "model_switch",
-        "Was sind die anderen Optionen?": "moreModels",
-        "Ich möchte lieber über mein Studienende sprechen": "customer_issue",
-        "DEFAULT": "moreModels"
-      }
-    },
-    "other_questions": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Natürlich, welche anderen Fragen haben Sie zu Ihrer Versicherung?",
-        "responseOptions": [
-          "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen",
-          "Welche Zusatzversicherungen können Sie empfehlen?",
-          "Wie funktioniert die Rückerstattung von Arztkosten?"
-        ]
-      },
-      "on": {
-        "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen": "customer_issue",
-        "Welche Zusatzversicherungen können Sie empfehlen?": "additional_insurance",
-        "Wie funktioniert die Rückerstattung von Arztkosten?": "reimbursement",
-        "DEFAULT": "customer_issue"
-      }
-    },
-    "reimbursement": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Die Rückerstattung von Arztkosten erfolgt, indem Sie uns die Rechnung per Post oder über unsere App zusenden. Nach Prüfung und Abzug der Franchise und Selbstbeteiligung erhalten Sie die Rückerstattung innerhalb von 2-3 Wochen auf Ihr Konto. Möchten Sie mehr über die Online-Einreichung erfahren?",
-        "responseOptions": [
-          "Ja, wie funktioniert die Online-Einreichung?",
-          "Nein, ich möchte über mein Studienende sprechen",
-          "Ich habe noch eine andere Frage"
-        ]
-      },
-      "on": {
-        "Ja, wie funktioniert die Online-Einreichung?": "online_submission",
-        "Nein, ich möchte über mein Studienende sprechen": "customer_issue",
-        "Ich habe noch eine andere Frage": "other_questions",
-        "DEFAULT": "customer_issue"
-      }
-    },
-    "online_submission": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Die Online-Einreichung ist einfach: Laden Sie unsere App herunter, melden Sie sich mit Ihrer Versichertennummer an, fotografieren Sie die Rechnung und laden Sie das Foto hoch. Sie können den Status der Rückerstattung jederzeit in der App verfolgen. Haben Sie noch weitere Fragen?",
-        "responseOptions": [
-          "Nein danke, das war hilfreich",
-          "Ja, ich möchte über mein Studienende sprechen",
-          "Ich möchte meine Franchise ändern"
-        ]
-      },
-      "on": {
-        "Nein danke, das war hilfreich": "goodbye",
-        "Ja, ich möchte über mein Studienende sprechen": "customer_issue",
-        "Ich möchte meine Franchise ändern": "moreFranchise",
-        "DEFAULT": "customer_issue"
-      }
-    },
-    "customer_issue": {
-      "stateType": "customer",
-      "meta": {
-        "customerText": "Guten Tag. Ich habe mein Studium abgeschlossen und wollte fragen, ob sich etwas an meiner Versicherung ändert und ob eine Anpassung von Franchise oder Modell für mich sinnvoll ist.",
-        "systemMessage": "Der Kunde hat sein Studium abgeschlossen und fragt nach möglichen Versicherungsanpassungen.",
-        "module": {
-          "id": "insurance_info",
-          "type": "INFORMATION",
-          "title": "Kundeninformationen",
-          "data": {
-            "message": "Studium abgeschlossen; fragt, ob sich etwas an der Versicherung ändert und ob eine Anpassung von Franchise oder Modell sinnvoll ist.",
-            "sections": [
-              {
-                "title": "Aktuell",
-                "items": [
-                  { "label": "Modell", "value": "Tel-Med" },
-                  { "label": "Franchise", "value": "2'500 CHF" },
-                  { "label": "Prämie", "value": "200.-" }
-                ]
-              },
-              {
-                "title": "Mögliche Anpassungen zum Studiumsabschluss",
-                "items": [
-                  { "label": "Franchise", "value": "Oft gewählt, um Prämien tief zu halten. Könnte gesenkt werden, falls mehr medizinische Leistungen erwartet werden oder um Risiko zu senken." },
-                  { "label": "Modellwechsel", "value": "Kann man wechseln zu Hausarzt oder freie Arztwahl. Je nachdem wie flexibel er sein will." }
-                ]
-              }
-            ],
-            "isInline": true
-          }
-        }
-      },
-      "on": {
-        "DEFAULT": "initial_options"
-      }
-    },
-    "initial_options": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Herzlichen Glückwunsch zum Studienabschluss! Da Sie nun eine neue Lebensphase beginnen, ist es sinnvoll, Ihre Versicherung zu überprüfen. Was interessiert Sie am meisten?",
-        "responseOptions": [
-          "Ich möchte mehr über Versicherungsmodelle erfahren",
-          "Ich möchte meine Franchise anpassen",
-          "Was ändert sich generell nach dem Studium?",
-          "Wie kann ich Prämien sparen?"
-        ]
-      },
-      "on": {
-        "Ich möchte mehr über Versicherungsmodelle erfahren": "moreModels",
-        "Ich möchte meine Franchise anpassen": "moreFranchise",
-        "Was ändert sich generell nach dem Studium?": "after_studies",
-        "Wie kann ich Prämien sparen?": "save_money",
-        "DEFAULT": "initial_options"
-      }
-    },
-    "after_studies": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Nach dem Studium gibt es einige wichtige Änderungen zu beachten. Der Studentenrabatt entfällt, was zu einer höheren Grundprämie führen kann. Außerdem erhöht sich oft das Einkommen, wodurch eine niedrigere Franchise sinnvoll sein könnte. Möchten Sie konkrete Anpassungsoptionen besprechen?",
-        "responseOptions": [
-          "Ja, zeigen Sie mir meine Optionen",
-          "Was empfehlen Sie in meiner Situation?",
-          "Nein, ich möchte erst über Modelle sprechen"
-        ]
-      },
-      "on": {
-        "Ja, zeigen Sie mir meine Optionen": "moreFranchise",
-        "Was empfehlen Sie in meiner Situation?": "recommendation",
-        "Nein, ich möchte erst über Modelle sprechen": "moreModels",
-        "DEFAULT": "after_studies"
-      }
-    },
-    "save_money": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Es gibt mehrere Möglichkeiten, bei Ihrer Versicherung zu sparen: 1) Wahl eines alternativen Versicherungsmodells wie Telmed oder HMO, 2) Anpassung der Franchise (höhere Franchise = niedrigere Prämie), 3) Kombination mit einer Zusatzversicherung für Rabatte. Worüber möchten Sie mehr erfahren?",
-        "responseOptions": [
-          "Alternative Versicherungsmodelle",
-          "Franchise-Optionen",
-          "Zusatzversicherungen und Rabatte"
-        ]
-      },
-      "on": {
-        "Alternative Versicherungsmodelle": "moreModels",
-        "Franchise-Optionen": "moreFranchise",
-        "Zusatzversicherungen und Rabatte": "additional_insurance",
-        "DEFAULT": "save_money"
-      }
-    },
-    "additional_insurance": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Mit bestimmten Zusatzversicherungen können Sie kombinierte Rabatte erhalten. Zum Beispiel bieten wir ein Kombipaket mit Spitalzusatzversicherung an, das einen Gesamtrabatt von 10% gewährt. Auch Wellness- und Fitnessangebote können hinzugefügt werden. Möchten Sie ein persönliches Angebot erhalten?",
-        "responseOptions": [
-          "Ja, bitte ein persönliches Angebot erstellen",
-          "Nein, ich möchte zurück zur Franchisendiskussion",
-          "Ich habe noch Fragen zu den Modellen"
-        ]
-      },
-      "on": {
-        "Ja, bitte ein persönliches Angebot erstellen": "personal_offer",
-        "Nein, ich möchte zurück zur Franchisendiskussion": "moreFranchise",
-        "Ich habe noch Fragen zu den Modellen": "moreModels",
-        "DEFAULT": "additional_insurance"
-      }
-    },
-    "personal_offer": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Ich werde Ihnen ein persönliches Angebot mit verschiedenen Zusatzversicherungen zusammenstellen. Dieses wird per E-Mail innerhalb der nächsten 24 Stunden an Sie gesendet. Gibt es noch etwas anderes, bei dem ich Ihnen heute helfen kann?",
-        "responseOptions": [
-          "Ich möchte doch meine Franchise ändern",
-          "Nein danke, das war alles"
-        ]
-      },
-      "on": {
-        "Ich möchte doch meine Franchise ändern": "moreFranchise",
-        "Nein danke, das war alles": "goodbye",
-        "DEFAULT": "personal_offer"
-      }
-    },
-    "recommendation": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Basierend auf Ihrer Situation als frischer Absolvent würde ich Folgendes empfehlen: Bleiben Sie im Telmed-Modell, da es kostengünstig ist, aber erwägen Sie eine Senkung der Franchise auf 1000 CHF. Dies bietet ein gutes Gleichgewicht zwischen monatlicher Prämie und Risiko. Wie klingt das für Sie?",
-        "responseOptions": [
-          "Das klingt gut, wie ändere ich die Franchise?",
-          "Ich würde lieber andere Modelle vergleichen",
-          "Welche Franchise ist die populärste?"
-        ]
-      },
-      "on": {
-        "Das klingt gut, wie ändere ich die Franchise?": "moreFranchise",
-        "Ich würde lieber andere Modelle vergleichen": "moreModels",
-        "Welche Franchise ist die populärste?": "popular_franchise",
-        "DEFAULT": "recommendation"
-      }
-    },
-    "popular_franchise": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Die häufigste gewählte Franchise ist 300 CHF, da sie das geringste Risiko bei eigenen Gesundheitskosten bietet. Allerdings wählen viele junge Menschen wie Sie eine höhere Franchise von 1000 CHF oder 1500 CHF, um die monatlichen Prämien zu senken. Dies ist sinnvoll, wenn Sie selten zum Arzt gehen. Welche Franchise würden Sie bevorzugen?",
-        "responseOptions": [
-          "Ich möchte die 1000 CHF Franchise",
-          "Zeigen Sie mir alle Franchiseoptionen",
-          "Was sind die genauen Prämienunterschiede?"
-        ]
-      },
-      "on": {
-        "Ich möchte die 1000 CHF Franchise": "changeFranchise",
-        "Zeigen Sie mir alle Franchiseoptionen": "moreFranchise",
-        "Was sind die genauen Prämienunterschiede?": "moreFranchise",
-        "DEFAULT": "popular_franchise"
-      }
-    },
-    "moreModels": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Hier sind die verschiedenen Modelle, die wir anbieten:",
-        "module": {
-          "id": "models_info",
-          "type": "INFORMATION",
-          "title": "Versicherungsmodelle",
-          "data": {
-            "message": "Verfügbare Versicherungsmodelle:",
-            "sections": [
-              {
-                "title": "Modelle",
-                "items": [
-                  { "label": "1. Standardmodell", "value": "Freie Arztwahl, keine Einschränkungen. Ca. CHF 290–330/Monat" },
-                  { "label": "2. Hausarztmodell", "value": "Immer zuerst zum gewählten Hausarzt. Ca. CHF 240–270/Monat" },
-                  { "label": "3. Telmed-Modell", "value": "Zuerst telefonische Beratung. Ca. CHF 220–250/Monat" },
-                  { "label": "4. HMO-Modell", "value": "Nur bestimmte Gesundheitszentren. Ca. CHF 230–260/Monat" }
-                ]
-              }
-            ],
-            "isInline": true
-          }
-        }
-      },
-      "on": {
-        "DEFAULT": "modelOptions"
-      }
-    },
-    "modelOptions": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Nach Betrachtung der Modelle, was würden Sie gerne tun?",
-        "responseOptions": [
-          "Ich bleibe beim Telmed-Modell",
-          "Ich möchte zum Hausarztmodell wechseln",
-          "Ich möchte zum Standardmodell wechseln",
-          "Ich möchte über Franchisen sprechen"
-        ]
-      },
-      "on": {
-        "Ich bleibe beim Telmed-Modell": "keep_telmed",
-        "Ich möchte zum Hausarztmodell wechseln": "change_to_hausarzt",
-        "Ich möchte zum Standardmodell wechseln": "change_to_standard",
-        "Ich möchte über Franchisen sprechen": "moreFranchise",
-        "DEFAULT": "modelOptions"
-      }
-    },
-    "keep_telmed": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Eine gute Entscheidung! Das Telmed-Modell bietet ein ausgezeichnetes Preis-Leistungs-Verhältnis. Möchten Sie auch Ihre Franchise anpassen, oder bleibt diese bei 2500 CHF?",
-        "responseOptions": [
-          "Ja, ich möchte meine Franchise ändern",
-          "Nein, ich behalte meine aktuelle Franchise"
-        ]
-      },
-      "on": {
-        "Ja, ich möchte meine Franchise ändern": "moreFranchise",
-        "Nein, ich behalte meine aktuelle Franchise": "keep_franchise",
-        "DEFAULT": "keep_telmed"
-      }
-    },
-    "change_to_hausarzt": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Das Hausarztmodell ist eine hervorragende Wahl, wenn Sie einen festen Hausarzt bevorzugen. Um den Wechsel abzuschließen, benötigen wir den Namen und die Adresse Ihres bevorzugten Hausarztes. Haben Sie bereits einen Hausarzt gewählt?",
-        "responseOptions": [
-          "Ja, ich habe einen Hausarzt",
-          "Nein, ich brauche Hilfe bei der Suche",
-          "Ich überlege es mir noch und möchte über Franchise sprechen"
-        ]
-      },
-      "on": {
-        "Ja, ich habe einen Hausarzt": "has_doctor",
-        "Nein, ich brauche Hilfe bei der Suche": "find_doctor",
-        "Ich überlege es mir noch und möchte über Franchise sprechen": "moreFranchise",
-        "DEFAULT": "change_to_hausarzt"
-      }
-    },
-    "has_doctor": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Sehr gut. Ich habe den Wechsel zum Hausarztmodell notiert. Wir werden Ihnen ein Formular zusenden, in dem Sie die Details Ihres Hausarztes eintragen können. Möchten Sie auch Ihre Franchise anpassen?",
-        "responseOptions": [
-          "Ja, ich möchte meine Franchise ändern",
-          "Nein, ich behalte meine aktuelle Franchise"
-        ]
-      },
-      "on": {
-        "Ja, ich möchte meine Franchise ändern": "moreFranchise",
-        "Nein, ich behalte meine aktuelle Franchise": "keep_franchise",
-        "DEFAULT": "has_doctor"
-      }
-    },
-    "find_doctor": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Ich kann Ihnen gerne helfen, einen Hausarzt zu finden. Auf unserer Website finden Sie eine Liste aller Hausärzte in Ihrem Gebiet, die mit unserer Versicherung zusammenarbeiten. Ich sende Ihnen den Link per E-Mail. In der Zwischenzeit, möchten Sie über Ihre Franchise sprechen?",
-        "responseOptions": [
-          "Ja, sprechen wir über meine Franchise",
-          "Nein danke, ich warte auf die E-Mail"
-        ]
-      },
-      "on": {
-        "Ja, sprechen wir über meine Franchise": "moreFranchise",
-        "Nein danke, ich warte auf die E-Mail": "goodbye",
-        "DEFAULT": "find_doctor"
-      }
-    },
-    "change_to_standard": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Das Standardmodell bietet maximale Flexibilität bei der Arztwahl, ist jedoch mit einer höheren Prämie verbunden. Ich habe den Wechsel notiert. Möchten Sie auch Ihre Franchise anpassen?",
-        "responseOptions": [
-          "Ja, ich möchte meine Franchise ändern",
-          "Nein, ich behalte meine aktuelle Franchise"
-        ]
-      },
-      "on": {
-        "Ja, ich möchte meine Franchise ändern": "moreFranchise",
-        "Nein, ich behalte meine aktuelle Franchise": "keep_franchise",
-        "DEFAULT": "change_to_standard"
-      }
-    },
-    "keep_franchise": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Alles klar. Ich habe notiert, dass Sie Ihre aktuelle Franchise von 2500 CHF beibehalten möchten. Gibt es sonst noch etwas, wobei ich Ihnen helfen kann?",
-        "responseOptions": [
-          "Nein, das war alles",
-          "Ich habe noch Fragen zu Zusatzversicherungen"
-        ]
-      },
-      "on": {
-        "Nein, das war alles": "goodbye",
-        "Ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "DEFAULT": "keep_franchise"
-      }
-    },
-    "moreFranchise": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Hier sehen Sie die Auswirkungen unterschiedlicher Franchisehöhen auf Ihre monatliche Prämie:",
+        "customerText": "Erzählen Sie mir bitte zuerst mehr über die Franchiseoptionen. Ich möchte verstehen, wie sich das auf meine monatliche Prämie auswirken würde.",
         "module": {
           "id": "franchise_info",
           "type": "INFORMATION",
@@ -648,188 +137,151 @@
             "note": "Info: Wenn Arztkosten weniger als ca. 2000.- erwartet werden, spart man mit einer hohen Franchise meistens.",
             "isInline": true
           }
-        }
-      },
-      "on": {
-        "DEFAULT": "franchiseOptions"
-      }
-    },
-    "franchiseOptions": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Welche Franchise würden Sie bevorzugen?",
+        },
         "responseOptions": [
-          "CHF 300",
-          "CHF 500",
-          "CHF 1000",
-          "CHF 1500",
-          "CHF 2000",
-          "CHF 2500"
+          "Hier sehen Sie die verschiedenen Franchiseoptionen und deren Auswirkung auf Ihre monatliche Prämie. Je höher die Franchise, desto niedriger die Prämie. Welche Franchise würden Sie bevorzugen?",
+          "Wie Sie sehen, reicht die Prämie von CHF 220 bei höchster Franchise bis CHF 400 bei niedrigster Franchise. Nach dem Studium empfehlen wir oft eine mittlere Franchise wie CHF 1000 oder CHF 1500. Was wäre für Sie interessant?",
+          "Diese Tabelle zeigt Ihnen die verschiedenen Optionen. Eine niedrigere Franchise bedeutet höhere monatliche Kosten, aber weniger Risiko bei Arztbesuchen. Haben Sie eine bestimmte Option im Sinn?"
         ]
       },
       "on": {
-        "CHF 300": "changeFranchiseTo300",
-        "CHF 500": "changeFranchiseTo500",
-        "CHF 1000": "changeFranchise",
-        "CHF 1500": "changeFranchiseTo1500",
-        "CHF 2000": "changeFranchiseTo2000",
-        "CHF 2500": "keepCurrentFranchise",
-        "DEFAULT": "franchiseOptions"
+        "Hier sehen Sie die verschiedenen Franchiseoptionen und deren Auswirkung auf Ihre monatliche Prämie. Je höher die Franchise, desto niedriger die Prämie. Welche Franchise würden Sie bevorzugen?": "customer_franchise_selection",
+        "Wie Sie sehen, reicht die Prämie von CHF 220 bei höchster Franchise bis CHF 400 bei niedrigster Franchise. Nach dem Studium empfehlen wir oft eine mittlere Franchise wie CHF 1000 oder CHF 1500. Was wäre für Sie interessant?": "customer_franchise_selection",
+        "Diese Tabelle zeigt Ihnen die verschiedenen Optionen. Eine niedrigere Franchise bedeutet höhere monatliche Kosten, aber weniger Risiko bei Arztbesuchen. Haben Sie eine bestimmte Option im Sinn?": "customer_franchise_selection",
+        "DEFAULT": "customer_franchise_selection"
       }
     },
-    "changeFranchiseTo300": {
-      "stateType": "agent",
+    "customer_franchise_selection": {
       "meta": {
-        "agentText": "Ich habe die Änderung Ihrer Franchise auf 300 CHF notiert. Die neue monatliche Prämie beträgt 400 CHF. Dies bietet Ihnen maximale Sicherheit bei medizinischen Kosten. Die Änderung wird ab dem nächsten Monat wirksam. Möchten Sie noch etwas anderes besprechen?",
+        "customerText": "Ich denke, eine Franchise von CHF 1000 wäre ein guter Kompromiss für mich. Nicht zu teuer monatlich, aber auch nicht zu viel Risiko. Wie sieht es mit den Versicherungsmodellen aus?",
         "responseOptions": [
-          "Nein, das war alles",
-          "Ja, ich habe noch Fragen zu Zusatzversicherungen"
+          "Eine sehr gute Wahl! Ich habe die Änderung Ihrer Franchise auf 1000 CHF notiert. Jetzt zu den Versicherungsmodellen. Möchten Sie einen Überblick über alle verfügbaren Modelle sehen?",
+          "CHF 1000 ist eine ausgezeichnete Wahl für Ihre Situation. Ich habe die Änderung vermerkt. Bezüglich der Versicherungsmodelle: Sie haben aktuell das Telmed-Modell. Möchten Sie dieses behalten oder mehr über die anderen Modelle erfahren?",
+          "Perfekt, 1000 CHF ist eine ausgewogene Wahl. Diese Änderung wird ab dem nächsten Monat wirksam. Zu den Modellen: Wir haben Standard, Hausarzt, Telmed und HMO. Möchten Sie einen detaillierten Vergleich sehen?"
         ]
       },
       "on": {
-        "Nein, das war alles": "goodbye",
-        "Ja, ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "DEFAULT": "changeFranchiseTo300"
+        "Eine sehr gute Wahl! Ich habe die Änderung Ihrer Franchise auf 1000 CHF notiert. Jetzt zu den Versicherungsmodellen. Möchten Sie einen Überblick über alle verfügbaren Modelle sehen?": "customer_model_inquiry",
+        "CHF 1000 ist eine ausgezeichnete Wahl für Ihre Situation. Ich habe die Änderung vermerkt. Bezüglich der Versicherungsmodelle: Sie haben aktuell das Telmed-Modell. Möchten Sie dieses behalten oder mehr über die anderen Modelle erfahren?": "customer_model_inquiry",
+        "Perfekt, 1000 CHF ist eine ausgewogene Wahl. Diese Änderung wird ab dem nächsten Monat wirksam. Zu den Modellen: Wir haben Standard, Hausarzt, Telmed und HMO. Möchten Sie einen detaillierten Vergleich sehen?": "customer_model_inquiry",
+        "DEFAULT": "customer_model_inquiry"
       }
     },
-    "changeFranchiseTo500": {
-      "stateType": "agent",
+    "customer_model_inquiry": {
       "meta": {
-        "agentText": "Ich habe die Änderung Ihrer Franchise auf 500 CHF notiert. Die neue monatliche Prämie beträgt 360 CHF. Die Änderung wird ab dem nächsten Monat wirksam. Möchten Sie noch etwas anderes besprechen?",
+        "customerText": "Ja, ich hätte gerne einen Überblick über alle Modelle, um zu sehen, ob es sich lohnt, vom Telmed-Modell zu wechseln.",
+        "module": {
+          "id": "models_info",
+          "type": "INFORMATION",
+          "title": "Versicherungsmodelle",
+          "data": {
+            "message": "Verfügbare Versicherungsmodelle:",
+            "sections": [
+              {
+                "title": "Modelle",
+                "items": [
+                  { "label": "1. Standardmodell", "value": "Freie Arztwahl, keine Einschränkungen. Ca. CHF 290–330/Monat" },
+                  { "label": "2. Hausarztmodell", "value": "Immer zuerst zum gewählten Hausarzt. Ca. CHF 240–270/Monat" },
+                  { "label": "3. Telmed-Modell", "value": "Zuerst telefonische Beratung. Ca. CHF 220–250/Monat" },
+                  { "label": "4. HMO-Modell", "value": "Nur bestimmte Gesundheitszentren. Ca. CHF 230–260/Monat" }
+                ]
+              }
+            ],
+            "isInline": true
+          }
+        },
         "responseOptions": [
-          "Nein, das war alles",
-          "Ja, ich habe noch Fragen zu Zusatzversicherungen"
+          "Hier ist eine Übersicht aller Modelle. Ihr aktuelles Telmed-Modell ist preislich am günstigsten. Möchten Sie bei diesem Modell bleiben oder zu einem anderen wechseln?",
+          "Wie Sie sehen, bietet das Telmed-Modell das beste Preis-Leistungs-Verhältnis. Für mehr Flexibilität könnten Sie zum Hausarztmodell oder Standardmodell wechseln, müssten aber mit höheren Kosten rechnen. Was bevorzugen Sie?",
+          "Da haben Sie eine gute Übersicht der Modelle. Der Hauptunterschied liegt in der Erstanlaufstelle bei Gesundheitsproblemen. Beim Telmed-Modell müssen Sie zuerst anrufen, beim Hausarztmodell gehen Sie direkt zum Hausarzt. Möchten Sie beim Telmed-Modell bleiben oder wechseln?"
         ]
       },
       "on": {
-        "Nein, das war alles": "goodbye",
-        "Ja, ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "DEFAULT": "changeFranchiseTo500"
+        "Hier ist eine Übersicht aller Modelle. Ihr aktuelles Telmed-Modell ist preislich am günstigsten. Möchten Sie bei diesem Modell bleiben oder zu einem anderen wechseln?": "customer_model_decision",
+        "Wie Sie sehen, bietet das Telmed-Modell das beste Preis-Leistungs-Verhältnis. Für mehr Flexibilität könnten Sie zum Hausarztmodell oder Standardmodell wechseln, müssten aber mit höheren Kosten rechnen. Was bevorzugen Sie?": "customer_model_decision",
+        "Da haben Sie eine gute Übersicht der Modelle. Der Hauptunterschied liegt in der Erstanlaufstelle bei Gesundheitsproblemen. Beim Telmed-Modell müssen Sie zuerst anrufen, beim Hausarztmodell gehen Sie direkt zum Hausarzt. Möchten Sie beim Telmed-Modell bleiben oder wechseln?": "customer_model_decision",
+        "DEFAULT": "customer_model_decision"
       }
     },
-    "changeFranchiseTo1500": {
-      "stateType": "agent",
+    "customer_model_decision": {
       "meta": {
-        "agentText": "Ich habe die Änderung Ihrer Franchise auf 1500 CHF notiert. Die neue monatliche Prämie beträgt 270 CHF. Die Änderung wird ab dem nächsten Monat wirksam. Möchten Sie noch etwas anderes besprechen?",
+        "customerText": "Ich denke, ich bleibe beim Telmed-Modell. Es ist günstig und bisher hatte ich keine Probleme damit. Aber ich hätte noch eine Frage zu Zusatzversicherungen. Gibt es welche, die für Absolventen besonders sinnvoll sind?",
         "responseOptions": [
-          "Nein, das war alles",
-          "Ja, ich habe noch Fragen zu Zusatzversicherungen"
+          "Eine gute Entscheidung! Das Telmed-Modell bietet ein ausgezeichnetes Preis-Leistungs-Verhältnis. Zu den Zusatzversicherungen: Für Absolventen empfehlen wir oft eine Kombi aus Spitalzusatzversicherung und ambulanter Zusatzversicherung. Möchten Sie ein persönliches Angebot dazu erhalten?",
+          "Das Telmed-Modell ist wirklich eine kosteneffiziente Wahl. Bei Zusatzversicherungen für Absolventen sind besonders relevant: Zahnversicherung, Reiseversicherung und vielleicht eine Spitalversicherung halbprivat. Soll ich Ihnen ein individuelles Angebot erstellen?",
+          "Sehr vernünftig! Bezüglich Zusatzversicherungen: Mit bestimmten Kombinationen können Sie Rabatte erhalten. Zum Beispiel bieten wir ein Kombipaket mit Spitalzusatzversicherung an, das einen Gesamtrabatt von 10% gewährt. Möchten Sie nähere Informationen dazu?"
         ]
       },
       "on": {
-        "Nein, das war alles": "goodbye",
-        "Ja, ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "DEFAULT": "changeFranchiseTo1500"
+        "Eine gute Entscheidung! Das Telmed-Modell bietet ein ausgezeichnetes Preis-Leistungs-Verhältnis. Zu den Zusatzversicherungen: Für Absolventen empfehlen wir oft eine Kombi aus Spitalzusatzversicherung und ambulanter Zusatzversicherung. Möchten Sie ein persönliches Angebot dazu erhalten?": "customer_additional_insurance",
+        "Das Telmed-Modell ist wirklich eine kosteneffiziente Wahl. Bei Zusatzversicherungen für Absolventen sind besonders relevant: Zahnversicherung, Reiseversicherung und vielleicht eine Spitalversicherung halbprivat. Soll ich Ihnen ein individuelles Angebot erstellen?": "customer_additional_insurance",
+        "Sehr vernünftig! Bezüglich Zusatzversicherungen: Mit bestimmten Kombinationen können Sie Rabatte erhalten. Zum Beispiel bieten wir ein Kombipaket mit Spitalzusatzversicherung an, das einen Gesamtrabatt von 10% gewährt. Möchten Sie nähere Informationen dazu?": "customer_additional_insurance",
+        "DEFAULT": "customer_additional_insurance"
       }
     },
-    "changeFranchiseTo2000": {
-      "stateType": "agent",
+    "customer_additional_insurance": {
       "meta": {
-        "agentText": "Ich habe die Änderung Ihrer Franchise auf 2000 CHF notiert. Die neue monatliche Prämie beträgt 240 CHF. Die Änderung wird ab dem nächsten Monat wirksam. Möchten Sie noch etwas anderes besprechen?",
+        "customerText": "Ja, ich würde gerne ein persönliches Angebot erhalten. Können Sie mir das per E-Mail schicken?",
         "responseOptions": [
-          "Nein, das war alles",
-          "Ja, ich habe noch Fragen zu Zusatzversicherungen"
+          "Sehr gerne! Ich werde Ihnen ein persönliches Angebot mit verschiedenen Zusatzversicherungen zusammenstellen. Dieses wird per E-Mail innerhalb der nächsten 24 Stunden an Sie gesendet. Gibt es noch etwas anderes, bei dem ich Ihnen heute helfen kann?",
+          "Natürlich, ich erstelle Ihnen ein maßgeschneidertes Angebot und sende es an Ihre hinterlegte E-Mail-Adresse. Sie sollten es innerhalb der nächsten 24 Stunden erhalten. Haben Sie sonst noch Fragen zu Ihren Versicherungsoptionen?",
+          "Selbstverständlich! Ich veranlasse die Erstellung eines individuellen Angebots für Zusatzversicherungen. Dieses wird an Ihre E-Mail-Adresse gesendet. Gibt es noch etwas, womit ich Ihnen heute behilflich sein kann?"
         ]
       },
       "on": {
-        "Nein, das war alles": "goodbye",
-        "Ja, ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "DEFAULT": "changeFranchiseTo2000"
+        "Sehr gerne! Ich werde Ihnen ein persönliches Angebot mit verschiedenen Zusatzversicherungen zusammenstellen. Dieses wird per E-Mail innerhalb der nächsten 24 Stunden an Sie gesendet. Gibt es noch etwas anderes, bei dem ich Ihnen heute helfen kann?": "customer_summary",
+        "Natürlich, ich erstelle Ihnen ein maßgeschneidertes Angebot und sende es an Ihre hinterlegte E-Mail-Adresse. Sie sollten es innerhalb der nächsten 24 Stunden erhalten. Haben Sie sonst noch Fragen zu Ihren Versicherungsoptionen?": "customer_summary",
+        "Selbstverständlich! Ich veranlasse die Erstellung eines individuellen Angebots für Zusatzversicherungen. Dieses wird an Ihre E-Mail-Adresse gesendet. Gibt es noch etwas, womit ich Ihnen heute behilflich sein kann?": "customer_summary",
+        "DEFAULT": "customer_summary"
       }
     },
-    "keepCurrentFranchise": {
-      "stateType": "agent",
+    "customer_summary": {
       "meta": {
-        "agentText": "Sie behalten Ihre aktuelle Franchise von 2500 CHF bei. Ihre monatliche Prämie bleibt bei 220 CHF. Dies ist eine gute Wahl, wenn Sie selten medizinische Leistungen in Anspruch nehmen. Möchten Sie noch etwas anderes besprechen?",
+        "customerText": "Nein danke, das war alles. Können Sie mir kurz zusammenfassen, welche Änderungen wir heute besprochen haben?",
         "responseOptions": [
-          "Nein, das war alles",
-          "Ja, ich habe noch Fragen zu Zusatzversicherungen"
+          "Natürlich. Wir haben heute folgende Änderungen besprochen: 1) Ihre Franchise wird von CHF 2'500 auf CHF 1'000 gesenkt. 2) Sie behalten das Telmed-Modell bei. 3) Sie erhalten ein persönliches Angebot zu Zusatzversicherungen per E-Mail. Die Franchise-Änderung wird ab dem nächsten Monat wirksam. Ist das so korrekt?",
+          "Gerne fasse ich zusammen: Sie reduzieren Ihre Franchise von 2'500 auf 1'000 CHF, bleiben beim Telmed-Modell und bekommen ein individuelles Angebot zu Zusatzversicherungen per E-Mail. Die Franchiseänderung gilt ab dem kommenden Monatsersten. Habe ich alles richtig erfasst?",
+          "Zusammengefasst haben wir folgendes vereinbart: 1. Senkung Ihrer Franchise auf 1'000 CHF (ab nächstem Monat gültig). 2. Beibehaltung des Telmed-Modells. 3. Erstellung eines persönlichen Angebots für Zusatzversicherungen, das Ihnen per E-Mail zugestellt wird. Stimmt diese Zusammenfassung?"
         ]
       },
       "on": {
-        "Nein, das war alles": "goodbye",
-        "Ja, ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "DEFAULT": "keepCurrentFranchise"
+        "Natürlich. Wir haben heute folgende Änderungen besprochen: 1) Ihre Franchise wird von CHF 2'500 auf CHF 1'000 gesenkt. 2) Sie behalten das Telmed-Modell bei. 3) Sie erhalten ein persönliches Angebot zu Zusatzversicherungen per E-Mail. Die Franchise-Änderung wird ab dem nächsten Monat wirksam. Ist das so korrekt?": "customer_confirmation",
+        "Gerne fasse ich zusammen: Sie reduzieren Ihre Franchise von 2'500 auf 1'000 CHF, bleiben beim Telmed-Modell und bekommen ein individuelles Angebot zu Zusatzversicherungen per E-Mail. Die Franchiseänderung gilt ab dem kommenden Monatsersten. Habe ich alles richtig erfasst?": "customer_confirmation",
+        "Zusammengefasst haben wir folgendes vereinbart: 1. Senkung Ihrer Franchise auf 1'000 CHF (ab nächstem Monat gültig). 2. Beibehaltung des Telmed-Modells. 3. Erstellung eines persönlichen Angebots für Zusatzversicherungen, das Ihnen per E-Mail zugestellt wird. Stimmt diese Zusammenfassung?": "customer_confirmation",
+        "DEFAULT": "customer_confirmation"
       }
     },
-    "changeFranchise": {
-      "stateType": "system",
+    "customer_confirmation": {
       "meta": {
-        "systemMessage": "Franchise wurde für das nächste Jahr auf 1000.- angepasst"
-      },
-      "on": {
-        "DEFAULT": "conclusion"
-      }
-    },
-    "conclusion": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Sehr gut. Ich habe die Änderung Ihrer Franchise auf 1000 CHF für das kommende Jahr eingetragen. Die neue Prämie beträgt 310 CHF pro Monat. Haben Sie noch weitere Anliegen?",
+        "customerText": "Ja, das ist alles korrekt. Vielen Dank für Ihre Hilfe!",
         "responseOptions": [
-          "Nein, das war alles. Vielen Dank für Ihre Hilfe.",
-          "Ich habe noch Fragen zu Zusatzversicherungen",
-          "Was passiert, wenn ich meine Meinung ändere?"
+          "Es freut mich, dass ich Ihnen helfen konnte. Die Änderungen wurden im System erfasst. Wenn Sie weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Ich wünsche Ihnen einen schönen Tag!",
+          "Sehr gut! Alle Änderungen sind nun gespeichert. Sie erhalten in den nächsten Tagen eine schriftliche Bestätigung per Post oder E-Mail. Vielen Dank für Ihren Anruf und einen schönen Tag noch!",
+          "Gerne! Alle besprochenen Punkte wurden erfasst. Falls Sie noch Fragen haben sollten, können Sie uns jederzeit kontaktieren. Ich wünsche Ihnen noch einen angenehmen Tag und viel Erfolg in Ihrem neuen Lebensabschnitt!"
         ]
       },
       "on": {
-        "Nein, das war alles. Vielen Dank für Ihre Hilfe.": "goodbye",
-        "Ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
-        "Was passiert, wenn ich meine Meinung ändere?": "change_mind",
-        "DEFAULT": "conclusion"
+        "Es freut mich, dass ich Ihnen helfen konnte. Die Änderungen wurden im System erfasst. Wenn Sie weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Ich wünsche Ihnen einen schönen Tag!": "end_call",
+        "Sehr gut! Alle Änderungen sind nun gespeichert. Sie erhalten in den nächsten Tagen eine schriftliche Bestätigung per Post oder E-Mail. Vielen Dank für Ihren Anruf und einen schönen Tag noch!": "end_call",
+        "Gerne! Alle besprochenen Punkte wurden erfasst. Falls Sie noch Fragen haben sollten, können Sie uns jederzeit kontaktieren. Ich wünsche Ihnen noch einen angenehmen Tag und viel Erfolg in Ihrem neuen Lebensabschnitt!": "end_call",
+        "DEFAULT": "end_call"
       }
     },
-    "change_mind": {
-      "stateType": "agent",
+    "end_call": {
       "meta": {
-        "agentText": "Sie können Ihre Franchise einmal pro Jahr ändern, in der Regel zum Jahreswechsel. Die Frist für Änderungen ist der 30. November für das Folgejahr. Wenn Sie Ihre Entscheidung bis dahin ändern möchten, können Sie uns jederzeit kontaktieren. Haben Sie noch weitere Fragen?",
-        "responseOptions": [
-          "Nein, das war alles. Vielen Dank für die Information.",
-          "Kann ich auch das Modell später noch ändern?"
-        ]
-      },
-      "on": {
-        "Nein, das war alles. Vielen Dank für die Information.": "goodbye",
-        "Kann ich auch das Modell später noch ändern?": "change_model_later",
-        "DEFAULT": "change_mind"
-      }
-    },
-    "change_model_later": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Ja, Sie können Ihr Versicherungsmodell ebenfalls zum Jahreswechsel ändern. Die gleiche Frist gilt: 30. November für das Folgejahr. Zudem können Sie bei einer Prämienerhöhung sogar unterjährig mit einer Kündigungsfrist von einem Monat das Modell wechseln. Haben Sie noch weitere Fragen?",
-        "responseOptions": [
-          "Nein, das war alles. Vielen Dank für die ausführliche Information."
-        ]
-      },
-      "on": {
-        "Nein, das war alles. Vielen Dank für die ausführliche Information.": "goodbye",
-        "DEFAULT": "change_model_later"
-      }
-    },
-    "goodbye": {
-      "stateType": "customer",
-      "meta": {
-        "customerText": "Nein, das war alles. Vielen Dank für Ihre Hilfe."
-      },
-      "on": {
-        "DEFAULT": "endcall"
-      }
-    },
-    "endcall": {
-      "stateType": "agent",
-      "meta": {
-        "agentText": "Gerne. Ich wünsche Ihnen noch einen schönen Tag. Auf Wiederhören!",
+        "agentText": "Gerne! Alle besprochenen Punkte wurden erfasst. Falls Sie noch Fragen haben sollten, können Sie uns jederzeit kontaktieren. Ich wünsche Ihnen noch einen angenehmen Tag und viel Erfolg in Ihrem neuen Lebensabschnitt!",
         "module": {
           "id": "nachbearbeitung_summary",
           "type": "NACHBEARBEITUNG",
           "title": "Nachbearbeitung",
           "data": {
-            "summary": "Kunde hat nach Studienabschluss Franchise von CHF 2'500.– auf CHF 1'000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet.",
+            "summary": "Kunde hat nach Studienabschluss Franchise von CHF 2'500.– auf CHF 1'000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet. Angebot zu Zusatzversicherungen wird per E-Mail versendet.",
             "points": [
               "Studium abgeschlossen",
               "Franchise von 2'500 auf 1'000 CHF reduziert",
               "Bleibt im Telmed-Modell",
-              "Änderung ab nächstem Monat"
+              "Änderung ab nächstem Monat",
+              "Angebot zu Zusatzversicherungen per E-Mail"
             ],
             "isInline": true
           }
@@ -840,7 +292,6 @@
       }
     },
     "end": {
-      "stateType": "system",
       "meta": {
         "systemMessage": "Der Call wurde beendet."
       }

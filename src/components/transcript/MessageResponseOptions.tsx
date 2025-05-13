@@ -20,7 +20,7 @@ const MessageResponseOptions: React.FC<MessageResponseOptionsProps> = ({
 
   return (
     <div className="mt-3 pt-2 border-t border-gray-300/20">
-      <div className="text-xs font-medium mb-2">Available Responses:</div>
+      <div className="text-xs font-medium mb-2">Verfügbare Antworten:</div>
       <div className="space-y-1.5">
         {responseOptions.map((option, idx) => (
           <button
