@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Bell, Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
+import { Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -45,7 +46,7 @@ const Header = () => {
       description: `${scenarioNames[selectedScenario]} scenario activated`,
     });
     
-    navigate('/', { state: { scenario: selectedScenario } });
+    navigate('/test-scenario', { state: { scenario: selectedScenario } });
   };
 
   return (
@@ -117,7 +118,7 @@ const Header = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Notifications Bell with Modal */}
+        {/* Notifications Bell with Modal - moved from sidebar to header */}
         <Button 
           variant="ghost" 
           size="icon" 

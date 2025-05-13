@@ -1,134 +1,42 @@
 
-import React, { useEffect } from 'react';
-import { useTranscript } from '@/hooks/useTranscript';
-import { ScenarioType } from '@/components/ScenarioSelector';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import ChatMessages from '@/components/TestScenario/ChatMessages';
-import { useConversationSummary } from '@/hooks/useConversationSummary';
-import { useTranscriptTimer } from '@/hooks/useTranscriptTimer';
-import { useScenarioManagement } from '@/hooks/useScenarioManagement';
-import TranscriptHeader from '@/components/transcript/TranscriptHeader';
-import JsonVisualizationDialog from '@/components/transcript/JsonVisualizationDialog';
-import ModuleDisplay from '@/components/transcript/ModuleDisplay';
+import React from 'react';
 import { StateMachine } from '@/utils/stateMachineLoader';
-
-// Define type for selected state details
-interface SelectedStateDetails {
-  id: string;
-  data: Record<string, unknown>;
-}
-
-// Define type for JsonVisualization
-interface JsonVisualization {
-  handleViewJson: () => void;
-  isLoadingJson: boolean;
-  jsonDialogOpen: boolean;
-  setJsonDialogOpen: (open: boolean) => void;
-  dialogViewMode: "json" | "visualization";
-  handleViewModeToggle: (mode: "json" | "visualization") => void;
-  jsonContent: string;
-  loadedStateMachine: StateMachine | null;
-  selectedState: SelectedStateDetails | null;
-  handleStateSelection: (state: string) => void;
-}
+import { ScenarioType } from '@/components/ScenarioSelector';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
-  jsonVisualization?: JsonVisualization;
+  jsonVisualization: any;
 }
 
-const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
+const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ 
   activeScenario,
   jsonVisualization
 }) => {
-  // Use the transcript hook with the active scenario
-  const transcript = useTranscript(activeScenario);
-  const { generateSummary } = useConversationSummary();
-  const elapsedTime = useTranscriptTimer(transcript.callActive);
-  const scenarioManagement = useScenarioManagement(activeScenario);
-  
-  // Update summary when scenario changes
-  useEffect(() => {
-    generateSummary(activeScenario);
-  }, [activeScenario, generateSummary]);
-
-  // Scroll to bottom whenever messages are updated
-  useEffect(() => {
-    if (transcript.messagesEndRef && transcript.messagesEndRef.current) {
-      transcript.messagesEndRef.current.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
-  }, [transcript.lastTranscriptUpdate, transcript.messagesEndRef]);
-  
-  // Handle module completion
-  const handleModuleComplete = (result: Record<string, unknown>) => {
-    console.log('Module completed with result:', result);
-    transcript.handleModuleComplete(result);
-  };
-
-  // Handle inline module completion
-  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: Record<string, unknown>) => {
-    transcript.handleInlineModuleComplete(messageId, moduleId, result);
-  };
-  
   return (
-    <div className="flex flex-col h-full">
-      {/* Header with call control */}
-      <TranscriptHeader 
-        activeScenario={activeScenario}
-        currentState={transcript.currentState}
-        elapsedTime={elapsedTime}
-        callActive={transcript.callActive}
-        handleCall={transcript.handleCall}
-        handleHangUpCall={transcript.handleHangUpCall}
-        onSelectScenario={scenarioManagement.handleScenarioChange}
-        viewJson={jsonVisualization?.handleViewJson}
-        isLoadingJson={jsonVisualization?.isLoadingJson}
-        resetConversation={transcript.resetConversation}
-      />
-      
-      {/* Main content area with messages */}
-      <div className="flex-grow overflow-auto relative">
-        <ScrollArea className="h-full p-4">
-          {/* Chat messages */}
-          <ChatMessages
-            messages={transcript.messages}
-            onSelectResponse={transcript.handleSelectResponse}
-            onVerifySystemCheck={transcript.handleVerifySystemCheck}
-            onValidateSensitiveData={transcript.handleValidateSensitiveData}
-            messagesEndRef={transcript.messagesEndRef}
-            onModuleComplete={handleInlineModuleComplete}
-          />
-          
-          {/* Active module display */}
-          <ModuleDisplay 
-            activeModule={transcript.activeModule}
-            currentState={transcript.currentState}
-            stateData={transcript.stateData}
-            onModuleComplete={handleModuleComplete}
-            completeModule={transcript.completeModule}
-          />
-        </ScrollArea>
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b flex justify-between items-center">
+        <h2 className="text-lg font-semibold">
+          {activeScenario === 'testscenario' ? 'Test Scenario' :
+           activeScenario === 'verificationFlow' ? 'Identity Verification Flow' :
+           activeScenario === 'contractManagement' ? 'Contract Management' :
+           activeScenario === 'productInfo' ? 'Product Information' :
+           activeScenario}
+        </h2>
       </div>
       
-      {/* JSON visualization dialog */}
-      {jsonVisualization && (
-        <JsonVisualizationDialog 
-          open={jsonVisualization.jsonDialogOpen}
-          onOpenChange={jsonVisualization.setJsonDialogOpen}
-          dialogViewMode={jsonVisualization.dialogViewMode}
-          handleViewModeToggle={jsonVisualization.handleViewModeToggle}
-          jsonContent={jsonVisualization.jsonContent}
-          loadedStateMachine={jsonVisualization.loadedStateMachine}
-          currentState={transcript.currentState}
-          activeScenario={activeScenario}
-          selectedState={jsonVisualization.selectedState}
-          onStateClick={jsonVisualization.handleStateSelection}
-        />
-      )}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="border rounded-md p-4 bg-white">
+          <p>Scenario content will be displayed here based on state machine transitions.</p>
+          <button 
+            onClick={() => jsonVisualization.toggleJsonDialog()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            View JSON Structure
+          </button>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default TranscriptPanel;

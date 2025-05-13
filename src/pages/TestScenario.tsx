@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -10,13 +11,18 @@ import { useScenarioState } from '@/hooks/useScenarioState';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
+import { useLocation } from 'react-router-dom';
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  
+  // Get scenario from location state if available
+  const scenarioFromLocation = location.state?.scenario || "testscenario";
   
   // State management for scenarios, states, and visualization
-  const scenarioState = useScenarioState("testscenario");
+  const scenarioState = useScenarioState(scenarioFromLocation);
 
   // Use the useJsonVisualization hook for JSON view functionality
   const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);
@@ -32,11 +38,11 @@ const TestScenario = () => {
   const activeScenario = customerScenario;
   const { currentState, error } = activeScenario;
   
-  // Add console.log to help debug the issue
+  // Log changes to help debug the component
   useEffect(() => {
-    console.log("TestScenario re-rendering, checking for sensitive field details:", 
-      scenarioState.showSensitiveFieldDetails ? "Open" : "Closed");
-  }, [scenarioState.showSensitiveFieldDetails]);
+    console.log("TestScenario re-rendering with scenario:", scenarioFromLocation);
+    console.log("Loaded state machine:", scenarioState.loadedStateMachine);
+  }, [scenarioFromLocation, scenarioState.loadedStateMachine]);
   
   return (
     <div className="flex h-screen bg-background">
