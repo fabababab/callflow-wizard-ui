@@ -4,7 +4,7 @@ import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle, Loader, ShieldCheck, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface InlineChatVerificationProps {
   onVerify: (verified: boolean, data?: FormValues) => void;
@@ -19,6 +19,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
 }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [verificationFailed, setVerificationFailed] = useState(false);
+  const [localVerified, setLocalVerified] = useState(isVerified);
   const verificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
   const hasDispatchedEventRef = useRef(false);
@@ -31,17 +32,24 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     postalCode: '10115',
     policyNumber: '12345678',
   };
+
+  // Update local state when props change
+  useEffect(() => {
+    if (isVerified) {
+      setLocalVerified(true);
+    }
+  }, [isVerified]);
   
   // Auto-verify on mount
   useEffect(() => {
-    if (!isVerified && !isVerifying && !isProcessingRef.current) {
+    if (!localVerified && !isVerifying && !isProcessingRef.current) {
       // Add a slight delay to make the verification process visible
       const timeout = setTimeout(() => {
         handleVerifyClick();
       }, 500);
       return () => clearTimeout(timeout);
     }
-  }, [isVerified, isVerifying]);
+  }, [localVerified, isVerifying]);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -64,6 +72,9 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     verificationTimeoutRef.current = setTimeout(() => {
       setIsValidating(false);
       console.log("Manual verification complete, calling onVerify(true)");
+      
+      // Set local verified state
+      setLocalVerified(true);
       
       // Always succeed with verification
       onVerify(true, defaultValues);
@@ -95,7 +106,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   };
   
   // If already verified, show success state
-  if (isVerified) {
+  if (localVerified) {
     return (
       <div className="p-2 bg-green-50 border-l-4 border-green-400 rounded-md mt-2 transition-all duration-300">
         <div className="flex items-center gap-1.5 text-green-700">

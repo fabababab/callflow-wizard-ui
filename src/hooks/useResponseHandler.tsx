@@ -180,15 +180,15 @@ export function useResponseHandler({
         // Get available responses for the current state
         const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
         
-        // If there are response options, automatically pick the first one
+        // If there are response options, automatically pick the first one after a delay
         if (responseOptions.length > 0) {
           console.log("Auto-selecting response after verification:", responseOptions[0]);
           
-          // Add a delay to make the flow feel more natural
+          // Add a longer delay to make the flow feel more natural and ensure verification UI is visible
           setTimeout(() => {
             verificationInProgressRef.current = false;
             handleSelectResponse(responseOptions[0]);
-          }, 1000);
+          }, 2500); // Extended delay to ensure verification success is visible
         } else {
           verificationInProgressRef.current = false;
         }
