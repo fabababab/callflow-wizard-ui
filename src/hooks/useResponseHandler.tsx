@@ -1,6 +1,6 @@
 
 // Hook for handling user response selections
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ResponseHandlerProps {
@@ -16,6 +16,9 @@ export function useResponseHandler({
   conversationState,
   toast
 }: ResponseHandlerProps) {
+  // Track if we've shown a response selection toast
+  const responseToastShownRef = useRef<Record<string, boolean>>({});
+  
   // This is our primary interaction method - updated to ensure explicit user action
   const handleSelectResponse = useCallback((response: string) => {
     console.log('===== RESPONSE SELECTION BEGIN =====');
@@ -30,7 +33,7 @@ export function useResponseHandler({
     // Only process if we're awaiting user response or at initial state
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
-      toast.toast({
+      toast({
         title: "Cannot select response",
         description: "Please wait for the conversation to initialize first",
         variant: "destructive",
@@ -43,12 +46,15 @@ export function useResponseHandler({
     const isVerifyIdentityOption = response.toLowerCase().includes('verify') && 
                                   response.toLowerCase().includes('identity');
     
-    // Show toast notification for response selection
-    toast.toast({
-      title: "Response Selected",
-      description: response,
-      duration: 2000,
-    });
+    // Show toast notification for response selection (only once per unique response)
+    if (!responseToastShownRef.current[response]) {
+      toast({
+        title: "Response Selected",
+        description: response,
+        duration: 2000,
+      });
+      responseToastShownRef.current[response] = true;
+    }
     
     // Set the user action flag
     conversationState.setIsUserAction(true);
@@ -78,7 +84,7 @@ export function useResponseHandler({
         
         if (!defaultSuccess) {
           console.error('Both specific and DEFAULT transitions failed');
-          toast.toast({
+          toast({
             title: "State Transition Failed",
             description: "Could not proceed to the next state. Try resetting the conversation.",
             variant: "destructive",
@@ -130,10 +136,23 @@ export function useResponseHandler({
     toast
   ]);
 
+  // Track which verification events we've already processed
+  const processedVerificationEventsRef = useRef<Set<string>>(new Set());
+  
   // Add event listeners for verification completion events
   useEffect(() => {
     const handleVerificationComplete = (event: CustomEvent) => {
+      // Generate a unique ID for this verification event
+      const eventId = `${event.type}-${event.detail?.moduleId || 'inline'}-${Date.now()}`;
+      
+      // Skip if we've already processed this verification event
+      if (processedVerificationEventsRef.current.has(eventId)) {
+        console.log("Skipping duplicate verification event:", eventId);
+        return;
+      }
+      
       console.log("Verification complete event detected:", event.detail);
+      processedVerificationEventsRef.current.add(eventId);
       
       // Add a short delay to ensure UI is updated
       setTimeout(() => {

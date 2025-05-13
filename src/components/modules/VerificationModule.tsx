@@ -39,6 +39,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const isInlineDisplay = data?.isInline === true;
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const processingRef = useRef(false);
+  const hasShownToastRef = useRef(false);
   const { toast } = useToast();
   
   // Auto-verify on mount after a small delay
@@ -78,12 +79,15 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     // Always succeed
     setVerificationStatus('success');
     
-    // Show toast notification
-    toast.toast({
-      title: "Verification Successful",
-      description: "Customer identity has been verified",
-      duration: 2000
-    });
+    // Show toast notification once
+    if (!hasShownToastRef.current) {
+      toast({
+        title: "Verification Successful",
+        description: "Customer identity has been verified",
+        duration: 2000
+      });
+      hasShownToastRef.current = true;
+    }
     
     // Add a slight delay to show the success state before completing
     completeTimeoutRef.current = setTimeout(() => {

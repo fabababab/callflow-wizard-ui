@@ -22,6 +22,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   const verificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isProcessingRef = useRef(false);
   const { toast } = useToast();
+  const hasShownToastRef = useRef(false);
   
   // Default values that will always verify successfully
   const defaultValues = {
@@ -66,12 +67,15 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       // Always succeed with verification
       onVerify(true, defaultValues);
       
-      // Show success toast
-      toast.toast({
-        title: "Identity Verified",
-        description: "Customer identity has been automatically verified",
-        duration: 2000
-      });
+      // Show success toast only once
+      if (!hasShownToastRef.current) {
+        toast({
+          title: "Identity Verified",
+          description: "Customer identity has been automatically verified",
+          duration: 2000
+        });
+        hasShownToastRef.current = true;
+      }
       
       // Dispatch a custom event to trigger state transition after verification
       const event = new CustomEvent('verification-complete', {
