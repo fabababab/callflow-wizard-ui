@@ -16,17 +16,17 @@ const ResponseOptions: React.FC<ResponseOptionsProps> = ({ options, onSelectResp
   return (
     <div className="mt-3 pt-2 border-t border-gray-300/20">
       <div className="text-xs font-medium mb-2">Response Options:</div>
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {options.map((option, idx) => (
           <Button
             key={idx}
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="w-full justify-start text-sm"
+            className="w-full justify-start text-sm hover:bg-primary/10 transition-all"
             onClick={() => onSelectResponse(option)}
           >
             <span className="truncate">{option}</span>
-            <ChevronRight className="h-3 w-3 ml-auto" />
+            <ChevronRight className="h-3 w-3 ml-auto opacity-70" />
           </Button>
         ))}
       </div>
