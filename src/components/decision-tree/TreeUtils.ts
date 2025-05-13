@@ -129,9 +129,33 @@ export function calculateViewBox(
     const viewBoxX = pos.x - viewBoxWidth / 2;
     const viewBoxY = pos.y - viewBoxHeight / 2;
     
+    console.log(`Centering on state ${centerState} at position:`, pos);
+    
     return { x: viewBoxX, y: viewBoxY, width: viewBoxWidth, height: viewBoxHeight };
   }
   
-  // Default centered viewBox
-  return { x: 0, y: 0, width: viewBoxWidth, height: viewBoxHeight };
+  // If no specific state to center on, and no positions defined, return default viewBox
+  if (Object.keys(statePositions).length === 0) {
+    console.log("No state positions found, using default viewBox");
+    return { x: 0, y: 0, width: viewBoxWidth, height: viewBoxHeight };
+  }
+  
+  // Default case: Find the center of all nodes and center the view there
+  const allX = Object.values(statePositions).map(p => p.x);
+  const allY = Object.values(statePositions).map(p => p.y);
+  
+  const minX = Math.min(...allX);
+  const maxX = Math.max(...allX);
+  const minY = Math.min(...allY);
+  const maxY = Math.max(...allY);
+  
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+  
+  const viewBoxX = centerX - viewBoxWidth / 2;
+  const viewBoxY = centerY - viewBoxHeight / 2;
+  
+  console.log("Using center of all nodes for viewBox:", { centerX, centerY, viewBoxX, viewBoxY });
+  
+  return { x: viewBoxX, y: viewBoxY, width: viewBoxWidth, height: viewBoxHeight };
 }

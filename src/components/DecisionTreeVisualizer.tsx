@@ -82,6 +82,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     };
   }, [isPanning, isDragging, dragStart, viewBox]);
   
+  // Recalculate and update the tree visualization when stateMachine, currentState, or zoom changes
   useEffect(() => {
     if (!stateMachine || !svgRef.current) return;
     
@@ -97,7 +98,9 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     setStatePositions(positions);
     
     // Calculate and set viewBox dimensions
-    const newViewBox = calculateViewBox(positions, zoomLevel, centerOnState);
+    // Use either the explicitly provided centerOnState or default to currentState
+    const stateToCenter = centerOnState || currentState;
+    const newViewBox = calculateViewBox(positions, zoomLevel, stateToCenter);
     setViewBox(newViewBox);
     
     // Clear the SVG to prevent duplications
@@ -132,7 +135,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
         
         // Determine state properties
         const hasSensitiveData = stateData.meta?.sensitiveFields && 
-                                stateData.meta.sensitiveFields.length > 0;
+                              stateData.meta.sensitiveFields.length > 0;
         const moduleType = stateData.meta?.module?.type || null;
         
         // Create node element
@@ -240,9 +243,19 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
     svg.setAttribute('viewBox', `${newViewBox.x} ${newViewBox.y} ${newViewBox.width} ${newViewBox.height}`);
     
     // Notify parent that centering has been applied
-    if (centerOnState) {
+    if (stateToCenter) {
       onCenter && onCenter();
     }
+    
+    // Add console logs to debug visualization issues
+    console.log('Tree visualization updated:', {
+      statePositions: positions,
+      viewBox: newViewBox,
+      currentState,
+      centerOnState,
+      zoomLevel
+    });
+    
   }, [stateMachine, currentState, onStateClick, zoomLevel, centerOnState, isPanning]);
   
   // Update viewBox when it changes (for panning)
@@ -272,6 +285,7 @@ const DecisionTreeVisualizer: React.FC<DecisionTreeVisualizerProps> = ({
           ref={svgRef}
           className="w-full h-[500px]"
           xmlns="http://www.w3.org/2000/svg"
+          data-testid="decision-tree-svg"
         ></svg>
       )}
       

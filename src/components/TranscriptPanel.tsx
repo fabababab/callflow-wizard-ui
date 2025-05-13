@@ -29,7 +29,8 @@ interface JsonVisualization {
   loadedStateMachine: StateMachine | null;
   selectedState: SelectedStateDetails | null;
   handleStateSelection: (state: string) => void;
-  handleJumpToState: (stateId: string) => void; // Added this line
+  handleJumpToState: (stateId: string) => void;
+  handleSensitiveFieldClick: (field: any) => void;
 }
 
 interface TranscriptPanelProps {
@@ -126,6 +127,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         selectedState={jsonVisualization.selectedState}
         onStateClick={jsonVisualization.handleStateSelection}
         onJumpToState={jsonVisualization.handleJumpToState}
+        onSensitiveFieldClick={jsonVisualization.handleSensitiveFieldClick}
       />
     </div>
   );

@@ -27,7 +27,9 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
   };
 
   // Handle state selection from visualization
-  const handleStateSelection = (state: string) => {
+  const handleStateSelection = useCallback((state: string) => {
+    console.log(`State selected: ${state}`);
+    
     if (loadedStateMachine && loadedStateMachine.states[state]) {
       setJsonContent(JSON.stringify(loadedStateMachine.states[state], null, 2));
       
@@ -41,7 +43,7 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
         sensitiveFields: sensitiveFields
       });
     }
-  };
+  }, [loadedStateMachine]);
   
   // Handle sensitive field click
   const handleSensitiveFieldClick = useCallback((field: SensitiveField) => {
@@ -64,6 +66,9 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
       return;
     }
     
+    // Update selected state when jumping
+    handleStateSelection(stateId);
+    
     // Trigger a custom event that the state machine can listen to
     const event = new CustomEvent('jump-to-state', {
       detail: { stateId }
@@ -78,16 +83,18 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
       description: `Loaded state: ${stateId}`,
       duration: 2000
     });
-  }, [loadedStateMachine, toast]);
+  }, [loadedStateMachine, toast, handleStateSelection]);
 
   // Load state machine when changing scenarios
   useEffect(() => {
     const loadVisualizationData = async () => {
+      console.log("Loading visualization data for scenario:", activeScenario);
       setIsLoadingJson(true);
       try {
         const machine = await loadStateMachine(activeScenario);
         setLoadedStateMachine(machine);
         setJsonContent(JSON.stringify(machine, null, 2));
+        console.log("State machine loaded:", machine);
       } catch (error) {
         console.error("Failed to load JSON:", error);
         setJsonContent(JSON.stringify({ error: "Failed to load state machine" }, null, 2));
@@ -108,8 +115,12 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
       setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
     }
     
+    setDialogViewMode("visualization"); // Switch to visualization by default
     setJsonDialogOpen(true);
     setIsLoadingJson(false);
+    
+    // Log that visualization is opening
+    console.log("Opening visualization with state machine:", loadedStateMachine);
   };
 
   return {

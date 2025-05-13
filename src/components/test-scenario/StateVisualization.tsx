@@ -61,13 +61,17 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
     setIsPanning(false);
   };
   
+  // Auto-center on state changes
   useEffect(() => {
-    // Reset view when switching to a new state machine or current state changes
-    if (currentState) {
+    if (currentState || selectedStateDetails?.id) {
       setCenterOnCurrentState(true);
     }
-  }, [loadedStateMachine, currentState]);
+  }, [currentState, selectedStateDetails]);
   
+  // Determine which state to center on
+  const stateToCenter = centerOnCurrentState ? 
+    (selectedStateDetails?.id || currentState) : null;
+    
   return (
     <div className="bg-white rounded-md flex flex-col md:flex-row h-full overflow-hidden">
       {/* Left side: Decision Tree Visualization with zoom controls */}
@@ -125,7 +129,7 @@ const StateVisualization: React.FC<StateVisualizationProps> = ({
             currentState={currentState} 
             onStateClick={onStateClick}
             zoomLevel={zoomLevel}
-            centerOnState={centerOnCurrentState ? currentState : null}
+            centerOnState={stateToCenter}
             onCenter={() => setCenterOnCurrentState(false)}
             isPanning={isPanning}
           />
