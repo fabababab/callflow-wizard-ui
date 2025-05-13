@@ -29,6 +29,7 @@ interface JsonVisualization {
   loadedStateMachine: StateMachine | null;
   selectedState: SelectedStateDetails | null;
   handleStateSelection: (state: string) => void;
+  handleJumpToState: (stateId: string) => void; // Added this line
 }
 
 interface TranscriptPanelProps {

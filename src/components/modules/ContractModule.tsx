@@ -3,10 +3,18 @@ import React, { useState, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Check, Calculator, Edit, Download, ArrowRight } from 'lucide-react';
+import { FileText, Check, Calculator, Edit, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+
+interface ContractDetails {
+  policyNumber: string;
+  startDate: string;
+  endDate: string;
+  premium: string;
+  coverageType: string;
+}
 
 const ContractModule: React.FC<ModuleProps> = memo(({ 
   id, 
@@ -17,7 +25,7 @@ const ContractModule: React.FC<ModuleProps> = memo(({
 }) => {
   const [showCalculator, setShowCalculator] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [contractDetails, setContractDetails] = useState(data?.contractDetails || {
+  const [contractDetails, setContractDetails] = useState<ContractDetails>(data?.contractDetails || {
     policyNumber: "PL-12345678",
     startDate: "2023-01-01",
     endDate: "2023-12-31",
@@ -44,7 +52,7 @@ const ContractModule: React.FC<ModuleProps> = memo(({
   };
   
   // Handle field change when editing
-  const handleFieldChange = (field: string, value: string) => {
+  const handleFieldChange = (field: keyof ContractDetails, value: string) => {
     setContractDetails(prev => ({
       ...prev,
       [field]: value
@@ -52,7 +60,7 @@ const ContractModule: React.FC<ModuleProps> = memo(({
   };
   
   // Simple calculator component
-  const Calculator = () => {
+  const CalculatorComponent = () => {
     const [amount, setAmount] = useState("1000");
     const [years, setYears] = useState("1");
     const [rate, setRate] = useState("2.5");
@@ -80,33 +88,30 @@ const ContractModule: React.FC<ModuleProps> = memo(({
         </h4>
         <div className="grid grid-cols-1 gap-2">
           <div>
-            <Label htmlFor="amount" className="text-xs">Amount (€)</Label>
+            <Label htmlFor="amount">Amount (€)</Label>
             <Input 
               id="amount" 
               value={amount} 
               onChange={(e) => setAmount(e.target.value)} 
               type="text" 
-              className="text-xs h-7 border-amber-200"
             />
           </div>
           <div>
-            <Label htmlFor="years" className="text-xs">Years</Label>
+            <Label htmlFor="years">Years</Label>
             <Input 
               id="years" 
               value={years} 
               onChange={(e) => setYears(e.target.value)} 
               type="text" 
-              className="text-xs h-7 border-amber-200"
             />
           </div>
           <div>
-            <Label htmlFor="rate" className="text-xs">Interest Rate (%)</Label>
+            <Label htmlFor="rate">Interest Rate (%)</Label>
             <Input 
               id="rate" 
               value={rate} 
               onChange={(e) => setRate(e.target.value)} 
               type="text" 
-              className="text-xs h-7 border-amber-200"
             />
           </div>
         </div>
@@ -123,7 +128,7 @@ const ContractModule: React.FC<ModuleProps> = memo(({
     : "w-full max-w-md border border-amber-200 shadow-md transition-all duration-300";
   
   return (
-    <Card className={cardClassName} data-testid={`contract-module-${id}`}>
+    <Card className={cardClassName}>
       <CardHeader className={`${isInlineDisplay ? "bg-transparent py-2 pb-0" : "bg-amber-50 border-b border-amber-100 py-3"}`}>
         <div className="flex items-center gap-2">
           <FileText className={`${isInlineDisplay ? "h-4 w-4" : "h-5 w-5"} text-amber-500`} />
@@ -160,7 +165,7 @@ const ContractModule: React.FC<ModuleProps> = memo(({
                   <Input 
                     id={key}
                     value={value}
-                    onChange={(e) => handleFieldChange(key, e.target.value)}
+                    onChange={(e) => handleFieldChange(key as keyof ContractDetails, e.target.value)}
                     className="text-xs h-7 border-amber-200"
                   />
                 </div>
@@ -217,7 +222,7 @@ const ContractModule: React.FC<ModuleProps> = memo(({
         </div>
         
         {/* Calculator Section */}
-        {showCalculator && <Calculator />}
+        {showCalculator && <CalculatorComponent />}
         
         {/* Contract Summary */}
         <div className="text-xs text-amber-700">
