@@ -54,8 +54,277 @@
         }
       },
       "on": {
-        "verification-success": "customer_issue",
+        "verification-success": "customer_inquiry_selection",
         "DEFAULT": "start"
+      }
+    },
+    "customer_inquiry_selection": {
+      "stateType": "customer",
+      "meta": {
+        "customerText": "Guten Tag. Ich hätte ein paar Fragen zu meinen Versicherungsoptionen.",
+        "systemMessage": "Der Kunde hat mehrere Anfragen. Fragen Sie, womit Sie helfen können.",
+        "responseOptions": [
+          "Wie kann ich Ihnen mit Ihren Versicherungsoptionen helfen?",
+          "Gerne, was möchten Sie wissen?",
+          "Um welche Art von Versicherung geht es?"
+        ]
+      },
+      "on": {
+        "DEFAULT": "agent_inquiry_response"
+      }
+    },
+    "agent_inquiry_response": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Wie kann ich Ihnen mit Ihren Versicherungsoptionen helfen?",
+        "responseOptions": [
+          "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen",
+          "Ich möchte wissen, ob ich meine Franchise ändern kann",
+          "Ich habe Fragen zu den Versicherungsmodellen"
+        ]
+      },
+      "on": {
+        "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen": "customer_issue",
+        "Ich möchte wissen, ob ich meine Franchise ändern kann": "franchise_inquiry",
+        "Ich habe Fragen zu den Versicherungsmodellen": "model_inquiry",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "franchise_inquiry": {
+      "stateType": "customer",
+      "meta": {
+        "customerText": "Ich möchte wissen, ob ich meine Franchise ändern kann und welche Optionen ich habe.",
+        "systemMessage": "Der Kunde fragt nach Franchiseoptionen."
+      },
+      "on": {
+        "DEFAULT": "franchise_response"
+      }
+    },
+    "franchise_response": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Ja, Sie können Ihre Franchise ändern. Die Änderung gilt jeweils ab dem 1. Januar des Folgejahres. Möchten Sie die verfügbaren Franchiseoptionen sehen?",
+        "responseOptions": [
+          "Ja bitte, zeigen Sie mir die Optionen",
+          "Wann ist die Frist für Änderungen?",
+          "Wie wirkt sich die Franchise auf meine Prämie aus?"
+        ]
+      },
+      "on": {
+        "Ja bitte, zeigen Sie mir die Optionen": "moreFranchise",
+        "Wann ist die Frist für Änderungen?": "deadline_info",
+        "Wie wirkt sich die Franchise auf meine Prämie aus?": "premium_impact",
+        "DEFAULT": "moreFranchise"
+      }
+    },
+    "deadline_info": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Die Frist für Franchiseänderungen ist der 30. November für das Folgejahr. Sie können Ihre Entscheidung bis dahin jederzeit ändern. Möchten Sie die verfügbaren Franchiseoptionen sehen?",
+        "responseOptions": [
+          "Ja, zeigen Sie mir die Optionen",
+          "Nein danke, ich habe noch andere Fragen"
+        ]
+      },
+      "on": {
+        "Ja, zeigen Sie mir die Optionen": "moreFranchise",
+        "Nein danke, ich habe noch andere Fragen": "other_questions",
+        "DEFAULT": "moreFranchise"
+      }
+    },
+    "premium_impact": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Die Franchise beeinflusst direkt Ihre Monatsprämie: Je höher die Franchise, desto niedriger die Prämie. Allerdings müssen Sie bei höherer Franchise mehr Selbstbehalt bezahlen, bevor die Versicherung übernimmt. Soll ich Ihnen die konkreten Zahlen zeigen?",
+        "responseOptions": [
+          "Ja, zeigen Sie mir die Zahlen",
+          "Ich verstehe. Was empfehlen Sie mir?"
+        ]
+      },
+      "on": {
+        "Ja, zeigen Sie mir die Zahlen": "moreFranchise",
+        "Ich verstehe. Was empfehlen Sie mir?": "recommendation",
+        "DEFAULT": "moreFranchise"
+      }
+    },
+    "model_inquiry": {
+      "stateType": "customer",
+      "meta": {
+        "customerText": "Ich habe Fragen zu den verschiedenen Versicherungsmodellen. Welche gibt es und was sind die Unterschiede?",
+        "systemMessage": "Der Kunde fragt nach Versicherungsmodellen."
+      },
+      "on": {
+        "DEFAULT": "model_overview"
+      }
+    },
+    "model_overview": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Wir bieten verschiedene Versicherungsmodelle an. Möchten Sie einen Überblick über alle Modelle sehen?",
+        "responseOptions": [
+          "Ja, zeigen Sie mir alle Modelle",
+          "Welches ist das günstigste Modell?",
+          "Was ist der Unterschied zwischen Telmed und Hausarzt?"
+        ]
+      },
+      "on": {
+        "Ja, zeigen Sie mir alle Modelle": "moreModels",
+        "Welches ist das günstigste Modell?": "cheapest_model",
+        "Was ist der Unterschied zwischen Telmed und Hausarzt?": "telmed_vs_hausarzt",
+        "DEFAULT": "moreModels"
+      }
+    },
+    "telmed_vs_hausarzt": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Der Hauptunterschied liegt im ersten Kontakt: Bei Telmed rufen Sie zuerst eine medizinische Beratung an, die entscheidet, ob Sie zum Arzt müssen. Bei Hausarzt gehen Sie direkt zu Ihrem gewählten Hausarzt. Telmed ist etwas günstiger, aber weniger flexibel. Möchten Sie trotzdem alle Modelle im Detail sehen?",
+        "responseOptions": [
+          "Ja, zeigen Sie mir alle Modelle",
+          "Welches würden Sie für mich empfehlen?",
+          "Ich habe eine andere Frage zu meiner Versicherung"
+        ]
+      },
+      "on": {
+        "Ja, zeigen Sie mir alle Modelle": "moreModels",
+        "Welches würden Sie für mich empfehlen?": "model_recommendation",
+        "Ich habe eine andere Frage zu meiner Versicherung": "other_questions",
+        "DEFAULT": "moreModels"
+      }
+    },
+    "cheapest_model": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Das günstigste Modell ist in der Regel das Telmed-Modell, bei dem Sie vor jedem Arztbesuch zunächst eine telemedizinische Beratung kontaktieren müssen. Es bietet durchschnittlich 10-15% Rabatt gegenüber dem Standardmodell. Möchten Sie mehr Details dazu?",
+        "responseOptions": [
+          "Ja, mehr Details zum Telmed-Modell",
+          "Zeigen Sie mir alle Modelle im Vergleich",
+          "Wie kann ich zu diesem Modell wechseln?"
+        ]
+      },
+      "on": {
+        "Ja, mehr Details zum Telmed-Modell": "telmed_details",
+        "Zeigen Sie mir alle Modelle im Vergleich": "moreModels",
+        "Wie kann ich zu diesem Modell wechseln?": "model_switch",
+        "DEFAULT": "moreModels"
+      }
+    },
+    "telmed_details": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Beim Telmed-Modell kontaktieren Sie vor jedem Arztbesuch unsere medizinische Hotline unter 0800 123 456. Die medizinischen Fachpersonen beraten Sie und entscheiden, ob ein Arztbesuch nötig ist. Dies spart Kosten und ist besonders für Menschen geeignet, die selten zum Arzt gehen. Möchten Sie zu diesem Modell wechseln?",
+        "responseOptions": [
+          "Ja, ich möchte wechseln",
+          "Nein, ich möchte andere Optionen prüfen",
+          "Ich habe noch Fragen zur Franchise"
+        ]
+      },
+      "on": {
+        "Ja, ich möchte wechseln": "model_switch",
+        "Nein, ich möchte andere Optionen prüfen": "moreModels",
+        "Ich habe noch Fragen zur Franchise": "moreFranchise",
+        "DEFAULT": "model_switch"
+      }
+    },
+    "model_switch": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Ich kann den Wechsel zum Telmed-Modell für Sie veranlassen. Der Wechsel wird zum nächsten Monatsersten wirksam. Möchten Sie gleichzeitig auch Ihre Franchise anpassen?",
+        "responseOptions": [
+          "Ja, ich möchte auch die Franchise ändern",
+          "Nein, nur das Modell wechseln",
+          "Ich möchte erst noch über die Studiumsabschluss-Anpassungen sprechen"
+        ]
+      },
+      "on": {
+        "Ja, ich möchte auch die Franchise ändern": "moreFranchise",
+        "Nein, nur das Modell wechseln": "confirm_model_only",
+        "Ich möchte erst noch über die Studiumsabschluss-Anpassungen sprechen": "customer_issue",
+        "DEFAULT": "confirm_model_only"
+      }
+    },
+    "confirm_model_only": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Ich habe den Wechsel zum Telmed-Modell für Sie eingeleitet. Sie erhalten in den nächsten Tagen eine Bestätigung per Post. Haben Sie noch weitere Fragen?",
+        "responseOptions": [
+          "Nein danke, das war alles",
+          "Ja, ich möchte über meinen Studiumsabschluss sprechen",
+          "Ja, ich habe noch Fragen zu Zusatzversicherungen"
+        ]
+      },
+      "on": {
+        "Nein danke, das war alles": "goodbye",
+        "Ja, ich möchte über meinen Studiumsabschluss sprechen": "customer_issue",
+        "Ja, ich habe noch Fragen zu Zusatzversicherungen": "additional_insurance",
+        "DEFAULT": "goodbye"
+      }
+    },
+    "model_recommendation": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Basierend auf Ihrem Profil würde ich das Telmed-Modell empfehlen. Es bietet ein gutes Gleichgewicht zwischen Kosteneinsparungen und Flexibilität. Sie müssen zuerst telefonisch Kontakt aufnehmen, bevor Sie zum Arzt gehen, sparen aber etwa 15% bei der Prämie. Möchten Sie zu diesem Modell wechseln?",
+        "responseOptions": [
+          "Ja, das klingt gut",
+          "Was sind die anderen Optionen?",
+          "Ich möchte lieber über mein Studienende sprechen"
+        ]
+      },
+      "on": {
+        "Ja, das klingt gut": "model_switch",
+        "Was sind die anderen Optionen?": "moreModels",
+        "Ich möchte lieber über mein Studienende sprechen": "customer_issue",
+        "DEFAULT": "moreModels"
+      }
+    },
+    "other_questions": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Natürlich, welche anderen Fragen haben Sie zu Ihrer Versicherung?",
+        "responseOptions": [
+          "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen",
+          "Welche Zusatzversicherungen können Sie empfehlen?",
+          "Wie funktioniert die Rückerstattung von Arztkosten?"
+        ]
+      },
+      "on": {
+        "Ich habe mein Studium abgeschlossen und möchte meine Versicherung anpassen": "customer_issue",
+        "Welche Zusatzversicherungen können Sie empfehlen?": "additional_insurance",
+        "Wie funktioniert die Rückerstattung von Arztkosten?": "reimbursement",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "reimbursement": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Die Rückerstattung von Arztkosten erfolgt, indem Sie uns die Rechnung per Post oder über unsere App zusenden. Nach Prüfung und Abzug der Franchise und Selbstbeteiligung erhalten Sie die Rückerstattung innerhalb von 2-3 Wochen auf Ihr Konto. Möchten Sie mehr über die Online-Einreichung erfahren?",
+        "responseOptions": [
+          "Ja, wie funktioniert die Online-Einreichung?",
+          "Nein, ich möchte über mein Studienende sprechen",
+          "Ich habe noch eine andere Frage"
+        ]
+      },
+      "on": {
+        "Ja, wie funktioniert die Online-Einreichung?": "online_submission",
+        "Nein, ich möchte über mein Studienende sprechen": "customer_issue",
+        "Ich habe noch eine andere Frage": "other_questions",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "online_submission": {
+      "stateType": "agent",
+      "meta": {
+        "agentText": "Die Online-Einreichung ist einfach: Laden Sie unsere App herunter, melden Sie sich mit Ihrer Versichertennummer an, fotografieren Sie die Rechnung und laden Sie das Foto hoch. Sie können den Status der Rückerstattung jederzeit in der App verfolgen. Haben Sie noch weitere Fragen?",
+        "responseOptions": [
+          "Nein danke, das war hilfreich",
+          "Ja, ich möchte über mein Studienende sprechen",
+          "Ich möchte meine Franchise ändern"
+        ]
+      },
+      "on": {
+        "Nein danke, das war hilfreich": "goodbye",
+        "Ja, ich möchte über mein Studienende sprechen": "customer_issue",
+        "Ich möchte meine Franchise ändern": "moreFranchise",
+        "DEFAULT": "customer_issue"
       }
     },
     "customer_issue": {

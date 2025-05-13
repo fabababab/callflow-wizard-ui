@@ -15,7 +15,7 @@ const ResponseOptions: React.FC<ResponseOptionsProps> = ({ options, onSelectResp
 
   return (
     <div className="mt-3 pt-2 border-t border-gray-300/20">
-      <div className="text-xs font-medium mb-2">Response Options:</div>
+      <div className="text-xs font-medium mb-2">Antwortoptionen:</div>
       <div className="space-y-1.5">
         {options.map((option, idx) => (
           <Button
