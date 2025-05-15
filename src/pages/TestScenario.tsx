@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
@@ -11,7 +10,7 @@ import { useScenarioState } from '@/hooks/useScenarioState';
 import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/use-toast.tsx';
 import { ModuleType } from '@/types/modules';
 
 const TestScenario = () => {

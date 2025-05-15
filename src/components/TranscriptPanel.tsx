@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';

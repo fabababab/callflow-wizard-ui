@@ -1,6 +1,5 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { toast } from '@/lib/use-toast.tsx';
+import { useToast } from '@/lib/use-toast.tsx';
 import { useConversationState } from '@/hooks/useConversationState';
 import { useCallState } from '@/hooks/useCallState';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
@@ -14,6 +13,7 @@ import { ValidationStatus } from '@/data/scenarioData';
 export function useTranscriptCore(activeScenario: ScenarioType) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
+  const { toast } = useToast();
   
   // Use the conversation state hook to manage conversation state
   const conversationState = useConversationState();
