@@ -1,4 +1,3 @@
-
 import React, { memo, useRef, useEffect, useState } from 'react';
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
@@ -39,6 +38,9 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     } else if (moduleConfig.type === ModuleType.INFORMATION_TABLE) {
       description = "Bitte wählen Sie die gewünschte Franchise-Option";
       title = "Franchise-Übersicht";
+    } else if (moduleConfig.type === ModuleType.INSURANCE_MODEL) {
+      description = "Bitte wählen Sie das gewünschte Versicherungsmodell";
+      title = "Versicherungsmodelle";
     }
     
     toast({
@@ -66,6 +68,9 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     if (moduleConfig.type === ModuleType.INFORMATION_TABLE && result.selectedOption) {
       title = "Franchise-Option ausgewählt";
       description = `Sie haben die Option CHF ${result.selectedOption} gewählt.`;
+    } else if (moduleConfig.type === ModuleType.INSURANCE_MODEL && result.modelTitle) {
+      title = "Versicherungsmodell ausgewählt";
+      description = `Sie haben ${result.modelTitle} ausgewählt.`;
     }
     
     toast({
@@ -145,19 +150,32 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       });
       window.dispatchEvent(franchiseEvent);
     }
+    
+    // For insurance model modules
+    if (moduleConfig.type === ModuleType.INSURANCE_MODEL) {
+      const insuranceModelEvent = new CustomEvent('insurance-model-complete', {
+        detail: { 
+          moduleId: moduleConfig.id,
+          result
+        }
+      });
+      window.dispatchEvent(insuranceModelEvent);
+    }
   };
 
   // Module header color based on type - make everything amber/yellow for consistency
   const getHeaderClass = () => {
     if (moduleConfig.type === ModuleType.INFORMATION_TABLE) {
       return "bg-amber-50 border-amber-200";
+    } else if (moduleConfig.type === ModuleType.INSURANCE_MODEL) {
+      return "bg-blue-50 border-blue-200";
     }
     return "bg-amber-50 border-amber-200";
   };
   
   return (
     <div className="ml-auto mt-2 w-full max-w-[85%] transition-all duration-300">
-      <div className={`rounded-lg overflow-hidden border border-amber-200 shadow-sm ${getHeaderClass()}`}>
+      <div className={`rounded-lg overflow-hidden border ${moduleConfig.type === ModuleType.INSURANCE_MODEL ? 'border-blue-200' : 'border-amber-200'} shadow-sm ${getHeaderClass()}`}>
         <ModuleHeader 
           moduleConfig={moduleConfig}
           completed={completed}

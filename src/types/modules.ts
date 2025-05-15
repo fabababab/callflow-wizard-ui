@@ -30,4 +30,5 @@ export interface ModuleProps {
   onComplete: (result: any) => void;
   currentState?: string;
   stateData?: any;
+  isInline?: boolean; // Added to support inline display mode
 }
