@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -51,20 +50,14 @@ const Index = () => {
   // Function to initialize or reset available scenarios
   const initializeScenarios = () => {
     const allScenarios: ScenarioType[] = [
-      'verificationFlow', 
-      'contractManagement', 
-      'productInfo', 
-      'testscenario',
-      'studiumabschlussCase',  // Updated to new scenario name
+      'studiumabschlussCase',  
       'leistungsabdeckungPhysio',
       'mahnungTrotzZahlung'
     ];
     
     // Randomly select 3 scenarios (or fewer if there aren't enough available)
-    const shuffled = [...allScenarios].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 3);
-    
-    setAvailableScenarios(selected);
+    // Since we only have 3 scenarios now, just use them all
+    setAvailableScenarios(allScenarios);
     
     // Show dialog to select first scenario if no active scenario
     if (!activeScenario) {
@@ -78,17 +71,6 @@ const Index = () => {
     setShowScenarioDialog(false);
     
     const scenarioNames: Record<ScenarioType, string> = {
-      'testscenario': 'Test Scenario',
-      'verificationFlow': 'Identity Verification',
-      'contractManagement': 'Contract Management',
-      'productInfo': 'Product Information',
-      'verification': 'Identity Verification (Legacy)',
-      'bankDetails': 'Change Bank Details',
-      'accountHistory': 'Account History Review',
-      'physioTherapy': 'Physiotherapy Coverage',
-      'paymentReminder': 'Payment Reminder Dispute',
-      'insurancePackage': 'Insurance Package Update',
-      'deutscheVersion': 'Deutsche Version',
       'studiumabschlussCase': 'Studiumabschluss-Case',
       'leistungsabdeckungPhysio': 'Leistungsabdeckung Physio',
       'mahnungTrotzZahlung': 'Mahnung trotz Zahlung'
@@ -244,16 +226,14 @@ const Index = () => {
                 onClick={() => selectScenario(scenario)}
                 className="justify-start text-left"
               >
-                {scenario === 'testscenario' && 'Test Scenario'}
-                {scenario === 'verificationFlow' && 'Identity Verification'}
-                {scenario === 'contractManagement' && 'Contract Management'}
-                {scenario === 'productInfo' && 'Product Information'}
-                {scenario === 'deutscheVersion' && 'Deutsche Version'}
+                {scenario === 'studiumabschlussCase' && 'Studiumabschluss-Case'}
+                {scenario === 'leistungsabdeckungPhysio' && 'Leistungsabdeckung Physio'}
+                {scenario === 'mahnungTrotzZahlung' && 'Mahnung trotz Zahlung'}
               </Button>
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={initializeScenarios}>Shuffle Scenarios</Button>
+            <Button variant="outline" onClick={initializeScenarios}>Reload Scenarios</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 import { useStateMachine } from '@/hooks/useStateMachine';
 
 /**
- * This hook is used to manage the customer scenario for the physiotherapy coverage scenario
+ * This hook is used to manage the customer scenario for the call flow
  */
 export function useCustomerScenario() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Use the scenario state machine from the useStateMachine hook
-  // Changed from 'deutscheVersion' to 'studiumabschlussCase'
+  // Using 'studiumabschlussCase' as the default scenario
   const {
     currentState,
     stateData,
