@@ -1,5 +1,5 @@
 
-// Re-export from the lib directory where the actual implementation is
-import { useToast, toast } from "@/lib/use-toast";
+// Re-export from the implementation file
+import { useToast, toast } from "@/lib/use-toast.tsx";
 
 export { useToast, toast };

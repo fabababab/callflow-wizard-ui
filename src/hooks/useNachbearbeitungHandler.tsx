@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { ModuleType } from '@/types/modules';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/use-toast.tsx';
 import { ScenarioType } from '@/components/ScenarioSelector';
 
 export function useNachbearbeitungHandler(completeModule: (result: any) => void, activeScenario?: ScenarioType) {

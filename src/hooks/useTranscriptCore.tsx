@@ -1,6 +1,6 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/lib/use-toast.tsx';
 import { useConversationState } from '@/hooks/useConversationState';
 import { useCallState } from '@/hooks/useCallState';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
@@ -30,11 +30,10 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   // Use the module manager hook
   const { activeModule, completeModule } = useModuleManager();
   
-  // Use the nachbearbeitung handler - fixed argument count
+  // Use the nachbearbeitung handler with correct arguments
   const { showNachbearbeitungSummary } = useNachbearbeitungHandler(
     completeModule, 
-    activeScenario,
-    messageHandling.addSystemMessage
+    activeScenario
   );
   
   // Use the call termination hook
