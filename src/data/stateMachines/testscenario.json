@@ -102,7 +102,7 @@
           "title": "Franchise-Übersicht 2024",
           "type": "information_table",
           "data": {
-            "description": "Please review this important information about your insurance coverage.",
+            "description": "Auswirkungen bei gleichbleibendem Modell:",
             "franchiseOptions": [
               { "amount": 300, "premium": 400 },
               { "amount": 500, "premium": 360 },
@@ -112,7 +112,7 @@
               { "amount": 2500, "premium": 220 }
             ],
             "tableTitle": "Franchise Optionen",
-            "buttonText": "Acknowledge"
+            "buttonText": "Option auswählen"
           }
         }
       },

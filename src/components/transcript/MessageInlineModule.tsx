@@ -25,6 +25,7 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
   useEffect(() => {
     // Notify about the inline module being displayed with appropriate message based on type
     let description = "Please complete this interactive module";
+    let title = moduleConfig.title || "Interactive Module";
     
     if (moduleConfig.type === ModuleType.VERIFICATION) {
       description = "Please verify the customer information";
@@ -34,12 +35,14 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       description = "Important customer information available";
     } else if (moduleConfig.type === ModuleType.FRANCHISE) {
       description = "Franchise options and premium information";
+      title = "Franchise-Optionen";
     } else if (moduleConfig.type === ModuleType.INFORMATION_TABLE) {
-      description = "Please review the franchise table information";
+      description = "Bitte wählen Sie die gewünschte Franchise-Option";
+      title = "Franchise-Übersicht";
     }
     
     toast({
-      title: `${moduleConfig.title}`,
+      title: title,
       description,
       duration: 3000
     });
@@ -56,10 +59,18 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     // Dispatch events based on module type
     dispatchModuleEvents(result);
     
-    // Show completion toast
+    // Show completion toast with appropriate message based on module type
+    let title = "Module Completed";
+    let description = `${moduleConfig.title} has been completed successfully`;
+    
+    if (moduleConfig.type === ModuleType.INFORMATION_TABLE && result.selectedOption) {
+      title = "Franchise-Option ausgewählt";
+      description = `Sie haben die Option CHF ${result.selectedOption} gewählt.`;
+    }
+    
     toast({
-      title: "Module Completed",
-      description: `${moduleConfig.title} has been completed successfully`,
+      title: title,
+      description: description,
       duration: 2000
     });
     
@@ -123,7 +134,9 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     }
 
     // For franchise modules
-    if (moduleConfig.type === ModuleType.FRANCHISE) {
+    if (moduleConfig.type === ModuleType.FRANCHISE || 
+        (moduleConfig.type === ModuleType.INFORMATION_TABLE && 
+         moduleConfig.data?.franchiseOptions)) {
       const franchiseEvent = new CustomEvent('franchise-complete', {
         detail: { 
           moduleId: moduleConfig.id,
@@ -134,8 +147,11 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     }
   };
 
-  // Module header color based on type - make everything amber/yellow
+  // Module header color based on type - make everything amber/yellow for consistency
   const getHeaderClass = () => {
+    if (moduleConfig.type === ModuleType.INFORMATION_TABLE) {
+      return "bg-amber-50 border-amber-200";
+    }
     return "bg-amber-50 border-amber-200";
   };
   

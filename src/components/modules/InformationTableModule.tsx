@@ -29,7 +29,7 @@ const InformationTableModule: React.FC<InformationTableModuleProps> = ({
   const [selectedOption, setSelectedOption] = useState<number>(1000);
   
   const {
-    description = "Please review this important information about your insurance coverage.",
+    description = "Auswirkungen bei gleichbleibendem Modell:",
     franchiseOptions = [
       { amount: 300, premium: 400 },
       { amount: 500, premium: 360 },
@@ -39,7 +39,7 @@ const InformationTableModule: React.FC<InformationTableModuleProps> = ({
       { amount: 2500, premium: 220 }
     ],
     tableTitle = "Franchise Optionen",
-    buttonText = "Acknowledge",
+    buttonText = "Option auswählen",
     isInline = false
   } = data;
   
@@ -56,8 +56,8 @@ const InformationTableModule: React.FC<InformationTableModuleProps> = ({
     const selectedFranchise = franchiseOptions.find(option => option.amount === selectedOption);
     
     toast({
-      title: "Franchise Option Selected",
-      description: `You've chosen the CHF ${formatPrice(selectedOption)} franchise option.`,
+      title: "Franchise-Option gewählt",
+      description: `Sie haben die Option CHF ${formatPrice(selectedOption)} gewählt.`,
       duration: 3000
     });
     
@@ -92,9 +92,9 @@ const InformationTableModule: React.FC<InformationTableModuleProps> = ({
               </TableHeader>
               <TableBody>
                 {franchiseOptions.map((option, index) => (
-                  <TableRow key={index} className={selectedOption === option.amount ? "bg-amber-100" : ""}>
-                    <TableCell>CHF {formatPrice(option.amount)}</TableCell>
-                    <TableCell>CHF {formatPrice(option.premium)}</TableCell>
+                  <TableRow key={index} className={selectedOption === option.amount ? "bg-green-100" : option.amount === 1000 ? "bg-green-50" : ""}>
+                    <TableCell className="py-2">CHF {formatPrice(option.amount)}</TableCell>
+                    <TableCell className="py-2">CHF {formatPrice(option.premium)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -107,7 +107,7 @@ const InformationTableModule: React.FC<InformationTableModuleProps> = ({
               <Button 
                 key={option.amount} 
                 variant={selectedOption === option.amount ? "default" : "outline"} 
-                className={`w-full ${selectedOption === option.amount ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-amber-300 text-amber-800 hover:bg-amber-100"}`}
+                className={`w-full ${selectedOption === option.amount ? "bg-amber-600 hover:bg-amber-700 text-white" : option.amount === 1000 ? "border-green-300 bg-green-50 text-amber-800 hover:bg-green-100" : "border-amber-300 text-amber-800 hover:bg-amber-100"}`}
                 onClick={() => handleOptionSelect(option.amount)}
               >
                 CHF {formatPrice(option.amount)}
