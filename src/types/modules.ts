@@ -18,6 +18,7 @@ export interface ModuleConfig {
   type: ModuleType;
   title: string;
   data?: any;
+  sourceState?: string; // Added to track which state the module comes from
 }
 
 // Base interface for module props

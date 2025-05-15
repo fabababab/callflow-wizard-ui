@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { StateMachine } from '@/utils/stateMachineLoader';
 import { ModuleConfig, ModuleType } from '@/types/modules';
