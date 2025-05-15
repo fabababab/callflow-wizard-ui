@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -54,7 +55,9 @@ const Index = () => {
       'contractManagement', 
       'productInfo', 
       'testscenario',
-      'deutscheVersion'  // Added deutscheVersion to available scenarios
+      'studiumabschlussCase',  // Updated to new scenario name
+      'leistungsabdeckungPhysio',
+      'mahnungTrotzZahlung'
     ];
     
     // Randomly select 3 scenarios (or fewer if there aren't enough available)
@@ -85,7 +88,10 @@ const Index = () => {
       'physioTherapy': 'Physiotherapy Coverage',
       'paymentReminder': 'Payment Reminder Dispute',
       'insurancePackage': 'Insurance Package Update',
-      'deutscheVersion': 'Deutsche Version'
+      'deutscheVersion': 'Deutsche Version',
+      'studiumabschlussCase': 'Studiumabschluss-Case',
+      'leistungsabdeckungPhysio': 'Leistungsabdeckung Physio',
+      'mahnungTrotzZahlung': 'Mahnung trotz Zahlung'
     };
     
     toast({
