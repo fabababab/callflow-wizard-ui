@@ -2,7 +2,6 @@
 // Hook for call termination
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { ScenarioType } from '@/components/ScenarioSelector';
 
 interface CallTerminationProps {
   callState: any;
@@ -11,7 +10,6 @@ interface CallTerminationProps {
   conversationState: any;
   showNachbearbeitungSummary: () => void;
   toast: ReturnType<typeof useToast>;
-  activeScenario?: ScenarioType;
 }
 
 export function useCallTermination({
@@ -20,12 +18,11 @@ export function useCallTermination({
   messageHandling,
   conversationState,
   showNachbearbeitungSummary,
-  toast,
-  activeScenario
+  toast
 }: CallTerminationProps) {
   // Function to handle hanging up a call
   const handleHangUpCall = useCallback(() => {
-    console.log('Hanging up call...', activeScenario);
+    console.log('Hanging up call...');
     
     // Set call as inactive
     callState.setCallActive(false);
@@ -34,7 +31,7 @@ export function useCallTermination({
     stateMachine.resetStateMachine();
     
     // Add system message
-    messageHandling.addSystemMessage(activeScenario === 'deutscheVersion' ? 'Gespräch beendet.' : 'Call ended.');
+    messageHandling.addSystemMessage('Call ended.');
     
     // Reset conversation state tracking but don't clear messages
     conversationState.resetConversationState(false);
@@ -45,14 +42,12 @@ export function useCallTermination({
       showNachbearbeitungSummary();
     } else {
       toast.toast({
-        title: activeScenario === 'deutscheVersion' ? "Gespräch Beendet" : "Call Ended",
-        description: activeScenario === 'deutscheVersion' 
-          ? "Das Gespräch wurde erfolgreich beendet." 
-          : "The call has been ended successfully.",
+        title: "Call Ended",
+        description: "The call has been ended successfully.",
         duration: 3000
       });
     }
-  }, [callState, stateMachine, messageHandling, conversationState, showNachbearbeitungSummary, toast, activeScenario]);
+  }, [callState, stateMachine, messageHandling, conversationState, showNachbearbeitungSummary, toast]);
 
   return {
     handleHangUpCall

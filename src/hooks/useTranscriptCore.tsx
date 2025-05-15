@@ -1,161 +1,181 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { useToast } from '@/lib/use-toast.tsx';
-import { useConversationState } from '@/hooks/useConversationState';
-import { useCallState } from '@/hooks/useCallState';
-import { useMessageHandling } from '@/hooks/useMessageHandling';
-import { useStateMachine } from '@/hooks/useStateMachine';
-import { useModuleManager } from '@/hooks/useModuleManager';
-import { useNachbearbeitungHandler } from '@/hooks/useNachbearbeitungHandler';
-import { useCallTermination } from '@/hooks/useCallTermination';
+
+// Core transcript hook functionality that composes other hooks
+import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
-import { ValidationStatus } from '@/data/scenarioData';
+import { useStateMachine } from '@/hooks/useStateMachine';
+import { useMessageHandling } from '@/hooks/useMessageHandling';
+import { useCallState } from '@/hooks/useCallState';
+import { useConversationState } from '@/hooks/useConversationState';
+import { useTransitionExtractor } from '@/hooks/useTransitionExtractor';
+import { useNachbearbeitungHandler } from '@/hooks/useNachbearbeitungHandler';
+import { useModuleManager } from '@/hooks/useModuleManager';
+import { useConversationInitializer } from '@/hooks/useConversationInitializer';
+import { useResponseHandler } from '@/hooks/useResponseHandler';
+import { useStateChangeProcessor } from '@/hooks/useStateChangeProcessor';
+import { useToast } from '@/hooks/use-toast';
+import { ModuleType } from '@/types/modules';
+import { useDebugLogging } from '@/hooks/useDebugLogging';
+import { useModuleCompletionEvents } from '@/hooks/useModuleCompletionEvents';
+import { useMessagesScrolling } from '@/hooks/useMessagesScrolling';
+import { useStateChangeEffect } from '@/hooks/useStateChangeEffect';
+import { useMessageUpdates } from '@/hooks/useMessageUpdates';
+import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
+  const toast = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
-  const { toast } = useToast();
   
-  // Use the conversation state hook to manage conversation state
-  const conversationState = useConversationState();
-  
-  // Use the call state hook to manage call state
-  const callState = useCallState();
-  
-  // Use the message handling hook to manage messages
+  // Get the message handling functionality
   const messageHandling = useMessageHandling();
   
-  // Use the scenario state machine from the useStateMachine hook
+  // Get the state machine data
   const stateMachine = useStateMachine(activeScenario);
   
-  // Use the module manager hook
-  const { activeModule, completeModule } = useModuleManager();
+  // Get call state - use the consolidated hook
+  const callState = useCallState();
   
-  // Use the nachbearbeitung handler with correct arguments
-  const { showNachbearbeitungSummary } = useNachbearbeitungHandler(
-    completeModule, 
-    activeScenario
+  // Get conversation state
+  const conversationState = useConversationState();
+  
+  // Get transition extractor
+  const transitionExtractor = useTransitionExtractor(stateMachine.stateMachine);
+  
+  // Get the module manager functionality
+  const moduleManager = useModuleManager(
+    stateMachine.stateMachine,
+    stateMachine.currentState,
+    stateMachine.stateData
   );
   
-  // Use the call termination hook
-  const { handleHangUpCall } = useCallTermination({
-    callState,
+  // Get Nachbearbeitung handler
+  const { showNachbearbeitungSummary } = useNachbearbeitungHandler(
+    moduleManager.completeModule
+  );
+
+  // Use response handler
+  const responseHandler = useResponseHandler({
     stateMachine,
     messageHandling,
     conversationState,
-    showNachbearbeitungSummary,
+    toast
+  });
+
+  // Use state change processor
+  const stateChangeProcessor = useStateChangeProcessor({
+    stateMachine,
+    messageHandling,
+    conversationState,
+    transitionExtractor,
+    callState,
+    toast
+  });
+
+  // Use conversation initializer
+  const conversationInitializer = useConversationInitializer({
+    activeScenario,
+    conversationState,
+    stateMachine,
+    messageHandling,
+    callState,
+    setHasInitializedConversation: () => {}, // Will be replaced by useScenarioChangeEffect
     toast,
-    activeScenario
+    showNachbearbeitungSummary
+  });
+
+  // Use debug logging hooks
+  const { debugLastStateChange } = useDebugLogging({
+    activeScenario,
+    stateData: stateMachine.stateData,
+    currentState: stateMachine.currentState,
+    debugLastStateChange: ""
   });
   
-  // Function to handle starting a call
-  const handleCall = useCallback(() => {
-    console.log('Starting call...');
-    
-    // Set call as active
-    callState.setCallActive(true);
-    
-    // Add system message
-    messageHandling.addSystemMessage('Call started.');
-    
-    // Start the state machine
-    stateMachine.processStartCall();
-  }, [callState, messageHandling, stateMachine]);
+  // Use module completion events hook
+  useModuleCompletionEvents({
+    addSystemMessage: messageHandling.addSystemMessage
+  });
   
-  // Function to handle selecting a response
-  const handleSelectResponse = useCallback((selection: string) => {
-    console.log(`Selected response: ${selection}`);
-    
-    // Add agent message
-    messageHandling.addAgentMessage(selection);
-    
-    // Process the selection
-    stateMachine.processSelection(selection);
-  }, [messageHandling, stateMachine]);
+  // Use messages scrolling hook - accepts Date or string type for lastTranscriptUpdate
+  useMessagesScrolling({
+    messagesEndRef,
+    lastTranscriptUpdate: conversationState.lastTranscriptUpdate
+  });
   
-  // Function to handle verifying a system check
-  const handleVerifySystemCheck = useCallback((messageId: string) => {
-    console.log(`Verifying system check: ${messageId}`);
-    
-    // Use the message handling function
-    messageHandling.handleVerifySystemCheck(messageId);
-    
-    // Force re-render to update transcript
-    setLastTranscriptUpdate(new Date());
-  }, [messageHandling]);
+  // Use state change effect hook
+  const stateChangeDebug = useStateChangeEffect({
+    stateData: stateMachine.stateData,
+    lastStateChange: stateMachine.lastStateChange,
+    callActive: callState.callActive,
+    currentState: stateMachine.currentState,
+    processStateChange: stateChangeProcessor.processStateChange,
+    debounceTimerRef: conversationState.debounceTimerRef
+  });
   
-  // Function to handle validating sensitive data
-  const handleValidateSensitiveData = useCallback((fieldId: string, isValid: boolean, notes?: string) => {
-    console.log(`Validating sensitive data: ${fieldId} - ${isValid ? 'valid' : 'invalid'}`);
-    
-    // Map boolean isValid to ValidationStatus
-    const status: ValidationStatus = isValid ? 'valid' : 'invalid';
-    
-    // Use the message handling function
-    messageHandling.updateSensitiveField(fieldId, status, notes);
-    
-    // Force re-render to update transcript
-    setLastTranscriptUpdate(new Date());
-  }, [messageHandling]);
+  // Use message updates hook - make sure we pass the correct type for lastMessageUpdate
+  useMessageUpdates({
+    lastMessageUpdate: messageHandling.lastMessageUpdate,
+    setLastTranscriptUpdate: conversationState.setLastTranscriptUpdate
+  });
   
-  // Function to handle module completion
+  // Use scenario change effect hook
+  const scenarioChangeState = useScenarioChangeEffect({
+    activeScenario,
+    resetConversationState: conversationState.resetConversationState
+  });
+
+  
+  // Handle module completion
   const handleModuleComplete = useCallback((result: any) => {
     console.log('Module completed with result:', result);
+    moduleManager.completeModule(result);
     
-    // Complete the module
-    completeModule(result);
-  }, [completeModule]);
-
-  // Function to handle inline module completion
-  const handleInlineModuleComplete = useCallback((messageId: string, moduleId: string, result: any) => {
-    console.log(`Inline module ${moduleId} completed in message ${messageId} with result:`, result);
-    
-    // Update the message with the module result
-    messageHandling.handleInlineModuleComplete(messageId, moduleId, result);
-    
-    // Force re-render to update transcript
-    setLastTranscriptUpdate(new Date());
-  }, [messageHandling]);
-
-  // Function to reset the conversation
-  const resetConversation = useCallback(() => {
-    console.log('Resetting conversation...');
-    
-    // Reset state machine
-    stateMachine.resetStateMachine();
-    
-    // Clear messages
-    messageHandling.clearMessages();
-    
-    // Add system message
-    messageHandling.addSystemMessage('Conversation reset.');
-  }, [stateMachine, messageHandling]);
-
-  // Add initial loading message when component mounts
-  useEffect(() => {
-    // Check if we need to add an initial message
-    if (messageHandling.messages.length === 0) {
-      console.log('Adding initial welcome message');
-      messageHandling.addSystemMessage('Willkommen! Starten Sie einen Anruf, um das Szenario zu beginnen.');
+    if (moduleManager.activeModule) {
+      // Only add system message if it's not the Nachbearbeitung module
+      if (moduleManager.activeModule.type !== ModuleType.NACHBEARBEITUNG) {
+        messageHandling.addSystemMessage(`${moduleManager.activeModule.title} completed: ${result.verified ? "Success" : "Failed"}`);
+      } else {
+        // For Nachbearbeitung module, add a summary message
+        messageHandling.addSystemMessage(`Call summary completed. Points verified: ${result.points?.length || 0}`, {
+          responseOptions: ["Thank you for your call. Have a nice day!"]
+        });
+        conversationState.setShowNachbearbeitungModule(false);
+      }
     }
-  }, [messageHandling]);
+  }, [moduleManager, messageHandling, conversationState]);
+  
+  // Combine state from scenario change effect with conversation initializer
+  const enhancedConversationInitializer = {
+    ...conversationInitializer,
+    handleCall: useCallback(() => {
+      console.log('Enhanced handleCall triggered');
+      conversationInitializer.handleCall();
+    }, [conversationInitializer]),
+    resetConversation: useCallback(() => {
+      conversationInitializer.resetConversation();
+      scenarioChangeState.setHasInitializedConversation(false);
+    }, [conversationInitializer, scenarioChangeState])
+  };
 
   return {
-    messages: messageHandling.messages,
-    callActive: callState.callActive,
-    setCallActive: callState.setCallActive,
+    // Combine properties and methods from all hooks
+    ...messageHandling,
+    ...callState,
+    lastTranscriptUpdate: conversationState.lastTranscriptUpdate,
+    awaitingUserResponse: conversationState.awaitingUserResponse,
+    messagesEndRef,
     currentState: stateMachine.currentState,
     stateData: stateMachine.stateData,
-    handleCall,
-    handleSelectResponse,
-    handleVerifySystemCheck,
-    handleValidateSensitiveData,
-    messagesEndRef,
-    lastTranscriptUpdate,
-    activeModule,
-    completeModule,
+    lastStateChange: stateMachine.lastStateChange,
+    handleCall: enhancedConversationInitializer.handleCall,
+    handleAcceptCall: conversationInitializer.handleAcceptCall,
+    handleHangUpCall: conversationInitializer.handleHangUpCall,
+    resetConversation: enhancedConversationInitializer.resetConversation,
     handleModuleComplete,
-    handleInlineModuleComplete,
-    handleHangUpCall,
-    resetConversation
+    showNachbearbeitungSummary,
+    handleSelectResponse: responseHandler.handleSelectResponse,
+    ...moduleManager,
+    getStateJson: transitionExtractor.getStateJson,
+    debugLastStateChange: stateChangeDebug.debugLastStateChange || debugLastStateChange,
+    hasInitializedConversation: scenarioChangeState.hasInitializedConversation,
   };
 }

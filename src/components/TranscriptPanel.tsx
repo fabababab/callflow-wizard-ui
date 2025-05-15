@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -10,7 +11,6 @@ import TranscriptHeader from '@/components/transcript/TranscriptHeader';
 import JsonVisualizationDialog from '@/components/transcript/JsonVisualizationDialog';
 import ModuleDisplay from '@/components/transcript/ModuleDisplay';
 import { StateMachine } from '@/utils/stateMachineLoader';
-import { ValidationStatus } from '@/data/scenarioData';
 
 // Define type for selected state details
 interface SelectedStateDetails {
@@ -63,15 +63,20 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     }
   }, [transcript.lastTranscriptUpdate]);
   
+  // Handle module completion
+  const handleModuleComplete = (result: Record<string, unknown>) => {
+    console.log('Module completed with result:', result);
+    transcript.handleModuleComplete(result);
+  };
+
+  // Handle inline module completion
+  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: Record<string, unknown>) => {
+    transcript.handleInlineModuleComplete(messageId, moduleId, result);
+  };
+  
   if (!jsonVisualization) {
     return null;
   }
-
-  // Wrapper for validateSensitiveData to match expected signature
-  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
-    // We need to convert the ValidationStatus to a boolean for the transcript.handleValidateSensitiveData function
-    transcript.handleValidateSensitiveData(fieldId, status === 'valid', notes);
-  };
   
   return (
     <div className="h-full flex flex-col bg-white relative">
@@ -99,9 +104,9 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           messages={transcript.messages}
           onSelectResponse={transcript.handleSelectResponse}
           onVerifySystemCheck={transcript.handleVerifySystemCheck}
-          onValidateSensitiveData={handleValidateSensitiveData}
+          onValidateSensitiveData={transcript.handleValidateSensitiveData}
           messagesEndRef={transcript.messagesEndRef}
-          onModuleComplete={transcript.handleInlineModuleComplete}
+          onModuleComplete={handleInlineModuleComplete}
         />
         
         {/* Active module display */}
@@ -109,7 +114,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           activeModule={transcript.activeModule}
           currentState={transcript.currentState}
           stateData={transcript.stateData}
-          onModuleComplete={transcript.handleModuleComplete}
+          onModuleComplete={handleModuleComplete}
           completeModule={transcript.completeModule}
         />
       </div>
