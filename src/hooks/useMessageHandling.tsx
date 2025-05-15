@@ -8,7 +8,7 @@ import { useMessageAdders } from '@/hooks/useMessageAdders';
 export function useMessageHandling() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [lastMessageUpdate, setLastMessageUpdate] = useState<Date | null>(new Date());
-  const [verificationBlocking, setVerificationBlocking] = useState(false); // We'll keep this but never use it
+  const [verificationBlocking, setVerificationBlocking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get sensitive data handlers
@@ -29,16 +29,16 @@ export function useMessageHandling() {
   /**
    * Clear all messages from the transcript
    */
-  const clearMessages = () => {
+  const clearMessages = useCallback(() => {
     console.log("Clearing all messages");
     setMessages([]);
     setLastMessageUpdate(new Date());
-  };
+  }, []);
 
   /**
    * Handle inline module completion
    */
-  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: any) => {
+  const handleInlineModuleComplete = useCallback((messageId: string, moduleId: string, result: any) => {
     console.log(`Inline module ${moduleId} completed for message ${messageId} with result:`, result);
     
     setMessages(prevMessages =>
@@ -66,18 +66,46 @@ export function useMessageHandling() {
     );
     
     setLastMessageUpdate(new Date());
-  };
+  }, []);
 
-  // Override the original handleVerifySystemCheck to ensure verificationBlocking is never true
-  const enhancedHandleVerifySystemCheck = (messageId: string) => {
-    console.log(`Enhanced verification check for message ${messageId} - blocking disabled`);
-    handleVerifySystemCheck(messageId);
-  };
+  // Function to update message with module result
+  const updateMessageModuleResult = useCallback((messageId: string, moduleId: string, result: any) => {
+    handleInlineModuleComplete(messageId, moduleId, result);
+  }, [handleInlineModuleComplete]);
+
+  // Function to update a sensitive field
+  const updateSensitiveField = useCallback((fieldId: string, status: ValidationStatus, notes?: string) => {
+    console.log(`Updating sensitive field ${fieldId} with status ${status}`);
+    
+    setMessages(prevMessages => {
+      return prevMessages.map(message => {
+        if (!message.sensitiveData) return message;
+        
+        const updatedSensitiveData = message.sensitiveData.map(field => {
+          if (field.id === fieldId) {
+            return {
+              ...field,
+              validationStatus: status,
+              notes
+            };
+          }
+          return field;
+        });
+        
+        return {
+          ...message,
+          sensitiveData: updatedSensitiveData
+        };
+      });
+    });
+    
+    setLastMessageUpdate(new Date());
+  }, []);
 
   return {
     messages,
     sensitiveDataStats,
-    verificationBlocking: false, // Always return false to disable blocking
+    verificationBlocking,
     lastMessageUpdate,
     messagesEndRef,
     addSystemMessage,
@@ -86,10 +114,10 @@ export function useMessageHandling() {
     addInlineModuleMessage,
     clearMessages,
     handleValidateSensitiveData,
-    handleVerifySystemCheck: enhancedHandleVerifySystemCheck,
+    handleVerifySystemCheck, 
     handleInlineModuleComplete,
-    setVerificationBlocking: () => {
-      console.log("Verification blocking disabled - no-op function called");
-    }, // No-op function
+    setVerificationBlocking,
+    updateMessageModuleResult,
+    updateSensitiveField
   };
 }

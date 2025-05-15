@@ -1,19 +1,20 @@
+
 import { useState, useRef, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/lib/use-toast';
 import { useConversationState } from '@/hooks/useConversationState';
 import { useCallState } from '@/hooks/useCallState';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
 import { useStateMachine } from '@/hooks/useStateMachine';
-import { useModuleCompletion } from '@/hooks/useModuleCompletion';
 import { useModuleManager } from '@/hooks/useModuleManager';
 import { useNachbearbeitungHandler } from '@/hooks/useNachbearbeitungHandler';
 import { useCallTermination } from '@/hooks/useCallTermination';
 import { ScenarioType } from '@/components/ScenarioSelector';
+import { ValidationStatus } from '@/data/scenarioData';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState(Date.now());
+  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   
   // Use the conversation state hook to manage conversation state
   const conversationState = useConversationState();
@@ -22,19 +23,12 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const callState = useCallState();
   
   // Use the message handling hook to manage messages
-  const messageHandling = useMessageHandling(conversationState.addMessage);
+  const messageHandling = useMessageHandling();
   
   // Use the scenario state machine from the useStateMachine hook
-  const {
-    currentState,
-    stateData,
-    processSelection,
-    processStartCall,
-    resetStateMachine,
-    selectedStateMachine
-  } = useStateMachine(activeScenario);
+  const stateMachine = useStateMachine(activeScenario);
   
-  // Use the module completion hook to handle module events
+  // Use the module manager hook
   const { activeModule, completeModule } = useModuleManager();
   
   // Use the nachbearbeitung handler
@@ -43,7 +37,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   // Use the call termination hook
   const { handleHangUpCall } = useCallTermination({
     callState,
-    stateMachine: { resetStateMachine },
+    stateMachine,
     messageHandling,
     conversationState,
     showNachbearbeitungSummary,
@@ -62,8 +56,8 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling.addSystemMessage('Call started.');
     
     // Start the state machine
-    processStartCall();
-  }, [callState, messageHandling, processStartCall]);
+    stateMachine.processStartCall();
+  }, [callState, messageHandling, stateMachine.processStartCall]);
   
   // Function to handle selecting a response
   const handleSelectResponse = useCallback((selection: string) => {
@@ -73,30 +67,30 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling.addAgentMessage(selection);
     
     // Process the selection
-    processSelection(selection);
-  }, [messageHandling, processSelection]);
+    stateMachine.processSelection(selection);
+  }, [messageHandling, stateMachine.processSelection]);
   
   // Function to handle verifying a system check
-  const handleVerifySystemCheck = useCallback((fieldId: string, isValid: boolean, notes?: string) => {
-    console.log(`Verifying system check: ${fieldId} - ${isValid}`);
+  const handleVerifySystemCheck = useCallback((messageId: string) => {
+    console.log(`Verifying system check: ${messageId}`);
     
-    // Update the state with the verification result
-    conversationState.updateSensitiveField(fieldId, isValid ? 'valid' : 'invalid', notes);
+    // Use the message handling function
+    messageHandling.handleVerifySystemCheck(messageId);
     
     // Force re-render to update transcript
-    setLastTranscriptUpdate(Date.now());
-  }, [conversationState]);
+    setLastTranscriptUpdate(new Date());
+  }, [messageHandling]);
   
   // Function to handle validating sensitive data
   const handleValidateSensitiveData = useCallback((fieldId: string, isValid: boolean, notes?: string) => {
     console.log(`Validating sensitive data: ${fieldId} - ${isValid}`);
     
-    // Update the state with the validation result
-    conversationState.updateSensitiveField(fieldId, isValid ? 'valid' : 'invalid', notes);
+    // Use the message handling function
+    messageHandling.handleValidateSensitiveData(fieldId, isValid, notes);
     
     // Force re-render to update transcript
-    setLastTranscriptUpdate(Date.now());
-  }, [conversationState]);
+    setLastTranscriptUpdate(new Date());
+  }, [messageHandling]);
   
   // Function to handle module completion
   const handleModuleComplete = useCallback((result: any) => {
@@ -111,39 +105,32 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     console.log(`Inline module ${moduleId} completed in message ${messageId} with result:`, result);
     
     // Update the message with the module result
-    conversationState.updateMessageModuleResult(messageId, moduleId, result);
+    messageHandling.handleInlineModuleComplete(messageId, moduleId, result);
     
     // Force re-render to update transcript
-    setLastTranscriptUpdate(Date.now());
-  }, [conversationState]);
+    setLastTranscriptUpdate(new Date());
+  }, [messageHandling]);
 
   // Function to reset the conversation
   const resetConversation = useCallback(() => {
     console.log('Resetting conversation...');
     
     // Reset state machine
-    resetStateMachine();
+    stateMachine.resetStateMachine();
     
-    // Reset conversation state tracking and clear messages
-    conversationState.resetConversationState(true);
+    // Clear messages
+    messageHandling.clearMessages();
     
     // Add system message
     messageHandling.addSystemMessage('Conversation reset.');
-  }, [resetStateMachine, conversationState, messageHandling]);
+  }, [stateMachine, messageHandling]);
 
   return {
-    messages: conversationState.messages,
-    addMessage: conversationState.addMessage,
-    updateMessage: conversationState.updateMessage,
-    updateMessageModuleResult: conversationState.updateMessageModuleResult,
-    sensitiveFields: conversationState.sensitiveFields,
-    updateSensitiveField: conversationState.updateSensitiveField,
-    getSensitiveDataVerificationStatus: conversationState.getSensitiveDataVerificationStatus,
+    messages: messageHandling.messages,
     callActive: callState.callActive,
     setCallActive: callState.setCallActive,
-    currentState,
-    stateData,
-    selectedStateMachine,
+    currentState: stateMachine.currentState,
+    stateData: stateMachine.stateData,
     handleCall,
     handleSelectResponse,
     handleVerifySystemCheck,
@@ -152,6 +139,8 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     lastTranscriptUpdate,
     activeModule,
     completeModule,
+    handleModuleComplete,
+    handleInlineModuleComplete,
     handleHangUpCall,
     resetConversation
   };

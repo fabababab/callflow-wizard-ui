@@ -63,17 +63,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     }
   }, [transcript.lastTranscriptUpdate]);
   
-  // Handle module completion
-  const handleModuleComplete = (result: Record<string, unknown>) => {
-    console.log('Module completed with result:', result);
-    transcript.handleModuleComplete(result);
-  };
-
-  // Handle inline module completion
-  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: Record<string, unknown>) => {
-    transcript.handleInlineModuleComplete(messageId, moduleId, result);
-  };
-  
   if (!jsonVisualization) {
     return null;
   }
@@ -106,7 +95,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           onVerifySystemCheck={transcript.handleVerifySystemCheck}
           onValidateSensitiveData={transcript.handleValidateSensitiveData}
           messagesEndRef={transcript.messagesEndRef}
-          onModuleComplete={handleInlineModuleComplete}
+          onModuleComplete={transcript.handleInlineModuleComplete}
         />
         
         {/* Active module display */}
@@ -114,7 +103,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           activeModule={transcript.activeModule}
           currentState={transcript.currentState}
           stateData={transcript.stateData}
-          onModuleComplete={handleModuleComplete}
+          onModuleComplete={transcript.handleModuleComplete}
           completeModule={transcript.completeModule}
         />
       </div>
