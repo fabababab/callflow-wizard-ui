@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { StateMachine } from '@/utils/stateMachineLoader';
 import { ModuleConfig, ModuleType } from '@/types/modules';
@@ -6,6 +7,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import InlineModuleDisplay from '@/components/transcript/InlineModuleDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 interface ModulesPreviewProps {
   loadedStateMachine: StateMachine | null;
@@ -36,8 +38,21 @@ const ModulesPreview: React.FC<ModulesPreviewProps> = ({ loadedStateMachine }) =
         }
       });
       
-      setModules(extractedModules);
-      setSelectedModule(0);
+      if (extractedModules.length > 0) {
+        setModules(extractedModules);
+        setSelectedModule(0);
+        toast({
+          title: `${extractedModules.length} modules found`,
+          description: "You can now preview all interactive modules in this scenario",
+          duration: 3000
+        });
+      } else {
+        toast({
+          title: "No modules found",
+          description: "This scenario doesn't contain any interactive modules",
+          duration: 3000
+        });
+      }
     }
   }, [loadedStateMachine]);
 
