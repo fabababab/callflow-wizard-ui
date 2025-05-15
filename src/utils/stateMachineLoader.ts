@@ -39,6 +39,13 @@ export interface StateMachine {
   };
 }
 
+// Map ScenarioType to actual filename
+const scenarioFileMap: Record<ScenarioType, string> = {
+  'studiumabschlussCase': 'studiumabschluss-case',
+  'leistungsabdeckungPhysio': 'leistungsabdeckung-physio',
+  'mahnungTrotzZahlung': 'mahnung-trotz-zahlung'
+};
+
 // Get list of all available state machines
 export async function getAvailableStateMachines(): Promise<ScenarioType[]> {
   const availableScenarios: ScenarioType[] = [];
@@ -73,8 +80,11 @@ export async function loadStateMachine(scenario: ScenarioType): Promise<StateMac
   }
 
   try {
-    // Use dynamic import instead of require
-    const module = await import(`../data/stateMachines/${scenario}.json`);
+    // Use the mapping to get the correct filename
+    const filename = scenarioFileMap[scenario] || scenario;
+    
+    // Use dynamic import with the correct filename
+    const module = await import(`../data/stateMachines/${filename}.json`);
     const machine = module.default;
     
     // Add status if not already present
@@ -96,8 +106,11 @@ export async function getStateMachineJson(scenario: ScenarioType): Promise<strin
       return JSON.stringify({ error: 'No state machine found for this scenario' }, null, 2);
     }
     
-    // Use dynamic import instead of require
-    const module = await import(`../data/stateMachines/${scenario}.json`);
+    // Use the mapping to get the correct filename
+    const filename = scenarioFileMap[scenario] || scenario;
+    
+    // Use dynamic import with the correct filename
+    const module = await import(`../data/stateMachines/${filename}.json`);
     const machine = module.default;
     
     // Add status if not already present
