@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useStateMachine } from '@/hooks/useStateMachine';
+import { ScenarioType } from '@/components/ScenarioSelector';
 
 /**
  * This hook is used to manage the customer scenario for the call flow

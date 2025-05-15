@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
@@ -55,8 +56,7 @@ const Index = () => {
       'mahnungTrotzZahlung'
     ];
     
-    // Randomly select 3 scenarios (or fewer if there aren't enough available)
-    // Since we only have 3 scenarios now, just use them all
+    // Use all three scenarios
     setAvailableScenarios(allScenarios);
     
     // Show dialog to select first scenario if no active scenario
@@ -181,13 +181,6 @@ const Index = () => {
                     identityValidationOpen, 
                     setIdentityValidationOpen, 
                     <IdentityValidation />
-                  )}
-                  
-                  {activeScenario === 'bankDetails' && renderCollapsibleSection(
-                    "Bank Details", 
-                    bankDetailsOpen, 
-                    setBankDetailsOpen, 
-                    <BankDetailsForm />
                   )}
                   
                   {renderCollapsibleSection(

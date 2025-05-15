@@ -32,11 +32,10 @@ const Header = () => {
   const handleSelectScenario = (selectedScenario: ScenarioType) => {
     setScenario(selectedScenario);
     
-    const scenarioNames = {
-      'testscenario': 'Test Scenario',
-      'verificationFlow': 'Identity Verification Flow',
-      'contractManagement': 'Contract Management',
-      'productInfo': 'Product Information'
+    const scenarioNames: Record<ScenarioType, string> = {
+      'studiumabschlussCase': 'Studiumabschluss-Case',
+      'leistungsabdeckungPhysio': 'Leistungsabdeckung Physio',
+      'mahnungTrotzZahlung': 'Mahnung trotz Zahlung'
     };
     
     toast({
@@ -73,39 +72,30 @@ const Header = () => {
             </DialogHeader>
             <div className="grid grid-cols-2 gap-3 py-4">
               <Button 
-                variant={scenario === 'verificationFlow' ? 'default' : 'outline'} 
+                variant={scenario === 'studiumabschlussCase' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('verificationFlow')}
+                onClick={() => handleSelectScenario('studiumabschlussCase')}
               >
                 <Shield className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Identity Verification</span>
+                <span className="text-xs text-center">Studiumabschluss Case</span>
               </Button>
               
               <Button 
-                variant={scenario === 'contractManagement' ? 'default' : 'outline'} 
+                variant={scenario === 'leistungsabdeckungPhysio' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('contractManagement')}
+                onClick={() => handleSelectScenario('leistungsabdeckungPhysio')}
               >
                 <FileText className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Contract Management</span>
+                <span className="text-xs text-center">Leistungsabdeckung Physio</span>
               </Button>
               
               <Button 
-                variant={scenario === 'productInfo' ? 'default' : 'outline'} 
+                variant={scenario === 'mahnungTrotzZahlung' ? 'default' : 'outline'} 
                 className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('productInfo')}
+                onClick={() => handleSelectScenario('mahnungTrotzZahlung')}
               >
                 <CreditCard className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Product Information</span>
-              </Button>
-
-              <Button 
-                variant={scenario === 'testscenario' ? 'default' : 'outline'} 
-                className="flex flex-col items-center justify-center h-24 p-2"
-                onClick={() => handleSelectScenario('testscenario')}
-              >
-                <AlertCircle className="h-8 w-8 mb-2" />
-                <span className="text-xs text-center">Test Scenario</span>
+                <span className="text-xs text-center">Mahnung trotz Zahlung</span>
               </Button>
             </div>
             <DialogClose asChild>

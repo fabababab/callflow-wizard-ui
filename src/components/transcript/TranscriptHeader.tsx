@@ -31,8 +31,8 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
   isLoadingJson = false,
   resetConversation
 }) => {
-  // Updated list of available scenarios for the dropdown to include deutscheVersion
-  const scenarios: ScenarioType[] = ['testscenario', 'verificationFlow', 'contractManagement', 'productInfo', 'deutscheVersion'];
+  // Updated list of available scenarios for the dropdown
+  const scenarios: ScenarioType[] = ['studiumabschlussCase', 'leistungsabdeckungPhysio', 'mahnungTrotzZahlung'];
   
   console.log('TranscriptHeader: callActive =', callActive, 'elapsedTime =', elapsedTime);
   
@@ -49,7 +49,9 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
               <SelectContent>
                 <SelectGroup>
                   {scenarios.map(scenario => <SelectItem key={scenario} value={scenario}>
-                      {scenario.charAt(0).toUpperCase() + scenario.slice(1)}
+                      {scenario === 'studiumabschlussCase' ? 'Studiumabschluss-Case' : 
+                       scenario === 'leistungsabdeckungPhysio' ? 'Leistungsabdeckung Physio' : 
+                       'Mahnung trotz Zahlung'}
                     </SelectItem>)}
                 </SelectGroup>
               </SelectContent>
@@ -77,9 +79,6 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
             {viewJson && <Button variant="outline" size="icon" className="h-12 w-12 rounded-md border-2 bg-white shadow-sm" onClick={viewJson} disabled={isLoadingJson} title="View JSON">
                 <FileText size={20} />
               </Button>}
-            
-            {/* Chat button */}
-            
           </div>
         </div>
       </div>
