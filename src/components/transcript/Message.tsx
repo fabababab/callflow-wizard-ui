@@ -33,6 +33,14 @@ const Message: React.FC<MessageProps> = ({
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
   const hasInlineModule = message.inlineModule !== undefined;
   
+  // Handler for response selection
+  const handleResponseSelection = useCallback((response: string) => {
+    console.log(`Response selected in Message component: ${response}`);
+    if (onSelectResponse) {
+      onSelectResponse(response);
+    }
+  }, [onSelectResponse]);
+  
   // Handler for inline module completion - memoize to avoid unnecessary re-renders
   const handleInlineModuleComplete = useCallback((result: any) => {
     console.log(`Module completed for message ${message.id}`, result);
@@ -72,10 +80,10 @@ const Message: React.FC<MessageProps> = ({
           />
           
           {/* Display response options */}
-          {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
+          {hasResponseOptions && isAgentMode && message.responseOptions && (
             <MessageResponseOptions 
               responseOptions={message.responseOptions} 
-              onSelectResponse={onSelectResponse}
+              onSelectResponse={handleResponseSelection}
             />
           )}
           

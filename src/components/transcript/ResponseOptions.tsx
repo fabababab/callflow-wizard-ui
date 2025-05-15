@@ -13,6 +13,11 @@ const ResponseOptions: React.FC<ResponseOptionsProps> = ({ options, onSelectResp
     return null;
   }
 
+  const handleOptionClick = (option: string) => {
+    console.log(`Option clicked: ${option}`);
+    onSelectResponse(option);
+  };
+
   return (
     <div className="mt-3 pt-2 border-t border-gray-300/20">
       <div className="text-xs font-medium mb-2">Antwortoptionen:</div>
@@ -23,7 +28,7 @@ const ResponseOptions: React.FC<ResponseOptionsProps> = ({ options, onSelectResp
             variant="outline"
             size="sm"
             className="w-full justify-start text-sm hover:bg-primary/10 transition-all"
-            onClick={() => onSelectResponse(option)}
+            onClick={() => handleOptionClick(option)}
           >
             <span className="truncate">{option}</span>
             <ChevronRight className="h-3 w-3 ml-auto opacity-70" />
