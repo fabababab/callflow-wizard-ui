@@ -1,919 +1,197 @@
 
 {
-  "id": "deutscheVersion",
-  "initialState": "start",
-  "status": "PRODUCTION",
+  "id": "deutsche-version",
+  "initial": "start",
   "states": {
     "start": {
       "meta": {
-        "systemMessage": "Anruf mit Kunde initiiert.",
-        "agentText": "Guten Tag, hier ist der Kundendienst. Wie kann ich Ihnen helfen?",
-        "sensitiveFields": [
-          {
-            "id": "dob",
-            "type": "date_of_birth",
-            "value": "23.05.1985",
-            "status": "pending",
-            "requiresVerification": true,
-            "systemValue": "23.05.1985",
-            "source": "Customer Profile"
-          },
-          {
-            "id": "address",
-            "type": "address",
-            "value": "Schmiedgasse 14, 8003 Zürich",
-            "status": "pending",
-            "requiresVerification": true,
-            "systemValue": "Schmiedgasse 14, 8003 Zürich",
-            "source": "Customer Registration Form"
-          }
-        ],
+        "systemMessage": "Call initiated with customer.",
+        "agentText": "Willkommen! Wie kann ich Ihnen heute helfen?",
         "responseOptions": [
-          "Bitte identifizieren Sie sich zuerst. Können Sie mir Ihr Geburtsdatum und Ihre Adresse nennen?",
-          "Guten Tag! Bevor wir beginnen, muss ich Ihre Identität verifizieren. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre aktuelle Adresse nennen?",
-          "Willkommen bei unserem Kundendienst! Um Ihre Anfrage zu bearbeiten, benötige ich vorab Ihre Identifikation. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre Adresse mitteilen?"
-        ],
+          "Gespräch beginnen",
+          "Kundenidentität zuerst überprüfen"
+        ]
+      },
+      "on": {
+        "START_CALL": "customer_issue",
+        "Gespräch beginnen": "customer_issue",
+        "Kundenidentität zuerst überprüfen": "verify_identity",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "verify_identity": {
+      "meta": {
+        "agentText": "Bevor wir fortfahren, muss ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihre Kontonummer oder E-Mail-Adresse mitteilen?",
+        "customerText": "Natürlich, meine Kontonummer ist ACC123456 und meine E-Mail ist kunde@beispiel.com",
+        "responseOptions": [
+          "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?",
+          "Ich sehe hier einen Hinweis zu einem kürzlichen Problem mit Ihrem Konto. Rufen Sie deswegen an?",
+          "Ich stelle fest, dass Sie seit über 2 Jahren Kunde sind. Bevor wir fortfahren, lassen Sie mich prüfen, ob es verfügbare Treueprämien gibt."
+        ]
+      },
+      "on": {
+        "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?": "customer_issue",
+        "Ich sehe hier einen Hinweis zu einem kürzlichen Problem mit Ihrem Konto. Rufen Sie deswegen an?": "customer_issue",
+        "Ich stelle fest, dass Sie seit über 2 Jahren Kunde sind. Bevor wir fortfahren, lassen Sie mich prüfen, ob es verfügbare Treueprämien gibt.": "loyalty_check",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "loyalty_check": {
+      "meta": {
+        "agentText": "Ich stelle fest, dass Sie seit über 2 Jahren Kunde sind. Bevor wir fortfahren, lassen Sie mich prüfen, ob es verfügbare Treueprämien gibt.",
+        "customerText": "Oh, das wäre großartig!",
+        "responseOptions": [
+          "Danke für Ihre Treue. Ich sehe, dass Sie für eine 5% Ermäßigung auf Ihre nächste Prämienzahlung berechtigt sind. Möchten Sie auch über Ihren aktuellen Krankenversicherungsplan sprechen?",
+          "Als geschätzter Langzeitkunde qualifizieren Sie sich für unser Treueprogramm, das priorisierten Kundenservice und eine kostenlose jährliche Gesundheitsuntersuchung beinhaltet. Gibt es etwas Bestimmtes zu Ihrer Versicherung, das Sie heute besprechen möchten?",
+          "Ich habe unsere Treueprämien geprüft, und Sie haben Anspruch auf ein Wellness-Paket mit Rabatten auf Fitnessstudio-Mitgliedschaften. Bevor ich das zu Ihrem Konto hinzufüge, hatten Sie Fragen oder Bedenken zu Ihrer aktuellen Deckung?"
+        ]
+      },
+      "on": {
+        "Danke für Ihre Treue. Ich sehe, dass Sie für eine 5% Ermäßigung auf Ihre nächste Prämienzahlung berechtigt sind. Möchten Sie auch über Ihren aktuellen Krankenversicherungsplan sprechen?": "customer_issue",
+        "Als geschätzter Langzeitkunde qualifizieren Sie sich für unser Treueprogramm, das priorisierten Kundenservice und eine kostenlose jährliche Gesundheitsuntersuchung beinhaltet. Gibt es etwas Bestimmtes zu Ihrer Versicherung, das Sie heute besprechen möchten?": "customer_issue",
+        "Ich habe unsere Treueprämien geprüft, und Sie haben Anspruch auf ein Wellness-Paket mit Rabatten auf Fitnessstudio-Mitgliedschaften. Bevor ich das zu Ihrem Konto hinzufüge, hatten Sie Fragen oder Bedenken zu Ihrer aktuellen Deckung?": "customer_issue",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "customer_issue": {
+      "meta": {
+        "customerText": "Hallo. Ich möchte meine Versicherung nach meinem Studienabschluss anpassen. Welche Optionen habe ich?",
+        "responseOptions": [
+          "Ich helfe Ihnen gerne bei der Anpassung Ihrer Versicherung nach dem Studium. Lassen Sie mich zunächst Ihre Kontodaten abrufen.",
+          "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen die verschiedenen Versicherungsmodelle zeigen, die für Ihre neue Situation passend sind.",
+          "Nach dem Studium gibt es verschiedene Optionen für Ihre Versicherung. Ich zeige Ihnen gerne die verfügbaren Versicherungsmodelle und Tarife."
+        ]
+      },
+      "on": {
+        "Ich helfe Ihnen gerne bei der Anpassung Ihrer Versicherung nach dem Studium. Lassen Sie mich zunächst Ihre Kontodaten abrufen.": "insurance_models",
+        "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen die verschiedenen Versicherungsmodelle zeigen, die für Ihre neue Situation passend sind.": "insurance_models",
+        "Nach dem Studium gibt es verschiedene Optionen für Ihre Versicherung. Ich zeige Ihnen gerne die verfügbaren Versicherungsmodelle und Tarife.": "insurance_models",
+        "DEFAULT": "insurance_models"
+      }
+    },
+    "insurance_models": {
+      "meta": {
+        "agentText": "Nach dem Studium gibt es verschiedene Optionen für Ihre Versicherung. Ich zeige Ihnen gerne die verfügbaren Versicherungsmodelle und Tarife.",
+        "customerText": "Ja bitte, das wäre sehr hilfreich!",
         "module": {
-          "id": "identity_verification",
-          "type": "VERIFICATION",
-          "title": "Kundenidentifikation erforderlich",
-          "data": {
-            "message": "Bitte identifizieren Sie den Kunden zuerst, in dem Sie diese beiden Informationen abfragen:",
-            "fields": [
-              {
-                "id": "dob",
-                "label": "Geburtsdatum",
-                "expectedValue": "23.05.1985",
-                "required": true
-              },
-              {
-                "id": "address",
-                "label": "Adresse",
-                "expectedValue": "Schmiedgasse 14, 8003 Zürich",
-                "required": true
-              }
-            ],
-            "isInline": true
-          }
-        }
-      },
-      "on": {
-        "Bitte identifizieren Sie sich zuerst. Können Sie mir Ihr Geburtsdatum und Ihre Adresse nennen?": "identity_verification",
-        "Guten Tag! Bevor wir beginnen, muss ich Ihre Identität verifizieren. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre aktuelle Adresse nennen?": "identity_verification",
-        "Willkommen bei unserem Kundendienst! Um Ihre Anfrage zu bearbeiten, benötige ich vorab Ihre Identifikation. Könnten Sie mir bitte Ihr Geburtsdatum und Ihre Adresse mitteilen?": "identity_verification",
-        "DEFAULT": "identity_verification"
-      }
-    },
-    "identity_verification": {
-      "meta": {
-        "customerText": "Mein Geburtsdatum ist der 23. Mai 1985 und ich wohne in der Schmiedgasse 14, 8003 Zürich.",
-        "responseOptions": [
-          "Vielen Dank für die Verifizierung. Wie kann ich Ihnen heute helfen?",
-          "Danke für die Informationen. Ihre Identität wurde bestätigt. Was kann ich für Sie tun?",
-          "Perfekt, vielen Dank! Ihre Identität ist nun bestätigt. Womit kann ich Ihnen heute behilflich sein?"
-        ]
-      },
-      "on": {
-        "Vielen Dank für die Verifizierung. Wie kann ich Ihnen heute helfen?": "customer_initial_inquiry",
-        "Danke für die Informationen. Ihre Identität wurde bestätigt. Was kann ich für Sie tun?": "customer_initial_inquiry",
-        "Perfekt, vielen Dank! Ihre Identität ist nun bestätigt. Womit kann ich Ihnen heute behilflich sein?": "customer_initial_inquiry",
-        "DEFAULT": "customer_initial_inquiry"
-      }
-    },
-    "customer_initial_inquiry": {
-      "meta": {
-        "customerText": "Ich habe mehrere Anliegen heute. Zum einen möchte ich meine Versicherungsdetails nach meinem Studienabschluss anpassen, zum anderen habe ich Fragen zu meiner Krankenversicherung bezüglich Physiotherapie. Womit sollen wir beginnen?",
-        "responseOptions": [
-          "Herzlichen Glückwunsch zum Studienabschluss! Lassen Sie uns zuerst Ihre Versicherungsoptionen nach dem Studium besprechen, und danach können wir über die Physiotherapie-Deckung sprechen.",
-          "Gerne helfe ich Ihnen bei beiden Anliegen. Beginnen wir mit der Anpassung Ihrer Versicherung nach dem Studienabschluss. Welche Änderungen möchten Sie vornehmen?",
-          "Wir können beide Themen besprechen. Für die Physiotherapie-Deckung sollte ich zuerst Ihre aktuelle Versicherungspolice überprüfen. Möchten Sie, dass wir damit beginnen?"
-        ]
-      },
-      "on": {
-        "Herzlichen Glückwunsch zum Studienabschluss! Lassen Sie uns zuerst Ihre Versicherungsoptionen nach dem Studium besprechen, und danach können wir über die Physiotherapie-Deckung sprechen.": "customer_insurance_change",
-        "Gerne helfe ich Ihnen bei beiden Anliegen. Beginnen wir mit der Anpassung Ihrer Versicherung nach dem Studienabschluss. Welche Änderungen möchten Sie vornehmen?": "customer_insurance_change",
-        "Wir können beide Themen besprechen. Für die Physiotherapie-Deckung sollte ich zuerst Ihre aktuelle Versicherungspolice überprüfen. Möchten Sie, dass wir damit beginnen?": "customer_physio_inquiry",
-        "DEFAULT": "customer_insurance_change"
-      }
-    },
-    "customer_physio_inquiry": {
-      "meta": {
-        "customerText": "Ja, lassen Sie uns mit der Physiotherapie-Deckung beginnen. Ich habe eine Überweisung vom Arzt für 10 Sitzungen erhalten und möchte wissen, ob diese von meiner Versicherung abgedeckt sind.",
-        "module": {
-          "id": "policy_information",
-          "type": "CONTRACT_MANAGEMENT",
-          "title": "Versicherungspolice",
-          "data": {
-            "message": "Aktuelle Versicherungspolice des Kunden:",
-            "policies": [
-              {
-                "id": "health-insurance-basic",
-                "name": "Grundversicherung",
-                "type": "Gesetzliche Krankenversicherung",
-                "status": "Aktiv",
-                "coverage": [
-                  { "item": "Ärztliche Behandlung", "coverage": "Vollständig" },
-                  { "item": "Spitalaufenthalt", "coverage": "Allgemeine Abteilung" },
-                  { "item": "Medikamente", "coverage": "Auf Rezept" },
-                  { "item": "Physiotherapie", "coverage": "50% der Kosten, max. 12 Sitzungen pro Jahr bei ärztlicher Verschreibung" }
-                ],
-                "premium": "CHF 320/Monat",
-                "franchise": "CHF 2'500 pro Jahr",
-                "renewalDate": "01.01.2026"
-              },
-              {
-                "id": "health-insurance-supplemental",
-                "name": "Zusatzversicherung",
-                "type": "Ambulante Zusatzversicherung",
-                "status": "Aktiv",
-                "coverage": [
-                  { "item": "Alternative Medizin", "coverage": "80% der Kosten, max. CHF 1'000 pro Jahr" },
-                  { "item": "Brillen/Kontaktlinsen", "coverage": "CHF 200 alle 3 Jahre" },
-                  { "item": "Physiotherapie", "coverage": "Zusätzlich 20% der Kosten für ärztlich verordnete Behandlungen" },
-                  { "item": "Zahnbehandlungen", "coverage": "50% der Kosten, max. CHF 500 pro Jahr" }
-                ],
-                "premium": "CHF 45/Monat",
-                "renewalDate": "01.01.2026"
-              }
-            ],
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Nach Überprüfung Ihrer Versicherungspolice kann ich bestätigen, dass Ihre ärztlich verschriebenen Physiotherapie-Sitzungen zu 50% von der Grundversicherung und zusätzlich 20% von Ihrer Zusatzversicherung abgedeckt sind. Insgesamt werden also 70% der Kosten übernommen für bis zu 12 Sitzungen pro Jahr.",
-          "Ich sehe, dass Sie sowohl eine Grund- als auch eine Zusatzversicherung haben. Für Physiotherapie deckt Ihre Grundversicherung 50% der Kosten für maximal 12 Sitzungen ab, und Ihre Zusatzversicherung übernimmt weitere 20%. Ihre 10 Sitzungen sollten also zu 70% gedeckt sein. Möchten Sie wissen, wie Sie die Kostenerstattung beantragen können?",
-          "Ihre Versicherung deckt ärztlich verordnete Physiotherapie-Sitzungen teilweise ab: 50% aus der Grundversicherung und 20% aus der Zusatzversicherung. Da Sie eine Franchise von CHF 2'500 haben, müssen Sie jedoch zuerst diesen Betrag selbst bezahlen, bevor die Versicherung beginnt, die Kosten zu übernehmen."
-        ]
-      },
-      "on": {
-        "Nach Überprüfung Ihrer Versicherungspolice kann ich bestätigen, dass Ihre ärztlich verschriebenen Physiotherapie-Sitzungen zu 50% von der Grundversicherung und zusätzlich 20% von Ihrer Zusatzversicherung abgedeckt sind. Insgesamt werden also 70% der Kosten übernommen für bis zu 12 Sitzungen pro Jahr.": "customer_physio_followup",
-        "Ich sehe, dass Sie sowohl eine Grund- als auch eine Zusatzversicherung haben. Für Physiotherapie deckt Ihre Grundversicherung 50% der Kosten für maximal 12 Sitzungen ab, und Ihre Zusatzversicherung übernimmt weitere 20%. Ihre 10 Sitzungen sollten also zu 70% gedeckt sein. Möchten Sie wissen, wie Sie die Kostenerstattung beantragen können?": "customer_physio_reimbursement",
-        "Ihre Versicherung deckt ärztlich verordnete Physiotherapie-Sitzungen teilweise ab: 50% aus der Grundversicherung und 20% aus der Zusatzversicherung. Da Sie eine Franchise von CHF 2'500 haben, müssen Sie jedoch zuerst diesen Betrag selbst bezahlen, bevor die Versicherung beginnt, die Kosten zu übernehmen.": "customer_physio_franchise",
-        "DEFAULT": "customer_physio_followup"
-      }
-    },
-    "customer_physio_reimbursement": {
-      "meta": {
-        "customerText": "Ja, ich würde gerne wissen, wie ich die Kostenerstattung beantragen kann und welche Dokumente ich dafür benötige.",
-        "module": {
-          "id": "reimbursement_info",
-          "type": "INFORMATION",
-          "title": "Informationen zur Kostenerstattung",
-          "data": {
-            "message": "Erforderliche Dokumente und Prozess für die Kostenerstattung:",
-            "sections": [
-              {
-                "title": "Benötigte Dokumente",
-                "items": [
-                  { "label": "1. Ärztliche Verordnung", "value": "Original oder Kopie der ärztlichen Verschreibung" },
-                  { "label": "2. Rechnungen", "value": "Original-Rechnungen des Physiotherapeuten" },
-                  { "label": "3. Zahlungsnachweis", "value": "Bei Selbstzahlung: Quittung oder Kontoauszug" },
-                  { "label": "4. Formular", "value": "Ausgefülltes Rückerstattungsformular (online verfügbar)" }
-                ]
-              },
-              {
-                "title": "Einreichungsmethoden",
-                "items": [
-                  { "label": "Online", "value": "Über Kundenportal oder App" },
-                  { "label": "E-Mail", "value": "Gescannte Dokumente an claims@versicherung.ch" },
-                  { "label": "Post", "value": "An: Versicherung AG, Abt. Leistungen, Hauptstr. 1, 8000 Zürich" },
-                  { "label": "Filiale", "value": "Persönliche Abgabe in jeder unserer Geschäftsstellen" }
-                ]
-              }
-            ],
-            "note": "Wichtig: Reichen Sie Ihre Dokumente innerhalb von 90 Tagen nach Behandlungsende ein. Die Bearbeitung dauert in der Regel 2-3 Wochen.",
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Wie Sie in der Übersicht sehen können, benötigen Sie die ärztliche Verordnung, die Original-Rechnungen, Zahlungsnachweise und unser Rückerstattungsformular. Am einfachsten geht die Einreichung über unser Kundenportal oder unsere App. Haben Sie zu diesem Prozess noch Fragen?",
-          "Nach der Behandlung können Sie die Erstattung mit der ärztlichen Verschreibung und den Rechnungen beantragen. Am schnellsten geht dies online über unser Kundenportal. Möchten Sie, dass ich Ihnen erkläre, wie Sie sich im Kundenportal anmelden können?",
-          "Für die Erstattung benötigen Sie die genannten Dokumente. Bitte beachten Sie die 90-Tage-Frist. Wenn Sie möchten, kann ich Ihnen auch ein vorausgefülltes Rückerstattungsformular per E-Mail zusenden. Wäre das hilfreich?"
-        ]
-      },
-      "on": {
-        "Wie Sie in der Übersicht sehen können, benötigen Sie die ärztliche Verordnung, die Original-Rechnungen, Zahlungsnachweise und unser Rückerstattungsformular. Am einfachsten geht die Einreichung über unser Kundenportal oder unsere App. Haben Sie zu diesem Prozess noch Fragen?": "customer_reimbursement_followup",
-        "Nach der Behandlung können Sie die Erstattung mit der ärztlichen Verschreibung und den Rechnungen beantragen. Am schnellsten geht dies online über unser Kundenportal. Möchten Sie, dass ich Ihnen erkläre, wie Sie sich im Kundenportal anmelden können?": "customer_portal_explanation",
-        "Für die Erstattung benötigen Sie die genannten Dokumente. Bitte beachten Sie die 90-Tage-Frist. Wenn Sie möchten, kann ich Ihnen auch ein vorausgefülltes Rückerstattungsformular per E-Mail zusenden. Wäre das hilfreich?": "customer_form_request",
-        "DEFAULT": "customer_reimbursement_followup"
-      }
-    },
-    "customer_form_request": {
-      "meta": {
-        "customerText": "Ja, das wäre sehr hilfreich. Bitte senden Sie mir das vorausgefüllte Formular per E-Mail zu.",
-        "responseOptions": [
-          "Sehr gerne, ich habe soeben ein vorausgefülltes Rückerstattungsformular an Ihre hinterlegte E-Mail-Adresse gesendet. Sie müssen nur noch Ihre Behandlungsdaten und die Rechnungsbeträge eintragen. Gibt es sonst noch etwas, wobei ich Ihnen bezüglich der Physiotherapie helfen kann?",
-          "Ich werde Ihnen das Formular umgehend zusenden. Es dauert üblicherweise 1-2 Werktage, bis die E-Mail bei Ihnen eintrifft. Möchten Sie nun über die Anpassung Ihrer Versicherung nach Ihrem Studienabschluss sprechen?",
-          "Das Formular wird in den nächsten Minuten an Ihre E-Mail-Adresse geschickt. Sie erhalten gleichzeitig auch eine Anleitung, wie Sie das Formular am besten ausfüllen. Haben Sie noch weitere Fragen zur Physiotherapie, oder sollen wir über Ihre Versicherungsoptionen nach dem Studium sprechen?"
-        ]
-      },
-      "on": {
-        "Sehr gerne, ich habe soeben ein vorausgefülltes Rückerstattungsformular an Ihre hinterlegte E-Mail-Adresse gesendet. Sie müssen nur noch Ihre Behandlungsdaten und die Rechnungsbeträge eintragen. Gibt es sonst noch etwas, wobei ich Ihnen bezüglich der Physiotherapie helfen kann?": "customer_physio_conclusion",
-        "Ich werde Ihnen das Formular umgehend zusenden. Es dauert üblicherweise 1-2 Werktage, bis die E-Mail bei Ihnen eintrifft. Möchten Sie nun über die Anpassung Ihrer Versicherung nach Ihrem Studienabschluss sprechen?": "customer_insurance_change_transition",
-        "Das Formular wird in den nächsten Minuten an Ihre E-Mail-Adresse geschickt. Sie erhalten gleichzeitig auch eine Anleitung, wie Sie das Formular am besten ausfüllen. Haben Sie noch weitere Fragen zur Physiotherapie, oder sollen wir über Ihre Versicherungsoptionen nach dem Studium sprechen?": "customer_physio_conclusion",
-        "DEFAULT": "customer_physio_conclusion"
-      }
-    },
-    "customer_portal_explanation": {
-      "meta": {
-        "customerText": "Ja, bitte erklären Sie mir, wie ich mich im Kundenportal anmelde. Ich glaube, ich habe meine Zugangsdaten verloren.",
-        "module": {
-          "id": "portal_access",
-          "type": "INFORMATION",
-          "title": "Zugang zum Kundenportal",
-          "data": {
-            "message": "Anleitung zum Kundenportal-Zugang:",
-            "sections": [
-              {
-                "title": "Erstanmeldung/Neuer Zugang",
-                "items": [
-                  { "label": "1. Website", "value": "www.versicherung.ch/portal" },
-                  { "label": "2. Option wählen", "value": "'Passwort vergessen' oder 'Erstanmeldung'" },
-                  { "label": "3. Identifikation", "value": "Versicherungsnummer & Geburtsdatum eingeben" },
-                  { "label": "4. Verifizierung", "value": "Code per SMS oder E-Mail empfangen" },
-                  { "label": "5. Neues Passwort", "value": "Sicheres Passwort erstellen" }
-                ]
-              },
-              {
-                "title": "Hilfe bei Problemen",
-                "items": [
-                  { "label": "Telefon", "value": "0800 123 456 (Mo-Fr, 8-18 Uhr)" },
-                  { "label": "E-Mail", "value": "portal@versicherung.ch" },
-                  { "label": "Video-Tutorial", "value": "www.versicherung.ch/portal/hilfe" }
-                ]
-              }
-            ],
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Wie Sie in der Übersicht sehen können, können Sie über 'Passwort vergessen' auf unserer Website einen neuen Zugang erstellen. Sie brauchen dafür Ihre Versicherungsnummer und Ihr Geburtsdatum. Soll ich Ihnen Ihre Versicherungsnummer nennen?",
-          "Um einen neuen Zugang einzurichten, besuchen Sie unsere Website und klicken auf 'Passwort vergessen'. Nach der Identifizierung mit Ihrer Versicherungsnummer und Ihrem Geburtsdatum erhalten Sie einen Verifizierungscode. Haben Sie Zugriff auf das bei uns hinterlegte Mobiltelefon oder die E-Mail-Adresse?",
-          "Ich kann Ihnen helfen, einen neuen Zugang einzurichten. Am besten erstellen Sie direkt hier am Telefon einen neuen Zugang. Dafür benötigen Sie Ihre Versicherungsnummer, die ich Ihnen gerne mitteile, und wir können den Verifizierungscode an Ihre Handynummer senden. Möchten Sie das jetzt machen?"
-        ]
-      },
-      "on": {
-        "Wie Sie in der Übersicht sehen können, können Sie über 'Passwort vergessen' auf unserer Website einen neuen Zugang erstellen. Sie brauchen dafür Ihre Versicherungsnummer und Ihr Geburtsdatum. Soll ich Ihnen Ihre Versicherungsnummer nennen?": "customer_insurance_number",
-        "Um einen neuen Zugang einzurichten, besuchen Sie unsere Website und klicken auf 'Passwort vergessen'. Nach der Identifizierung mit Ihrer Versicherungsnummer und Ihrem Geburtsdatum erhalten Sie einen Verifizierungscode. Haben Sie Zugriff auf das bei uns hinterlegte Mobiltelefon oder die E-Mail-Adresse?": "customer_verification_method",
-        "Ich kann Ihnen helfen, einen neuen Zugang einzurichten. Am besten erstellen Sie direkt hier am Telefon einen neuen Zugang. Dafür benötigen Sie Ihre Versicherungsnummer, die ich Ihnen gerne mitteile, und wir können den Verifizierungscode an Ihre Handynummer senden. Möchten Sie das jetzt machen?": "customer_immediate_setup",
-        "DEFAULT": "customer_insurance_number"
-      }
-    },
-    "customer_insurance_number": {
-      "meta": {
-        "customerText": "Ja, bitte teilen Sie mir meine Versicherungsnummer mit.",
-        "responseOptions": [
-          "Ihre Versicherungsnummer lautet VD-12345678. Mit dieser und Ihrem Geburtsdatum können Sie den 'Passwort vergessen'-Prozess durchführen. Haben Sie noch weitere Fragen zum Kundenportal?",
-          "Ihre Versicherungsnummer ist VD-12345678. Ich kann Ihnen auch einen temporären Link per E-Mail senden, mit dem Sie direkt einen neuen Zugang erstellen können, ohne die Nummer eingeben zu müssen. Wäre das hilfreich?",
-          "Ihre Versicherungsnummer ist VD-12345678. Aus Sicherheitsgründen rate ich Ihnen, diese Nummer nicht zu teilen. Möchten Sie nun zum Thema Ihrer Versicherungsanpassung nach dem Studium übergehen?"
-        ]
-      },
-      "on": {
-        "Ihre Versicherungsnummer lautet VD-12345678. Mit dieser und Ihrem Geburtsdatum können Sie den 'Passwort vergessen'-Prozess durchführen. Haben Sie noch weitere Fragen zum Kundenportal?": "customer_portal_followup",
-        "Ihre Versicherungsnummer ist VD-12345678. Ich kann Ihnen auch einen temporären Link per E-Mail senden, mit dem Sie direkt einen neuen Zugang erstellen können, ohne die Nummer eingeben zu müssen. Wäre das hilfreich?": "customer_link_request",
-        "Ihre Versicherungsnummer ist VD-12345678. Aus Sicherheitsgründen rate ich Ihnen, diese Nummer nicht zu teilen. Möchten Sie nun zum Thema Ihrer Versicherungsanpassung nach dem Studium übergehen?": "customer_insurance_change_transition",
-        "DEFAULT": "customer_portal_followup"
-      }
-    },
-    "customer_portal_followup": {
-      "meta": {
-        "customerText": "Danke, das sollte ausreichen. Jetzt würde ich gerne über die Anpassung meiner Versicherung nach dem Studienabschluss sprechen.",
-        "responseOptions": [
-          "Sehr gerne. Herzlichen Glückwunsch zum Studienabschluss! Welche Änderungen möchten Sie an Ihrer Versicherung vornehmen?",
-          "Natürlich, lassen Sie uns über Ihre Versicherungsanpassung nach dem Studium sprechen. In der Regel empfehlen wir nach dem Studium eine Überprüfung der Franchise und des Versicherungsmodells. Was genau möchten Sie ändern?",
-          "Selbstverständlich können wir jetzt darüber sprechen. Nach dem Studienabschluss ändern sich oft die Bedürfnisse. Möchten Sie Ihre Franchise anpassen, das Versicherungsmodell wechseln oder über Zusatzversicherungen sprechen?"
-        ]
-      },
-      "on": {
-        "Sehr gerne. Herzlichen Glückwunsch zum Studienabschluss! Welche Änderungen möchten Sie an Ihrer Versicherung vornehmen?": "customer_insurance_change",
-        "Natürlich, lassen Sie uns über Ihre Versicherungsanpassung nach dem Studium sprechen. In der Regel empfehlen wir nach dem Studium eine Überprüfung der Franchise und des Versicherungsmodells. Was genau möchten Sie ändern?": "customer_insurance_change",
-        "Selbstverständlich können wir jetzt darüber sprechen. Nach dem Studienabschluss ändern sich oft die Bedürfnisse. Möchten Sie Ihre Franchise anpassen, das Versicherungsmodell wechseln oder über Zusatzversicherungen sprechen?": "customer_insurance_change",
-        "DEFAULT": "customer_insurance_change"
-      }
-    },
-    "customer_physio_followup": {
-      "meta": {
-        "customerText": "Vielen Dank für die Information. Erstatten Sie die Kosten direkt an den Physiotherapeuten, oder muss ich die Rechnung zuerst selbst bezahlen?",
-        "responseOptions": [
-          "Das hängt von der Abrechnungsmethode des Physiotherapeuten ab. Viele Therapeuten rechnen direkt mit uns ab - dann zahlen Sie nur Ihren Eigenanteil von 30%. Falls nicht, müssen Sie die Rechnung zunächst selbst bezahlen und können dann die Erstattung bei uns einreichen. Möchten Sie wissen, wie der Erstattungsprozess genau funktioniert?",
-          "In der Regel müssen Sie die Rechnung zunächst selbst bezahlen und können dann die Erstattung bei uns beantragen. Einige Physiotherapeuten bieten jedoch auch das Tiers Payant System an, bei dem direkt mit uns abgerechnet wird. Am besten fragen Sie bei Ihrem Therapeuten, welche Methode er bevorzugt.",
-          "Die meisten Physiotherapeuten in unserem Netzwerk rechnen direkt mit uns ab. In diesem Fall bezahlen Sie nur Ihren Eigenanteil von 30%. Ich kann gerne prüfen, ob Ihr Physiotherapeut zu unserem Direktabrechnungsnetzwerk gehört. Wissen Sie bereits, wo Sie die Therapie machen werden?"
-        ]
-      },
-      "on": {
-        "Das hängt von der Abrechnungsmethode des Physiotherapeuten ab. Viele Therapeuten rechnen direkt mit uns ab - dann zahlen Sie nur Ihren Eigenanteil von 30%. Falls nicht, müssen Sie die Rechnung zunächst selbst bezahlen und können dann die Erstattung bei uns einreichen. Möchten Sie wissen, wie der Erstattungsprozess genau funktioniert?": "customer_physio_reimbursement",
-        "In der Regel müssen Sie die Rechnung zunächst selbst bezahlen und können dann die Erstattung bei uns beantragen. Einige Physiotherapeuten bieten jedoch auch das Tiers Payant System an, bei dem direkt mit uns abgerechnet wird. Am besten fragen Sie bei Ihrem Therapeuten, welche Methode er bevorzugt.": "customer_physio_conclusion",
-        "Die meisten Physiotherapeuten in unserem Netzwerk rechnen direkt mit uns ab. In diesem Fall bezahlen Sie nur Ihren Eigenanteil von 30%. Ich kann gerne prüfen, ob Ihr Physiotherapeut zu unserem Direktabrechnungsnetzwerk gehört. Wissen Sie bereits, wo Sie die Therapie machen werden?": "customer_therapist_check",
-        "DEFAULT": "customer_physio_reimbursement"
-      }
-    },
-    "customer_physio_franchise": {
-      "meta": {
-        "customerText": "Ach richtig, die Franchise hatte ich vergessen. Wie ist denn der aktuelle Stand meiner Franchise? Habe ich in diesem Jahr schon Leistungen bezogen?",
-        "module": {
-          "id": "franchise_overview",
-          "type": "INFORMATION",
-          "title": "Franchise-Übersicht 2024",
-          "data": {
-            "message": "Aktuelle Franchise-Nutzung:",
-            "sections": [
-              {
-                "title": "Franchise-Details",
-                "items": [
-                  { "label": "Gewählte Franchise", "value": "CHF 2'500" },
-                  { "label": "Bereits bezogene Leistungen", "value": "CHF 1'735" },
-                  { "label": "Verbleibende Franchise", "value": "CHF 765" },
-                  { "label": "Franchise-Jahr", "value": "01.01.2024 - 31.12.2024" }
-                ]
-              },
-              {
-                "title": "Letzte abgerechnete Leistungen",
-                "items": [
-                  { "label": "15.02.2024", "value": "Hausarztbesuch - CHF 220" },
-                  { "label": "03.04.2024", "value": "Blutuntersuchung - CHF 155" },
-                  { "label": "22.06.2024", "value": "Facharztbesuch - CHF 360" },
-                  { "label": "14.07.2024", "value": "Medikamente - CHF 1'000" }
-                ]
-              }
-            ],
-            "note": "Nach Erreichen der Franchise übernimmt die Versicherung 90% der weiteren Kosten (abzüglich Selbstbehalt von 10%, max. CHF 700 pro Jahr).",
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Wie Sie der Übersicht entnehmen können, haben Sie von Ihrer jährlichen Franchise von CHF 2'500 bereits CHF 1'735 verbraucht. Es verbleiben also noch CHF 765, die Sie dieses Jahr selbst bezahlen müssten. Die 10 Physiotherapie-Sitzungen kosten voraussichtlich etwa CHF 1'000, wovon Sie also CHF 765 plus 10% Selbstbehalt vom Rest bezahlen müssten.",
-          "Sie haben bereits CHF 1'735 von Ihrer Franchise verbraucht. Bei den Physiotherapie-Kosten von ca. CHF 1'000 würden Sie zunächst die verbleibenden CHF 765 selbst bezahlen, und von den restlichen CHF 235 übernimmt die Versicherung 70%, Sie zahlen also noch CHF 70.50 (10% Selbstbehalt). Insgesamt würden Sie somit CHF 835.50 selbst bezahlen.",
-          "Ihre Franchise-Übersicht zeigt, dass Sie bereits CHF 1'735 von Ihrer jährlichen Franchise verbraucht haben. Nach Erreichen der vollen Franchise übernehmen wir 90% der Kosten, wobei Sie einen Selbstbehalt von 10% (maximal CHF 700 pro Jahr) tragen. Möchten Sie, dass ich Ihnen die voraussichtlichen Kosten für Ihre Physiotherapie unter Berücksichtigung dieser Informationen berechne?"
-        ]
-      },
-      "on": {
-        "Wie Sie der Übersicht entnehmen können, haben Sie von Ihrer jährlichen Franchise von CHF 2'500 bereits CHF 1'735 verbraucht. Es verbleiben also noch CHF 765, die Sie dieses Jahr selbst bezahlen müssten. Die 10 Physiotherapie-Sitzungen kosten voraussichtlich etwa CHF 1'000, wovon Sie also CHF 765 plus 10% Selbstbehalt vom Rest bezahlen müssten.": "customer_franchise_calculation",
-        "Sie haben bereits CHF 1'735 von Ihrer Franchise verbraucht. Bei den Physiotherapie-Kosten von ca. CHF 1'000 würden Sie zunächst die verbleibenden CHF 765 selbst bezahlen, und von den restlichen CHF 235 übernimmt die Versicherung 70%, Sie zahlen also noch CHF 70.50 (10% Selbstbehalt). Insgesamt würden Sie somit CHF 835.50 selbst bezahlen.": "customer_franchise_calculation",
-        "Ihre Franchise-Übersicht zeigt, dass Sie bereits CHF 1'735 von Ihrer jährlichen Franchise verbraucht haben. Nach Erreichen der vollen Franchise übernehmen wir 90% der Kosten, wobei Sie einen Selbstbehalt von 10% (maximal CHF 700 pro Jahr) tragen. Möchten Sie, dass ich Ihnen die voraussichtlichen Kosten für Ihre Physiotherapie unter Berücksichtigung dieser Informationen berechne?": "customer_cost_calculation_request",
-        "DEFAULT": "customer_franchise_calculation"
-      }
-    },
-    "customer_cost_calculation_request": {
-      "meta": {
-        "customerText": "Ja, bitte berechnen Sie mir die voraussichtlichen Kosten für die Physiotherapie.",
-        "module": {
-          "id": "cost_calculator",
-          "type": "QUIZ",
-          "title": "Kostenberechnung Physiotherapie",
-          "data": {
-            "message": "Berechnung der voraussichtlichen Kosten:",
-            "steps": [
-              {
-                "id": "step1",
-                "title": "Gesamtkosten ermitteln",
-                "calculation": "10 Sitzungen × CHF 100 = CHF 1'000",
-                "explanation": "Eine Physiotherapie-Sitzung kostet durchschnittlich CHF 100"
-              },
-              {
-                "id": "step2",
-                "title": "Franchise-Anteil berechnen",
-                "calculation": "Verbleibende Franchise: CHF 765",
-                "explanation": "Dieser Betrag muss zuerst vollständig bezahlt werden"
-              },
-              {
-                "id": "step3",
-                "title": "Kosten nach Franchise",
-                "calculation": "CHF 1'000 - CHF 765 = CHF 235",
-                "explanation": "Kosten, die über die Franchise hinausgehen"
-              },
-              {
-                "id": "step4",
-                "title": "Versicherungsanteil",
-                "calculation": "70% von CHF 235 = CHF 164.50",
-                "explanation": "Die Versicherung übernimmt 70% (50% Grundversicherung + 20% Zusatzversicherung)"
-              },
-              {
-                "id": "step5",
-                "title": "Ihr Selbstbehalt",
-                "calculation": "30% von CHF 235 = CHF 70.50",
-                "explanation": "Ihr Anteil an den Kosten nach Erreichen der Franchise"
-              },
-              {
-                "id": "step6",
-                "title": "Ihre Gesamtkosten",
-                "calculation": "CHF 765 + CHF 70.50 = CHF 835.50",
-                "explanation": "Summe aus Franchise-Anteil und Selbstbehalt"
-              }
-            ],
-            "summary": "Bei Gesamtkosten von CHF 1'000 für die Physiotherapie werden Sie voraussichtlich CHF 835.50 selbst bezahlen.",
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Wie Sie der Berechnung entnehmen können, würden Sie bei 10 Physiotherapie-Sitzungen (Gesamtkosten ca. CHF 1'000) insgesamt CHF 835.50 selbst bezahlen müssen. Die Versicherung übernimmt CHF 164.50. Ist Ihnen der Berechnungsprozess verständlich?",
-          "Nach unserer Berechnung betragen Ihre Eigenkosten für die 10 Physiotherapie-Sitzungen CHF 835.50. Würden Sie nun über die Anpassung Ihrer Franchise nach dem Studium sprechen wollen? Eventuell wäre eine niedrigere Franchise für Sie jetzt sinnvoller.",
-          "Die Berechnung zeigt, dass Sie CHF 835.50 selbst bezahlen würden. Wenn Sie regelmäßig Physiotherapie oder andere medizinische Behandlungen benötigen, könnte es für Sie wirtschaftlicher sein, zu einer niedrigeren Franchise zu wechseln. Möchten Sie, dass wir verschiedene Franchise-Optionen für Sie vergleichen?"
-        ]
-      },
-      "on": {
-        "Wie Sie der Berechnung entnehmen können, würden Sie bei 10 Physiotherapie-Sitzungen (Gesamtkosten ca. CHF 1'000) insgesamt CHF 835.50 selbst bezahlen müssen. Die Versicherung übernimmt CHF 164.50. Ist Ihnen der Berechnungsprozess verständlich?": "customer_calculation_followup",
-        "Nach unserer Berechnung betragen Ihre Eigenkosten für die 10 Physiotherapie-Sitzungen CHF 835.50. Würden Sie nun über die Anpassung Ihrer Franchise nach dem Studium sprechen wollen? Eventuell wäre eine niedrigere Franchise für Sie jetzt sinnvoller.": "customer_insurance_change_transition",
-        "Die Berechnung zeigt, dass Sie CHF 835.50 selbst bezahlen würden. Wenn Sie regelmäßig Physiotherapie oder andere medizinische Behandlungen benötigen, könnte es für Sie wirtschaftlicher sein, zu einer niedrigeren Franchise zu wechseln. Möchten Sie, dass wir verschiedene Franchise-Optionen für Sie vergleichen?": "customer_franchise_comparison",
-        "DEFAULT": "customer_calculation_followup"
-      }
-    },
-    "customer_franchise_comparison": {
-      "meta": {
-        "customerText": "Ja, das wäre sehr hilfreich. Bitte zeigen Sie mir die verschiedenen Franchise-Optionen und wie sich diese auf meine monatliche Prämie auswirken würden.",
-        "module": {
-          "id": "franchise_info",
-          "type": "INFORMATION",
-          "title": "Franchise-Optionen Vergleich",
-          "data": {
-            "message": "Übersicht der Franchiseoptionen und Prämien:",
-            "sections": [
-              {
-                "title": "Franchise & monatliche Prämie",
-                "items": [
-                  { "label": "CHF 300", "value": "CHF 400" },
-                  { "label": "CHF 500", "value": "CHF 360" },
-                  { "label": "CHF 1'000", "value": "CHF 310" },
-                  { "label": "CHF 1'500", "value": "CHF 270" },
-                  { "label": "CHF 2'000", "value": "CHF 240" },
-                  { "label": "CHF 2'500 (aktuell)", "value": "CHF 220" }
-                ]
-              },
-              {
-                "title": "Jahresvergleich bei erwarteten Gesundheitskosten von CHF 2'000",
-                "items": [
-                  { "label": "CHF 300 Franchise", "value": "Jahreskosten: CHF 5'100 (Prämie: CHF 4'800 + Franchise: CHF 300)" },
-                  { "label": "CHF 1'000 Franchise", "value": "Jahreskosten: CHF 4'720 (Prämie: CHF 3'720 + Franchise: CHF 1'000)" },
-                  { "label": "CHF 2'500 Franchise", "value": "Jahreskosten: CHF 5'140 (Prämie: CHF 2'640 + Franchise: CHF 2'500)" }
-                ]
-              }
-            ],
-            "note": "Die optimale Franchise hängt von Ihren erwarteten Gesundheitskosten ab. Bei regelmäßigen Arztbesuchen oder Behandlungen ist oft eine niedrigere Franchise wirtschaftlicher.",
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Wie Sie der Übersicht entnehmen können, würde eine Reduzierung Ihrer Franchise von CHF 2'500 auf CHF 1'000 Ihre monatliche Prämie von CHF 220 auf CHF 310 erhöhen. Bei erwarteten Gesundheitskosten von CHF 2'000 pro Jahr wäre die CHF 1'000 Franchise am wirtschaftlichsten. Möchten Sie Ihre Franchise auf CHF 1'000 reduzieren?",
-          "Der Vergleich zeigt, dass bei regelmäßigen Behandlungen wie Ihrer Physiotherapie eine mittlere Franchise wie CHF 1'000 oft die beste Wahl ist. Ihre monatliche Prämie würde sich auf CHF 310 erhöhen, aber Sie würden weniger Eigenanteil bei Behandlungen zahlen. Welche Franchise würden Sie bevorzugen?",
-          "Bei Ihrem aktuellen Gesundheitsprofil und den zu erwartenden Physiotherapie-Kosten wäre die CHF 1'000 Franchise wirtschaftlich am sinnvollsten. Sie würden etwa CHF 420 pro Jahr sparen im Vergleich zu Ihrer aktuellen CHF 2'500 Franchise. Soll ich diese Änderung für Sie vornehmen?"
-        ]
-      },
-      "on": {
-        "Wie Sie der Übersicht entnehmen können, würde eine Reduzierung Ihrer Franchise von CHF 2'500 auf CHF 1'000 Ihre monatliche Prämie von CHF 220 auf CHF 310 erhöhen. Bei erwarteten Gesundheitskosten von CHF 2'000 pro Jahr wäre die CHF 1'000 Franchise am wirtschaftlichsten. Möchten Sie Ihre Franchise auf CHF 1'000 reduzieren?": "customer_franchise_decision",
-        "Der Vergleich zeigt, dass bei regelmäßigen Behandlungen wie Ihrer Physiotherapie eine mittlere Franchise wie CHF 1'000 oft die beste Wahl ist. Ihre monatliche Prämie würde sich auf CHF 310 erhöhen, aber Sie würden weniger Eigenanteil bei Behandlungen zahlen. Welche Franchise würden Sie bevorzugen?": "customer_franchise_decision",
-        "Bei Ihrem aktuellen Gesundheitsprofil und den zu erwartenden Physiotherapie-Kosten wäre die CHF 1'000 Franchise wirtschaftlich am sinnvollsten. Sie würden etwa CHF 420 pro Jahr sparen im Vergleich zu Ihrer aktuellen CHF 2'500 Franchise. Soll ich diese Änderung für Sie vornehmen?": "customer_franchise_decision",
-        "DEFAULT": "customer_franchise_decision"
-      }
-    },
-    "customer_franchise_decision": {
-      "meta": {
-        "customerText": "Ja, die CHF 1'000 Franchise klingt am besten für meine Situation. Bitte nehmen Sie diese Änderung vor. Ab wann würde diese Änderung gelten?",
-        "responseOptions": [
-          "Ich habe die Änderung Ihrer Franchise auf CHF 1'000 veranlasst. Die neue Franchise gilt ab dem 1. des nächsten Monats. Ihre monatliche Prämie beträgt dann CHF 310. Sie erhalten in den nächsten Tagen eine schriftliche Bestätigung per Post. Möchten Sie auch Ihr Versicherungsmodell überprüfen?",
-          "Sehr gerne. Ich habe Ihre Franchise auf CHF 1'000 geändert. Die Änderung wird zum 1. des nächsten Monats wirksam. Alle bis dahin anfallenden Leistungen werden noch mit der alten Franchise von CHF 2'500 abgerechnet. Gibt es noch etwas anderes, das Sie an Ihrer Versicherung anpassen möchten?",
-          "Ich habe die Reduzierung Ihrer Franchise auf CHF 1'000 eingetragen. Diese Änderung wird zum nächsten Monatsbeginn wirksam. Zu beachten ist, dass Sie dann auch beginnen, die höhere Prämie von CHF 310 zu bezahlen. Möchten Sie sich noch über andere Versicherungsoptionen nach Ihrem Studienabschluss informieren?"
-        ]
-      },
-      "on": {
-        "Ich habe die Änderung Ihrer Franchise auf CHF 1'000 veranlasst. Die neue Franchise gilt ab dem 1. des nächsten Monats. Ihre monatliche Prämie beträgt dann CHF 310. Sie erhalten in den nächsten Tagen eine schriftliche Bestätigung per Post. Möchten Sie auch Ihr Versicherungsmodell überprüfen?": "customer_insurance_model",
-        "Sehr gerne. Ich habe Ihre Franchise auf CHF 1'000 geändert. Die Änderung wird zum 1. des nächsten Monats wirksam. Alle bis dahin anfallenden Leistungen werden noch mit der alten Franchise von CHF 2'500 abgerechnet. Gibt es noch etwas anderes, das Sie an Ihrer Versicherung anpassen möchten?": "customer_additional_changes",
-        "Ich habe die Reduzierung Ihrer Franchise auf CHF 1'000 eingetragen. Diese Änderung wird zum nächsten Monatsbeginn wirksam. Zu beachten ist, dass Sie dann auch beginnen, die höhere Prämie von CHF 310 zu bezahlen. Möchten Sie sich noch über andere Versicherungsoptionen nach Ihrem Studienabschluss informieren?": "customer_additional_insurance_options",
-        "DEFAULT": "customer_insurance_model"
-      }
-    },
-    "customer_insurance_change": {
-      "meta": {
-        "customerText": "Ich hätte ein paar Fragen zu meinen Versicherungsoptionen. Ich habe nämlich gerade mein Studium abgeschlossen und bin mir nicht sicher, ob sich etwas an meiner Versicherung ändert.",
-        "responseOptions": [
-          "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen gerne mit Ihren Versicherungsoptionen helfen. Was möchten Sie genau wissen?",
-          "Gratulation zum Abschluss! Ja, nach dem Studium gibt es einige wichtige Änderungen zu beachten. Der Studentenrabatt entfällt, was zu einer höheren Grundprämie führen kann. Möchten Sie konkrete Anpassungsoptionen besprechen?",
-          "Zum Studienabschluss gratuliere ich! Da Sie nun eine neue Lebensphase beginnen, ist es sinnvoll, Ihre Versicherung zu überprüfen. Möchten Sie wissen, welche spezifischen Aspekte sich ändern könnten?"
-        ]
-      },
-      "on": {
-        "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen gerne mit Ihren Versicherungsoptionen helfen. Was möchten Sie genau wissen?": "customer_options_request",
-        "Gratulation zum Abschluss! Ja, nach dem Studium gibt es einige wichtige Änderungen zu beachten. Der Studentenrabatt entfällt, was zu einer höheren Grundprämie führen kann. Möchten Sie konkrete Anpassungsoptionen besprechen?": "customer_options_request",
-        "Zum Studienabschluss gratuliere ich! Da Sie nun eine neue Lebensphase beginnen, ist es sinnvoll, Ihre Versicherung zu überprüfen. Möchten Sie wissen, welche spezifischen Aspekte sich ändern könnten?": "customer_options_request",
-        "DEFAULT": "customer_options_request"
-      }
-    },
-    "customer_options_request": {
-      "meta": {
-        "customerText": "Ich würde gerne wissen, ob ich meine Franchise anpassen sollte und ob mein aktuelles Telmed-Modell immer noch das richtige für mich ist.",
-        "module": {
-          "id": "franchise_info",
-          "type": "INFORMATION",
-          "title": "Auswirkungen Änderung Franchise",
-          "data": {
-            "message": "Übersicht der Franchiseoptionen und Prämien:",
-            "sections": [
-              {
-                "title": "Franchise & Prämie",
-                "items": [
-                  { "label": "CHF 300", "value": "CHF 400" },
-                  { "label": "CHF 500", "value": "CHF 360" },
-                  { "label": "CHF 1000", "value": "CHF 310" },
-                  { "label": "CHF 1500", "value": "CHF 270" },
-                  { "label": "CHF 2000", "value": "CHF 240" },
-                  { "label": "CHF 2500", "value": "CHF 220" }
-                ]
-              }
-            ],
-            "note": "Info: Wenn Arztkosten weniger als ca. 2000.- erwartet werden, spart man mit einer hohen Franchise meistens.",
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Hier sehen Sie die verschiedenen Franchiseoptionen und deren Auswirkung auf Ihre monatliche Prämie. Je höher die Franchise, desto niedriger die Prämie. Welche Franchise würden Sie bevorzugen?",
-          "Wie Sie sehen, reicht die Prämie von CHF 220 bei höchster Franchise bis CHF 400 bei niedrigster Franchise. Nach dem Studium empfehlen wir oft eine mittlere Franchise wie CHF 1000 oder CHF 1500. Was wäre für Sie interessant?",
-          "Diese Tabelle zeigt Ihnen die verschiedenen Optionen. Eine niedrigere Franchise bedeutet höhere monatliche Kosten, aber weniger Risiko bei Arztbesuchen. Haben Sie eine bestimmte Option im Sinn?"
-        ]
-      },
-      "on": {
-        "Hier sehen Sie die verschiedenen Franchiseoptionen und deren Auswirkung auf Ihre monatliche Prämie. Je höher die Franchise, desto niedriger die Prämie. Welche Franchise würden Sie bevorzugen?": "customer_franchise_selection",
-        "Wie Sie sehen, reicht die Prämie von CHF 220 bei höchster Franchise bis CHF 400 bei niedrigster Franchise. Nach dem Studium empfehlen wir oft eine mittlere Franchise wie CHF 1000 oder CHF 1500. Was wäre für Sie interessant?": "customer_franchise_selection",
-        "Diese Tabelle zeigt Ihnen die verschiedenen Optionen. Eine niedrigere Franchise bedeutet höhere monatliche Kosten, aber weniger Risiko bei Arztbesuchen. Haben Sie eine bestimmte Option im Sinn?": "customer_franchise_selection",
-        "DEFAULT": "customer_franchise_selection"
-      }
-    },
-    "customer_franchise_selection": {
-      "meta": {
-        "customerText": "Ich denke, eine Franchise von CHF 1000 wäre ein guter Kompromiss für mich. Nicht zu teuer monatlich, aber auch nicht zu viel Risiko. Wie sieht es mit den Versicherungsmodellen aus?",
-        "responseOptions": [
-          "Eine sehr gute Wahl! Ich habe die Änderung Ihrer Franchise auf 1000 CHF notiert. Jetzt zu den Versicherungsmodellen. Möchten Sie einen Überblick über alle verfügbaren Modelle sehen?",
-          "CHF 1000 ist eine ausgezeichnete Wahl für Ihre Situation. Ich habe die Änderung vermerkt. Bezüglich der Versicherungsmodelle: Sie haben aktuell das Telmed-Modell. Möchten Sie dieses behalten oder mehr über die anderen Modelle erfahren?",
-          "Perfekt, 1000 CHF ist eine ausgewogene Wahl. Diese Änderung wird ab dem nächsten Monat wirksam. Zu den Modellen: Wir haben Standard, Hausarzt, Telmed und HMO. Möchten Sie einen detaillierten Vergleich sehen?"
-        ]
-      },
-      "on": {
-        "Eine sehr gute Wahl! Ich habe die Änderung Ihrer Franchise auf 1000 CHF notiert. Jetzt zu den Versicherungsmodellen. Möchten Sie einen Überblick über alle verfügbaren Modelle sehen?": "customer_model_inquiry",
-        "CHF 1000 ist eine ausgezeichnete Wahl für Ihre Situation. Ich habe die Änderung vermerkt. Bezüglich der Versicherungsmodelle: Sie haben aktuell das Telmed-Modell. Möchten Sie dieses behalten oder mehr über die anderen Modelle erfahren?": "customer_model_inquiry",
-        "Perfekt, 1000 CHF ist eine ausgewogene Wahl. Diese Änderung wird ab dem nächsten Monat wirksam. Zu den Modellen: Wir haben Standard, Hausarzt, Telmed und HMO. Möchten Sie einen detaillierten Vergleich sehen?": "customer_model_inquiry",
-        "DEFAULT": "customer_model_inquiry"
-      }
-    },
-    "customer_model_inquiry": {
-      "meta": {
-        "customerText": "Ja, ich hätte gerne einen Überblick über alle Modelle, um zu sehen, ob es sich lohnt, vom Telmed-Modell zu wechseln.",
-        "module": {
-          "id": "models_info",
-          "type": "INFORMATION",
+          "id": "insurance-model-module-1",
           "title": "Versicherungsmodelle",
+          "type": "INSURANCE_MODEL",
           "data": {
-            "message": "Verfügbare Versicherungsmodelle:",
-            "sections": [
+            "models": [
               {
-                "title": "Modelle",
-                "items": [
-                  { "label": "1. Standardmodell", "value": "Freie Arztwahl, keine Einschränkungen. Ca. CHF 290–330/Monat" },
-                  { "label": "2. Hausarztmodell", "value": "Immer zuerst zum gewählten Hausarzt. Ca. CHF 240–270/Monat" },
-                  { "label": "3. Telmed-Modell", "value": "Zuerst telefonische Beratung. Ca. CHF 220–250/Monat" },
-                  { "label": "4. HMO-Modell", "value": "Nur bestimmte Gesundheitszentren. Ca. CHF 230–260/Monat" }
-                ]
+                "id": "standard",
+                "title": "Standardmodell",
+                "description": "Freie Arztwahl, keine Einschränkungen.",
+                "priceRange": "Ca. CHF 290–330/Monat"
+              },
+              {
+                "id": "hausarzt",
+                "title": "Hausarztmodell",
+                "description": "Immer zuerst zum gewählten Hausarzt.",
+                "priceRange": "Ca. CHF 240–270/Monat"
+              },
+              {
+                "id": "telmed",
+                "title": "Telmed-Modell",
+                "description": "Zuerst telefonische Beratung.",
+                "priceRange": "Ca. CHF 220–250/Monat"
+              },
+              {
+                "id": "hmo",
+                "title": "HMO-Modell",
+                "description": "Nur bestimmte Gesundheitszentren.",
+                "priceRange": "Ca. CHF 230–260/Monat"
               }
             ],
-            "isInline": true
+            "buttonText": "Auswählen"
           }
         },
         "responseOptions": [
-          "Hier ist eine Übersicht aller Modelle. Ihr aktuelles Telmed-Modell ist preislich am günstigsten. Möchten Sie bei diesem Modell bleiben oder zu einem anderen wechseln?",
-          "Wie Sie sehen, bietet das Telmed-Modell das beste Preis-Leistungs-Verhältnis. Für mehr Flexibilität könnten Sie zum Hausarztmodell oder Standardmodell wechseln, müssten aber mit höheren Kosten rechnen. Was bevorzugen Sie?",
-          "Da haben Sie eine gute Übersicht der Modelle. Der Hauptunterschied liegt in der Erstanlaufstelle bei Gesundheitsproblemen. Beim Telmed-Modell müssen Sie zuerst anrufen, beim Hausarztmodell gehen Sie direkt zum Hausarzt. Möchten Sie beim Telmed-Modell bleiben oder wechseln?"
+          "Vielen Dank für Ihre Auswahl des Telmed-Modells. Das ist eine gute Wahl, da es eine gute Balance zwischen Prämie und Flexibilität bietet.",
+          "Ich sehe, Sie haben das Telmed-Modell gewählt. Eine ausgezeichnete Wahl! Dies wird Ihre monatliche Prämie auf ca. CHF 220-250 reduzieren.",
+          "Das Telmed-Modell ist eine beliebte Option für viele unserer Kunden. Ich werde diese Änderung für Sie vornehmen."
         ]
       },
       "on": {
-        "Hier ist eine Übersicht aller Modelle. Ihr aktuelles Telmed-Modell ist preislich am günstigsten. Möchten Sie bei diesem Modell bleiben oder zu einem anderen wechseln?": "customer_model_decision",
-        "Wie Sie sehen, bietet das Telmed-Modell das beste Preis-Leistungs-Verhältnis. Für mehr Flexibilität könnten Sie zum Hausarztmodell oder Standardmodell wechseln, müssten aber mit höheren Kosten rechnen. Was bevorzugen Sie?": "customer_model_decision",
-        "Da haben Sie eine gute Übersicht der Modelle. Der Hauptunterschied liegt in der Erstanlaufstelle bei Gesundheitsproblemen. Beim Telmed-Modell müssen Sie zuerst anrufen, beim Hausarztmodell gehen Sie direkt zum Hausarzt. Möchten Sie beim Telmed-Modell bleiben oder wechseln?": "customer_model_decision",
-        "DEFAULT": "customer_model_decision"
+        "Vielen Dank für Ihre Auswahl des Telmed-Modells. Das ist eine gute Wahl, da es eine gute Balance zwischen Prämie und Flexibilität bietet.": "model_confirmation",
+        "Ich sehe, Sie haben das Telmed-Modell gewählt. Eine ausgezeichnete Wahl! Dies wird Ihre monatliche Prämie auf ca. CHF 220-250 reduzieren.": "model_confirmation",
+        "Das Telmed-Modell ist eine beliebte Option für viele unserer Kunden. Ich werde diese Änderung für Sie vornehmen.": "model_confirmation",
+        "DEFAULT": "model_confirmation"
       }
     },
-    "customer_model_decision": {
+    "model_confirmation": {
       "meta": {
-        "customerText": "Ich denke, ich bleibe beim Telmed-Modell. Es ist günstig und bisher hatte ich keine Probleme damit. Aber ich hätte noch eine Frage zu Zusatzversicherungen. Gibt es welche, die für Absolventen besonders sinnvoll sind?",
+        "agentText": "Das Telmed-Modell ist eine beliebte Option für viele unserer Kunden. Ich werde diese Änderung für Sie vornehmen.",
+        "customerText": "Ausgezeichnet. Wann wird diese Änderung wirksam?",
         "responseOptions": [
-          "Eine gute Entscheidung! Das Telmed-Modell bietet ein ausgezeichnetes Preis-Leistungs-Verhältnis. Zu den Zusatzversicherungen: Für Absolventen empfehlen wir oft eine Kombi aus Spitalzusatzversicherung und ambulanter Zusatzversicherung. Möchten Sie ein persönliches Angebot dazu erhalten?",
-          "Das Telmed-Modell ist wirklich eine kosteneffiziente Wahl. Bei Zusatzversicherungen für Absolventen sind besonders relevant: Zahnversicherung, Reiseversicherung und vielleicht eine Spitalversicherung halbprivat. Soll ich Ihnen ein individuelles Angebot erstellen?",
-          "Sehr vernünftig! Bezüglich Zusatzversicherungen: Mit bestimmten Kombinationen können Sie Rabatte erhalten. Zum Beispiel bieten wir ein Kombipaket mit Spitalzusatzversicherung an, das einen Gesamtrabatt von 10% gewährt. Möchten Sie nähere Informationen dazu?"
+          "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Sie werden die angepasste Prämie auf Ihrer nächsten Rechnung sehen.",
+          "Diese Änderung wird ab dem ersten Tag des kommenden Monats wirksam sein. Ich werde Ihnen eine Bestätigungs-E-Mail mit allen Details senden.",
+          "Ihr neues Versicherungsmodell wird ab nächstem Monat angewendet. Möchten Sie, dass ich Ihnen eine schriftliche Bestätigung dieser Änderung zusende?"
         ]
       },
       "on": {
-        "Eine gute Entscheidung! Das Telmed-Modell bietet ein ausgezeichnetes Preis-Leistungs-Verhältnis. Zu den Zusatzversicherungen: Für Absolventen empfehlen wir oft eine Kombi aus Spitalzusatzversicherung und ambulanter Zusatzversicherung. Möchten Sie ein persönliches Angebot dazu erhalten?": "customer_additional_insurance",
-        "Das Telmed-Modell ist wirklich eine kosteneffiziente Wahl. Bei Zusatzversicherungen für Absolventen sind besonders relevant: Zahnversicherung, Reiseversicherung und vielleicht eine Spitalversicherung halbprivat. Soll ich Ihnen ein individuelles Angebot erstellen?": "customer_additional_insurance",
-        "Sehr vernünftig! Bezüglich Zusatzversicherungen: Mit bestimmten Kombinationen können Sie Rabatte erhalten. Zum Beispiel bieten wir ein Kombipaket mit Spitalzusatzversicherung an, das einen Gesamtrabatt von 10% gewährt. Möchten Sie nähere Informationen dazu?": "customer_additional_insurance",
-        "DEFAULT": "customer_additional_insurance"
+        "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Sie werden die angepasste Prämie auf Ihrer nächsten Rechnung sehen.": "franchise_options",
+        "Diese Änderung wird ab dem ersten Tag des kommenden Monats wirksam sein. Ich werde Ihnen eine Bestätigungs-E-Mail mit allen Details senden.": "franchise_options",
+        "Ihr neues Versicherungsmodell wird ab nächstem Monat angewendet. Möchten Sie, dass ich Ihnen eine schriftliche Bestätigung dieser Änderung zusende?": "franchise_options",
+        "DEFAULT": "franchise_options"
       }
     },
-    "customer_additional_insurance": {
+    "franchise_options": {
       "meta": {
-        "customerText": "Ja, ich würde gerne ein persönliches Angebot erhalten. Können Sie mir das per E-Mail schicken?",
+        "agentText": "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Möchten Sie auch Ihre Franchise anpassen?",
+        "customerText": "Ja, ich würde auch gerne die Franchise-Optionen überprüfen.",
         "module": {
-          "id": "supplemental_insurance_info",
-          "type": "CONTRACT_MANAGEMENT",
-          "title": "Zusatzversicherungen für Absolventen",
+          "id": "info-table-module-2",
+          "title": "Franchise-Übersicht 2024",
+          "type": "INFORMATION_TABLE",
           "data": {
-            "message": "Übersicht der empfohlenen Zusatzversicherungen:",
-            "policies": [
-              {
-                "id": "hospital-semi-private",
-                "name": "Spitalzusatzversicherung Halbprivat",
-                "type": "Spitalversicherung",
-                "benefits": [
-                  "Freie Spitalwahl in der ganzen Schweiz",
-                  "Unterbringung im Zweibettzimmer",
-                  "Freie Arztwahl im Spital",
-                  "Kürzere Wartezeiten für Wahleingriffe"
-                ],
-                "premium": "CHF 45/Monat",
-                "specialOffer": "10% Rabatt für Absolventen im ersten Jahr"
-              },
-              {
-                "id": "dental-coverage",
-                "name": "Zahnversicherung Kompakt",
-                "type": "Zahnpflegeversicherung",
-                "benefits": [
-                  "75% Kostendeckung für Zahnbehandlungen",
-                  "Maximal CHF 3'000 pro Jahr",
-                  "Inklusive Prophylaxe und Kontrolle",
-                  "Kieferorthopädische Behandlungen teilweise gedeckt"
-                ],
-                "premium": "CHF 29/Monat",
-                "specialOffer": "Keine Wartezeit für Kontrollen und Prophylaxe"
-              },
-              {
-                "id": "travel-insurance",
-                "name": "Weltweiter Reiseschutz",
-                "type": "Reiseversicherung",
-                "benefits": [
-                  "Medizinische Notfallbehandlung weltweit",
-                  "Rücktransport in die Schweiz",
-                  "Reiseannullationskosten bis CHF 15'000",
-                  "24h Notfall-Hotline"
-                ],
-                "premium": "CHF 11/Monat",
-                "specialOffer": "25% Rabatt bei Kombination mit anderen Zusatzversicherungen"
-              }
+            "description": "Auswirkungen mit Telmed-Modell:",
+            "franchiseOptions": [
+              { "amount": 300, "premium": 250 },
+              { "amount": 500, "premium": 240 },
+              { "amount": 1000, "premium": 230 },
+              { "amount": 1500, "premium": 220 },
+              { "amount": 2000, "premium": 215 },
+              { "amount": 2500, "premium": 210 }
             ],
-            "bundles": [
-              {
-                "id": "graduate-bundle",
-                "name": "Absolventenpaket",
-                "includedPolicies": ["hospital-semi-private", "travel-insurance"],
-                "totalPremium": "CHF 50/Monat",
-                "savings": "Ersparnis von CHF 6/Monat gegenüber Einzelabschluss"
-              }
-            ],
-            "isInline": true
+            "tableTitle": "Franchise Optionen",
+            "buttonText": "Option auswählen"
           }
         },
         "responseOptions": [
-          "Sehr gerne! Ich werde Ihnen ein persönliches Angebot mit verschiedenen Zusatzversicherungen zusammenstellen. Dieses wird per E-Mail innerhalb der nächsten 24 Stunden an Sie gesendet. Gibt es noch etwas anderes, bei dem ich Ihnen heute helfen kann?",
-          "Natürlich, ich erstelle Ihnen ein maßgeschneidertes Angebot und sende es an Ihre hinterlegte E-Mail-Adresse. Sie sollten es innerhalb der nächsten 24 Stunden erhalten. Haben Sie sonst noch Fragen zu Ihren Versicherungsoptionen?",
-          "Selbstverständlich! Ich veranlasse die Erstellung eines individuellen Angebots für Zusatzversicherungen. Dieses wird an Ihre E-Mail-Adresse gesendet. Gibt es noch etwas, womit ich Ihnen heute behilflich sein kann?"
+          "Basierend auf Ihrer Auswahl des Telmed-Modells sehen Sie hier die möglichen Franchise-Optionen. Je höher die Franchise, desto niedriger die monatliche Prämie.",
+          "Hier sind die Franchise-Optionen für das Telmed-Modell. Mit einer höheren Franchise können Sie Ihre monatliche Prämie weiter reduzieren.",
+          "Da Sie sich für das Telmed-Modell entschieden haben, zeige ich Ihnen nun die passenden Franchise-Optionen. Was würden Sie bevorzugen?"
         ]
       },
       "on": {
-        "Sehr gerne! Ich werde Ihnen ein persönliches Angebot mit verschiedenen Zusatzversicherungen zusammenstellen. Dieses wird per E-Mail innerhalb der nächsten 24 Stunden an Sie gesendet. Gibt es noch etwas anderes, bei dem ich Ihnen heute helfen kann?": "customer_summary",
-        "Natürlich, ich erstelle Ihnen ein maßgeschneidertes Angebot und sende es an Ihre hinterlegte E-Mail-Adresse. Sie sollten es innerhalb der nächsten 24 Stunden erhalten. Haben Sie sonst noch Fragen zu Ihren Versicherungsoptionen?": "customer_summary",
-        "Selbstverständlich! Ich veranlasse die Erstellung eines individuellen Angebots für Zusatzversicherungen. Dieses wird an Ihre E-Mail-Adresse gesendet. Gibt es noch etwas, womit ich Ihnen heute behilflich sein kann?": "customer_summary",
-        "DEFAULT": "customer_summary"
+        "Basierend auf Ihrer Auswahl des Telmed-Modells sehen Sie hier die möglichen Franchise-Optionen. Je höher die Franchise, desto niedriger die monatliche Prämie.": "conclusion",
+        "Hier sind die Franchise-Optionen für das Telmed-Modell. Mit einer höheren Franchise können Sie Ihre monatliche Prämie weiter reduzieren.": "conclusion",
+        "Da Sie sich für das Telmed-Modell entschieden haben, zeige ich Ihnen nun die passenden Franchise-Optionen. Was würden Sie bevorzugen?": "conclusion",
+        "DEFAULT": "conclusion"
       }
     },
-    "customer_summary": {
+    "conclusion": {
       "meta": {
-        "customerText": "Nein danke, das war alles. Können Sie mir kurz zusammenfassen, welche Änderungen wir heute besprochen haben?",
+        "agentText": "Basierend auf Ihrer Auswahl des Telmed-Modells und der Franchise von CHF 1000 wird Ihre neue monatliche Prämie CHF 230 betragen. Die Änderungen werden ab dem nächsten Monat wirksam. Gibt es sonst noch etwas, wobei ich Ihnen helfen kann?",
+        "customerText": "Nein, das ist alles. Vielen Dank für Ihre Hilfe!",
         "responseOptions": [
-          "Natürlich. Wir haben heute folgende Änderungen besprochen: 1) Ihre Franchise wird von CHF 2'500 auf CHF 1'000 gesenkt. 2) Sie behalten das Telmed-Modell bei. 3) Sie erhalten ein persönliches Angebot zu Zusatzversicherungen per E-Mail. Die Franchise-Änderung wird ab dem nächsten Monat wirksam. Ist das so korrekt?",
-          "Gerne fasse ich zusammen: Sie reduzieren Ihre Franchise von 2'500 auf 1'000 CHF, bleiben beim Telmed-Modell und bekommen ein individuelles Angebot zu Zusatzversicherungen per E-Mail. Die Franchiseänderung gilt ab dem kommenden Monatsersten. Habe ich alles richtig erfasst?",
-          "Zusammengefasst haben wir folgendes vereinbart: 1. Senkung Ihrer Franchise auf 1'000 CHF (ab nächstem Monat gültig). 2. Beibehaltung des Telmed-Modells. 3. Erstellung eines persönlichen Angebots für Zusatzversicherungen, das Ihnen per E-Mail zugestellt wird. Stimmt diese Zusammenfassung?"
+          "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!",
+          "Es war mir ein Vergnügen, Ihnen heute zu helfen. Wenn Sie in Zukunft weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Haben Sie einen schönen Tag!",
+          "Danke für Ihren Anruf. Ich habe eine Bestätigungs-E-Mail mit den Details zu den Änderungen an Ihre Versicherung gesendet. Ist noch etwas, womit ich Ihnen helfen kann, bevor wir das Gespräch beenden?"
         ]
       },
       "on": {
-        "Natürlich. Wir haben heute folgende Änderungen besprochen: 1) Ihre Franchise wird von CHF 2'500 auf CHF 1'000 gesenkt. 2) Sie behalten das Telmed-Modell bei. 3) Sie erhalten ein persönliches Angebot zu Zusatzversicherungen per E-Mail. Die Franchise-Änderung wird ab dem nächsten Monat wirksam. Ist das so korrekt?": "customer_confirmation",
-        "Gerne fasse ich zusammen: Sie reduzieren Ihre Franchise von 2'500 auf 1'000 CHF, bleiben beim Telmed-Modell und bekommen ein individuelles Angebot zu Zusatzversicherungen per E-Mail. Die Franchiseänderung gilt ab dem kommenden Monatsersten. Habe ich alles richtig erfasst?": "customer_confirmation",
-        "Zusammengefasst haben wir folgendes vereinbart: 1. Senkung Ihrer Franchise auf 1'000 CHF (ab nächstem Monat gültig). 2. Beibehaltung des Telmed-Modells. 3. Erstellung eines persönlichen Angebots für Zusatzversicherungen, das Ihnen per E-Mail zugestellt wird. Stimmt diese Zusammenfassung?": "customer_confirmation",
-        "DEFAULT": "customer_confirmation"
-      }
-    },
-    "customer_confirmation": {
-      "meta": {
-        "customerText": "Ja, das ist alles korrekt. Vielen Dank für Ihre Hilfe!",
-        "responseOptions": [
-          "Es freut mich, dass ich Ihnen helfen konnte. Die Änderungen wurden im System erfasst. Wenn Sie weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Ich wünsche Ihnen einen schönen Tag!",
-          "Sehr gut! Alle Änderungen sind nun gespeichert. Sie erhalten in den nächsten Tagen eine schriftliche Bestätigung per Post oder E-Mail. Vielen Dank für Ihren Anruf und einen schönen Tag noch!",
-          "Gerne! Alle besprochenen Punkte wurden erfasst. Falls Sie noch Fragen haben sollten, können Sie uns jederzeit kontaktieren. Ich wünsche Ihnen noch einen angenehmen Tag und viel Erfolg in Ihrem neuen Lebensabschnitt!"
-        ]
-      },
-      "on": {
-        "Es freut mich, dass ich Ihnen helfen konnte. Die Änderungen wurden im System erfasst. Wenn Sie weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Ich wünsche Ihnen einen schönen Tag!": "end_call",
-        "Sehr gut! Alle Änderungen sind nun gespeichert. Sie erhalten in den nächsten Tagen eine schriftliche Bestätigung per Post oder E-Mail. Vielen Dank für Ihren Anruf und einen schönen Tag noch!": "end_call",
-        "Gerne! Alle besprochenen Punkte wurden erfasst. Falls Sie noch Fragen haben sollten, können Sie uns jederzeit kontaktieren. Ich wünsche Ihnen noch einen angenehmen Tag und viel Erfolg in Ihrem neuen Lebensabschnitt!": "end_call",
+        "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!": "end_call",
+        "Es war mir ein Vergnügen, Ihnen heute zu helfen. Wenn Sie in Zukunft weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Haben Sie einen schönen Tag!": "end_call",
+        "Danke für Ihren Anruf. Ich habe eine Bestätigungs-E-Mail mit den Details zu den Änderungen an Ihre Versicherung gesendet. Ist noch etwas, womit ich Ihnen helfen kann, bevor wir das Gespräch beenden?": "end_call",
         "DEFAULT": "end_call"
       }
     },
     "end_call": {
       "meta": {
-        "agentText": "Gerne! Alle besprochenen Punkte wurden erfasst. Falls Sie noch Fragen haben sollten, können Sie uns jederzeit kontaktieren. Ich wünsche Ihnen noch einen angenehmen Tag und viel Erfolg in Ihrem neuen Lebensabschnitt!",
-        "module": {
-          "id": "nachbearbeitung_summary",
-          "type": "NACHBEARBEITUNG",
-          "title": "Nachbearbeitung",
-          "data": {
-            "summary": "Kunde hat zwei Hauptanliegen besprochen: 1) Informationen zur Physiotherapie-Deckung und Kostenerstattung bekommen; 2) Nach Studienabschluss Franchise von CHF 2'500 auf CHF 1'000 angepasst, bleibt im Telmed-Modell. Erhält zudem Angebot zu Zusatzversicherungen per E-Mail. Änderungen per nächstem Monatsbeginn eingeleitet.",
-            "points": [
-              "Studium abgeschlossen",
-              "Franchise von 2'500 auf 1'000 CHF reduziert",
-              "Bleibt im Telmed-Modell",
-              "Änderung ab nächstem Monat",
-              "Angebot zu Zusatzversicherungen per E-Mail",
-              "Informationen zur Physiotherapie-Deckung (70% der Kosten)",
-              "Erklärt Kostenerstattungsprozess für Physiotherapie"
-            ],
-            "isInline": true
-          }
-        }
-      },
-      "on": {
-        "DEFAULT": "end"
-      }
-    },
-    "end": {
-      "meta": {
-        "systemMessage": "Der Call wurde beendet."
-      }
-    },
-    "customer_insurance_change_transition": {
-      "meta": {
-        "customerText": "Ja, lassen Sie uns jetzt über meine Versicherungsanpassungen nach dem Studium sprechen.",
-        "responseOptions": [
-          "Sehr gerne. Nach dem Studienabschluss ist es sinnvoll, Ihre Versicherungsoptionen zu überprüfen. Haben Sie bestimmte Änderungen im Sinn, oder möchten Sie einen allgemeinen Überblick über Ihre Möglichkeiten?",
-          "Ausgezeichnet. Nach dem Studium ändern sich oft die Bedürfnisse und finanziellen Möglichkeiten. In Ihrem Fall wäre es besonders sinnvoll, die Franchise und das Versicherungsmodell zu überprüfen. Wo möchten Sie beginnen?",
-          "Gerne besprechen wir jetzt Ihre Versicherungsanpassungen. Als Absolvent haben Sie verschiedene Optionen, von der Franchise bis hin zu speziellen Zusatzversicherungen für Berufseinsteiger. Welcher Aspekt interessiert Sie besonders?"
-        ]
-      },
-      "on": {
-        "Sehr gerne. Nach dem Studienabschluss ist es sinnvoll, Ihre Versicherungsoptionen zu überprüfen. Haben Sie bestimmte Änderungen im Sinn, oder möchten Sie einen allgemeinen Überblick über Ihre Möglichkeiten?": "customer_options_request",
-        "Ausgezeichnet. Nach dem Studium ändern sich oft die Bedürfnisse und finanziellen Möglichkeiten. In Ihrem Fall wäre es besonders sinnvoll, die Franchise und das Versicherungsmodell zu überprüfen. Wo möchten Sie beginnen?": "customer_options_request",
-        "Gerne besprechen wir jetzt Ihre Versicherungsanpassungen. Als Absolvent haben Sie verschiedene Optionen, von der Franchise bis hin zu speziellen Zusatzversicherungen für Berufseinsteiger. Welcher Aspekt interessiert Sie besonders?": "customer_options_request",
-        "DEFAULT": "customer_options_request"
-      }
-    },
-    "customer_physio_conclusion": {
-      "meta": {
-        "customerText": "Ich habe keine weiteren Fragen zur Physiotherapie. Können wir nun zur Anpassung meiner Versicherung nach dem Studium übergehen?",
-        "responseOptions": [
-          "Natürlich, sehr gerne. Nach dem Studienabschluss ist es sinnvoll, Ihre Versicherungsoptionen zu überprüfen. Besonders wichtig ist die Wahl der richtigen Franchise. Aktuell haben Sie eine Franchise von CHF 2'500. Möchten Sie diese anpassen?",
-          "Selbstverständlich können wir nun Ihre Versicherungsoptionen nach dem Studium besprechen. Haben Sie bereits konkrete Vorstellungen, was Sie ändern möchten, oder soll ich Ihnen einen Überblick über die Möglichkeiten geben?",
-          "Gerne gehen wir jetzt zum Thema Versicherungsanpassung über. Als Absolvent können Sie verschiedene Anpassungen vornehmen. Die Franchise ist dabei ein wichtiger Punkt, aber auch das Versicherungsmodell und potenzielle Zusatzversicherungen könnten für Sie interessant sein. Womit möchten Sie beginnen?"
-        ]
-      },
-      "on": {
-        "Natürlich, sehr gerne. Nach dem Studienabschluss ist es sinnvoll, Ihre Versicherungsoptionen zu überprüfen. Besonders wichtig ist die Wahl der richtigen Franchise. Aktuell haben Sie eine Franchise von CHF 2'500. Möchten Sie diese anpassen?": "customer_franchise_options",
-        "Selbstverständlich können wir nun Ihre Versicherungsoptionen nach dem Studium besprechen. Haben Sie bereits konkrete Vorstellungen, was Sie ändern möchten, oder soll ich Ihnen einen Überblick über die Möglichkeiten geben?": "customer_insurance_change_transition",
-        "Gerne gehen wir jetzt zum Thema Versicherungsanpassung über. Als Absolvent können Sie verschiedene Anpassungen vornehmen. Die Franchise ist dabei ein wichtiger Punkt, aber auch das Versicherungsmodell und potenzielle Zusatzversicherungen könnten für Sie interessant sein. Womit möchten Sie beginnen?": "customer_insurance_change_transition",
-        "DEFAULT": "customer_insurance_change_transition"
-      }
-    },
-    "customer_franchise_calculation": {
-      "meta": {
-        "customerText": "Vielen Dank für die ausführliche Erklärung. Ich verstehe jetzt besser, wie die Kostenübernahme funktioniert. Könnte ich meine Franchise nach dem Studienabschluss anpassen, um bei solchen Behandlungen weniger selbst zahlen zu müssen?",
-        "responseOptions": [
-          "Ja, absolut! Nach dem Studienabschluss ist es ein guter Zeitpunkt, Ihre Franchise zu überdenken. Bei regelmäßigen Arztbesuchen oder Behandlungen wie Physiotherapie kann eine niedrigere Franchise wie CHF 1'000 wirtschaftlicher sein. Möchten Sie einen Vergleich der verschiedenen Franchise-Optionen sehen?",
-          "Das ist eine sehr gute Überlegung. Wenn Sie häufiger medizinische Leistungen in Anspruch nehmen, könnte eine niedrigere Franchise für Sie vorteilhafter sein. Die monatliche Prämie wäre zwar etwas höher, aber Ihre Eigenleistung bei Behandlungen geringer. Sollen wir verschiedene Franchise-Optionen vergleichen?",
-          "Eine Franchise-Anpassung ist nach dem Studium durchaus sinnvoll. In Ihrem Fall würde ich eine Reduzierung der Franchise empfehlen, da Sie Physiotherapie benötigen. Wir sollten aber die Kosten-Nutzen-Relation genau analysieren, um die optimale Franchise für Sie zu finden. Möchten Sie, dass ich Ihnen verschiedene Optionen durchrechne?"
-        ]
-      },
-      "on": {
-        "Ja, absolut! Nach dem Studienabschluss ist es ein guter Zeitpunkt, Ihre Franchise zu überdenken. Bei regelmäßigen Arztbesuchen oder Behandlungen wie Physiotherapie kann eine niedrigere Franchise wie CHF 1'000 wirtschaftlicher sein. Möchten Sie einen Vergleich der verschiedenen Franchise-Optionen sehen?": "customer_franchise_comparison",
-        "Das ist eine sehr gute Überlegung. Wenn Sie häufiger medizinische Leistungen in Anspruch nehmen, könnte eine niedrigere Franchise für Sie vorteilhafter sein. Die monatliche Prämie wäre zwar etwas höher, aber Ihre Eigenleistung bei Behandlungen geringer. Sollen wir verschiedene Franchise-Optionen vergleichen?": "customer_franchise_comparison",
-        "Eine Franchise-Anpassung ist nach dem Studium durchaus sinnvoll. In Ihrem Fall würde ich eine Reduzierung der Franchise empfehlen, da Sie Physiotherapie benötigen. Wir sollten aber die Kosten-Nutzen-Relation genau analysieren, um die optimale Franchise für Sie zu finden. Möchten Sie, dass ich Ihnen verschiedene Optionen durchrechne?": "customer_franchise_comparison",
-        "DEFAULT": "customer_franchise_comparison"
-      }
-    },
-    "customer_additional_insurance_options": {
-      "meta": {
-        "customerText": "Ja, ich würde gerne wissen, welche zusätzlichen Versicherungsoptionen für Absolventen sinnvoll sein könnten.",
-        "responseOptions": [
-          "Gerne stelle ich Ihnen einige Optionen vor, die für Absolventen besonders relevant sind. Dazu gehören: 1) Eine Zahnversicherung, da diese Kosten von der Grundversicherung nicht übernommen werden, 2) Eine Reiseversicherung, falls Sie nach dem Studium reisen möchten, 3) Eine Rechtsschutzversicherung für berufliche Angelegenheiten. Welche dieser Optionen interessiert Sie am meisten?",
-          "Als Absolvent sollten Sie besonders diese Zusatzversicherungen in Betracht ziehen: Eine Spitalzusatzversicherung für mehr Komfort bei Spitalaufenthalten, eine ambulante Zusatzversicherung für alternative Heilmethoden und eine Unfallversicherung mit erweiterten Leistungen. Wir haben auch ein spezielles Absolventenpaket mit Rabatt. Möchten Sie dazu ein Angebot?",
-          "Für Berufseinsteiger empfehlen wir folgende Zusatzversicherungen: Zahnversicherung (hilft bei teuren Zahnbehandlungen), erweiterte ambulante Versicherung (deckt Alternativmedizin und Brillen) und eine halbprivate Spitalversicherung. Diese können einzeln oder als vergünstigtes Paket abgeschlossen werden. Soll ich Ihnen ein personalisiertes Angebot erstellen?"
-        ]
-      },
-      "on": {
-        "Gerne stelle ich Ihnen einige Optionen vor, die für Absolventen besonders relevant sind. Dazu gehören: 1) Eine Zahnversicherung, da diese Kosten von der Grundversicherung nicht übernommen werden, 2) Eine Reiseversicherung, falls Sie nach dem Studium reisen möchten, 3) Eine Rechtsschutzversicherung für berufliche Angelegenheiten. Welche dieser Optionen interessiert Sie am meisten?": "customer_additional_insurance_specifics",
-        "Als Absolvent sollten Sie besonders diese Zusatzversicherungen in Betracht ziehen: Eine Spitalzusatzversicherung für mehr Komfort bei Spitalaufenthalten, eine ambulante Zusatzversicherung für alternative Heilmethoden und eine Unfallversicherung mit erweiterten Leistungen. Wir haben auch ein spezielles Absolventenpaket mit Rabatt. Möchten Sie dazu ein Angebot?": "customer_additional_insurance",
-        "Für Berufseinsteiger empfehlen wir folgende Zusatzversicherungen: Zahnversicherung (hilft bei teuren Zahnbehandlungen), erweiterte ambulante Versicherung (deckt Alternativmedizin und Brillen) und eine halbprivate Spitalversicherung. Diese können einzeln oder als vergünstigtes Paket abgeschlossen werden. Soll ich Ihnen ein personalisiertes Angebot erstellen?": "customer_additional_insurance",
-        "DEFAULT": "customer_additional_insurance"
-      }
-    },
-    "customer_additional_insurance_specifics": {
-      "meta": {
-        "customerText": "Die Zahnversicherung klingt interessant, da ich weiß, dass Zahnbehandlungen teuer sein können. Welche Kosten werden dabei übernommen und wie hoch wären die monatlichen Prämien?",
-        "module": {
-          "id": "dental_insurance",
-          "type": "INFORMATION",
-          "title": "Zahnversicherung Details",
-          "data": {
-            "message": "Informationen zur Zahnversicherung:",
-            "sections": [
-              {
-                "title": "Leistungsumfang",
-                "items": [
-                  { "label": "Zahnkontrollen", "value": "100% Kostenübernahme, zweimal jährlich" },
-                  { "label": "Dentalhygiene", "value": "80% Kostenübernahme, bis CHF 150 pro Jahr" },
-                  { "label": "Füllungen", "value": "75% Kostenübernahme" },
-                  { "label": "Wurzelbehandlungen", "value": "75% Kostenübernahme" },
-                  { "label": "Kronen/Brücken", "value": "50% Kostenübernahme, max. CHF 1'000 pro Jahr" },
-                  { "label": "Kieferorthopädie", "value": "50% Kostenübernahme, max. CHF 2'000 pro Jahr" }
-                ]
-              },
-              {
-                "title": "Optionen & Prämien",
-                "items": [
-                  { "label": "Basic", "value": "CHF 15/Monat, max. Leistungen CHF 1'500/Jahr" },
-                  { "label": "Comfort", "value": "CHF 25/Monat, max. Leistungen CHF 3'000/Jahr" },
-                  { "label": "Premium", "value": "CHF 40/Monat, max. Leistungen CHF 5'000/Jahr" }
-                ]
-              }
-            ],
-            "note": "Neue Versicherungsnehmer haben eine Wartezeit von 6 Monaten für einfache Behandlungen und 12 Monaten für komplexere Eingriffe. Bestehende Probleme sind von der Deckung ausgeschlossen.",
-            "isInline": true
-          }
-        },
-        "responseOptions": [
-          "Wie Sie der Übersicht entnehmen können, bieten wir verschiedene Stufen der Zahnversicherung an. Der Comfort-Tarif für CHF 25/Monat bietet ein ausgewogenes Verhältnis zwischen Prämie und Leistungen. Wichtig zu wissen ist, dass eine Wartezeit von 6-12 Monaten besteht und bestehende Probleme ausgeschlossen sind. Möchten Sie eine Zahnversicherung in Ihr Angebot aufnehmen?",
-          "Unsere Zahnversicherungen decken von einfachen Kontrollen bis hin zu komplexen Behandlungen ab, mit unterschiedlichen Deckungsgraden je nach gewähltem Tarif. Die Prämien beginnen bei CHF 15 monatlich. Bei regelmäßigen Zahnarztbesuchen oder geplanten größeren Eingriffen kann sich die Versicherung schnell rechnen. Soll ich Ihnen ein Angebot mit der Zahnversicherung Comfort erstellen?",
-          "Die Zahnversicherung übernimmt je nach Tarif zwischen 50% und 100% der Kosten für verschiedene Behandlungen. Als Absolvent empfehle ich Ihnen den Comfort-Tarif, der ein gutes Gleichgewicht zwischen Prämie und Leistungen bietet. Beachten Sie die Wartezeiten von 6-12 Monaten. Möchten Sie mehr über unsere speziellen Absolventenpakete erfahren, die auch diese Zahnversicherung beinhalten?"
-        ]
-      },
-      "on": {
-        "Wie Sie der Übersicht entnehmen können, bieten wir verschiedene Stufen der Zahnversicherung an. Der Comfort-Tarif für CHF 25/Monat bietet ein ausgewogenes Verhältnis zwischen Prämie und Leistungen. Wichtig zu wissen ist, dass eine Wartezeit von 6-12 Monaten besteht und bestehende Probleme ausgeschlossen sind. Möchten Sie eine Zahnversicherung in Ihr Angebot aufnehmen?": "customer_insurance_addon_decision",
-        "Unsere Zahnversicherungen decken von einfachen Kontrollen bis hin zu komplexen Behandlungen ab, mit unterschiedlichen Deckungsgraden je nach gewähltem Tarif. Die Prämien beginnen bei CHF 15 monatlich. Bei regelmäßigen Zahnarztbesuchen oder geplanten größeren Eingriffen kann sich die Versicherung schnell rechnen. Soll ich Ihnen ein Angebot mit der Zahnversicherung Comfort erstellen?": "customer_insurance_addon_decision",
-        "Die Zahnversicherung übernimmt je nach Tarif zwischen 50% und 100% der Kosten für verschiedene Behandlungen. Als Absolvent empfehle ich Ihnen den Comfort-Tarif, der ein gutes Gleichgewicht zwischen Prämie und Leistungen bietet. Beachten Sie die Wartezeiten von 6-12 Monaten. Möchten Sie mehr über unsere speziellen Absolventenpakete erfahren, die auch diese Zahnversicherung beinhalten?": "customer_graduate_package_inquiry",
-        "DEFAULT": "customer_insurance_addon_decision"
-      }
-    },
-    "customer_graduate_package_inquiry": {
-      "meta": {
-        "customerText": "Ja, bitte erzählen Sie mir mehr über die Absolventenpakete. Welche Vorteile bieten diese?",
-        "responseOptions": [
-          "Unsere Absolventenpakete kombinieren verschiedene Zusatzversicherungen zu einem vergünstigten Preis. Das Basis-Absolventenpaket umfasst eine ambulante Zusatzversicherung und eine Zahnversicherung Basic für insgesamt CHF 35/Monat statt CHF 45/Monat bei Einzelabschluss. Das Premium-Absolventenpaket enthält zusätzlich eine halbprivate Spitalversicherung und einen weltweiten Reiseschutz für insgesamt CHF 75/Monat, was einer Ersparnis von 20% entspricht. Welches Paket würde Sie mehr interessieren?",
-          "Als Absolvent profitieren Sie von speziellen Paketen mit bis zu 25% Rabatt gegenüber dem Einzelabschluss der Versicherungen. Das beliebteste Paket enthält die Zahnversicherung Comfort, eine halbprivate Spitalversicherung und einen Reiseschutz für weltweite Absicherung zum Preis von CHF 70/Monat. Zudem verzichten wir im ersten Jahr auf die übliche Wartezeit für Zahnbehandlungen. Soll ich Ihnen ein detailliertes Angebot zu diesem Paket erstellen?",
-          "Für Absolventen haben wir spezielle Pakete geschnürt, die auf die Bedürfnisse von Berufseinsteigern zugeschnitten sind. Diese beinhalten wesentliche Zusatzleistungen zu vergünstigten Konditionen. Das Highlight ist unser 'Career Starter'-Paket mit Zahnversicherung, ambulanter Zusatzversicherung und Rechtsschutz für berufliche Angelegenheiten für nur CHF 55/Monat. Zusätzlich erhalten Sie einen Gutschein für eine professionelle Zahnreinigung. Möchten Sie mehr Details zu diesem oder anderen Paketen?"
-        ]
-      },
-      "on": {
-        "Unsere Absolventenpakete kombinieren verschiedene Zusatzversicherungen zu einem vergünstigten Preis. Das Basis-Absolventenpaket umfasst eine ambulante Zusatzversicherung und eine Zahnversicherung Basic für insgesamt CHF 35/Monat statt CHF 45/Monat bei Einzelabschluss. Das Premium-Absolventenpaket enthält zusätzlich eine halbprivate Spitalversicherung und einen weltweiten Reiseschutz für insgesamt CHF 75/Monat, was einer Ersparnis von 20% entspricht. Welches Paket würde Sie mehr interessieren?": "customer_package_selection",
-        "Als Absolvent profitieren Sie von speziellen Paketen mit bis zu 25% Rabatt gegenüber dem Einzelabschluss der Versicherungen. Das beliebteste Paket enthält die Zahnversicherung Comfort, eine halbprivate Spitalversicherung und einen Reiseschutz für weltweite Absicherung zum Preis von CHF 70/Monat. Zudem verzichten wir im ersten Jahr auf die übliche Wartezeit für Zahnbehandlungen. Soll ich Ihnen ein detailliertes Angebot zu diesem Paket erstellen?": "customer_package_offer_request",
-        "Für Absolventen haben wir spezielle Pakete geschnürt, die auf die Bedürfnisse von Berufseinsteigern zugeschnitten sind. Diese beinhalten wesentliche Zusatzleistungen zu vergünstigten Konditionen. Das Highlight ist unser 'Career Starter'-Paket mit Zahnversicherung, ambulanter Zusatzversicherung und Rechtsschutz für berufliche Angelegenheiten für nur CHF 55/Monat. Zusätzlich erhalten Sie einen Gutschein für eine professionelle Zahnreinigung. Möchten Sie mehr Details zu diesem oder anderen Paketen?": "customer_career_starter_package",
-        "DEFAULT": "customer_package_offer_request"
-      }
-    },
-    "customer_package_offer_request": {
-      "meta": {
-        "customerText": "Das klingt sehr interessant. Ja, bitte erstellen Sie mir ein detailliertes Angebot zu diesem Paket und senden Sie es per E-Mail. Gibt es sonst noch etwas, das ich nach meinem Studienabschluss beachten sollte?",
-        "responseOptions": [
-          "Ich erstelle Ihnen gerne ein detailliertes Angebot und sende es an Ihre E-Mail-Adresse. Ein wichtiger Punkt nach dem Studienabschluss ist auch die berufliche Vorsorge. Sobald Sie eine Stelle antreten, werden Sie automatisch in die Pensionskasse Ihres Arbeitgebers aufgenommen. Falls Sie selbständig werden sollten, wäre eine freiwillige dritte Säule empfehlenswert. Möchten Sie dazu ebenfalls Informationen erhalten?",
-          "Sehr gerne stelle ich Ihnen ein Angebot zusammen. Nach dem Studienabschluss sollten Sie auch Ihre Haftpflichtversicherung überprüfen, besonders wenn Sie in eine eigene Wohnung ziehen oder bereits gezogen sind. Zudem könnte eine Hausratversicherung sinnvoll sein. Soll ich Informationen dazu in das Angebot aufnehmen?",
-          "Ich werde Ihnen ein ausführliches Angebot per E-Mail zusenden. Nach dem Studium ist es außerdem wichtig, den korrekten Berufsstand in Ihrer Versicherung zu aktualisieren, da dies Auswirkungen auf verschiedene Policen haben kann. Möchten Sie, dass ich direkt eine Zusammenfassung aller heute besprochenen Änderungen mitschicke?"
-        ]
-      },
-      "on": {
-        "Ich erstelle Ihnen gerne ein detailliertes Angebot und sende es an Ihre E-Mail-Adresse. Ein wichtiger Punkt nach dem Studienabschluss ist auch die berufliche Vorsorge. Sobald Sie eine Stelle antreten, werden Sie automatisch in die Pensionskasse Ihres Arbeitgebers aufgenommen. Falls Sie selbständig werden sollten, wäre eine freiwillige dritte Säule empfehlenswert. Möchten Sie dazu ebenfalls Informationen erhalten?": "customer_retirement_planning",
-        "Sehr gerne stelle ich Ihnen ein Angebot zusammen. Nach dem Studienabschluss sollten Sie auch Ihre Haftpflichtversicherung überprüfen, besonders wenn Sie in eine eigene Wohnung ziehen oder bereits gezogen sind. Zudem könnte eine Hausratversicherung sinnvoll sein. Soll ich Informationen dazu in das Angebot aufnehmen?": "customer_liability_insurance",
-        "Ich werde Ihnen ein ausführliches Angebot per E-Mail zusenden. Nach dem Studium ist es außerdem wichtig, den korrekten Berufsstand in Ihrer Versicherung zu aktualisieren, da dies Auswirkungen auf verschiedene Policen haben kann. Möchten Sie, dass ich direkt eine Zusammenfassung aller heute besprochenen Änderungen mitschicke?": "customer_summary_request",
-        "DEFAULT": "customer_summary_request"
-      }
-    },
-    "customer_summary_request": {
-      "meta": {
-        "customerText": "Ja, eine Zusammenfassung aller besprochenen Änderungen wäre sehr hilfreich. Vielen Dank für die umfassende Beratung!",
-        "responseOptions": [
-          "Sehr gerne. Ich fasse zusammen: 1) Wir reduzieren Ihre Franchise von CHF 2'500 auf CHF 1'000 ab nächstem Monat, 2) Sie behalten das Telmed-Modell bei, 3) Sie erhalten ein detailliertes Angebot zum Absolventenpaket mit Zahnversicherung, halbprivater Spitalversicherung und Reiseschutz per E-Mail, 4) Wir haben Ihre Kostenübernahme für die Physiotherapie-Behandlungen besprochen (70% Kostendeckung). Ist diese Zusammenfassung korrekt oder habe ich etwas vergessen?",
-          "Ich erstelle Ihnen folgende Zusammenfassung: Sie erhalten ein umfassendes Angebot per E-Mail mit dem Absolventenpaket und allen Details zur Zahnversicherung. Ihre Franchise wird von CHF 2'500 auf CHF 1'000 reduziert (gültig ab nächstem Monat). Sie behalten Ihr Telmed-Modell bei. Zusätzlich haben wir Informationen zur Deckung und Kostenerstattung für Physiotherapie besprochen. Ist das so vollständig?",
-          "Gerne fasse ich alles zusammen: 1) Franchise-Reduktion auf CHF 1'000 (wirksam ab nächstem Monat), 2) Beibehaltung des Telmed-Modells, 3) Detailliertes Angebot zum Absolventenpaket wird per E-Mail gesendet, 4) Information zur Physiotherapie-Deckung (70% der Kosten werden übernommen) und zum Erstattungsprozess. Die Zusammenfassung und das Angebot erhalten Sie in den nächsten 24 Stunden per E-Mail. War unsere Beratung heute hilfreich für Sie?"
-        ]
-      },
-      "on": {
-        "Sehr gerne. Ich fasse zusammen: 1) Wir reduzieren Ihre Franchise von CHF 2'500 auf CHF 1'000 ab nächstem Monat, 2) Sie behalten das Telmed-Modell bei, 3) Sie erhalten ein detailliertes Angebot zum Absolventenpaket mit Zahnversicherung, halbprivater Spitalversicherung und Reiseschutz per E-Mail, 4) Wir haben Ihre Kostenübernahme für die Physiotherapie-Behandlungen besprochen (70% Kostendeckung). Ist diese Zusammenfassung korrekt oder habe ich etwas vergessen?": "customer_confirmation",
-        "Ich erstelle Ihnen folgende Zusammenfassung: Sie erhalten ein umfassendes Angebot per E-Mail mit dem Absolventenpaket und allen Details zur Zahnversicherung. Ihre Franchise wird von CHF 2'500 auf CHF 1'000 reduziert (gültig ab nächstem Monat). Sie behalten Ihr Telmed-Modell bei. Zusätzlich haben wir Informationen zur Deckung und Kostenerstattung für Physiotherapie besprochen. Ist das so vollständig?": "customer_confirmation",
-        "Gerne fasse ich alles zusammen: 1) Franchise-Reduktion auf CHF 1'000 (wirksam ab nächstem Monat), 2) Beibehaltung des Telmed-Modells, 3) Detailliertes Angebot zum Absolventenpaket wird per E-Mail gesendet, 4) Information zur Physiotherapie-Deckung (70% der Kosten werden übernommen) und zum Erstattungsprozess. Die Zusammenfassung und das Angebot erhalten Sie in den nächsten 24 Stunden per E-Mail. War unsere Beratung heute hilfreich für Sie?": "customer_feedback",
-        "DEFAULT": "customer_confirmation"
-      }
-    },
-    "customer_feedback": {
-      "meta": {
-        "customerText": "Ja, die Beratung war sehr hilfreich und umfassend. Ich freue mich auf das Angebot per E-Mail. Vielen Dank für Ihre Zeit!",
-        "responseOptions": [
-          "Es freut mich sehr, dass ich Ihnen helfen konnte. Ich wünsche Ihnen alles Gute für Ihren beruflichen Start nach dem Studium! Falls Sie weitere Fragen haben sollten, zögern Sie nicht, uns zu kontaktieren. Einen schönen Tag noch!",
-          "Vielen Dank für Ihr positives Feedback! Es war mir ein Vergnügen, Sie zu beraten. Das Angebot und die Zusammenfassung werden Sie in Kürze erhalten. Ich wünsche Ihnen viel Erfolg in Ihrem neuen Lebensabschnitt!",
-          "Ich freue mich, dass wir alle Ihre Fragen klären konnten. Sie erhalten alle besprochenen Informationen und Angebote per E-Mail. Sollten Sie weitere Unterstützung benötigen, sind wir jederzeit für Sie da. Vielen Dank für Ihr Vertrauen und einen schönen Tag noch!"
-        ]
-      },
-      "on": {
-        "Es freut mich sehr, dass ich Ihnen helfen konnte. Ich wünsche Ihnen alles Gute für Ihren beruflichen Start nach dem Studium! Falls Sie weitere Fragen haben sollten, zögern Sie nicht, uns zu kontaktieren. Einen schönen Tag noch!": "end_call",
-        "Vielen Dank für Ihr positives Feedback! Es war mir ein Vergnügen, Sie zu beraten. Das Angebot und die Zusammenfassung werden Sie in Kürze erhalten. Ich wünsche Ihnen viel Erfolg in Ihrem neuen Lebensabschnitt!": "end_call",
-        "Ich freue mich, dass wir alle Ihre Fragen klären konnten. Sie erhalten alle besprochenen Informationen und Angebote per E-Mail. Sollten Sie weitere Unterstützung benötigen, sind wir jederzeit für Sie da. Vielen Dank für Ihr Vertrauen und einen schönen Tag noch!": "end_call",
-        "DEFAULT": "end_call"
+        "agentText": "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!"
       }
     }
   }
