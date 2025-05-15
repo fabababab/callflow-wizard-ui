@@ -191,7 +191,22 @@
     },
     "end_call": {
       "meta": {
-        "agentText": "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!"
+        "agentText": "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!",
+        "module": {
+          "id": "nachbearbeitung-module",
+          "title": "Gesprächszusammenfassung",
+          "type": "NACHBEARBEITUNG",
+          "data": {
+            "isInline": true,
+            "points": [
+              "Studium abgeschlossen",
+              "Franchise von 2500 auf 1000 CHF reduziert",
+              "Bleibt im Telmed-Modell",
+              "Änderung ab nächstem Monat"
+            ],
+            "summary": "Kunde hat nach Studienabschluss Franchise von CHF 2500.– auf CHF 1000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet."
+          }
+        }
       }
     }
   }

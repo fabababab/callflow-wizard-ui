@@ -24,18 +24,31 @@ const NachbearbeitungModule: React.FC<ModuleProps> = ({
   onClose, 
   onComplete 
 }) => {
-  // Use provided summary points or default ones
-  const initialPoints = data?.points?.map((point: string, index: number) => ({
-    id: `${index + 1}`,
-    text: point,
-    checked: index < 2, // First two points checked by default
-    important: index < 2 // First two points marked as important
-  })) || [
-    { id: '1', text: 'Studium abgeschlossen', checked: true, important: true },
-    { id: '2', text: 'Franchise von 2500 auf 1000 CHF reduziert', checked: true, important: true },
-    { id: '3', text: 'Bleibt im Telmed-Modell', checked: false, important: true },
-    { id: '4', text: 'Änderung ab nächstem Monat', checked: false, important: false }
-  ];
+  // Process the points data - could be an array of strings or CallSummaryPoint objects
+  const initialPoints = React.useMemo(() => {
+    if (data?.points) {
+      // If points is an array of strings, convert to CallSummaryPoint objects
+      if (typeof data.points[0] === 'string') {
+        return (data.points as string[]).map((point, index) => ({
+          id: `${index + 1}`,
+          text: point,
+          checked: index < 2, // First two points checked by default
+          important: index < 2 // First two points marked as important
+        }));
+      } 
+      // If points is already an array of CallSummaryPoint objects, use as is
+      else {
+        return data.points as CallSummaryPoint[];
+      }
+    }
+    // Default points if none provided
+    return [
+      { id: '1', text: 'Studium abgeschlossen', checked: true, important: true },
+      { id: '2', text: 'Franchise von 2500 auf 1000 CHF reduziert', checked: true, important: true },
+      { id: '3', text: 'Bleibt im Telmed-Modell', checked: false, important: true },
+      { id: '4', text: 'Änderung ab nächstem Monat', checked: false, important: false }
+    ];
+  }, [data?.points]);
   
   // Use provided summary or default
   const initialNotes = data?.summary || 'Kunde hat nach Studienabschluss Franchise von CHF 2500.– auf CHF 1000.– angepasst, bleibt im Telmed-Modell. Änderung per nächstem Monatsbeginn eingeleitet.';
