@@ -11,6 +11,7 @@ import TranscriptHeader from '@/components/transcript/TranscriptHeader';
 import JsonVisualizationDialog from '@/components/transcript/JsonVisualizationDialog';
 import ModuleDisplay from '@/components/transcript/ModuleDisplay';
 import { StateMachine } from '@/utils/stateMachineLoader';
+import { ValidationStatus } from '@/data/scenarioData';
 
 // Define type for selected state details
 interface SelectedStateDetails {
@@ -66,6 +67,11 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   if (!jsonVisualization) {
     return null;
   }
+
+  // Wrapper for validateSensitiveData to match expected signature
+  const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
+    transcript.handleValidateSensitiveData(fieldId, status === 'valid', notes);
+  };
   
   return (
     <div className="h-full flex flex-col bg-white relative">
@@ -93,7 +99,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           messages={transcript.messages}
           onSelectResponse={transcript.handleSelectResponse}
           onVerifySystemCheck={transcript.handleVerifySystemCheck}
-          onValidateSensitiveData={transcript.handleValidateSensitiveData}
+          onValidateSensitiveData={handleValidateSensitiveData}
           messagesEndRef={transcript.messagesEndRef}
           onModuleComplete={transcript.handleInlineModuleComplete}
         />

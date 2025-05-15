@@ -1,6 +1,6 @@
 
 import { useState, useRef, useCallback } from 'react';
-import { useToast } from '@/lib/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useConversationState } from '@/hooks/useConversationState';
 import { useCallState } from '@/hooks/useCallState';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
@@ -57,7 +57,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     
     // Start the state machine
     stateMachine.processStartCall();
-  }, [callState, messageHandling, stateMachine.processStartCall]);
+  }, [callState, messageHandling, stateMachine]);
   
   // Function to handle selecting a response
   const handleSelectResponse = useCallback((selection: string) => {
@@ -68,7 +68,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     
     // Process the selection
     stateMachine.processSelection(selection);
-  }, [messageHandling, stateMachine.processSelection]);
+  }, [messageHandling, stateMachine]);
   
   // Function to handle verifying a system check
   const handleVerifySystemCheck = useCallback((messageId: string) => {
@@ -85,8 +85,11 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const handleValidateSensitiveData = useCallback((fieldId: string, isValid: boolean, notes?: string) => {
     console.log(`Validating sensitive data: ${fieldId} - ${isValid}`);
     
+    // Map boolean isValid to ValidationStatus
+    const status: ValidationStatus = isValid ? 'valid' : 'invalid';
+    
     // Use the message handling function
-    messageHandling.handleValidateSensitiveData(fieldId, isValid, notes);
+    messageHandling.updateSensitiveField(fieldId, status, notes);
     
     // Force re-render to update transcript
     setLastTranscriptUpdate(new Date());
