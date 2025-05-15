@@ -1,4 +1,3 @@
 
-import { useToast as useHookToast, toast as hookToast } from "./use-toast";
-
-export { useHookToast as useToast, hookToast as toast };
+// Export from the tsx file which has the implementation
+export { useToast, toast } from "./use-toast.tsx";

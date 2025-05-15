@@ -1,3 +1,4 @@
+
 // This is our main toast implementation
 import * as React from "react"
 import { type ToastActionElement, ToastProps } from "@/components/ui/toast"
@@ -10,6 +11,10 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  // Add notification-specific fields
+  read?: boolean
+  timestamp?: string
+  variant?: ToastProps['variant']
 }
 
 const actionTypes = {
@@ -17,6 +22,8 @@ const actionTypes = {
   UPDATE_TOAST: "UPDATE_TOAST",
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
+  MARK_AS_READ: "MARK_AS_READ",
+  CLEAR_ALL: "CLEAR_ALL",
 } as const
 
 let count = 0
@@ -46,6 +53,13 @@ type Action =
       type: ActionType["REMOVE_TOAST"]
       id: string
     }
+  | {
+      type: ActionType["MARK_AS_READ"]
+      id: string
+    }
+  | {
+      type: ActionType["CLEAR_ALL"]
+    }
 
 interface State {
   toasts: ToasterToast[]
@@ -74,7 +88,13 @@ export const reducer = (state: State, action: Action): State => {
     case "ADD_TOAST":
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+        toasts: [
+          {
+            ...action.toast,
+            read: false, // Mark all new notifications as unread by default
+          },
+          ...state.toasts
+        ].slice(0, TOAST_LIMIT),
       }
 
     case "UPDATE_TOAST":
@@ -119,6 +139,27 @@ export const reducer = (state: State, action: Action): State => {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.id),
       }
+      
+    case "MARK_AS_READ":
+      if (action.id === "all") {
+        return {
+          ...state,
+          toasts: state.toasts.map((t) => ({ ...t, read: true })),
+        }
+      }
+      
+      return {
+        ...state,
+        toasts: state.toasts.map((t) => 
+          t.id === action.id ? { ...t, read: true } : t
+        ),
+      }
+      
+    case "CLEAR_ALL":
+      return {
+        ...state,
+        toasts: [],
+      }
   }
 }
 
@@ -137,6 +178,7 @@ type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
   const id = genId()
+  const timestamp = new Date().toLocaleTimeString();
 
   const update = (props: Toast) =>
     dispatch({
@@ -152,6 +194,7 @@ function toast({ ...props }: Toast) {
     toast: {
       ...props,
       id,
+      timestamp,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss()
@@ -178,11 +221,32 @@ function useToast() {
       }
     }
   }, [state])
+  
+  // Get unread notification count
+  const unreadCount = state.toasts.filter(toast => !toast.read).length;
+  
+  // All toasts as notifications
+  const notifications = state.toasts;
+  
+  // Mark notifications as read
+  const markAsRead = (id: string) => {
+    dispatch({ type: "MARK_AS_READ", id });
+  }
+  
+  // Clear all notifications
+  const clearAll = () => {
+    dispatch({ type: "CLEAR_ALL" });
+  }
 
   return {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", id: toastId || "all" }),
+    // Add notification related methods
+    unreadCount,
+    notifications,
+    markAsRead,
+    clearAll,
   }
 }
 
