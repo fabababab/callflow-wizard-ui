@@ -3,7 +3,7 @@ import React, { memo, useRef, useEffect, useState } from 'react';
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Calculator, FileText, Info, ChevronDown, ChevronUp, BarChart } from 'lucide-react';
+import { Shield, Calculator, FileText, Info, ChevronDown, ChevronUp, BarChart, Table } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -32,6 +32,8 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
         return <FileText className="h-4 w-4 text-amber-600" />;
       case ModuleType.FRANCHISE:
         return <BarChart className="h-4 w-4 text-amber-600" />;
+      case ModuleType.INFORMATION_TABLE:
+        return <Table className="h-4 w-4 text-amber-600" />;
       default:
         return <Info className="h-4 w-4 text-amber-600" />;
     }
@@ -49,6 +51,8 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       description = "Important customer information available";
     } else if (moduleConfig.type === ModuleType.FRANCHISE) {
       description = "Franchise options and premium information";
+    } else if (moduleConfig.type === ModuleType.INFORMATION_TABLE) {
+      description = "Please review the franchise table information";
     }
     
     toast({
@@ -98,7 +102,7 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       window.dispatchEvent(contractEvent);
     }
     
-    if (moduleConfig.type === ModuleType.INFORMATION) {
+    if (moduleConfig.type === ModuleType.INFORMATION || moduleConfig.type === ModuleType.INFORMATION_TABLE) {
       const infoEvent = new CustomEvent('information-module-complete', {
         detail: { 
           moduleId: moduleConfig.id,
@@ -261,7 +265,7 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
           key={moduleConfig.id} // Add a stable key to prevent unnecessary re-renders
         />
         
-        {/* Collapsible Configuration Details Section */}
+        {/* Collapsible Configuration Details Section - Always visible now */}
         <Collapsible 
           open={isConfigOpen} 
           onOpenChange={setIsConfigOpen}

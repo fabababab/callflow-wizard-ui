@@ -98,26 +98,11 @@
           "I've pulled up your franchise options. You currently have the standard franchise of CHF 300, but you can increase this to reduce your premium."
         ],
         "module": {
-          "id": "franchise-module-1",
-          "title": "Franchise Optionen",
-          "type": "franchise",
+          "id": "info-table-module-1",
+          "title": "Auswirkungen Änderung Franchise",
+          "type": "information_table",
           "data": {
-            "currentFranchise": 300,
-            "historicalData": [
-              { "date": "2024-01-15", "amount": 300, "policyId": "POL-2024-001" },
-              { "date": "2023-01-10", "amount": 500, "policyId": "POL-2023-001" },
-              { "date": "2022-01-05", "amount": 300, "policyId": "POL-2022-001" }
-            ],
-            "minFranchise": 300,
-            "maxFranchise": 2500,
-            "stepSize": 100,
-            "franchiseUsed": 180,
-            "usageHistory": [
-              { "year": "2024", "used": 180, "total": 300, "claims": 2 },
-              { "year": "2023", "used": 450, "total": 500, "claims": 5 },
-              { "year": "2022", "used": 300, "total": 300, "claims": 3 },
-              { "year": "2021", "used": 220, "total": 300, "claims": 2 }
-            ],
+            "description": "Please review this important information about your insurance coverage.",
             "franchiseOptions": [
               { "amount": 300, "premium": 400 },
               { "amount": 500, "premium": 360 },
@@ -125,7 +110,9 @@
               { "amount": 1500, "premium": 270 },
               { "amount": 2000, "premium": 240 },
               { "amount": 2500, "premium": 220 }
-            ]
+            ],
+            "tableTitle": "Franchise Optionen",
+            "buttonText": "Acknowledge"
           }
         }
       },
