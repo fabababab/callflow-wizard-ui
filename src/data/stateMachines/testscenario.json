@@ -1,3 +1,4 @@
+
 {
   "id": "test-scenario",
   "initial": "start",
@@ -67,444 +68,150 @@
     },
     "customer_issue": {
       "meta": {
-        "customerText": "Hi there. I recently purchased your premium subscription package, but I'm being charged the standard rate. I checked my account online and it shows I'm on the premium plan, but the features are limited to the standard plan and my last invoice shows the standard rate.",
+        "customerText": "Hi there. I'd like to check my franchise options for my health insurance. I think I want to change it.",
         "suggestions": [
-          "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
-          "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
-          "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied."
+          "I'd be happy to help you review your franchise options. Let me pull up your account information.",
+          "I can show you the different franchise options available for your health insurance plan.",
+          "Let me check your current franchise settings and show you what options are available."
         ],
         "responseOptions": [
-          "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
-          "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
-          "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied."
+          "I'd be happy to help you review your franchise options. Let me pull up your account information.",
+          "I can show you the different franchise options available for your health insurance plan.",
+          "Let me check your current franchise settings and show you what options are available."
         ]
       },
       "on": {
-        "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?": "account_verification_path",
-        "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.": "technical_escalation_path",
-        "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied.": "billing_explanation_path",
-        "DEFAULT": "account_verification_path"
+        "I'd be happy to help you review your franchise options. Let me pull up your account information.": "franchise_options",
+        "I can show you the different franchise options available for your health insurance plan.": "franchise_options",
+        "Let me check your current franchise settings and show you what options are available.": "franchise_options",
+        "DEFAULT": "franchise_options"
       }
     },
     
-    "account_verification_path": {
+    "franchise_options": {
       "meta": {
-        "agentText": "I understand your concern about the billing discrepancy. Let me check your account details. Could you please provide your account number or the email associated with your account?",
-        "customerText": "Yes, my email is customer@example.com and my account number is ACC123456.",
+        "agentText": "I'd be happy to help you review your franchise options. Let me pull up your account information.",
+        "customerText": "Great, thank you. I'd like to see what options I have and how they would affect my premium.",
         "suggestions": [
-          "Thank you for providing that information. I can see that you upgraded to the premium plan last week. Looking at your account, I notice that there's a system flag that hasn't properly updated your billing tier. Let me fix that for you right away.",
-          "I've found your account, but I'm having trouble seeing the premium upgrade on our system. Can you tell me when exactly you made the upgrade?",
-          "Thank you. I can see your account details, but there seems to be a discrepancy between what you're saying and what our system shows. Let me double check with our billing department."
-        ],
-        "sensitiveFields": [
-          {
-            "id": "cust-email-1",
-            "type": "customer_id",
-            "value": "ACC123456",
-            "pattern": "/\\b[0-9]{9}\\b/",
-            "status": "pending",
-            "requiresVerification": true,
-            "systemValue": "ACC123457",
-            "source": "Customer Database Record #45789",
-            "matched": false
-          }
+          "Here's an overview of your franchise options. As you can see, the standard franchise is CHF 300, but you can choose a higher amount which would lower your monthly premium.",
+          "Let me show you the different franchise options available. The higher the franchise amount, the lower your monthly premium will be.",
+          "I've pulled up your franchise options. You currently have the standard franchise of CHF 300, but you can increase this to reduce your premium."
         ],
         "module": {
-          "id": "verification-module-1",
-          "title": "Customer Verification Required",
-          "type": "verification",
+          "id": "franchise-module-1",
+          "title": "Franchise Optionen",
+          "type": "franchise",
           "data": {
-            "fields": [
-              {
-                "id": "customer-id",
-                "label": "Customer ID",
-                "type": "text",
-                "value": "ACC123456",
-                "expectedValue": "ACC123457",
-                "required": true
-              },
-              {
-                "id": "email",
-                "label": "Email Address",
-                "type": "email",
-                "value": "customer@example.com",
-                "expectedValue": "customer@example.com",
-                "required": true
-              }
+            "currentFranchise": 300,
+            "historicalData": [
+              { "date": "2024-01-15", "amount": 300, "policyId": "POL-2024-001" },
+              { "date": "2023-01-10", "amount": 500, "policyId": "POL-2023-001" },
+              { "date": "2022-01-05", "amount": 300, "policyId": "POL-2022-001" }
+            ],
+            "minFranchise": 300,
+            "maxFranchise": 2500,
+            "stepSize": 100,
+            "franchiseUsed": 180,
+            "usageHistory": [
+              { "year": "2024", "used": 180, "total": 300, "claims": 2 },
+              { "year": "2023", "used": 450, "total": 500, "claims": 5 },
+              { "year": "2022", "used": 300, "total": 300, "claims": 3 },
+              { "year": "2021", "used": 220, "total": 300, "claims": 2 }
+            ],
+            "franchiseOptions": [
+              { "amount": 300, "premium": 400 },
+              { "amount": 500, "premium": 360 },
+              { "amount": 1000, "premium": 310 },
+              { "amount": 1500, "premium": 270 },
+              { "amount": 2000, "premium": 240 },
+              { "amount": 2500, "premium": 220 }
             ]
           }
         }
       },
       "on": {
-        "Thank you for providing that information. I can see that you upgraded to the premium plan last week. Looking at your account, I notice that there's a system flag that hasn't properly updated your billing tier. Let me fix that for you right away.": "account_resolution",
-        "I've found your account, but I'm having trouble seeing the premium upgrade on our system. Can you tell me when exactly you made the upgrade?": "account_followup",
-        "Thank you. I can see your account details, but there seems to be a discrepancy between what you're saying and what our system shows. Let me double check with our billing department.": "billing_investigation",
-        "DEFAULT": "account_resolution"
+        "Here's an overview of your franchise options. As you can see, the standard franchise is CHF 300, but you can choose a higher amount which would lower your monthly premium.": "franchise_selection",
+        "Let me show you the different franchise options available. The higher the franchise amount, the lower your monthly premium will be.": "franchise_selection",
+        "I've pulled up your franchise options. You currently have the standard franchise of CHF 300, but you can increase this to reduce your premium.": "franchise_selection",
+        "DEFAULT": "franchise_selection"
       }
     },
     
-    "account_followup": {
+    "franchise_selection": {
       "meta": {
-        "agentText": "I've found your account, but I'm having trouble seeing the premium upgrade on our system. Can you tell me when exactly you made the upgrade?",
-        "customerText": "I upgraded exactly two weeks ago, on the 15th. I received a confirmation email at that time.",
+        "agentText": "Here's an overview of your franchise options. As you can see, the standard franchise is CHF 300, but you can choose a higher amount which would lower your monthly premium.",
+        "customerText": "I think I'd like to go with the CHF 1000 franchise option. That seems like a good balance between the premium and what I'd have to pay out of pocket.",
         "suggestions": [
-          "Thank you for that clarification. I can now see the upgrade in our system. There appears to be a processing delay that prevented it from being fully applied. I'll fix this right away.",
-          "I appreciate that information. Our records show the upgrade was initiated but not completed due to a payment processing issue. Would you like me to try processing it again now?",
-          "Thanks for confirming. I've found the record of your upgrade request, but it seems there was a technical error during processing. Let me escalate this to our technical team."
-        ],
-        "sensitiveFields": [
-          {
-            "id": "upgrade-date-1",
-            "type": "date_of_birth",
-            "value": "15.05.2023",
-            "pattern": "/\\b(0[1-9]|[12][0-9]|3[01])\\.(0[1-9]|1[0-2])\\.(19|20)\\d\\d\\b/",
-            "status": "pending",
-            "requiresVerification": true,
-            "systemValue": "15.05.2023",
-            "source": "Transaction History",
-            "matched": true
-          }
+          "That's a great choice. The CHF 1000 franchise will reduce your monthly premium to CHF 310, which is a savings of CHF 90 per month compared to the standard franchise.",
+          "I'll update your plan with the CHF 1000 franchise option. This will lower your monthly premium to CHF 310, effective from the next billing cycle.",
+          "The CHF 1000 franchise is a popular choice that offers a good balance. I'll process this change for you, which will reduce your premium to CHF 310 per month."
         ]
       },
       "on": {
-        "Thank you for that clarification. I can now see the upgrade in our system. There appears to be a processing delay that prevented it from being fully applied. I'll fix this right away.": "account_resolution",
-        "I appreciate that information. Our records show the upgrade was initiated but not completed due to a payment processing issue. Would you like me to try processing it again now?": "payment_processing",
-        "Thanks for confirming. I've found the record of your upgrade request, but it seems there was a technical error during processing. Let me escalate this to our technical team.": "technical_escalation_path",
-        "DEFAULT": "account_resolution"
+        "That's a great choice. The CHF 1000 franchise will reduce your monthly premium to CHF 310, which is a savings of CHF 90 per month compared to the standard franchise.": "franchise_confirmation",
+        "I'll update your plan with the CHF 1000 franchise option. This will lower your monthly premium to CHF 310, effective from the next billing cycle.": "franchise_confirmation",
+        "The CHF 1000 franchise is a popular choice that offers a good balance. I'll process this change for you, which will reduce your premium to CHF 310 per month.": "franchise_confirmation",
+        "DEFAULT": "franchise_confirmation"
       }
     },
     
-    "payment_processing": {
+    "franchise_confirmation": {
       "meta": {
-        "agentText": "I appreciate that information. Our records show the upgrade was initiated but not completed due to a payment processing issue. Would you like me to try processing it again now?",
-        "customerText": "Yes, please try processing it again. I want to make sure I get the premium features I'm paying for.",
+        "agentText": "That's a great choice. The CHF 1000 franchise will reduce your monthly premium to CHF 310, which is a savings of CHF 90 per month compared to the standard franchise.",
+        "customerText": "Excellent. When will this change take effect?",
         "suggestions": [
-          "I've successfully reprocessed the payment and upgraded your account to premium. You should now have full access to all premium features. The correct billing will apply starting today.",
-          "I've attempted to process the payment, but it seems there might be an issue with the payment method on file. Would you like to update your payment details?",
-          "The payment is processing now. It may take up to 24 hours for all premium features to activate. Is there a specific premium feature you need access to right away that I can enable manually?"
+          "The change to your franchise will take effect from the beginning of next month. You'll see the adjusted premium on your next bill.",
+          "This change will be effective from the first day of the coming month. I'll send you a confirmation email with all the details.",
+          "Your new franchise amount will be applied starting next month. Would you like me to send you a written confirmation of this change?"
         ]
       },
       "on": {
-        "I've successfully reprocessed the payment and upgraded your account to premium. You should now have full access to all premium features. The correct billing will apply starting today.": "account_resolution",
-        "I've attempted to process the payment, but it seems there might be an issue with the payment method on file. Would you like to update your payment details?": "payment_method_update",
-        "The payment is processing now. It may take up to 24 hours for all premium features to activate. Is there a specific premium feature you need access to right away that I can enable manually?": "manual_feature_activation",
-        "DEFAULT": "account_resolution"
-      }
-    },
-    
-    "payment_method_update": {
-      "meta": {
-        "agentText": "I've attempted to process the payment, but it seems there might be an issue with the payment method on file. Would you like to update your payment details?",
-        "customerText": "That's strange, I just used this card for another purchase. But yes, let's update the payment details to make sure.",
-        "suggestions": [
-          "I've updated your payment method and successfully processed the premium upgrade. Your account now has full premium access, and you'll be billed at the correct rate starting today.",
-          "Thank you for providing the new payment details. The system is processing your upgrade now. You should receive a confirmation email within the next hour.",
-          "I've updated your payment information. To ensure everything works properly, I'm also going to apply a one-time credit to your account for the inconvenience caused."
-        ],
-        "sensitiveFields": [
-          {
-            "id": "bank-account-1",
-            "type": "bank_account",
-            "value": "CH9300762011623852957",
-            "pattern": "/\\b[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]{0,16})?\\b/i",
-            "status": "pending",
-            "requiresVerification": true,
-            "systemValue": "CH9300762011623852957",
-            "source": "Payment Records",
-            "matched": true
-          }
-        ],
-        "module": {
-          "id": "contract-module-1",
-          "title": "Payment Contracts",
-          "type": "contract",
-          "data": {
-            "contracts": [
-              {
-                "id": "contract-001",
-                "name": "Premium Subscription",
-                "type": "Monthly Billing",
-                "status": "active",
-                "startDate": "2023-09-15",
-                "endDate": "2024-09-15",
-                "details": {
-                  "Monthly Rate": "$19.99",
-                  "Billing Cycle": "15th of each month",
-                  "Payment Method": "Credit Card ending in 4567",
-                  "Auto Renewal": "Yes"
-                }
-              },
-              {
-                "id": "contract-002",
-                "name": "Add-on Services Package",
-                "type": "Pay-as-you-go",
-                "status": "pending",
-                "startDate": "2023-10-01",
-                "details": {
-                  "Base Rate": "$5.99",
-                  "Usage Charges": "Variable",
-                  "Payment Method": "Same as primary subscription"
-                }
-              }
-            ]
-          }
-        }
-      },
-      "on": {
-        "I've updated your payment method and successfully processed the premium upgrade. Your account now has full premium access, and you'll be billed at the correct rate starting today.": "account_resolution",
-        "Thank you for providing the new payment details. The system is processing your upgrade now. You should receive a confirmation email within the next hour.": "conclusion",
-        "I've updated your payment information. To ensure everything works properly, I'm also going to apply a one-time credit to your account for the inconvenience caused.": "account_resolution",
-        "DEFAULT": "account_resolution"
-      }
-    },
-    
-    "manual_feature_activation": {
-      "meta": {
-        "agentText": "The payment is processing now. It may take up to 24 hours for all premium features to activate. Is there a specific premium feature you need access to right away that I can enable manually?",
-        "customerText": "Yes, I need access to the advanced analytics dashboard right away for a presentation I'm preparing.",
-        "suggestions": [
-          "I've manually enabled the advanced analytics dashboard for your account. You should be able to access it immediately. The rest of the premium features will activate automatically within 24 hours.",
-          "I'll enable all premium features for you right now instead of waiting. You should have full access within the next 5 minutes. Is there anything else you need help with?",
-          "I've expedited the activation process for all premium features. Additionally, I'll extend your premium subscription by one week to compensate for this inconvenience."
-        ]
-      },
-      "on": {
-        "I've manually enabled the advanced analytics dashboard for your account. You should be able to access it immediately. The rest of the premium features will activate automatically within 24 hours.": "conclusion",
-        "I'll enable all premium features for you right now instead of waiting. You should have full access within the next 5 minutes. Is there anything else you need help with?": "conclusion",
-        "I've expedited the activation process for all premium features. Additionally, I'll extend your premium subscription by one week to compensate for this inconvenience.": "conclusion",
+        "The change to your franchise will take effect from the beginning of next month. You'll see the adjusted premium on your next bill.": "conclusion",
+        "This change will be effective from the first day of the coming month. I'll send you a confirmation email with all the details.": "conclusion",
+        "Your new franchise amount will be applied starting next month. Would you like me to send you a written confirmation of this change?": "conclusion",
         "DEFAULT": "conclusion"
       }
     },
     
-    "account_resolution": {
+    "loyalty_check": {
       "meta": {
-        "agentText": "I've updated your account status in our system. You should now have full access to all premium features. I've also processed a refund for the difference between the standard and premium rates for this period. It will appear in your account within 3-5 business days. Is there anything else I can help you with today?",
-        "customerText": "That was quick! Thank you for fixing it so efficiently. I think that's all I needed help with today.",
+        "agentText": "I notice you've been a customer for over 2 years. Before we proceed, let me check if there are any loyalty rewards available.",
+        "customerText": "Oh, that would be great!",
         "suggestions": [
-          "You're welcome! I'm glad I could resolve this issue for you. If you need any assistance in the future, please don't hesitate to contact us.",
-          "I'm happy to have helped. As a courtesy, I've also added a complimentary month to your premium subscription to compensate for the inconvenience.",
-          "Excellent! Just to confirm, you should receive an email confirmation of these changes within the next hour. Is there anything else before we end the call?"
+          "Thank you for your loyalty. I can see that you're eligible for a 5% discount on your next premium payment. Would you also like to discuss your current health insurance plan?",
+          "As a valued long-term customer, you qualify for our loyalty program, which includes priority customer service and a free annual health check-up. Is there anything specific about your insurance you'd like to discuss today?",
+          "I've checked our loyalty rewards, and you're eligible for a wellness package that includes discounts on fitness club memberships. Before I add this to your account, did you have any questions or concerns about your current coverage?"
         ]
       },
       "on": {
-        "You're welcome! I'm glad I could resolve this issue for you. If you need any assistance in the future, please don't hesitate to contact us.": "conclusion",
-        "I'm happy to have helped. As a courtesy, I've also added a complimentary month to your premium subscription to compensate for the inconvenience.": "conclusion",
-        "Excellent! Just to confirm, you should receive an email confirmation of these changes within the next hour. Is there anything else before we end the call?": "conclusion",
-        "DEFAULT": "conclusion"
-      }
-    },
-    
-    "technical_escalation_path": {
-      "meta": {
-        "agentText": "I apologize for the inconvenience. This sounds like a technical issue with our billing system. I'd like to escalate this to our technical team who can investigate the system error.",
-        "customerText": "How long will that take? I need this resolved soon as I'm trying to use the premium features for an important project.",
-        "suggestions": [
-          "I understand the urgency. Let me create a priority ticket for our technical team. They typically respond within 4 hours for urgent matters. In the meantime, I can manually activate the premium features on your account as a temporary solution.",
-          "I'll mark this as high priority. Our technical team will contact you directly within 24 hours. Can I get the best phone number to reach you?",
-          "I apologize for the delay this might cause. Instead of waiting, let me try a different approach to fix this issue immediately without involving the technical team."
-        ]
-      },
-      "on": {
-        "I understand the urgency. Let me create a priority ticket for our technical team. They typically respond within 4 hours for urgent matters. In the meantime, I can manually activate the premium features on your account as a temporary solution.": "temp_access_granted",
-        "I'll mark this as high priority. Our technical team will contact you directly within 24 hours. Can I get the best phone number to reach you?": "contact_information",
-        "I apologize for the delay this might cause. Instead of waiting, let me try a different approach to fix this issue immediately without involving the technical team.": "account_resolution",
-        "DEFAULT": "temp_access_granted"
-      }
-    },
-    
-    "contact_information": {
-      "meta": {
-        "agentText": "I'll mark this as high priority. Our technical team will contact you directly within 24 hours. Can I get the best phone number to reach you?",
-        "customerText": "Yes, they can reach me at 555-123-4567. I'm usually available in the afternoons.",
-        "suggestions": [
-          "Thank you for providing your contact information. I've added it to the ticket. As a goodwill gesture, I've also activated the premium features on your account immediately while we resolve the billing issue.",
-          "Perfect, I've updated the ticket with your phone number and availability. The technical team will call you within 24 hours. Is there anything else you need assistance with today?",
-          "I've added your contact details to the priority ticket. For your convenience, I can also send you updates via email as the technical team works on your case. Would you like that?"
-        ],
-        "sensitiveFields": [
-          {
-            "id": "phone-number-1",
-            "type": "customer_id",
-            "value": "555-123-4567",
-            "pattern": "/\\b[0-9]{9}\\b/",
-            "status": "pending",
-            "requiresVerification": true,
-            "systemValue": "555-123-4568",
-            "source": "Customer Profile",
-            "matched": false
-          }
-        ]
-      },
-      "on": {
-        "Thank you for providing your contact information. I've added it to the ticket. As a goodwill gesture, I've also activated the premium features on your account immediately while we resolve the billing issue.": "temp_access_granted",
-        "Perfect, I've updated the ticket with your phone number and availability. The technical team will call you within 24 hours. Is there anything else you need assistance with today?": "conclusion",
-        "I've added your contact details to the priority ticket. For your convenience, I can also send you updates via email as the technical team works on your case. Would you like that?": "email_updates",
-        "DEFAULT": "temp_access_granted"
-      }
-    },
-    
-    "email_updates": {
-      "meta": {
-        "agentText": "I've added your contact details to the priority ticket. For your convenience, I can also send you updates via email as the technical team works on your case. Would you like that?",
-        "customerText": "Yes, that would be helpful. My email is the same one associated with my account.",
-        "suggestions": [
-          "Perfect! I've set up email notifications for this case. You'll receive an initial confirmation shortly, followed by updates as our team makes progress. Is there anything else I can help with today?",
-          "I've enabled email updates and also activated premium features on your account immediately so you can continue your work without interruption while we resolve the billing issue.",
-          "Great! I've set up the email notifications and expedited your case with the technical team. They should resolve this within the next few hours rather than the standard 24-hour timeframe."
-        ]
-      },
-      "on": {
-        "Perfect! I've set up email notifications for this case. You'll receive an initial confirmation shortly, followed by updates as our team makes progress. Is there anything else I can help with today?": "conclusion",
-        "I've enabled email updates and also activated premium features on your account immediately so you can continue your work without interruption while we resolve the billing issue.": "temp_access_granted",
-        "Great! I've set up the email notifications and expedited your case with the technical team. They should resolve this within the next few hours rather than the standard 24-hour timeframe.": "conclusion",
-        "DEFAULT": "conclusion"
-      }
-    },
-    
-    "temp_access_granted": {
-      "meta": {
-        "agentText": "I've activated all premium features on your account. This will remain active while our technical team investigates the billing issue. I've created ticket #TK-45678 for you. You'll receive an email confirmation shortly, and our team will contact you once the billing issue is permanently resolved. Is there anything else you need assistance with today?",
-        "customerText": "No, that's perfect. I appreciate your help with this.",
-        "suggestions": [
-          "It was my pleasure helping you today. Thank you for your patience. If you need any further assistance, please don't hesitate to contact us again. Have a wonderful day!",
-          "You're welcome! I've also added a note to your account about this issue, so if you call back, other agents will be aware of the situation. Is there anything else you need help with?",
-          "I'm glad I could assist. To ensure everything is working properly, could you try accessing one of the premium features now to confirm you have access?"
-        ]
-      },
-      "on": {
-        "It was my pleasure helping you today. Thank you for your patience. If you need any further assistance, please don't hesitate to contact us again. Have a wonderful day!": "conclusion",
-        "You're welcome! I've also added a note to your account about this issue, so if you call back, other agents will be aware of the situation. Is there anything else you need help with?": "conclusion",
-        "I'm glad I could assist. To ensure everything is working properly, could you try accessing one of the premium features now to confirm you have access?": "feature_confirmation",
-        "DEFAULT": "conclusion"
-      }
-    },
-    
-    "feature_confirmation": {
-      "meta": {
-        "agentText": "I'm glad I could assist. To ensure everything is working properly, could you try accessing one of the premium features now to confirm you have access?",
-        "customerText": "Yes, let me check... I can now see the advanced analytics dashboard. It's working perfectly!",
-        "suggestions": [
-          "Excellent! I'm glad to hear everything is working as expected. Your permanent fix should be implemented within 48 hours, but you won't lose access in the meantime. Is there anything else I can help you with today?",
-          "Great! I'm pleased the features are accessible now. I've made a note that you've successfully verified access. Have a wonderful day, and thank you for your patience with this issue.",
-          "Perfect! Now that we've confirmed your access is working, I'll also add a 10% discount to your next bill as a courtesy for the inconvenience you've experienced. Is there anything else you need help with?"
-        ]
-      },
-      "on": {
-        "Excellent! I'm glad to hear everything is working as expected. Your permanent fix should be implemented within 48 hours, but you won't lose access in the meantime. Is there anything else I can help you with today?": "conclusion",
-        "Great! I'm pleased the features are accessible now. I've made a note that you've successfully verified access. Have a wonderful day, and thank you for your patience with this issue.": "conclusion",
-        "Perfect! Now that we've confirmed your access is working, I'll also add a 10% discount to your next bill as a courtesy for the inconvenience you've experienced. Is there anything else you need help with?": "conclusion",
-        "DEFAULT": "conclusion"
-      }
-    },
-    
-    "billing_explanation_path": {
-      "meta": {
-        "agentText": "I'm sorry to hear about this confusion with your subscription. Let me explain how our billing cycle works, as there might be a delay between upgrading and when the new rate is applied.",
-        "customerText": "I upgraded over two weeks ago though, so I don't think it's just a delay. Something seems wrong.",
-        "suggestions": [
-          "You're right, two weeks is longer than our typical processing time. Let me investigate this further. Could you tell me when exactly you upgraded and if you received any confirmation email?",
-          "I apologize for the misunderstanding. This does seem like an error rather than a normal delay. Let me check your account details more thoroughly to find the issue.",
-          "You're absolutely right. After checking our system more carefully, I can see this isn't a normal delay but an error in our billing system. Let me fix this for you immediately."
-        ],
-        "module": {
-          "id": "information-module-1",
-          "title": "Billing Information",
-          "type": "information",
-          "data": {
-            "blocks": [
-              {
-                "id": "info-001",
-                "title": "Billing Cycle Information",
-                "content": "Billing changes typically take effect within 24-48 hours of making changes to your subscription.",
-                "type": "info",
-                "hasDetails": true,
-                "detailsContent": "Our billing system processes subscription changes in batches every 24 hours. After a change is submitted, it enters the next processing queue. Once processed, the changes are applied to your account and reflected in your next billing statement.",
-                "link": "#",
-                "linkText": "View billing policy"
-              },
-              {
-                "id": "info-002",
-                "title": "Delayed Processing Detected",
-                "content": "We've detected an unusual delay in processing your subscription change.",
-                "type": "warning",
-                "hasDetails": false
-              },
-              {
-                "id": "info-003",
-                "title": "System Maintenance Notice",
-                "content": "There was scheduled system maintenance on the 15th which may have affected some account changes.",
-                "type": "info",
-                "hasDetails": true,
-                "detailsContent": "Our system underwent routine maintenance between 2AM and 5AM on the 15th. During this time, some account changes may have been queued but not fully processed. Our technical team is aware of this issue and working to process all pending changes."
-              }
-            ]
-          }
-        }
-      },
-      "on": {
-        "You're right, two weeks is longer than our typical processing time. Let me investigate this further. Could you tell me when exactly you upgraded and if you received any confirmation email?": "billing_investigation",
-        "I apologize for the misunderstanding. This does seem like an error rather than a normal delay. Let me check your account details more thoroughly to find the issue.": "billing_investigation",
-        "You're absolutely right. After checking our system more carefully, I can see this isn't a normal delay but an error in our billing system. Let me fix this for you immediately.": "billing_resolution",
-        "DEFAULT": "billing_investigation"
-      }
-    },
-    
-    "billing_investigation": {
-      "meta": {
-        "agentText": "You're right, two weeks is longer than our typical processing time. Let me investigate this further. Could you tell me when exactly you upgraded and if you received any confirmation email?",
-        "customerText": "I upgraded on the 15th of last month and yes, I received a confirmation email saying my account was upgraded to premium.",
-        "suggestions": [
-          "Thank you for that information. I've reviewed your account history and I can see the issue now. Your account was correctly upgraded, but there was an error in our billing system that didn't apply the correct rate. I've fixed this discrepancy and applied a credit to your account for the difference.",
-          "I appreciate you providing that detail. I can see the confirmation in our system, but it appears the upgrade was only partially processed. Let me complete the process and ensure you're set up properly on the premium plan.",
-          "Thank you for confirming. I've found the issue - there was a system upgrade on that date that affected some account changes. I'll need to escalate this to our technical team to correctly apply the premium features and billing."
-        ]
-      },
-      "on": {
-        "Thank you for that information. I've reviewed your account history and I can see the issue now. Your account was correctly upgraded, but there was an error in our billing system that didn't apply the correct rate. I've fixed this discrepancy and applied a credit to your account for the difference.": "billing_resolution",
-        "I appreciate you providing that detail. I can see the confirmation in our system, but it appears the upgrade was only partially processed. Let me complete the process and ensure you're set up properly on the premium plan.": "billing_resolution",
-        "Thank you for confirming. I've found the issue - there was a system upgrade on that date that affected some account changes. I'll need to escalate this to our technical team to correctly apply the premium features and billing.": "technical_escalation_path",
-        "DEFAULT": "billing_resolution"
-      }
-    },
-    
-    "billing_resolution": {
-      "meta": {
-        "agentText": "Thank you for that information. I've reviewed your account history and I can see the issue now. Your account was correctly upgraded, but there was an error in our billing system that didn't apply the correct rate. I've fixed this discrepancy and applied a credit to your account for the difference. You'll see this reflected in your next statement. You should now have full access to all premium features as well.",
-        "customerText": "That's great news! Thank you for sorting that out for me.",
-        "suggestions": [
-          "You're welcome! I'm glad I could resolve this issue for you. You should receive an email confirmation of these changes shortly. Is there anything else I can help you with today?",
-          "I'm happy I could help! As a gesture of goodwill for the inconvenience caused, I've also added an additional month of premium service to your subscription at no extra charge.",
-          "It's my pleasure! To ensure everything is working properly, could you try logging in to check if you can now access all the premium features? I'll stay on the line."
-        ]
-      },
-      "on": {
-        "You're welcome! I'm glad I could resolve this issue for you. You should receive an email confirmation of these changes shortly. Is there anything else I can help you with today?": "conclusion",
-        "I'm happy I could help! As a gesture of goodwill for the inconvenience caused, I've also added an additional month of premium service to your subscription at no extra charge.": "conclusion",
-        "It's my pleasure! To ensure everything is working properly, could you try logging in to check if you can now access all the premium features? I'll stay on the line.": "feature_confirmation",
-        "DEFAULT": "conclusion"
+        "Thank you for your loyalty. I can see that you're eligible for a 5% discount on your next premium payment. Would you also like to discuss your current health insurance plan?": "customer_issue",
+        "As a valued long-term customer, you qualify for our loyalty program, which includes priority customer service and a free annual health check-up. Is there anything specific about your insurance you'd like to discuss today?": "customer_issue",
+        "I've checked our loyalty rewards, and you're eligible for a wellness package that includes discounts on fitness club memberships. Before I add this to your account, did you have any questions or concerns about your current coverage?": "customer_issue",
+        "DEFAULT": "customer_issue"
       }
     },
     
     "conclusion": {
       "meta": {
-        "agentText": "It was my pleasure helping you today. Is there anything else I can assist you with?",
-        "customerText": "No, that's all. Thanks again for your help.",
+        "agentText": "The change to your franchise will take effect from the beginning of next month. You'll see the adjusted premium on your next bill. Is there anything else I can assist you with today?",
+        "customerText": "No, that's all I needed. Thank you for your help.",
         "suggestions": [
-          "Thank you for calling customer support. Have a wonderful day!",
-          "You're welcome! If you have any questions in the future, please don't hesitate to contact us again. Have a great day!",
-          "I'm glad I could help resolve your issue today. Thank you for being our valued customer. Have a wonderful day ahead!"
+          "You're welcome! I'm glad I could help you with your franchise adjustment. Thank you for choosing our health insurance. Have a wonderful day!",
+          "It was my pleasure assisting you today. If you have any other questions in the future, please don't hesitate to contact us. Have a great day!",
+          "Thank you for calling. I've sent a confirmation email with the details of your franchise change. Is there anything else you need help with before we end the call?"
         ]
       },
       "on": {
-        "Thank you for calling customer support. Have a wonderful day!": "end_call",
-        "You're welcome! If you have any questions in the future, please don't hesitate to contact us again. Have a great day!": "end_call",
-        "I'm glad I could help resolve your issue today. Thank you for being our valued customer. Have a wonderful day ahead!": "end_call",
+        "You're welcome! I'm glad I could help you with your franchise adjustment. Thank you for choosing our health insurance. Have a wonderful day!": "end_call",
+        "It was my pleasure assisting you today. If you have any other questions in the future, please don't hesitate to contact us. Have a great day!": "end_call",
+        "Thank you for calling. I've sent a confirmation email with the details of your franchise change. Is there anything else you need help with before we end the call?": "end_call",
         "DEFAULT": "end_call"
       }
     },
+    
     "end_call": {
       "meta": {
-        "agentText": "Thank you for calling customer support. Have a wonderful day!"
+        "agentText": "You're welcome! I'm glad I could help you with your franchise adjustment. Thank you for choosing our health insurance. Have a wonderful day!"
       }
     }
   }

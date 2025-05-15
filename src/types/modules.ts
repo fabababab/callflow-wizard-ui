@@ -8,7 +8,7 @@ export enum ModuleType {
   CONTRACT_MANAGEMENT = 'CONTRACT_MANAGEMENT',
   QUIZ = 'QUIZ',
   FRANCHISE = 'FRANCHISE',
-  INSURANCE_MODEL = 'INSURANCE_MODEL', // New module type
+  INSURANCE_MODEL = 'INSURANCE_MODEL', 
 }
 
 // Interface for module configuration

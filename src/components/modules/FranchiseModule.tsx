@@ -4,14 +4,29 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, History, PieChart } from 'lucide-react';
+import { CalendarDays, History, PieChart, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { ModuleProps } from '@/types/modules';
 import { Progress } from '@/components/ui/progress';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 // Type definition for the module's props
 interface FranchiseModuleProps extends ModuleProps {}
+
+// Type for franchise option
+interface FranchiseOption {
+  amount: number;
+  premium: number;
+}
 
 const FranchiseModule: React.FC<FranchiseModuleProps> = ({
   id,
@@ -37,11 +52,19 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
       { year: '2023', used: 450, total: 500, claims: 5 },
       { year: '2022', used: 300, total: 300, claims: 3 },
       { year: '2021', used: 220, total: 300, claims: 2 }
+    ],
+    franchiseOptions = [
+      { amount: 300, premium: 400 },
+      { amount: 500, premium: 360 },
+      { amount: 1000, premium: 310 },
+      { amount: 1500, premium: 270 },
+      { amount: 2000, premium: 240 },
+      { amount: 2500, premium: 220 }
     ]
   } = data;
 
   const [selectedFranchise, setSelectedFranchise] = useState<number>(currentFranchise);
-  const [activeTab, setActiveTab] = useState<string>('usage');
+  const [activeTab, setActiveTab] = useState<string>('options');
   const [animateProgress, setAnimateProgress] = useState<boolean>(false);
 
   useEffect(() => {
@@ -73,6 +96,10 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
     setSelectedFranchise(value[0]);
   };
 
+  const handleSelectFranchise = (amount: number) => {
+    setSelectedFranchise(amount);
+  };
+
   const handleSave = () => {
     const result = {
       action: 'update',
@@ -84,7 +111,7 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
 
     toast({
       title: "Franchise Updated",
-      description: `Your franchise has been changed to CHF ${selectedFranchise}`,
+      description: `Ihre Franchise wurde auf CHF ${selectedFranchise} geändert`,
     });
 
     onComplete(result);
@@ -101,6 +128,10 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
   // Current usage percentage
   const usagePercentage = calculateUsagePercentage(franchiseUsed, currentFranchise);
 
+  const formatPrice = (price: number): string => {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  };
+
   return (
     <Card className="border-amber-200 bg-amber-50/50 shadow-md">
       <CardHeader className="bg-amber-50 border-b border-amber-200">
@@ -111,31 +142,85 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
           </Badge>
         </div>
         <CardDescription className="text-amber-700">
-          Manage your franchise amount and view usage history
+          Verwalten Sie Ihre Franchise und sehen Sie die Auswirkungen auf Ihre Prämie
         </CardDescription>
       </CardHeader>
 
       <CardContent className="pt-4 pb-2">
-        <Tabs defaultValue="usage" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 mb-4">
+        <Tabs defaultValue="options" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="options" className="flex items-center gap-2 text-sm">
+              <FileText className="h-4 w-4" />
+              <span>Optionen</span>
+            </TabsTrigger>
             <TabsTrigger value="usage" className="flex items-center gap-2 text-sm">
               <PieChart className="h-4 w-4" />
-              <span>Usage</span>
+              <span>Nutzung</span>
             </TabsTrigger>
             <TabsTrigger value="adjust" className="flex items-center gap-2 text-sm">
               <CalendarDays className="h-4 w-4" />
-              <span>Adjust</span>
+              <span>Anpassen</span>
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2 text-sm">
               <History className="h-4 w-4" />
-              <span>History</span>
+              <span>Historie</span>
             </TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="options" className="px-1">
+            <div className="space-y-6">
+              <div className="p-4 bg-white rounded-lg border border-amber-200">
+                <h3 className="text-sm font-medium text-amber-800 mb-3">Auswirkungen bei gleichbleibendem Modell</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="col-span-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Franchise</TableHead>
+                          <TableHead>Prämie</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {franchiseOptions.map((option, index) => (
+                          <TableRow key={index} className={selectedFranchise === option.amount ? "bg-amber-100" : ""}>
+                            <TableCell>CHF {formatPrice(option.amount)}</TableCell>
+                            <TableCell>CHF {formatPrice(option.premium)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  <div className="flex flex-col space-y-2">
+                    <h4 className="text-sm font-medium text-amber-800 mb-1">Franchise wählen</h4>
+                    {franchiseOptions.map((option) => (
+                      <Button 
+                        key={option.amount} 
+                        variant={selectedFranchise === option.amount ? "default" : "outline"} 
+                        className={`w-full ${selectedFranchise === option.amount ? "bg-amber-600 hover:bg-amber-700 text-white" : "border-amber-300 text-amber-800 hover:bg-amber-100"}`}
+                        onClick={() => handleSelectFranchise(option.amount)}
+                      >
+                        CHF {formatPrice(option.amount)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                
+                {selectedFranchise === 1000 && (
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-800 text-sm">
+                    <p className="font-medium">Empfehlung: CHF 1'000</p>
+                    <p className="text-xs mt-1">Diese Option bietet ein optimales Verhältnis zwischen Prämie und Selbstbeteiligung.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
 
           <TabsContent value="usage" className="px-1">
             <div className="space-y-6">
               <div className="p-4 bg-white rounded-lg border border-amber-200">
-                <h3 className="text-sm font-medium text-amber-800 mb-3">Current Franchise Usage</h3>
+                <h3 className="text-sm font-medium text-amber-800 mb-3">Aktuelle Franchise-Nutzung</h3>
                 
                 <div className="relative mb-2">
                   <Progress 
@@ -147,7 +232,7 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
                 <div className="flex justify-between text-xs text-amber-600 mb-4">
                   <span>CHF 0</span>
                   <span className="font-medium">
-                    CHF {franchiseUsed} of CHF {currentFranchise} used
+                    CHF {franchiseUsed} von CHF {currentFranchise} genutzt
                   </span>
                   <span>CHF {currentFranchise}</span>
                 </div>
@@ -155,25 +240,25 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
                 <div className="flex justify-between items-center p-2 bg-amber-100/50 rounded border border-amber-100 text-sm">
                   <div>
                     <span className="text-amber-800 font-medium">
-                      {usagePercentage}% used
+                      {usagePercentage}% genutzt
                     </span>
                   </div>
                   <div className="text-right">
                     <span className="text-amber-800 font-medium">
-                      CHF {currentFranchise - franchiseUsed} remaining
+                      CHF {currentFranchise - franchiseUsed} verbleibend
                     </span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-amber-800 mb-2">Usage History</h3>
+                <h3 className="text-sm font-medium text-amber-800 mb-2">Nutzungshistorie</h3>
                 <div className="space-y-3">
                   {usageHistory.map((entry, index) => (
                     <div key={index} className="p-3 bg-white rounded-lg border border-amber-100">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium text-amber-800">{entry.year}</span>
-                        <span className="text-xs text-amber-600">{entry.claims} claims</span>
+                        <span className="text-xs text-amber-600">{entry.claims} Ansprüche</span>
                       </div>
                       
                       <div className="relative mb-1">
@@ -184,9 +269,9 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
                       </div>
                       
                       <div className="flex justify-between text-xs text-amber-600">
-                        <span>CHF {entry.used} used</span>
+                        <span>CHF {entry.used} genutzt</span>
                         <span>
-                          {calculateUsagePercentage(entry.used, entry.total)}% of CHF {entry.total}
+                          {calculateUsagePercentage(entry.used, entry.total)}% von CHF {entry.total}
                         </span>
                       </div>
                     </div>
@@ -199,7 +284,7 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
           <TabsContent value="adjust" className="px-1">
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-medium mb-2 text-amber-800">Current Franchise: CHF {currentFranchise}</h3>
+                <h3 className="text-sm font-medium mb-2 text-amber-800">Aktuelle Franchise: CHF {formatPrice(currentFranchise)}</h3>
                 <div className="mb-6">
                   <div className="mb-6">
                     <Slider
@@ -212,9 +297,9 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
                       className="py-4"
                     />
                     <div className="flex justify-between items-center mt-2 text-sm text-amber-700">
-                      <span>CHF {minFranchise}</span>
-                      <span className="font-medium text-amber-900 text-lg">CHF {selectedFranchise}</span>
-                      <span>CHF {maxFranchise}</span>
+                      <span>CHF {formatPrice(minFranchise)}</span>
+                      <span className="font-medium text-amber-900 text-lg">CHF {formatPrice(selectedFranchise)}</span>
+                      <span>CHF {formatPrice(maxFranchise)}</span>
                     </div>
                   </div>
                 </div>
@@ -222,12 +307,12 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
 
               {hasChanged && (
                 <div className="rounded-md bg-amber-100 p-3 border border-amber-200">
-                  <h4 className="text-sm font-medium text-amber-800 mb-2">Impact of your change</h4>
+                  <h4 className="text-sm font-medium text-amber-800 mb-2">Auswirkung Ihrer Änderung</h4>
                   <div className="text-sm space-y-1 text-amber-700">
-                    <p><span className="font-medium">New franchise:</span> CHF {selectedFranchise}</p>
-                    <p><span className="font-medium">Change:</span> {selectedFranchise > currentFranchise ? '+' : ''}{selectedFranchise - currentFranchise} CHF</p>
-                    <p><span className="font-medium">Estimated annual savings:</span> ~CHF {calculateSavings(selectedFranchise)}/month</p>
-                    <p className="text-xs mt-2 italic">Higher franchise means lower premiums but higher out-of-pocket costs for medical services.</p>
+                    <p><span className="font-medium">Neue Franchise:</span> CHF {formatPrice(selectedFranchise)}</p>
+                    <p><span className="font-medium">Änderung:</span> {selectedFranchise > currentFranchise ? '+' : ''}{selectedFranchise - currentFranchise} CHF</p>
+                    <p><span className="font-medium">Geschätzte monatliche Einsparungen:</span> ~CHF {calculateSavings(selectedFranchise)}/Monat</p>
+                    <p className="text-xs mt-2 italic">Höhere Franchise bedeutet niedrigere Prämien, aber höhere Selbstbeteiligung bei medizinischen Leistungen.</p>
                   </div>
                 </div>
               )}
@@ -236,16 +321,16 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
 
           <TabsContent value="history" className="px-1">
             <div className="space-y-4">
-              <h3 className="text-sm font-medium mb-2 text-amber-800">Franchise History</h3>
+              <h3 className="text-sm font-medium mb-2 text-amber-800">Franchise-Historie</h3>
               <div className="space-y-3">
                 {historicalData.map((entry, index) => (
                   <div key={index} className="flex justify-between p-3 rounded-md bg-white border border-amber-100">
                     <div>
-                      <p className="text-sm font-medium text-amber-800">CHF {entry.amount}</p>
+                      <p className="text-sm font-medium text-amber-800">CHF {formatPrice(entry.amount)}</p>
                       <p className="text-xs text-amber-600">{entry.policyId}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm text-amber-700">Changed on</p>
+                      <p className="text-sm text-amber-700">Geändert am</p>
                       <p className="text-xs font-medium">{formatDate(entry.date)}</p>
                     </div>
                   </div>
@@ -258,17 +343,15 @@ const FranchiseModule: React.FC<FranchiseModuleProps> = ({
 
       <CardFooter className="flex justify-between border-t border-amber-200 pt-3 bg-amber-50/80">
         <Button variant="outline" onClick={handleCancel} className="border-amber-300 text-amber-800 hover:bg-amber-100">
-          Cancel
+          Abbrechen
         </Button>
-        {activeTab === 'adjust' && (
-          <Button 
-            onClick={handleSave} 
-            disabled={!hasChanged}
-            className={`bg-amber-600 text-white hover:bg-amber-700 ${!hasChanged ? 'opacity-50' : ''}`}
-          >
-            Update Franchise
-          </Button>
-        )}
+        <Button 
+          onClick={handleSave} 
+          disabled={!hasChanged}
+          className={`bg-amber-600 text-white hover:bg-amber-700 ${!hasChanged ? 'opacity-50' : ''}`}
+        >
+          Franchise aktualisieren
+        </Button>
       </CardFooter>
     </Card>
   );

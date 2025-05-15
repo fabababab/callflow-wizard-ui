@@ -3,7 +3,7 @@ import React, { memo, useRef, useEffect, useState } from 'react';
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import InlineModuleDisplay from './InlineModuleDisplay';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Calculator, FileText, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { Shield, Calculator, FileText, Info, ChevronDown, ChevronUp, BarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -30,6 +30,8 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
         return <Info className="h-4 w-4 text-amber-600" />;
       case ModuleType.CONTRACT:
         return <FileText className="h-4 w-4 text-amber-600" />;
+      case ModuleType.FRANCHISE:
+        return <BarChart className="h-4 w-4 text-amber-600" />;
       default:
         return <Info className="h-4 w-4 text-amber-600" />;
     }
@@ -45,6 +47,8 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       description = "View and manage contract details";
     } else if (moduleConfig.type === ModuleType.INFORMATION) {
       description = "Important customer information available";
+    } else if (moduleConfig.type === ModuleType.FRANCHISE) {
+      description = "Franchise options and premium information";
     }
     
     toast({
@@ -113,6 +117,16 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       });
       window.dispatchEvent(nachbearbeitungEvent);
     }
+
+    if (moduleConfig.type === ModuleType.FRANCHISE) {
+      const franchiseEvent = new CustomEvent('franchise-complete', {
+        detail: { 
+          moduleId: moduleConfig.id,
+          result
+        }
+      });
+      window.dispatchEvent(franchiseEvent);
+    }
     
     // Show completion toast
     toast({
@@ -136,6 +150,52 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     return String(value);
   };
   
+  // Format array or nested objects for better display
+  const formatComplexValue = (value: any) => {
+    if (Array.isArray(value)) {
+      return (
+        <div className="mt-1 text-xs">
+          {value.map((item, i) => (
+            <div key={i} className="p-1 mb-1 bg-amber-50/50 rounded border border-amber-100">
+              {typeof item === 'object' ? (
+                Object.entries(item).map(([key, val]) => (
+                  <div key={key} className="grid grid-cols-[30%,70%] gap-1 mb-1">
+                    <div className="font-medium text-amber-700">{key}:</div>
+                    <div className="text-gray-700 break-all">
+                      {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                String(item)
+              )}
+            </div>
+          ))}
+        </div>
+      );
+    } else if (typeof value === 'object' && value !== null) {
+      return (
+        <div className="mt-1 text-xs space-y-1">
+          {Object.entries(value).map(([key, val]) => (
+            <div key={key} className="grid grid-cols-[30%,70%] gap-1">
+              <div className="font-medium text-amber-700">{key}:</div>
+              <div className="text-gray-700 break-all">
+                {typeof val === 'object' ? (
+                  <pre className="whitespace-pre-wrap text-[10px] bg-white p-1 rounded border border-amber-100">
+                    {JSON.stringify(val, null, 2)}
+                  </pre>
+                ) : (
+                  String(val)
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return String(value);
+  };
+  
   // Render configuration details in a readable format
   const renderConfigDetails = () => {
     if (!moduleConfig.data) return <p className="text-xs text-gray-500">No configuration data available</p>;
@@ -149,13 +209,11 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
     return (
       <div className="text-xs space-y-1 bg-amber-50/50 p-2 rounded-md">
         {configKeys.map(key => (
-          <div key={key} className="grid grid-cols-[1fr,2fr] gap-2">
-            <div className="font-medium text-amber-700">{key}:</div>
-            <div className="text-gray-700 break-words">
+          <div key={key} className="mb-2 pb-2 border-b border-amber-100 last:border-0">
+            <div className="font-medium text-amber-700 mb-1">{key}:</div>
+            <div className="text-gray-700 break-words pl-2">
               {typeof moduleConfig.data[key] === 'object' ? (
-                <pre className="whitespace-pre-wrap text-[10px] bg-white p-1 rounded border border-amber-100">
-                  {JSON.stringify(moduleConfig.data[key], null, 2)}
-                </pre>
+                formatComplexValue(moduleConfig.data[key])
               ) : (
                 formatConfigValue(moduleConfig.data[key])
               )}
