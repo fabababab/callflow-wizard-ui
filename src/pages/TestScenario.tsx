@@ -19,7 +19,7 @@ const TestScenario = () => {
   const transcriptRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // State management for scenarios, states, and visualization
+  // Initialize with deutscheVersion instead of hardcoded value to respect user preference
   const scenarioState = useScenarioState("deutscheVersion");
 
   // Use the useJsonVisualization hook for JSON view functionality

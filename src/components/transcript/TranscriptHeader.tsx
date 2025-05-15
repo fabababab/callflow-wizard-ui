@@ -31,8 +31,8 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
   isLoadingJson = false,
   resetConversation
 }) => {
-  // List of available scenarios for the dropdown
-  const scenarios: ScenarioType[] = ['testscenario', 'verificationFlow', 'contractManagement', 'productInfo'];
+  // Updated list of available scenarios for the dropdown to include deutscheVersion
+  const scenarios: ScenarioType[] = ['testscenario', 'verificationFlow', 'contractManagement', 'productInfo', 'deutscheVersion'];
   
   console.log('TranscriptHeader: callActive =', callActive, 'elapsedTime =', elapsedTime);
   
