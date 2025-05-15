@@ -19,12 +19,15 @@ import Settings from "./pages/Settings";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 
+// Note: We import Toaster but don't use it in the render as notifications are handled
+// exclusively through the NotificationPanel component with the bell icon in the Header
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
+      {/* Note: Toaster component is intentionally not used here */}
       <Sonner />
       <BrowserRouter>
         <Routes>

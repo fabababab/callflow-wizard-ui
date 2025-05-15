@@ -15,6 +15,14 @@ import { useToast } from '@/hooks/use-toast';
 import { ToastProps } from '@/components/ui/toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+/**
+ * NotificationPanel - Centralizes all toast notifications into a single Bell icon interface
+ * 
+ * IMPORTANT: This component replaces the default toast UI display.
+ * All notifications are exclusively shown through this panel and not as independent toasts.
+ * Do NOT add the <Toaster /> component from @/components/ui/toaster to your application
+ * as this would cause duplicate notification displays.
+ */
 type NotificationPanelProps = {
   className?: string;
 }
