@@ -1,6 +1,14 @@
 
 import React from 'react';
-import { ModuleConfig } from '@/types/modules';
+import { ModuleConfig, ModuleType } from '@/types/modules';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ModuleConfigDetailsProps {
   moduleConfig: ModuleConfig;
@@ -14,8 +22,43 @@ const ModuleConfigDetails: React.FC<ModuleConfigDetailsProps> = ({ moduleConfig 
     return String(value);
   };
   
+  // Format currency with thousands separator
+  const formatPrice = (price: number): string => {
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  };
+  
+  // Format franchise options as a table
+  const renderFranchiseOptions = (options: Array<{ amount: number; premium: number }>) => {
+    return (
+      <div className="mt-2">
+        <Table className="border border-amber-100 text-xs">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="py-1 px-2">Franchise</TableHead>
+              <TableHead className="py-1 px-2">Prämie</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {options.map((option, index) => (
+              <TableRow key={index}>
+                <TableCell className="py-1 px-2">CHF {formatPrice(option.amount)}</TableCell>
+                <TableCell className="py-1 px-2">CHF {formatPrice(option.premium)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+  
   // Format array or nested objects for better display
-  const formatComplexValue = (value: any) => {
+  const formatComplexValue = (key: string, value: any) => {
+    // Special handling for franchise options
+    if (key === 'franchiseOptions' && Array.isArray(value) && 
+        value.length > 0 && 'amount' in value[0] && 'premium' in value[0]) {
+      return renderFranchiseOptions(value);
+    }
+    
     if (Array.isArray(value)) {
       return (
         <div className="mt-1 text-xs">
@@ -76,11 +119,7 @@ const ModuleConfigDetails: React.FC<ModuleConfigDetailsProps> = ({ moduleConfig 
           <div key={key} className="mb-2 pb-2 border-b border-amber-100 last:border-0">
             <div className="font-medium text-amber-700 mb-1">{key}:</div>
             <div className="text-gray-700 break-words pl-2">
-              {typeof moduleConfig.data[key] === 'object' ? (
-                formatComplexValue(moduleConfig.data[key])
-              ) : (
-                formatConfigValue(moduleConfig.data[key])
-              )}
+              {formatComplexValue(key, moduleConfig.data[key])}
             </div>
           </div>
         ))}
