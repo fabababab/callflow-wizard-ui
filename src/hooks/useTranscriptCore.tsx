@@ -22,7 +22,7 @@ import { useMessageUpdates } from '@/hooks/useMessageUpdates';
 import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
-  const { toast: showToast, ...toastRest } = useToast();
+  const toast = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the message handling functionality
@@ -47,7 +47,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     stateMachine.stateData
   );
   
-  // Get Nachbearbeitung handler - fix: pass completeModule directly
+  // Get Nachbearbeitung handler
   const { showNachbearbeitungSummary } = useNachbearbeitungHandler(
     moduleManager.completeModule
   );
@@ -57,7 +57,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     stateMachine,
     messageHandling,
     conversationState,
-    toast: { toast: showToast, ...toastRest }
+    toast
   });
 
   // Use state change processor
@@ -67,7 +67,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     conversationState,
     transitionExtractor,
     callState,
-    toast: { toast: showToast, ...toastRest }
+    toast
   });
 
   // Use conversation initializer
@@ -78,7 +78,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling,
     callState,
     setHasInitializedConversation: () => {}, // Will be replaced by useScenarioChangeEffect
-    toast: { toast: showToast, ...toastRest },
+    toast,
     showNachbearbeitungSummary
   });
 
@@ -123,10 +123,6 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     resetConversationState: conversationState.resetConversationState
   });
 
-  // Handle inline module completion
-  const handleInlineModuleComplete = useCallback((messageId: string, moduleId: string, result: any) => {
-    console.log(`Inline module ${moduleId} completed for message ${messageId}`, result);
-  }, []);
   
   // Handle module completion
   const handleModuleComplete = useCallback((result: any) => {
@@ -139,8 +135,8 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
         messageHandling.addSystemMessage(`${moduleManager.activeModule.title} completed: ${result.verified ? "Success" : "Failed"}`);
       } else {
         // For Nachbearbeitung module, add a summary message
-        messageHandling.addSystemMessage(`Gesprächszusammenfassung abgeschlossen. Punkte bestätigt: ${result.points?.length || 0}`, {
-          responseOptions: ["Vielen Dank für Ihren Anruf. Einen schönen Tag noch!"]
+        messageHandling.addSystemMessage(`Call summary completed. Points verified: ${result.points?.length || 0}`, {
+          responseOptions: ["Thank you for your call. Have a nice day!"]
         });
         conversationState.setShowNachbearbeitungModule(false);
       }
@@ -175,7 +171,6 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     handleHangUpCall: conversationInitializer.handleHangUpCall,
     resetConversation: enhancedConversationInitializer.resetConversation,
     handleModuleComplete,
-    handleInlineModuleComplete,
     showNachbearbeitungSummary,
     handleSelectResponse: responseHandler.handleSelectResponse,
     ...moduleManager,

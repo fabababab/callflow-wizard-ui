@@ -15,9 +15,7 @@ const MessageResponseOptions: React.FC<MessageResponseOptionsProps> = ({
 
   const handleSelectResponse = (response: string) => {
     console.log(`Selecting response: ${response}`);
-    if (onSelectResponse) {
-      onSelectResponse(response);
-    }
+    onSelectResponse(response);
   };
 
   return (
@@ -28,8 +26,7 @@ const MessageResponseOptions: React.FC<MessageResponseOptionsProps> = ({
           <button
             key={idx}
             onClick={() => handleSelectResponse(option)}
-            className="w-full px-3 py-2 text-left text-sm bg-primary/10 hover:bg-primary/20 rounded-md transition-colors duration-200 flex items-center gap-2 group cursor-pointer"
-            type="button"
+            className="w-full px-3 py-2 text-left text-sm bg-primary/10 hover:bg-primary/20 rounded-md transition-colors duration-200 flex items-center gap-2 group"
           >
             <span className="flex-1 whitespace-normal break-words">{option}</span>
             <ChevronRight className="h-4 w-4 shrink-0 opacity-50 group-hover:opacity-90 transition-opacity" />

@@ -22,23 +22,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
  * All notifications are exclusively shown through this panel and not as independent toasts.
  * Do NOT add the <Toaster /> component from @/components/ui/toaster to your application
  * as this would cause duplicate notification displays.
- * 
- * Usage:
- * 1. Import NotificationPanel in your layout or header component
- * 2. Place it in your header or navigation bar
- * 3. Use the useToast() hook and toast() function to create notifications:
- *    ```
- *    const { toast } = useToast();
- *    
- *    // Then later:
- *    toast({
- *      title: "Notification Title",
- *      description: "Notification description text",
- *      variant: "default" // or "destructive" for error notifications
- *    });
- *    ```
- * 
- * The notifications will be collected and displayed only when the bell icon is clicked.
  */
 type NotificationPanelProps = {
   className?: string;

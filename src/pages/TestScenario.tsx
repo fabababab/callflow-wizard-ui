@@ -13,7 +13,6 @@ import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFie
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
 import { useToast } from '@/hooks/use-toast';
 import { ModuleType } from '@/types/modules';
-import NotificationPanel from '@/components/NotificationPanel';
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);

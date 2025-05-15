@@ -1,5 +1,5 @@
 
-// Re-export from hooks directory
-import { useToast, toast } from "@/hooks/use-toast";
+// This file simply re-exports from the implementation in use-toast.tsx
+import { useToast, toast } from "./use-toast.tsx";
 
 export { useToast, toast };

@@ -11,16 +11,16 @@ export function useNachbearbeitungHandler(completeModule: (result: any) => void)
     // Create nachbearbeitung module config
     const nachbearbeitungModuleConfig = {
       id: 'nachbearbeitung-' + Date.now(),
-      title: 'Gesprächszusammenfassung',
+      title: 'Call Summary',
       type: ModuleType.NACHBEARBEITUNG,
       data: {
         isInline: true, // Set to display inline instead of modal
         summaryPoints: [
-          { id: '1', text: 'Kunde hat Studium abgeschlossen', checked: true, important: true },
-          { id: '2', text: 'Wechsel zum Telmed-Modell', checked: true, important: true },
-          { id: '3', text: 'Franchise von CHF 1000 gewählt', checked: true, important: true },
-          { id: '4', text: 'Änderung ab nächstem Monat wirksam', checked: false, important: false },
-          { id: '5', text: 'E-Mail mit Bestätigung gesendet', checked: false, important: false }
+          { id: '1', text: 'Customer identity was verified', checked: false, important: true },
+          { id: '2', text: 'Customer issue was addressed', checked: false, important: true },
+          { id: '3', text: 'Relevant information was provided', checked: false, important: true },
+          { id: '4', text: 'Next steps were explained to customer', checked: false, important: false },
+          { id: '5', text: 'Customer was offered additional assistance', checked: false, important: false }
         ]
       }
     };
@@ -36,8 +36,8 @@ export function useNachbearbeitungHandler(completeModule: (result: any) => void)
       window.dispatchEvent(event);
       
       toast({
-        title: "Gesprächszusammenfassung",
-        description: "Bitte bestätigen Sie die Gesprächspunkte",
+        title: "Call Summary Module",
+        description: "Please complete the call summary checklist",
         duration: 3000
       });
     }, 300);
