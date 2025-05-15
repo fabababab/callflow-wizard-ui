@@ -131,14 +131,14 @@ const Dashboard = () => {
     }
 
     switch (activeScenario) {
-      case 'verification':
+      case 'studiumabschlussCase':
         return [
           {
             id: 1,
             timestamp: '14:32:15',
             agent: 'RoboVoice',
-            content: "Hello, I need to verify my identity. I received an email saying someone tried to log into my account from a different country.",
-            response: "I understand your concern. For security purposes, I'll need to verify your identity. Could you confirm when you last logged into your account?",
+            content: "Guten Tag, ich schließe nächsten Monat mein Studium ab und muss meine Studentenversicherung auf ein reguläres Paket umstellen.",
+            response: "Herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung Ihrer Versicherung. Können Sie mir Ihre aktuelle Versicherungsnummer mitteilen?",
             customerName: incomingCall.customerName,
             callType: incomingCall.callType
           },
@@ -146,55 +146,13 @@ const Dashboard = () => {
             id: 2,
             timestamp: '14:33:20',
             agent: 'RoboVoice',
-            content: "I logged in yesterday evening from my home computer, but I definitely wasn't abroad.",
-            response: "Thank you for confirming. To proceed with verification, I'll need some additional information. Can you confirm your date of birth and the last four digits of your account number?",
+            content: "Danke! Meine Versicherungsnummer ist ST-7654321. Ich suche nach einem Paket mit guter Zahnversicherung und bin bald Vollzeit beschäftigt.",
+            response: "Vielen Dank für diese Informationen. Wir bieten verschiedene Pakete für Berufseinsteiger an, die auf Ihre Bedürfnisse zugeschnitten sind. Ich werde Ihnen gerne die Optionen erklären.",
             customerName: incomingCall.customerName,
             callType: incomingCall.callType
           }
         ];
-      case 'bankDetails':
-        return [
-          {
-            id: 1,
-            timestamp: '14:32:15',
-            agent: 'RoboVoice',
-            content: "Hi there, I need to update my bank details as I've switched to a new bank.",
-            response: "I'd be happy to help you update your bank information. For security purposes, I'll need to verify your identity first before making any changes.",
-            customerName: incomingCall.customerName,
-            callType: incomingCall.callType
-          },
-          {
-            id: 2,
-            timestamp: '14:33:20',
-            agent: 'RoboVoice',
-            content: "I understand. What information do you need from me for verification?",
-            response: "I'll need your full name, date of birth, and the current account information we have on file. After verification, I can help you update to your new bank details.",
-            customerName: incomingCall.customerName,
-            callType: incomingCall.callType
-          }
-        ];
-      case 'accountHistory':
-        return [
-          {
-            id: 1,
-            timestamp: '14:32:15',
-            agent: 'RoboVoice',
-            content: "Hello, I'm calling because I noticed some unusual charges on my account statement and I'd like to review my account history.",
-            response: "I understand your concern about the unusual charges. I'd be happy to help you review your account history. Could you specify which time period you're interested in?",
-            customerName: incomingCall.customerName,
-            callType: incomingCall.callType
-          },
-          {
-            id: 2,
-            timestamp: '14:33:20',
-            agent: 'RoboVoice',
-            content: "I'd like to look at the past three months, specifically any transactions over €50.",
-            response: "Thank you for that information. Before I provide your account history, I need to verify your identity for security purposes. Can you please confirm your full name and date of birth?",
-            customerName: incomingCall.customerName,
-            callType: incomingCall.callType
-          }
-        ];
-      case 'physioTherapy':
+      case 'leistungsabdeckungPhysio':
         return [
           {
             id: 1,
@@ -215,7 +173,7 @@ const Dashboard = () => {
             callType: incomingCall.callType
           }
         ];
-      case 'paymentReminder':
+      case 'mahnungTrotzZahlung':
         return [
           {
             id: 1,
@@ -232,27 +190,6 @@ const Dashboard = () => {
             agent: 'RoboVoice',
             content: "Meine Kundennummer ist 987654321 und ich habe am 25. April überwiesen. Ich habe sogar einen Zahlungsbeleg.",
             response: "Vielen Dank für diese Information. Es kann manchmal zu Verzögerungen bei der Verarbeitung von Zahlungen kommen. Ich werde das für Sie überprüfen und klären.",
-            customerName: incomingCall.customerName,
-            callType: incomingCall.callType
-          }
-        ];
-      case 'insurancePackage':
-        return [
-          {
-            id: 1,
-            timestamp: '14:32:15',
-            agent: 'RoboVoice',
-            content: "Guten Tag, ich schließe nächsten Monat mein Studium ab und muss meine Studentenversicherung auf ein reguläres Paket umstellen.",
-            response: "Herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung Ihrer Versicherung. Können Sie mir Ihre aktuelle Versicherungsnummer mitteilen?",
-            customerName: incomingCall.customerName,
-            callType: incomingCall.callType
-          },
-          {
-            id: 2,
-            timestamp: '14:33:20',
-            agent: 'RoboVoice',
-            content: "Danke! Meine Versicherungsnummer ist ST-7654321. Ich suche nach einem Paket mit guter Zahnversicherung und bin bald Vollzeit beschäftigt.",
-            response: "Vielen Dank für diese Informationen. Wir bieten verschiedene Pakete für Berufseinsteiger an, die auf Ihre Bedürfnisse zugeschnitten sind. Ich werde Ihnen gerne die Optionen erklären.",
             customerName: incomingCall.customerName,
             callType: incomingCall.callType
           }
@@ -339,18 +276,12 @@ const Dashboard = () => {
   // Get scenario-specific initial message - simplified to use incomingCall directly
   const getScenarioInitialMessage = () => {
     switch(activeScenario) {
-      case 'verification':
-        return `Hello ${incomingCall.customerName}, thank you for calling about the security alert. I understand you're concerned about the login attempt from an unfamiliar location. Let me help you verify your identity and secure your account.`;
-      case 'bankDetails':
-        return `Hello ${incomingCall.customerName}, thank you for calling about updating your bank details. I'll be happy to help you make this change securely. First, I'll need to verify some information with you.`;
-      case 'accountHistory':
-        return `Hello ${incomingCall.customerName}, thank you for calling about your account history. I understand you've noticed some unusual charges. I'll help you review your recent transactions and resolve any discrepancies.`;
-      case 'physioTherapy':
-        return `Guten Tag ${incomingCall.customerName}, danke für Ihren Anruf bezüglich der Physiotherapie-Abdeckung. Ich verstehe, dass Sie Fragen zu Ihrer Verschreibung haben. Ich werde Ihnen gerne alle Details zu Ihrer Versicherungsabdeckung erklären.`;
-      case 'paymentReminder':
-        return `Guten Tag ${incomingCall.customerName}, danke für Ihren Anruf bezüglich der Mahnung. Ich verstehe, dass Sie bereits eine Zahlung geleistet haben und trotzdem eine Mahnung erhalten haben. Ich werde das umgehend für Sie klären.`;
-      case 'insurancePackage':
+      case 'studiumabschlussCase':
         return `Guten Tag ${incomingCall.customerName}, herzlichen Glückwunsch zum baldigen Studienabschluss! Ich helfe Ihnen gerne bei der Umstellung Ihrer Versicherung auf ein passendes Paket für Ihre neue Lebenssituation.`;
+      case 'leistungsabdeckungPhysio':
+        return `Guten Tag ${incomingCall.customerName}, danke für Ihren Anruf bezüglich der Physiotherapie-Abdeckung. Ich verstehe, dass Sie Fragen zu Ihrer Verschreibung haben. Ich werde Ihnen gerne alle Details zu Ihrer Versicherungsabdeckung erklären.`;
+      case 'mahnungTrotzZahlung':
+        return `Guten Tag ${incomingCall.customerName}, danke für Ihren Anruf bezüglich der Mahnung. Ich verstehe, dass Sie bereits eine Zahlung geleistet haben und trotzdem eine Mahnung erhalten haben. Ich werde das umgehend für Sie klären.`;
       default:
         return `Hello ${incomingCall.customerName}, thank you for calling customer support. How can I assist you today?`;
     }
@@ -359,18 +290,12 @@ const Dashboard = () => {
   // Get scenario-specific customer response
   const getScenarioCustomerResponse = () => {
     switch(activeScenario) {
-      case 'verification':
-        return "Yes, I'm very concerned. I received an email alert about a login attempt from another country. I want to make sure my account is secure and no one has accessed my personal information.";
-      case 'bankDetails':
-        return "Thank you. I recently changed banks and need to update my direct debit information for my monthly payments. I have all my new bank details ready.";
-      case 'accountHistory':
-        return "Thanks for your help. There are three transactions from last month that I don't recognize. They're all small amounts, but I want to make sure no one has unauthorized access to my account.";
-      case 'physioTherapy':
-        return "Danke. Mein Hauptanliegen ist, ob alle 10 verschriebenen Behandlungen von meiner Versicherung übernommen werden. Mein Physiotherapeut sagte mir, dass manche Versicherungen nur 6 Behandlungen abdecken.";
-      case 'paymentReminder':
-        return "Ich habe definitiv am 25. April bezahlt und habe sogar eine Bestätigung von meiner Bank. Trotzdem habe ich gestern eine Mahnung mit Mahngebühren erhalten. Das ist sehr ärgerlich.";
-      case 'insurancePackage':
+      case 'studiumabschlussCase':
         return "Danke. Ich beginne am 1. Juli meinen neuen Job und brauche bis dahin ein neues Versicherungspaket. Besonders wichtig ist mir eine gute Zahnversicherung und eventuell eine Zusatzversicherung für Brillen.";
+      case 'leistungsabdeckungPhysio':
+        return "Danke. Mein Hauptanliegen ist, ob alle 10 verschriebenen Behandlungen von meiner Versicherung übernommen werden. Mein Physiotherapeut sagte mir, dass manche Versicherungen nur 6 Behandlungen abdecken.";
+      case 'mahnungTrotzZahlung':
+        return "Ich habe definitiv am 25. April bezahlt und habe sogar eine Bestätigung von meiner Bank. Trotzdem habe ich gestern eine Mahnung mit Mahngebühren erhalten. Das ist sehr ärgerlich.";
       default:
         return "I've been having issues with my service recently and need some help resolving them.";
     }
@@ -418,31 +343,15 @@ const Dashboard = () => {
   // Get scenario-specific customer responses
   const getScenarioResponses = () => {
     switch(activeScenario) {
-      case 'verification':
+      case 'studiumabschlussCase':
         return [
-          "Yes, I can confirm my date of birth is May 12, 1985.",
-          "The last four digits of my account are 7890.",
-          "I have received no other suspicious emails or notifications.",
-          "Should I change my password as a precaution?",
-          "Thank you for your help with this."
+          "Ich werde als Softwareentwickler arbeiten, hauptsächlich im Büro.",
+          "Ich brauche definitiv eine gute Zahnversicherung und Brillenversicherung.",
+          "Wie viel würde ein umfassendes Paket kosten?",
+          "Gibt es Rabatte für Neukunden oder Berufseinsteiger?",
+          "Vielen Dank für die ausführliche Beratung."
         ];
-      case 'bankDetails':
-        return [
-          "My name is Max Hoffman, born June 3, 1982.",
-          "My current bank is Commerzbank, account ending in 4321.",
-          "My new bank is Deutsche Bank, and I have the IBAN ready.",
-          "When will the change take effect for my next payment?",
-          "Thank you for updating my information."
-        ];
-      case 'accountHistory':
-        return [
-          "The transactions were on March 15, 18, and 22.",
-          "They were all between €15-25 from an online merchant called 'DigiStore'.",
-          "I've never shopped at this store before.",
-          "Should I request a new card as a precaution?",
-          "Thank you for flagging these as suspicious."
-        ];
-      case 'physioTherapy':
+      case 'leistungsabdeckungPhysio':
         return [
           "Meine Versicherungsnummer ist DE12345678.",
           "Die Behandlungen sind für chronische Rückenschmerzen nach einem Bandscheibenvorfall.",
@@ -450,21 +359,13 @@ const Dashboard = () => {
           "Muss ich eine Vorabgenehmigung einholen?",
           "Vielen Dank für die Informationen."
         ];
-      case 'paymentReminder':
+      case 'mahnungTrotzZahlung':
         return [
           "Die Rechnungsnummer ist INV-29384.",
           "Ich habe per Überweisung bezahlt, nicht per Lastschrift.",
           "Werden die Mahngebühren storniert, wenn es sich um einen Fehler handelt?",
           "Kann ich Ihnen den Zahlungsbeleg zusenden?",
           "Danke für Ihre Hilfe in dieser Angelegenheit."
-        ];
-      case 'insurancePackage':
-        return [
-          "Ich werde als Softwareentwickler arbeiten, hauptsächlich im Büro.",
-          "Ich brauche definitiv eine gute Zahnversicherung und Brillenversicherung.",
-          "Wie viel würde ein umfassendes Paket kosten?",
-          "Gibt es Rabatte für Neukunden oder Berufseinsteiger?",
-          "Vielen Dank für die ausführliche Beratung."
         ];
       default:
         return [

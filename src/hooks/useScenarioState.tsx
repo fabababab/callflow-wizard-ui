@@ -12,7 +12,7 @@ interface SelectedStateDetails {
   sensitiveFields?: SensitiveField[];
 }
 
-export function useScenarioState(initialScenario: ScenarioType = "testscenario") {
+export function useScenarioState(initialScenario: ScenarioType = "studiumabschlussCase") {
   const [showJsonDialog, setShowJsonDialog] = useState(false);
   const [selectedStateMachine, setSelectedStateMachine] = useState<ScenarioType>(initialScenario);
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);

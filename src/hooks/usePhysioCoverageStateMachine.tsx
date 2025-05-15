@@ -19,7 +19,7 @@ export function usePhysioCoverageStateMachine() {
     processSelection,
     processStartCall,
     resetStateMachine
-  } = useStateMachine('testscenario');
+  } = useStateMachine('leistungsabdeckungPhysio');
 
   // Set the loading and error states based on the state machine loading/error
   useEffect(() => {
