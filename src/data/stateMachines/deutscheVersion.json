@@ -1,4 +1,3 @@
-
 {
   "id": "deutsche-version",
   "initial": "start",
@@ -191,7 +190,23 @@
     },
     "end_call": {
       "meta": {
-        "agentText": "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!"
+        "agentText": "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!",
+        "module": {
+          "id": "nachbearbeitung-module-1",
+          "title": "Gesprächszusammenfassung",
+          "type": "NACHBEARBEITUNG",
+          "data": {
+            "isInline": true,
+            "points": [
+              "Studium abgeschlossen",
+              "Wechsel zum Telmed-Modell",
+              "Franchise von CHF 1000 gewählt",
+              "Neue monatliche Prämie CHF 230",
+              "Änderung ab nächstem Monat wirksam"
+            ],
+            "summary": "Kunde hat nach Studienabschluss das Telmed-Modell gewählt und eine Franchise von CHF 1000. Die neue monatliche Prämie beträgt CHF 230. Alle Änderungen werden ab dem nächsten Monat wirksam."
+          }
+        }
       }
     }
   }
