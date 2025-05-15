@@ -1,6 +1,6 @@
 
-import { useState, useRef, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 import { useConversationState } from '@/hooks/useConversationState';
 import { useCallState } from '@/hooks/useCallState';
 import { useMessageHandling } from '@/hooks/useMessageHandling';
@@ -12,7 +12,6 @@ import { ScenarioType } from '@/components/ScenarioSelector';
 import { ValidationStatus } from '@/data/scenarioData';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
-  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   
@@ -31,8 +30,12 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   // Use the module manager hook
   const { activeModule, completeModule } = useModuleManager();
   
-  // Use the nachbearbeitung handler
-  const { showNachbearbeitungSummary } = useNachbearbeitungHandler(completeModule, activeScenario);
+  // Use the nachbearbeitung handler - fixed argument count
+  const { showNachbearbeitungSummary } = useNachbearbeitungHandler(
+    completeModule, 
+    activeScenario,
+    messageHandling.addSystemMessage
+  );
   
   // Use the call termination hook
   const { handleHangUpCall } = useCallTermination({
@@ -83,7 +86,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   
   // Function to handle validating sensitive data
   const handleValidateSensitiveData = useCallback((fieldId: string, isValid: boolean, notes?: string) => {
-    console.log(`Validating sensitive data: ${fieldId} - ${isValid}`);
+    console.log(`Validating sensitive data: ${fieldId} - ${isValid ? 'valid' : 'invalid'}`);
     
     // Map boolean isValid to ValidationStatus
     const status: ValidationStatus = isValid ? 'valid' : 'invalid';
@@ -127,6 +130,15 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     // Add system message
     messageHandling.addSystemMessage('Conversation reset.');
   }, [stateMachine, messageHandling]);
+
+  // Add initial loading message when component mounts
+  useEffect(() => {
+    // Check if we need to add an initial message
+    if (messageHandling.messages.length === 0) {
+      console.log('Adding initial welcome message');
+      messageHandling.addSystemMessage('Willkommen! Starten Sie einen Anruf, um das Szenario zu beginnen.');
+    }
+  }, [messageHandling]);
 
   return {
     messages: messageHandling.messages,

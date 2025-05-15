@@ -70,6 +70,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 
   // Wrapper for validateSensitiveData to match expected signature
   const handleValidateSensitiveData = (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => {
+    // We need to convert the ValidationStatus to a boolean for the transcript.handleValidateSensitiveData function
     transcript.handleValidateSensitiveData(fieldId, status === 'valid', notes);
   };
   
