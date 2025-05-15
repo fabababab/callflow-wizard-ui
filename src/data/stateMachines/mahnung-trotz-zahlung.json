@@ -1,0 +1,156 @@
+
+{
+  "id": "mahnung-trotz-zahlung",
+  "initial": "start",
+  "states": {
+    "start": {
+      "meta": {
+        "systemMessage": "Call initiated with customer.",
+        "agentText": "Guten Tag! Wie kann ich Ihnen heute helfen?",
+        "responseOptions": [
+          "Gespräch beginnen",
+          "Kundenidentität zuerst überprüfen"
+        ]
+      },
+      "on": {
+        "START_CALL": "customer_issue",
+        "Gespräch beginnen": "customer_issue",
+        "Kundenidentität zuerst überprüfen": "verify_identity",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "verify_identity": {
+      "meta": {
+        "agentText": "Bevor wir fortfahren, muss ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihre Kundennummer und Postleitzahl mitteilen?",
+        "customerText": "Natürlich. Meine Kundennummer ist MT876543 und meine Postleitzahl ist 8005.",
+        "responseOptions": [
+          "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?",
+          "Danke für die Bestätigung. Ich sehe, dass auf Ihrem Konto eine offene Forderung vermerkt ist. Rufen Sie deswegen an?"
+        ]
+      },
+      "on": {
+        "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?": "customer_issue",
+        "Danke für die Bestätigung. Ich sehe, dass auf Ihrem Konto eine offene Forderung vermerkt ist. Rufen Sie deswegen an?": "customer_issue",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "customer_issue": {
+      "meta": {
+        "customerText": "Ja, ich habe heute eine Zahlungserinnerung erhalten, obwohl ich die Rechnung bereits letzte Woche bezahlt habe. Ich habe sogar den Zahlungsbeleg hier vor mir.",
+        "responseOptions": [
+          "Es tut mir leid, dass Sie eine Mahnung erhalten haben, obwohl Sie bereits bezahlt haben. Ich werde das sofort für Sie überprüfen.",
+          "Danke für Ihren Anruf. Solche Überschneidungen können vorkommen, wenn Zahlungen und Mahnungen zeitlich eng beieinander liegen. Lassen Sie mich Ihre Zahlung in unserem System suchen."
+        ]
+      },
+      "on": {
+        "Es tut mir leid, dass Sie eine Mahnung erhalten haben, obwohl Sie bereits bezahlt haben. Ich werde das sofort für Sie überprüfen.": "payment_check",
+        "Danke für Ihren Anruf. Solche Überschneidungen können vorkommen, wenn Zahlungen und Mahnungen zeitlich eng beieinander liegen. Lassen Sie mich Ihre Zahlung in unserem System suchen.": "payment_check",
+        "DEFAULT": "payment_check"
+      }
+    },
+    "payment_check": {
+      "meta": {
+        "agentText": "Es tut mir leid, dass Sie eine Mahnung erhalten haben, obwohl Sie bereits bezahlt haben. Ich werde das sofort für Sie überprüfen. Können Sie mir bitte das Datum der Zahlung und den genauen Betrag mitteilen?",
+        "customerText": "Ich habe am 10. Mai CHF 378,50 überwiesen. Die Mahnung bezieht sich auf eine Rechnung mit der Nummer RN-12345.",
+        "responseOptions": [
+          "Vielen Dank für diese Informationen. Ich werde jetzt in unserem Zahlungssystem nachsehen, ob Ihre Zahlung verbucht wurde."
+        ]
+      },
+      "on": {
+        "Vielen Dank für diese Informationen. Ich werde jetzt in unserem Zahlungssystem nachsehen, ob Ihre Zahlung verbucht wurde.": "system_check",
+        "DEFAULT": "system_check"
+      }
+    },
+    "system_check": {
+      "meta": {
+        "agentText": "Vielen Dank für diese Informationen. Ich überprüfe jetzt unser Zahlungssystem.",
+        "module": {
+          "id": "payment-verification-module",
+          "title": "Zahlungsüberprüfung",
+          "type": "VERIFICATION",
+          "data": {
+            "isInline": true,
+            "fields": [
+              {"label": "Rechnungsnummer", "value": "RN-12345", "system": "RN-12345", "isRequired": true},
+              {"label": "Zahlungsdatum", "value": "10. Mai 2025", "system": "2025-05-10", "isRequired": true},
+              {"label": "Betrag", "value": "CHF 378,50", "system": "378.50", "isRequired": true},
+              {"label": "Zahlung im System", "value": "Ja, verbucht am 11. Mai", "system": "Verbucht", "isRequired": true}
+            ],
+            "title": "Zahlungsdetails"
+          }
+        },
+        "responseOptions": [
+          "Ich habe Ihre Zahlung in unserem System gefunden. Sie wurde tatsächlich am 11. Mai verbucht. Das Problem ist, dass die Zahlungserinnerung bereits am 9. Mai generiert wurde, bevor Ihre Zahlung eingegangen ist."
+        ]
+      },
+      "on": {
+        "Ich habe Ihre Zahlung in unserem System gefunden. Sie wurde tatsächlich am 11. Mai verbucht. Das Problem ist, dass die Zahlungserinnerung bereits am 9. Mai generiert wurde, bevor Ihre Zahlung eingegangen ist.": "payment_found",
+        "DEFAULT": "payment_found"
+      }
+    },
+    "payment_found": {
+      "meta": {
+        "agentText": "Ich habe Ihre Zahlung in unserem System gefunden. Sie wurde tatsächlich am 11. Mai verbucht. Das Problem ist, dass die Zahlungserinnerung bereits am 9. Mai generiert wurde, bevor Ihre Zahlung eingegangen ist. Der Versand der Erinnerung erfolgte dann automatisch am 15. Mai, obwohl die Zahlung zu diesem Zeitpunkt bereits verbucht war.",
+        "customerText": "Verstehe. Muss ich jetzt irgendwas unternehmen oder die Mahnung ignorieren?",
+        "responseOptions": [
+          "Sie können die Mahnung ignorieren. Ich werde in unserem System vermerken, dass die Zahlung bereits eingegangen ist und die Mahnung hinfällig ist. Es werden keine weiteren Mahnungen zu dieser Rechnung verschickt.",
+          "Die Mahnung können Sie ignorieren. Ich setze einen Vermerk in Ihrem Kundenkonto, dass die Zahlung bereits erfolgt ist. Möchten Sie eine Bestätigung per E-Mail erhalten, dass diese Angelegenheit geklärt ist?"
+        ]
+      },
+      "on": {
+        "Sie können die Mahnung ignorieren. Ich werde in unserem System vermerken, dass die Zahlung bereits eingegangen ist und die Mahnung hinfällig ist. Es werden keine weiteren Mahnungen zu dieser Rechnung verschickt.": "resolution",
+        "Die Mahnung können Sie ignorieren. Ich setze einen Vermerk in Ihrem Kundenkonto, dass die Zahlung bereits erfolgt ist. Möchten Sie eine Bestätigung per E-Mail erhalten, dass diese Angelegenheit geklärt ist?": "email_confirmation",
+        "DEFAULT": "resolution"
+      }
+    },
+    "email_confirmation": {
+      "meta": {
+        "agentText": "Die Mahnung können Sie ignorieren. Ich setze einen Vermerk in Ihrem Kundenkonto, dass die Zahlung bereits erfolgt ist. Möchten Sie eine Bestätigung per E-Mail erhalten, dass diese Angelegenheit geklärt ist?",
+        "customerText": "Ja, das wäre super. So habe ich einen Nachweis, falls nochmal was kommt.",
+        "responseOptions": [
+          "Ich werde Ihnen sofort eine Bestätigungsmail zusenden. Sie sollte in den nächsten Minuten bei Ihnen eintreffen. Ich entschuldige mich nochmals für die Unannehmlichkeiten."
+        ]
+      },
+      "on": {
+        "Ich werde Ihnen sofort eine Bestätigungsmail zusenden. Sie sollte in den nächsten Minuten bei Ihnen eintreffen. Ich entschuldige mich nochmals für die Unannehmlichkeiten.": "resolution",
+        "DEFAULT": "resolution"
+      }
+    },
+    "resolution": {
+      "meta": {
+        "agentText": "Ich werde Ihnen sofort eine Bestätigungsmail zusenden. Sie sollte in den nächsten Minuten bei Ihnen eintreffen. Ich entschuldige mich nochmals für die Unannehmlichkeiten und bedanke mich für Ihre Geduld. Gibt es noch etwas, wobei ich Ihnen helfen kann?",
+        "customerText": "Nein, danke. Das war's schon. Schön, dass das so schnell geklärt werden konnte.",
+        "responseOptions": [
+          "Es freut mich, dass ich Ihnen helfen konnte. Ich wünsche Ihnen noch einen schönen Tag und danke für Ihren Anruf.",
+          "Gerne geschehen. Sollten Sie in Zukunft weitere Fragen haben, zögern Sie nicht, uns wieder zu kontaktieren. Einen schönen Tag noch!"
+        ]
+      },
+      "on": {
+        "Es freut mich, dass ich Ihnen helfen konnte. Ich wünsche Ihnen noch einen schönen Tag und danke für Ihren Anruf.": "end_call",
+        "Gerne geschehen. Sollten Sie in Zukunft weitere Fragen haben, zögern Sie nicht, uns wieder zu kontaktieren. Einen schönen Tag noch!": "end_call",
+        "DEFAULT": "end_call"
+      }
+    },
+    "end_call": {
+      "meta": {
+        "agentText": "Es freut mich, dass ich Ihnen helfen konnte. Ich wünsche Ihnen noch einen schönen Tag und danke für Ihren Anruf.",
+        "module": {
+          "id": "nachbearbeitung-mahnung",
+          "title": "Nachbearbeitung",
+          "type": "NACHBEARBEITUNG",
+          "data": {
+            "isInline": true,
+            "points": [
+              "Problem mit Mahnung trotz erfolgter Zahlung identifiziert",
+              "Zahlungseingang vom 11. Mai im System verifiziert",
+              "Erklärung zum zeitlichen Ablauf der Mahnungsgenerierung gegeben",
+              "Vermerk im Kundenkonto gesetzt",
+              "Bestätigungsmail an Kunden gesendet"
+            ],
+            "summary": "Kunde erhielt eine Zahlungserinnerung, obwohl die Zahlung bereits erfolgt war. Die Zahlung wurde im System gefunden (verbucht am 11. Mai), während die Mahnung bereits am 9. Mai generiert wurde. Eine Bestätigungsmail wurde an den Kunden gesendet und ein Vermerk im System gesetzt, dass die Mahnung hinfällig ist."
+          }
+        }
+      }
+    }
+  }
+}

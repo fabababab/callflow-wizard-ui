@@ -14,7 +14,10 @@ export type ScenarioType =
   'physioTherapy' |
   'paymentReminder' |
   'insurancePackage' |
-  'deutscheVersion';
+  'deutscheVersion' |
+  'studiumabschlussCase' |
+  'leistungsabdeckungPhysio' |
+  'mahnungTrotzZahlung';
 
 // Define and export the scenarioCallData object that Dashboard.tsx is looking for
 export const scenarioCallData: Record<ScenarioType, {
@@ -258,8 +261,74 @@ export const scenarioCallData: Record<ScenarioType, {
       keyPoints: ['Customer asking about product features', 'Comparing different options']
     }
   },
-  'deutscheVersion': {
+  'studiumabschlussCase': {
     id: 11,
+    customerName: 'Markus Weber',
+    phoneNumber: '+41 78 123 4567',
+    waitTime: '0m 20s',
+    callType: 'Versicherungsanpassung',
+    priority: 'medium',
+    expertise: 'Versicherung',
+    matchScore: 94,
+    caseHistory: [
+      {
+        type: 'Vertragsänderung',
+        date: 'Mai 12, 2025',
+        description: 'Kunde hat Studium abgeschlossen und fragt nach Anpassungen.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '1m 30s',
+      sentiment: 'Neutral',
+      keyPoints: ['Studium abgeschlossen', 'Frage nach Versicherungsanpassungen', 'Überprüfung der Franchise']
+    }
+  },
+  'leistungsabdeckungPhysio': {
+    id: 12,
+    customerName: 'Anna Fischer',
+    phoneNumber: '+41 76 987 6543',
+    waitTime: '0m 35s',
+    callType: 'Leistungsabdeckung',
+    priority: 'medium',
+    expertise: 'Leistungen',
+    matchScore: 91,
+    caseHistory: [
+      {
+        type: 'Leistungsanfrage',
+        date: 'Mai 14, 2025',
+        description: 'Kundin hat Fragen zur Abdeckung von Physiotherapie.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '1m 45s',
+      sentiment: 'Interessiert',
+      keyPoints: ['Ärztliche Verordnung für Physiotherapie', 'Frage zur Kostenübernahme', 'Klärung der Selbstbeteiligung']
+    }
+  },
+  'mahnungTrotzZahlung': {
+    id: 13,
+    customerName: 'Thomas Müller',
+    phoneNumber: '+41 79 345 6789',
+    waitTime: '0m 15s',
+    callType: 'Zahlungsproblem',
+    priority: 'high',
+    expertise: 'Zahlungsverkehr',
+    matchScore: 96,
+    caseHistory: [
+      {
+        type: 'Zahlungsreklamation',
+        date: 'Mai 15, 2025',
+        description: 'Kunde erhielt Mahnung trotz bereits erfolgter Zahlung.'
+      }
+    ],
+    roboCallSummary: {
+      duration: '1m 10s',
+      sentiment: 'Verärgert',
+      keyPoints: ['Mahnung erhalten', 'Zahlung bereits getätigt', 'Hat Zahlungsbeleg']
+    }
+  },
+  'deutscheVersion': {
+    id: 14,
     customerName: 'Markus Weber',
     phoneNumber: '+41 78 123 4567',
     waitTime: '0m 20s',
@@ -299,7 +368,9 @@ const ScenarioSelector = ({
     'verificationFlow',
     'contractManagement',
     'productInfo',
-    'deutscheVersion'
+    'studiumabschlussCase',
+    'leistungsabdeckungPhysio',
+    'mahnungTrotzZahlung'
   ];
 
   return (
@@ -320,7 +391,9 @@ const ScenarioSelector = ({
                 {scenario === 'verificationFlow' ? 'Identity Verification' :
                  scenario === 'contractManagement' ? 'Contract Management' :
                  scenario === 'productInfo' ? 'Product Information' :
-                 scenario === 'deutscheVersion' ? 'Deutsche Version' :
+                 scenario === 'studiumabschlussCase' ? 'Studiumabschluss-Case' :
+                 scenario === 'leistungsabdeckungPhysio' ? 'Leistungsabdeckung Physio' :
+                 scenario === 'mahnungTrotzZahlung' ? 'Mahnung trotz Zahlung' :
                  'Test Scenario'}
               </SelectItem>
             ))}

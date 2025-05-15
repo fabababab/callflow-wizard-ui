@@ -19,8 +19,8 @@ const TestScenario = () => {
   const transcriptRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Initialize with deutscheVersion instead of hardcoded value to respect user preference
-  const scenarioState = useScenarioState("deutscheVersion");
+  // Initialize with studiumabschlussCase instead of deutscheVersion
+  const scenarioState = useScenarioState("studiumabschlussCase");
 
   // Use the useJsonVisualization hook for JSON view functionality
   const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);
@@ -40,7 +40,7 @@ const TestScenario = () => {
   useEffect(() => {
     if (scenarioState.loadedStateMachine) {
       toast({
-        title: "Deutsche Version geladen",
+        title: "Studiumabschluss-Case geladen",
         description: "Szenario zum Thema Versicherungsanpassung nach Studienabschluss",
         duration: 3000
       });

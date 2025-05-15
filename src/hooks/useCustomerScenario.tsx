@@ -10,7 +10,7 @@ export function useCustomerScenario() {
   const [error, setError] = useState<string | null>(null);
 
   // Use the scenario state machine from the useStateMachine hook
-  // Changed from 'testscenario' to 'deutscheVersion'
+  // Changed from 'deutscheVersion' to 'studiumabschlussCase'
   const {
     currentState,
     stateData,
@@ -20,7 +20,7 @@ export function useCustomerScenario() {
     processSelection,
     processStartCall,
     resetStateMachine
-  } = useStateMachine('deutscheVersion');
+  } = useStateMachine('studiumabschlussCase');
 
   // Set the loading and error states based on the state machine loading/error
   useEffect(() => {

@@ -1,0 +1,162 @@
+
+{
+  "id": "leistungsabdeckung-physio",
+  "initial": "start",
+  "states": {
+    "start": {
+      "meta": {
+        "systemMessage": "Call initiated with customer.",
+        "agentText": "Guten Tag! Wie kann ich Ihnen heute helfen?",
+        "responseOptions": [
+          "Gespräch beginnen",
+          "Kundenidentität zuerst überprüfen"
+        ]
+      },
+      "on": {
+        "START_CALL": "customer_issue",
+        "Gespräch beginnen": "customer_issue",
+        "Kundenidentität zuerst überprüfen": "verify_identity",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "verify_identity": {
+      "meta": {
+        "agentText": "Bevor wir fortfahren, muss ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihre Versicherungsnummer und Geburtsdatum mitteilen?",
+        "customerText": "Natürlich. Meine Versicherungsnummer ist PH567890 und ich bin am 14.03.1982 geboren.",
+        "responseOptions": [
+          "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?",
+          "Danke für die Bestätigung. Ich sehe, Sie haben eine Anfrage bezüglich einer Physiotherapie-Behandlung. Darf ich fragen, worum es genau geht?"
+        ]
+      },
+      "on": {
+        "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?": "customer_issue",
+        "Danke für die Bestätigung. Ich sehe, Sie haben eine Anfrage bezüglich einer Physiotherapie-Behandlung. Darf ich fragen, worum es genau geht?": "customer_issue",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "customer_issue": {
+      "meta": {
+        "customerText": "Mein Arzt hat mir 10 Physiotherapie-Sitzungen verschrieben. Ich möchte wissen, wie viele davon von meiner Versicherung übernommen werden und ob ich etwas zuzahlen muss.",
+        "responseOptions": [
+          "Ich helfe Ihnen gerne, die Deckung für Ihre Physiotherapie-Behandlungen zu klären. Lassen Sie mich Ihr Versicherungsprofil überprüfen.",
+          "Gerne überprüfe ich die Leistungsabdeckung für Physiotherapie in Ihrem Tarif. Einen Moment bitte."
+        ]
+      },
+      "on": {
+        "Ich helfe Ihnen gerne, die Deckung für Ihre Physiotherapie-Behandlungen zu klären. Lassen Sie mich Ihr Versicherungsprofil überprüfen.": "check_coverage",
+        "Gerne überprüfe ich die Leistungsabdeckung für Physiotherapie in Ihrem Tarif. Einen Moment bitte.": "check_coverage",
+        "DEFAULT": "check_coverage"
+      }
+    },
+    "check_coverage": {
+      "meta": {
+        "agentText": "Ich überprüfe gerade Ihre Versicherungsdetails. Können Sie mir bitte mitteilen, welche Franchise Sie aktuell haben?",
+        "customerText": "Ich habe eine Franchise von CHF 1000.",
+        "responseOptions": [
+          "Danke für diese Information. Ich kann nun eine genaue Auskunft zu Ihrer Leistungsabdeckung geben."
+        ]
+      },
+      "on": {
+        "Danke für diese Information. Ich kann nun eine genaue Auskunft zu Ihrer Leistungsabdeckung geben.": "coverage_details",
+        "DEFAULT": "coverage_details"
+      }
+    },
+    "coverage_details": {
+      "meta": {
+        "agentText": "Danke für diese Information. In Ihrem Fall werden Physiotherapie-Behandlungen grundsätzlich von der Grundversicherung übernommen, wenn sie ärztlich verordnet sind. Hier sind die Details zu Ihrer Abdeckung.",
+        "module": {
+          "id": "physio-coverage-module",
+          "title": "Physiotherapie-Leistungsabdeckung",
+          "type": "INFORMATION_TABLE",
+          "data": {
+            "description": "Ihr aktueller Versicherungsschutz für Physiotherapie:",
+            "tableTitle": "Leistungsübersicht",
+            "franchiseOptions": [
+              {"description": "Anzahl verordneter Sitzungen", "coverage": "10"},
+              {"description": "Durch Grundversicherung gedeckt", "coverage": "9 Sitzungen nach Franchise/Selbstbehalt"},
+              {"description": "Ihre aktuelle Franchise", "coverage": "CHF 1000"},
+              {"description": "Bereits bezahlte Franchise dieses Jahr", "coverage": "CHF 550"},
+              {"description": "Noch zu bezahlende Franchise", "coverage": "CHF 450"},
+              {"description": "Selbstbehalt (10%)", "coverage": "Max. CHF 700/Jahr"},
+              {"description": "Status Selbstbehalt", "coverage": "CHF 350 bereits erreicht"}
+            ],
+            "buttonText": "Verstanden"
+          }
+        },
+        "responseOptions": [
+          "Basierend auf Ihren Versicherungsdetails möchte ich Ihnen die genauen Kosten für Ihre Physiotherapie-Behandlungen erklären.",
+          "Lassen Sie mich erklären, wie die Kostenbeteiligung für Ihre Physiotherapie berechnet wird."
+        ]
+      },
+      "on": {
+        "Basierend auf Ihren Versicherungsdetails möchte ich Ihnen die genauen Kosten für Ihre Physiotherapie-Behandlungen erklären.": "cost_explanation",
+        "Lassen Sie mich erklären, wie die Kostenbeteiligung für Ihre Physiotherapie berechnet wird.": "cost_explanation",
+        "DEFAULT": "cost_explanation"
+      }
+    },
+    "cost_explanation": {
+      "meta": {
+        "agentText": "Basierend auf Ihren Versicherungsdetails werden die Kosten wie folgt aufgeteilt: Von Ihrer Franchise müssen Sie noch CHF 450 bezahlen. Danach übernimmt Ihre Grundversicherung 90% der Kosten, während Sie 10% als Selbstbehalt tragen müssen - bis zur Jahresgrenze von CHF 700, von der Sie bereits CHF 350 erreicht haben. Konkret bedeutet das: Für 9 Physiotherapie-Sitzungen à ca. CHF 100 (insgesamt CHF 900) müssen Sie CHF 450 Franchise plus ca. CHF 45 Selbstbehalt (10% von den restlichen CHF 450) zahlen. Die 10. Sitzung müssten Sie komplett selbst bezahlen, da nur 9 Sitzungen genehmigt sind. Haben Sie dazu noch Fragen?",
+        "customerText": "Danke für die detaillierte Erklärung. Was passiert, wenn ich mehr als 9 Sitzungen benötige? Kann ich eine Verlängerung beantragen?",
+        "responseOptions": [
+          "Ja, eine Verlängerung ist möglich. Wenn Ihr Arzt feststellt, dass Sie weitere Sitzungen benötigen, kann er eine zusätzliche Verordnung ausstellen. Diese muss dann bei uns eingereicht werden, und nach einer Überprüfung können weitere Sitzungen bewilligt werden.",
+          "Bei medizinischer Notwendigkeit kann Ihr Arzt eine Folgeverordnung ausstellen. Diese wird dann von unserem Vertrauensarzt geprüft, bevor weitere Sitzungen genehmigt werden."
+        ]
+      },
+      "on": {
+        "Ja, eine Verlängerung ist möglich. Wenn Ihr Arzt feststellt, dass Sie weitere Sitzungen benötigen, kann er eine zusätzliche Verordnung ausstellen. Diese muss dann bei uns eingereicht werden, und nach einer Überprüfung können weitere Sitzungen bewilligt werden.": "conclusion",
+        "Bei medizinischer Notwendigkeit kann Ihr Arzt eine Folgeverordnung ausstellen. Diese wird dann von unserem Vertrauensarzt geprüft, bevor weitere Sitzungen genehmigt werden.": "conclusion",
+        "DEFAULT": "conclusion"
+      }
+    },
+    "conclusion": {
+      "meta": {
+        "agentText": "Bei medizinischer Notwendigkeit kann Ihr Arzt eine Folgeverordnung ausstellen. Diese wird dann von unserem Vertrauensarzt geprüft, bevor weitere Sitzungen genehmigt werden. Die Folgeverordnung sollte etwa 1-2 Wochen vor Ablauf der aktuellen Verordnung eingereicht werden, damit keine Unterbrechung der Therapie entsteht. Gibt es noch etwas anderes, womit ich Ihnen helfen kann?",
+        "customerText": "Das war sehr hilfreich, vielen Dank! Das sind alle Fragen, die ich hatte.",
+        "responseOptions": [
+          "Ich freue mich, dass ich Ihnen helfen konnte! Falls Sie noch weitere Fragen haben sollten, zögern Sie nicht, uns erneut zu kontaktieren. Ich wünsche Ihnen eine gute Besserung und erfolgreiche Physiotherapie-Behandlungen.",
+          "Gerne geschehen! Möchten Sie, dass ich Ihnen eine Zusammenfassung dieser Informationen per E-Mail zusende?"
+        ]
+      },
+      "on": {
+        "Ich freue mich, dass ich Ihnen helfen konnte! Falls Sie noch weitere Fragen haben sollten, zögern Sie nicht, uns erneut zu kontaktieren. Ich wünsche Ihnen eine gute Besserung und erfolgreiche Physiotherapie-Behandlungen.": "end_call",
+        "Gerne geschehen! Möchten Sie, dass ich Ihnen eine Zusammenfassung dieser Informationen per E-Mail zusende?": "send_email",
+        "DEFAULT": "end_call"
+      }
+    },
+    "send_email": {
+      "meta": {
+        "agentText": "Gerne geschehen! Möchten Sie, dass ich Ihnen eine Zusammenfassung dieser Informationen per E-Mail zusende?",
+        "customerText": "Ja, das wäre sehr hilfreich. Bitte senden Sie die Zusammenfassung an meine E-Mail-Adresse.",
+        "responseOptions": [
+          "Ich habe soeben eine E-Mail mit der Zusammenfassung unseres Gesprächs an Sie gesendet. Sie sollte in Kürze bei Ihnen eingehen. Haben Sie einen schönen Tag und gute Besserung!"
+        ]
+      },
+      "on": {
+        "Ich habe soeben eine E-Mail mit der Zusammenfassung unseres Gesprächs an Sie gesendet. Sie sollte in Kürze bei Ihnen eingehen. Haben Sie einen schönen Tag und gute Besserung!": "end_call",
+        "DEFAULT": "end_call"
+      }
+    },
+    "end_call": {
+      "meta": {
+        "agentText": "Ich freue mich, dass ich Ihnen helfen konnte! Falls Sie noch weitere Fragen haben sollten, zögern Sie nicht, uns erneut zu kontaktieren. Ich wünsche Ihnen eine gute Besserung und erfolgreiche Physiotherapie-Behandlungen. Haben Sie einen schönen Tag!",
+        "module": {
+          "id": "nachbearbeitung-physio",
+          "title": "Nachbearbeitung",
+          "type": "NACHBEARBEITUNG",
+          "data": {
+            "isInline": true,
+            "points": [
+              "Kundenidentität überprüft",
+              "Abdeckung von 9 Physiotherapie-Sitzungen erklärt",
+              "Franchise-Status überprüft: CHF 550 von CHF 1000 bereits bezahlt",
+              "Selbstbehalt-Status überprüft: CHF 350 bereits erreicht",
+              "Informationen zur Verlängerung der Verordnung gegeben"
+            ],
+            "summary": "Kunde wurde über die Leistungsabdeckung für 9 verordnete Physiotherapie-Sitzungen informiert. Die Kostenaufteilung (verbleibende Franchise: CHF 450, Selbstbehalt: 10%) wurde erklärt und der Prozess für eine eventuelle Folgeverordnung erläutert."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,214 @@
+
+{
+  "id": "studiumabschluss-case",
+  "initial": "start",
+  "states": {
+    "start": {
+      "meta": {
+        "systemMessage": "Call initiated with customer.",
+        "agentText": "Willkommen! Wie kann ich Ihnen heute helfen?",
+        "responseOptions": [
+          "Gespräch beginnen",
+          "Kundenidentität zuerst überprüfen"
+        ]
+      },
+      "on": {
+        "START_CALL": "customer_issue",
+        "Gespräch beginnen": "customer_issue",
+        "Kundenidentität zuerst überprüfen": "verify_identity",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "verify_identity": {
+      "meta": {
+        "agentText": "Bevor wir fortfahren, muss ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihre Kontonummer oder E-Mail-Adresse mitteilen?",
+        "customerText": "Natürlich, meine Kontonummer ist SAC123456 und meine E-Mail ist markus.weber@beispiel.ch",
+        "responseOptions": [
+          "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?",
+          "Ich sehe hier einen Hinweis zu einem kürzlichen Abschluss Ihres Studiums. Rufen Sie deswegen an?",
+          "Ich stelle fest, dass Sie seit über 3 Jahren Kunde sind. Bevor wir fortfahren, lassen Sie mich prüfen, ob es verfügbare Treueprämien gibt."
+        ]
+      },
+      "on": {
+        "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?": "customer_issue",
+        "Ich sehe hier einen Hinweis zu einem kürzlichen Abschluss Ihres Studiums. Rufen Sie deswegen an?": "customer_issue",
+        "Ich stelle fest, dass Sie seit über 3 Jahren Kunde sind. Bevor wir fortfahren, lassen Sie mich prüfen, ob es verfügbare Treueprämien gibt.": "loyalty_check",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "loyalty_check": {
+      "meta": {
+        "agentText": "Ich stelle fest, dass Sie seit über 3 Jahren Kunde sind. Bevor wir fortfahren, lassen Sie mich prüfen, ob es verfügbare Treueprämien gibt.",
+        "customerText": "Oh, das wäre großartig!",
+        "responseOptions": [
+          "Danke für Ihre Treue. Ich sehe, dass Sie für eine 5% Ermäßigung auf Ihre nächste Prämienzahlung berechtigt sind. Möchten Sie auch über Ihren aktuellen Krankenversicherungsplan sprechen?",
+          "Als geschätzter Langzeitkunde qualifizieren Sie sich für unser Treueprogramm, das priorisierten Kundenservice und eine kostenlose jährliche Gesundheitsuntersuchung beinhaltet. Gibt es etwas Bestimmtes zu Ihrer Versicherung, das Sie heute besprechen möchten?",
+          "Ich habe unsere Treueprämien geprüft, und Sie haben Anspruch auf ein Wellness-Paket mit Rabatten auf Fitnessstudio-Mitgliedschaften. Bevor ich das zu Ihrem Konto hinzufüge, hatten Sie Fragen oder Bedenken zu Ihrer aktuellen Deckung?"
+        ]
+      },
+      "on": {
+        "Danke für Ihre Treue. Ich sehe, dass Sie für eine 5% Ermäßigung auf Ihre nächste Prämienzahlung berechtigt sind. Möchten Sie auch über Ihren aktuellen Krankenversicherungsplan sprechen?": "customer_issue",
+        "Als geschätzter Langzeitkunde qualifizieren Sie sich für unser Treueprogramm, das priorisierten Kundenservice und eine kostenlose jährliche Gesundheitsuntersuchung beinhaltet. Gibt es etwas Bestimmtes zu Ihrer Versicherung, das Sie heute besprechen möchten?": "customer_issue",
+        "Ich habe unsere Treueprämien geprüft, und Sie haben Anspruch auf ein Wellness-Paket mit Rabatten auf Fitnessstudio-Mitgliedschaften. Bevor ich das zu Ihrem Konto hinzufüge, hatten Sie Fragen oder Bedenken zu Ihrer aktuellen Deckung?": "customer_issue",
+        "DEFAULT": "customer_issue"
+      }
+    },
+    "customer_issue": {
+      "meta": {
+        "customerText": "Hallo. Ich habe kürzlich mein Studium abgeschlossen und möchte meine Versicherung anpassen. Welche Optionen habe ich?",
+        "responseOptions": [
+          "Ich helfe Ihnen gerne bei der Anpassung Ihrer Versicherung nach dem Studium. Lassen Sie mich zunächst Ihre Kontodaten abrufen.",
+          "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen die verschiedenen Versicherungsmodelle zeigen, die für Ihre neue Situation passend sind.",
+          "Nach dem Studium gibt es verschiedene Optionen für Ihre Versicherung. Ich zeige Ihnen gerne die verfügbaren Versicherungsmodelle und Tarife."
+        ]
+      },
+      "on": {
+        "Ich helfe Ihnen gerne bei der Anpassung Ihrer Versicherung nach dem Studium. Lassen Sie mich zunächst Ihre Kontodaten abrufen.": "insurance_models",
+        "Herzlichen Glückwunsch zum Studienabschluss! Ich kann Ihnen die verschiedenen Versicherungsmodelle zeigen, die für Ihre neue Situation passend sind.": "insurance_models",
+        "Nach dem Studium gibt es verschiedene Optionen für Ihre Versicherung. Ich zeige Ihnen gerne die verfügbaren Versicherungsmodelle und Tarife.": "insurance_models",
+        "DEFAULT": "insurance_models"
+      }
+    },
+    "insurance_models": {
+      "meta": {
+        "agentText": "Nach dem Studium gibt es verschiedene Optionen für Ihre Versicherung. Ich zeige Ihnen gerne die verfügbaren Versicherungsmodelle und Tarife.",
+        "customerText": "Ja bitte, das wäre sehr hilfreich!",
+        "module": {
+          "id": "insurance-model-module-1",
+          "title": "Versicherungsmodelle",
+          "type": "INSURANCE_MODEL",
+          "data": {
+            "models": [
+              {
+                "id": "standard",
+                "title": "Standardmodell",
+                "description": "Freie Arztwahl, keine Einschränkungen.",
+                "priceRange": "Ca. CHF 290–330/Monat"
+              },
+              {
+                "id": "hausarzt",
+                "title": "Hausarztmodell",
+                "description": "Immer zuerst zum gewählten Hausarzt.",
+                "priceRange": "Ca. CHF 240–270/Monat"
+              },
+              {
+                "id": "telmed",
+                "title": "Telmed-Modell",
+                "description": "Zuerst telefonische Beratung.",
+                "priceRange": "Ca. CHF 220–250/Monat"
+              },
+              {
+                "id": "hmo",
+                "title": "HMO-Modell",
+                "description": "Nur bestimmte Gesundheitszentren.",
+                "priceRange": "Ca. CHF 230–260/Monat"
+              }
+            ],
+            "buttonText": "Auswählen"
+          }
+        },
+        "responseOptions": [
+          "Vielen Dank für Ihre Auswahl des Telmed-Modells. Das ist eine gute Wahl, da es eine gute Balance zwischen Prämie und Flexibilität bietet.",
+          "Ich sehe, Sie haben das Telmed-Modell gewählt. Eine ausgezeichnete Wahl! Dies wird Ihre monatliche Prämie auf ca. CHF 220-250 reduzieren.",
+          "Das Telmed-Modell ist eine beliebte Option für viele unserer Kunden. Ich werde diese Änderung für Sie vornehmen."
+        ]
+      },
+      "on": {
+        "Vielen Dank für Ihre Auswahl des Telmed-Modells. Das ist eine gute Wahl, da es eine gute Balance zwischen Prämie und Flexibilität bietet.": "model_confirmation",
+        "Ich sehe, Sie haben das Telmed-Modell gewählt. Eine ausgezeichnete Wahl! Dies wird Ihre monatliche Prämie auf ca. CHF 220-250 reduzieren.": "model_confirmation",
+        "Das Telmed-Modell ist eine beliebte Option für viele unserer Kunden. Ich werde diese Änderung für Sie vornehmen.": "model_confirmation",
+        "DEFAULT": "model_confirmation"
+      }
+    },
+    "model_confirmation": {
+      "meta": {
+        "agentText": "Das Telmed-Modell ist eine beliebte Option für viele unserer Kunden. Ich werde diese Änderung für Sie vornehmen.",
+        "customerText": "Ausgezeichnet. Wann wird diese Änderung wirksam?",
+        "responseOptions": [
+          "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Sie werden die angepasste Prämie auf Ihrer nächsten Rechnung sehen.",
+          "Diese Änderung wird ab dem ersten Tag des kommenden Monats wirksam sein. Ich werde Ihnen eine Bestätigungs-E-Mail mit allen Details senden.",
+          "Ihr neues Versicherungsmodell wird ab nächstem Monat angewendet. Möchten Sie, dass ich Ihnen eine schriftliche Bestätigung dieser Änderung zusende?"
+        ]
+      },
+      "on": {
+        "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Sie werden die angepasste Prämie auf Ihrer nächsten Rechnung sehen.": "franchise_options",
+        "Diese Änderung wird ab dem ersten Tag des kommenden Monats wirksam sein. Ich werde Ihnen eine Bestätigungs-E-Mail mit allen Details senden.": "franchise_options",
+        "Ihr neues Versicherungsmodell wird ab nächstem Monat angewendet. Möchten Sie, dass ich Ihnen eine schriftliche Bestätigung dieser Änderung zusende?": "franchise_options",
+        "DEFAULT": "franchise_options"
+      }
+    },
+    "franchise_options": {
+      "meta": {
+        "agentText": "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Möchten Sie auch Ihre Franchise anpassen?",
+        "customerText": "Ja, ich würde auch gerne die Franchise-Optionen überprüfen.",
+        "module": {
+          "id": "info-table-module-2",
+          "title": "Franchise-Übersicht 2024",
+          "type": "INFORMATION_TABLE",
+          "data": {
+            "description": "Auswirkungen mit Telmed-Modell:",
+            "franchiseOptions": [
+              { "amount": 300, "premium": 250 },
+              { "amount": 500, "premium": 240 },
+              { "amount": 1000, "premium": 230 },
+              { "amount": 1500, "premium": 220 },
+              { "amount": 2000, "premium": 215 },
+              { "amount": 2500, "premium": 210 }
+            ],
+            "tableTitle": "Franchise Optionen",
+            "buttonText": "Option auswählen"
+          }
+        },
+        "responseOptions": [
+          "Basierend auf Ihrer Auswahl des Telmed-Modells sehen Sie hier die möglichen Franchise-Optionen. Je höher die Franchise, desto niedriger die monatliche Prämie.",
+          "Hier sind die Franchise-Optionen für das Telmed-Modell. Mit einer höheren Franchise können Sie Ihre monatliche Prämie weiter reduzieren.",
+          "Da Sie sich für das Telmed-Modell entschieden haben, zeige ich Ihnen nun die passenden Franchise-Optionen. Was würden Sie bevorzugen?"
+        ]
+      },
+      "on": {
+        "Basierend auf Ihrer Auswahl des Telmed-Modells sehen Sie hier die möglichen Franchise-Optionen. Je höher die Franchise, desto niedriger die monatliche Prämie.": "conclusion",
+        "Hier sind die Franchise-Optionen für das Telmed-Modell. Mit einer höheren Franchise können Sie Ihre monatliche Prämie weiter reduzieren.": "conclusion",
+        "Da Sie sich für das Telmed-Modell entschieden haben, zeige ich Ihnen nun die passenden Franchise-Optionen. Was würden Sie bevorzugen?": "conclusion",
+        "DEFAULT": "conclusion"
+      }
+    },
+    "conclusion": {
+      "meta": {
+        "agentText": "Basierend auf Ihrer Auswahl des Telmed-Modells und der Franchise von CHF 1000 wird Ihre neue monatliche Prämie CHF 230 betragen. Die Änderungen werden ab dem nächsten Monat wirksam. Gibt es sonst noch etwas, wobei ich Ihnen helfen kann?",
+        "customerText": "Nein, das ist alles. Vielen Dank für Ihre Hilfe!",
+        "responseOptions": [
+          "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!",
+          "Es war mir ein Vergnügen, Ihnen heute zu helfen. Wenn Sie in Zukunft weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Haben Sie einen schönen Tag!",
+          "Danke für Ihren Anruf. Ich habe eine Bestätigungs-E-Mail mit den Details zu den Änderungen an Ihre Versicherung gesendet. Ist noch etwas, womit ich Ihnen helfen kann, bevor wir das Gespräch beenden?"
+        ]
+      },
+      "on": {
+        "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!": "end_call",
+        "Es war mir ein Vergnügen, Ihnen heute zu helfen. Wenn Sie in Zukunft weitere Fragen haben, zögern Sie nicht, uns zu kontaktieren. Haben Sie einen schönen Tag!": "end_call",
+        "Danke für Ihren Anruf. Ich habe eine Bestätigungs-E-Mail mit den Details zu den Änderungen an Ihre Versicherung gesendet. Ist noch etwas, womit ich Ihnen helfen kann, bevor wir das Gespräch beenden?": "end_call",
+        "DEFAULT": "end_call"
+      }
+    },
+    "end_call": {
+      "meta": {
+        "agentText": "Gerne geschehen! Ich freue mich, dass ich Ihnen bei der Anpassung Ihrer Versicherung nach dem Studium helfen konnte. Vielen Dank, dass Sie sich für unsere Krankenversicherung entschieden haben. Haben Sie einen schönen Tag!",
+        "module": {
+          "id": "nachbearbeitung-studium",
+          "title": "Nachbearbeitung",
+          "type": "NACHBEARBEITUNG",
+          "data": {
+            "isInline": true,
+            "points": [
+              "Studium abgeschlossen",
+              "Anpassung des Versicherungsmodells auf Telmed",
+              "Franchise von CHF 2500 auf CHF 1000 reduziert",
+              "Änderungen ab nächstem Monat wirksam",
+              "Bestätigungs-E-Mail wurde versandt"
+            ],
+            "summary": "Kunde hat nach Studienabschluss sein Versicherungsmodell auf Telmed geändert und die Franchise von CHF 2500 auf CHF 1000 reduziert. Alle Änderungen werden ab dem nächsten Monatsbeginn wirksam."
+          }
+        }
+      }
+    }
+  }
+}

@@ -70,5 +70,21 @@ export const stateMachines: Record<ScenarioType, StateMachineConfig> = {
     status: StateMachineStatus.PRODUCTION,
     available: true,
     description: 'Deutsche Version mit Versicherungsanpassung nach Studienabschluss'
+  },
+  // Add the three new scenarios
+  'studiumabschlussCase': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Szenario für Versicherungsanpassung nach Studienabschluss'
+  },
+  'leistungsabdeckungPhysio': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Szenario für Fragen zur Abdeckung von Physiotherapie-Behandlungen'
+  },
+  'mahnungTrotzZahlung': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Szenario für Mahnungsprobleme bei bereits erfolgter Zahlung'
   }
 };

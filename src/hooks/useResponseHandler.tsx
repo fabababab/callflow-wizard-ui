@@ -1,3 +1,4 @@
+
 // Hook for handling user response selections
 import { useCallback, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -38,7 +39,7 @@ export function useResponseHandler({
     if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
       // Show toast notification for better user feedback
-      toast.toast({
+      toast({
         title: "Bitte warten",
         description: "Die Konversation wird initialisiert",
         variant: "destructive",
@@ -53,7 +54,7 @@ export function useResponseHandler({
     
     // Show toast for selection feedback
     if (!responseToastShownRef.current[response]) {
-      toast.toast({
+      toast({
         title: "Auswahl getroffen",
         description: response,
         duration: 2000,
@@ -89,7 +90,7 @@ export function useResponseHandler({
         
         if (!defaultSuccess) {
           console.error('Both specific and DEFAULT transitions failed');
-          toast.toast({
+          toast({
             title: "Fehler bei der Statusänderung",
             description: "Konnte nicht zum nächsten Status übergehen. Versuchen Sie, die Konversation zurückzusetzen.",
             variant: "destructive",
