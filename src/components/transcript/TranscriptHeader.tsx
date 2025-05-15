@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CallControl from '@/components/TestScenario/CallControl';
+import NotificationPanel from '@/components/NotificationPanel';
 
 interface TranscriptHeaderProps {
   activeScenario: ScenarioType;
@@ -73,13 +74,13 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
           <div className="flex items-center gap-4">
             <CallControl callActive={callActive} elapsedTime={elapsedTime} onStartCall={handleCall} onEndCall={handleHangUpCall} onResetScenario={resetConversation} />
             
+            {/* Notification Panel */}
+            <NotificationPanel className="mr-2" />
+            
             {/* JSON Visualization button */}
             {viewJson && <Button variant="outline" size="icon" className="h-12 w-12 rounded-md border-2 bg-white shadow-sm" onClick={viewJson} disabled={isLoadingJson} title="View JSON">
                 <FileText size={20} />
               </Button>}
-            
-            {/* Chat button */}
-            
           </div>
         </div>
       </div>
