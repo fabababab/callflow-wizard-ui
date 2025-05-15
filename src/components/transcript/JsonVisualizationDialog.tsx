@@ -6,6 +6,7 @@ import { ScenarioType } from '@/components/ScenarioSelector';
 import DialogViewControls from '../test-scenario/DialogViewControls';
 import StateVisualization from '../test-scenario/StateVisualization';
 import { SensitiveField } from '@/data/scenarioData';
+import ModulesPreview from '../test-scenario/ModulesPreview';
 
 interface SelectedStateDetails {
   id: string;
@@ -16,8 +17,8 @@ interface SelectedStateDetails {
 interface JsonVisualizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  dialogViewMode: "json" | "visualization";
-  handleViewModeToggle: (mode: "json" | "visualization") => void;
+  dialogViewMode: "json" | "visualization" | "modules";
+  handleViewModeToggle: (mode: "json" | "visualization" | "modules") => void;
   jsonContent: string;
   loadedStateMachine: StateMachine | null;
   currentState: string;
@@ -42,18 +43,44 @@ const JsonVisualizationDialog: React.FC<JsonVisualizationDialogProps> = ({
   onJumpToState,
   onSensitiveFieldClick
 }) => {
+  // Function to get the appropriate title and description based on the view mode
+  const getDialogHeaderContent = () => {
+    switch (dialogViewMode) {
+      case "json":
+        return {
+          title: `${activeScenario} State Machine`,
+          description: "Complete JSON representation of the state machine flow"
+        };
+      case "visualization":
+        return {
+          title: `${activeScenario} State Machine`,
+          description: "Visual representation of the state machine flow"
+        };
+      case "modules":
+        return {
+          title: `${activeScenario} Interactive Modules`,
+          description: "Preview of all interactive modules in the state machine"
+        };
+      default:
+        return {
+          title: `${activeScenario} State Machine`,
+          description: ""
+        };
+    }
+  };
+
+  const headerContent = getDialogHeaderContent();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[90vw] max-h-[90vh] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] bg-background">
         <DialogHeader className="flex flex-row items-center justify-between">
           <div>
             <DialogTitle>
-              {activeScenario} State Machine
+              {headerContent.title}
             </DialogTitle>
             <DialogDescription>
-              {dialogViewMode === "json" ? 
-                "Complete JSON representation of the state machine flow" : 
-                "Visual representation of the state machine flow"}
+              {headerContent.description}
             </DialogDescription>
           </div>
           <DialogViewControls 
@@ -63,11 +90,13 @@ const JsonVisualizationDialog: React.FC<JsonVisualizationDialogProps> = ({
         </DialogHeader>
         
         <div className="overflow-auto max-h-[70vh] mt-4">
-          {dialogViewMode === "json" ? (
+          {dialogViewMode === "json" && (
             <pre className="bg-slate-100 p-4 rounded-md text-xs overflow-x-auto">
               {jsonContent}
             </pre>
-          ) : (
+          )}
+          
+          {dialogViewMode === "visualization" && (
             <StateVisualization 
               loadedStateMachine={loadedStateMachine}
               currentState={currentState}
@@ -75,6 +104,12 @@ const JsonVisualizationDialog: React.FC<JsonVisualizationDialogProps> = ({
               selectedStateDetails={selectedState}
               onSensitiveFieldClick={onSensitiveFieldClick}
               onJumpToState={onJumpToState}
+            />
+          )}
+          
+          {dialogViewMode === "modules" && (
+            <ModulesPreview 
+              loadedStateMachine={loadedStateMachine}
             />
           )}
         </div>

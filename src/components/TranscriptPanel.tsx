@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useTranscript } from '@/hooks/useTranscript';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -23,8 +24,8 @@ interface JsonVisualization {
   isLoadingJson: boolean;
   jsonDialogOpen: boolean;
   setJsonDialogOpen: (open: boolean) => void;
-  dialogViewMode: "json" | "visualization";
-  handleViewModeToggle: (mode: "json" | "visualization") => void;
+  dialogViewMode: "json" | "visualization" | "modules";
+  handleViewModeToggle: (mode: "json" | "visualization" | "modules") => void;
   jsonContent: string;
   loadedStateMachine: StateMachine | null;
   selectedState: SelectedStateDetails | null;
@@ -73,6 +74,10 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     transcript.handleInlineModuleComplete(messageId, moduleId, result);
   };
   
+  if (!jsonVisualization) {
+    return null;
+  }
+  
   return (
     <div className="h-full flex flex-col bg-white relative">
       {/* Header with call control */}
@@ -84,8 +89,8 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
         handleCall={transcript.handleCall}
         handleHangUpCall={transcript.handleHangUpCall}
         onSelectScenario={scenarioManagement.handleScenarioChange}
-        viewJson={jsonVisualization?.handleViewJson}
-        isLoadingJson={jsonVisualization?.isLoadingJson}
+        viewJson={jsonVisualization.handleViewJson}
+        isLoadingJson={jsonVisualization.isLoadingJson}
         resetConversation={transcript.resetConversation}
       />
       

@@ -16,18 +16,27 @@ export function useJsonVisualization(activeScenario: ScenarioType) {
   const [jsonDialogOpen, setJsonDialogOpen] = useState(false);
   const [jsonContent, setJsonContent] = useState("");
   const [isLoadingJson, setIsLoadingJson] = useState(false);
-  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization">("visualization");
+  const [dialogViewMode, setDialogViewMode] = useState<"json" | "visualization" | "modules">("visualization");
   const [loadedStateMachine, setLoadedStateMachine] = useState<StateMachine | null>(null);
   const [selectedState, setSelectedState] = useState<SelectedStateDetails | null>(null);
   const { toast } = useToast();
 
   // Handle view mode toggle
-  const handleViewModeToggle = (mode: "json" | "visualization") => {
+  const handleViewModeToggle = (mode: "json" | "visualization" | "modules") => {
     setDialogViewMode(mode);
     
     // When switching to JSON view, ensure we show the full state machine
     if (mode === "json" && loadedStateMachine) {
       setJsonContent(JSON.stringify(loadedStateMachine, null, 2));
+    }
+    
+    // When switching to modules view, show a notification
+    if (mode === "modules") {
+      toast({
+        title: "Module Preview Mode",
+        description: "You can now browse and interact with all modules in this scenario",
+        duration: 3000
+      });
     }
   };
 

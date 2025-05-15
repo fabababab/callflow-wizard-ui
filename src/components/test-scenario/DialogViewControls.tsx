@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FileJson, LayoutDashboard } from 'lucide-react';
+import { FileJson, LayoutDashboard, Puzzle } from 'lucide-react';
 
 interface DialogViewControlsProps {
-  dialogViewMode: "json" | "visualization";
-  handleViewModeToggle: (mode: "json" | "visualization") => void;
+  dialogViewMode: "json" | "visualization" | "modules";
+  handleViewModeToggle: (mode: "json" | "visualization" | "modules") => void;
 }
 
 const DialogViewControls: React.FC<DialogViewControlsProps> = ({
@@ -31,6 +31,15 @@ const DialogViewControls: React.FC<DialogViewControlsProps> = ({
       >
         <LayoutDashboard size={16} />
         Visualization
+      </Button>
+      <Button 
+        variant={dialogViewMode === "modules" ? "secondary" : "outline"} 
+        size="sm" 
+        onClick={() => handleViewModeToggle("modules")} 
+        className="flex items-center gap-2"
+      >
+        <Puzzle size={16} />
+        Modules
       </Button>
     </div>
   );
