@@ -8,6 +8,13 @@ import InlineModuleDisplay from '@/components/transcript/InlineModuleDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface ModulesPreviewProps {
   loadedStateMachine: StateMachine | null;
@@ -60,6 +67,11 @@ const ModulesPreview: React.FC<ModulesPreviewProps> = ({ loadedStateMachine }) =
     console.log("Module interaction completed:", result);
   };
 
+  const handleModuleChange = (value: string) => {
+    const index = parseInt(value);
+    setSelectedModule(index);
+  };
+
   if (modules.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 bg-slate-50 rounded-lg">
@@ -80,22 +92,6 @@ const ModulesPreview: React.FC<ModulesPreviewProps> = ({ loadedStateMachine }) =
           <p className="text-sm text-muted-foreground">
             From state: <Badge variant="outline">{modules[selectedModule]?.sourceState || "unknown"}</Badge>
           </p>
-        </div>
-        <div className="flex space-x-2">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => setSelectedModule(prev => prev === 0 ? modules.length - 1 : prev - 1)}
-          >
-            Previous
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            onClick={() => setSelectedModule(prev => (prev + 1) % modules.length)}
-          >
-            Next
-          </Button>
         </div>
       </div>
 
@@ -119,23 +115,21 @@ const ModulesPreview: React.FC<ModulesPreviewProps> = ({ loadedStateMachine }) =
 
       {modules.length > 1 && (
         <div className="py-2">
-          <Carousel className="w-full">
-            <CarouselContent>
+          <Select
+            value={selectedModule.toString()}
+            onValueChange={handleModuleChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a module" />
+            </SelectTrigger>
+            <SelectContent>
               {modules.map((module, index) => (
-                <CarouselItem key={module.id} className="basis-1/4">
-                  <Button
-                    variant={selectedModule === index ? "default" : "outline"}
-                    onClick={() => setSelectedModule(index)}
-                    className="w-full h-full"
-                  >
-                    {module.title || `Module ${index + 1}`}
-                  </Button>
-                </CarouselItem>
+                <SelectItem key={module.id} value={index.toString()}>
+                  {module.title || `Module ${index + 1}`} ({module.sourceState})
+                </SelectItem>
               ))}
-            </CarouselContent>
-            <CarouselPrevious />
-            <CarouselNext />
-          </Carousel>
+            </SelectContent>
+          </Select>
         </div>
       )}
     </div>
