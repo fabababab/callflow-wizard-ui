@@ -12,15 +12,14 @@ import LoadingErrorStates from '@/components/test-scenario/LoadingErrorStates';
 import SensitiveFieldDetailsDialog from '@/components/test-scenario/SensitiveFieldDetailsDialog';
 import { useJsonVisualization } from '@/hooks/useJsonVisualization';
 import { useToast } from '@/hooks/use-toast';
-import { ModuleType } from '@/types/modules';
 
 const TestScenario = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(true);
   const transcriptRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
-  // Initialize with studiumabschlussCase instead of deutscheVersion
-  const scenarioState = useScenarioState("studiumabschlussCase");
+  // Initialize with leistungsabdeckungPhysio scenario
+  const scenarioState = useScenarioState("leistungsabdeckungPhysio");
 
   // Use the useJsonVisualization hook for JSON view functionality
   const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);
@@ -32,16 +31,16 @@ const TestScenario = () => {
   const customerScenario = useCustomerScenario();
   const physioCoverage = usePhysioCoverageStateMachine();
 
-  // Always use agent mode
-  const activeScenario = customerScenario;
+  // Use physioCoverage for this component
+  const activeScenario = physioCoverage;
   const { currentState, error } = activeScenario;
 
   // Add notification when scenario is loaded
   useEffect(() => {
     if (scenarioState.loadedStateMachine) {
       toast({
-        title: "Studiumabschluss-Case geladen",
-        description: "Szenario zum Thema Versicherungsanpassung nach Studienabschluss",
+        title: "Leistungsabdeckung Physio geladen",
+        description: "Szenario zum Thema Physiotherapie-Leistungsabdeckung",
         duration: 3000
       });
     }

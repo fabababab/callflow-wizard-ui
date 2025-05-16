@@ -18,7 +18,8 @@ export function usePhysioCoverageStateMachine() {
     error: machineError,
     processSelection,
     processStartCall,
-    resetStateMachine
+    resetStateMachine,
+    lastStateChange
   } = useStateMachine('leistungsabdeckungPhysio');
 
   // Set the loading and error states based on the state machine loading/error
@@ -26,8 +27,23 @@ export function usePhysioCoverageStateMachine() {
     setIsLoading(machineLoading);
     if (machineError) {
       setError(machineError);
+    } else {
+      setError(null);
     }
   }, [machineLoading, machineError]);
+
+  // Add debugging for state changes
+  useEffect(() => {
+    if (currentState && stateData) {
+      console.log(`Physio Coverage state changed to: ${currentState}`);
+      console.log('State data:', stateData);
+      
+      // Check for modules in the state
+      if (stateData.meta?.module) {
+        console.log('Module found in state:', stateData.meta.module);
+      }
+    }
+  }, [currentState, stateData, lastStateChange]);
 
   return {
     currentState,

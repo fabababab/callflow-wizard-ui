@@ -10,6 +10,7 @@ export enum ModuleType {
   FRANCHISE = 'FRANCHISE',
   INSURANCE_MODEL = 'INSURANCE_MODEL',
   INFORMATION_TABLE = 'INFORMATION_TABLE',
+  CHOICE_LIST = 'CHOICE_LIST',
 }
 
 // Interface for module configuration

@@ -34,16 +34,20 @@
             "title": "Verifizierung",
             "fields": [
               {
+                "id": "birthdate",
                 "label": "Geburtsdatum",
+                "type": "text",
                 "value": "14.05.1985",
                 "system": "14.05.1985",
-                "isRequired": true
+                "required": true
               },
               {
+                "id": "postalCode",
                 "label": "Postleitzahl",
+                "type": "text",
                 "value": "8004",
                 "system": "8004",
-                "isRequired": true
+                "required": true
               }
             ]
           }
@@ -107,7 +111,8 @@
                 "label": "Janna Brun – 8004 Zürich (nicht anerkannt)"
               }
             ],
-            "buttonText": "Auswählen"
+            "buttonText": "Auswählen",
+            "isInline": true
           }
         }
       },
@@ -145,6 +150,7 @@
           "type": "INFORMATION_TABLE",
           "data": {
             "description": "Leistung gemäss Grundversicherung bei ärztlicher Verordnung:",
+            "isInline": true,
             "coverageInfo": [
               {
                 "requirement": "Ärztliche Verordnung",

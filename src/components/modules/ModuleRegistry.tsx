@@ -9,6 +9,7 @@ import QuizModule from './QuizModule';
 import FranchiseModule from './FranchiseModule';
 import InsuranceModelModule from './InsuranceModelModule';
 import InformationTableModule from './InformationTableModule';
+import ChoiceListModule from './ChoiceListModule';
 
 // This file serves as a registry to map module types to their respective components
 const ModuleRegistry = {
@@ -21,6 +22,7 @@ const ModuleRegistry = {
   [ModuleType.FRANCHISE]: FranchiseModule,
   [ModuleType.INSURANCE_MODEL]: InsuranceModelModule,
   [ModuleType.INFORMATION_TABLE]: InformationTableModule,
+  [ModuleType.CHOICE_LIST]: ChoiceListModule,
 };
 
 export default ModuleRegistry;
