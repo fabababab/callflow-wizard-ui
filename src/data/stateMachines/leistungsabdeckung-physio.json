@@ -5,141 +5,188 @@
   "states": {
     "start": {
       "meta": {
-        "systemMessage": "Call initiated with customer.",
-        "agentText": "Guten Tag! Wie kann ich Ihnen heute helfen?",
+        "systemMessage": "Call initiated with customer to clarify physiotherapy coverage.",
+        "agentText": "Grüezi, wie kann ich Ihnen helfen?",
         "responseOptions": [
-          "Gespräch beginnen",
-          "Kundenidentität zuerst überprüfen"
+          "Ich möchte eine Leistung abklären",
+          "Kundenidentifikation starten"
         ]
       },
       "on": {
-        "START_CALL": "customer_issue",
-        "Gespräch beginnen": "customer_issue",
-        "Kundenidentität zuerst überprüfen": "verify_identity",
-        "DEFAULT": "customer_issue"
+        "Ich möchte eine Leistung abklären": "verify_identity",
+        "Kundenidentifikation starten": "verify_identity",
+        "DEFAULT": "verify_identity"
       }
     },
     "verify_identity": {
       "meta": {
-        "agentText": "Bevor wir fortfahren, muss ich Ihre Identität überprüfen. Könnten Sie mir bitte Ihre Versicherungsnummer und Geburtsdatum mitteilen?",
-        "customerText": "Natürlich. Meine Versicherungsnummer ist PH567890 und ich bin am 14.03.1982 geboren.",
+        "agentText": "Darf ich Sie kurz identifizieren? Bitte nennen Sie mir Ihr Geburtsdatum und Ihre Postleitzahl.",
+        "customerText": "Geburtsdatum: 14.05.1985, PLZ: 8004 Zürich",
         "responseOptions": [
-          "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?",
-          "Danke für die Bestätigung. Ich sehe, Sie haben eine Anfrage bezüglich einer Physiotherapie-Behandlung. Darf ich fragen, worum es genau geht?"
-        ]
+          "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?"
+        ],
+        "module": {
+          "id": "verification-module-physio",
+          "title": "Identitätsprüfung",
+          "type": "VERIFICATION",
+          "data": {
+            "isInline": true,
+            "title": "Verifizierung",
+            "fields": [
+              {
+                "label": "Geburtsdatum",
+                "value": "14.05.1985",
+                "system": "14.05.1985",
+                "isRequired": true
+              },
+              {
+                "label": "Postleitzahl",
+                "value": "8004",
+                "system": "8004",
+                "isRequired": true
+              }
+            ]
+          }
+        }
       },
       "on": {
-        "Vielen Dank für die Überprüfung Ihrer Identität. Wie kann ich Ihnen heute helfen?": "customer_issue",
-        "Danke für die Bestätigung. Ich sehe, Sie haben eine Anfrage bezüglich einer Physiotherapie-Behandlung. Darf ich fragen, worum es genau geht?": "customer_issue",
+        "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?": "customer_issue",
         "DEFAULT": "customer_issue"
       }
     },
     "customer_issue": {
       "meta": {
-        "customerText": "Mein Arzt hat mir 10 Physiotherapie-Sitzungen verschrieben. Ich möchte wissen, wie viele davon von meiner Versicherung übernommen werden und ob ich etwas zuzahlen muss.",
+        "customerText": "Ich möchte wissen, ob meine Physiotherapie übernommen wird und ob die Therapeutin anerkannt ist.",
         "responseOptions": [
-          "Ich helfe Ihnen gerne, die Deckung für Ihre Physiotherapie-Behandlungen zu klären. Lassen Sie mich Ihr Versicherungsprofil überprüfen.",
-          "Gerne überprüfe ich die Leistungsabdeckung für Physiotherapie in Ihrem Tarif. Einen Moment bitte."
+          "Gerne. Wie heisst die Therapeutin und in welchem Ort ist die Praxis?"
         ]
       },
       "on": {
-        "Ich helfe Ihnen gerne, die Deckung für Ihre Physiotherapie-Behandlungen zu klären. Lassen Sie mich Ihr Versicherungsprofil überprüfen.": "check_coverage",
-        "Gerne überprüfe ich die Leistungsabdeckung für Physiotherapie in Ihrem Tarif. Einen Moment bitte.": "check_coverage",
-        "DEFAULT": "check_coverage"
+        "Gerne. Wie heisst die Therapeutin und in welchem Ort ist die Praxis?": "search_therapist",
+        "DEFAULT": "search_therapist"
       }
     },
-    "check_coverage": {
+    "search_therapist": {
       "meta": {
-        "agentText": "Ich überprüfe gerade Ihre Versicherungsdetails. Können Sie mir bitte mitteilen, welche Franchise Sie aktuell haben?",
-        "customerText": "Ich habe eine Franchise von CHF 1000.",
+        "agentText": "Wie lautet der Name der Therapeutin und die Postleitzahl der Praxis?",
+        "customerText": "Jana Brunner, 8004 Zürich",
         "responseOptions": [
-          "Danke für diese Information. Ich kann nun eine genaue Auskunft zu Ihrer Leistungsabdeckung geben."
+          "Ich habe mehrere Einträge gefunden. Lassen Sie mich kurz prüfen..."
         ]
       },
       "on": {
-        "Danke für diese Information. Ich kann nun eine genaue Auskunft zu Ihrer Leistungsabdeckung geben.": "coverage_details",
-        "DEFAULT": "coverage_details"
+        "Ich habe mehrere Einträge gefunden. Lassen Sie mich kurz prüfen...": "fuzzy_matches",
+        "DEFAULT": "fuzzy_matches"
       }
     },
-    "coverage_details": {
+    "fuzzy_matches": {
       "meta": {
-        "agentText": "Danke für diese Information. In Ihrem Fall werden Physiotherapie-Behandlungen grundsätzlich von der Grundversicherung übernommen, wenn sie ärztlich verordnet sind. Hier sind die Details zu Ihrer Abdeckung.",
+        "agentText": "Meinten Sie: 1) Jana Brunner (8004), 2) Jana Brendel (8003), 3) Janna Brun (8004)?",
+        "responseOptions": [
+          "Jana Brunner",
+          "Jana Brendel",
+          "Janna Brun"
+        ],
         "module": {
-          "id": "physio-coverage-module",
-          "title": "Physiotherapie-Leistungsabdeckung",
+          "id": "therapist-suggestion-module",
+          "title": "Ähnlich klingende Therapeutinnen",
+          "type": "CHOICE_LIST",
+          "data": {
+            "description": "Bitte bestätigen Sie, welche Therapeutin gemeint ist.",
+            "options": [
+              {
+                "id": "jana_brunner",
+                "label": "Jana Brunner – 8004 Zürich (anerkannt)"
+              },
+              {
+                "id": "jana_brendel",
+                "label": "Jana Brendel – 8003 Zürich (nicht anerkannt)"
+              },
+              {
+                "id": "janna_brun",
+                "label": "Janna Brun – 8004 Zürich (nicht anerkannt)"
+              }
+            ],
+            "buttonText": "Auswählen"
+          }
+        }
+      },
+      "on": {
+        "Jana Brunner": "coverage_check",
+        "Jana Brendel": "customer_confused",
+        "Janna Brun": "customer_confused",
+        "DEFAULT": "customer_confused"
+      }
+    },
+    "customer_confused": {
+      "meta": {
+        "customerText": "Brendel? Ich meinte Brunner – die in der Schmiedgasse. Haben Sie die auch?",
+        "responseOptions": [
+          "Entschuldigung, ich habe mich verklickt. Sie ist anerkannt."
+        ]
+      },
+      "on": {
+        "Entschuldigung, ich habe mich verklickt. Sie ist anerkannt.": "coverage_check",
+        "DEFAULT": "coverage_check"
+      }
+    },
+    "coverage_check": {
+      "meta": {
+        "agentText": "Frau Brunner ist anerkannt. Mit ärztlicher Verordnung übernimmt die Grundversicherung die Kosten.",
+        "customerText": "Brauche ich eine Überweisung?",
+        "responseOptions": [
+          "Ja, eine ärztliche Verordnung ist notwendig.",
+          "Üblicherweise werden 9 Sitzungen pro Verordnung bewilligt.",
+          "Die Behandlung muss innerhalb von 5 Wochen nach Ausstellung beginnen."
+        ],
+        "module": {
+          "id": "coverage-info-module",
+          "title": "Kostenübernahme Physiotherapie",
           "type": "INFORMATION_TABLE",
           "data": {
-            "description": "Ihr aktueller Versicherungsschutz für Physiotherapie:",
-            "tableTitle": "Leistungsübersicht",
-            "franchiseOptions": [
-              {"description": "Anzahl verordneter Sitzungen", "coverage": "10"},
-              {"description": "Durch Grundversicherung gedeckt", "coverage": "9 Sitzungen nach Franchise/Selbstbehalt"},
-              {"description": "Ihre aktuelle Franchise", "coverage": "CHF 1000"},
-              {"description": "Bereits bezahlte Franchise dieses Jahr", "coverage": "CHF 550"},
-              {"description": "Noch zu bezahlende Franchise", "coverage": "CHF 450"},
-              {"description": "Selbstbehalt (10%)", "coverage": "Max. CHF 700/Jahr"},
-              {"description": "Status Selbstbehalt", "coverage": "CHF 350 bereits erreicht"}
+            "description": "Leistung gemäss Grundversicherung bei ärztlicher Verordnung:",
+            "coverageInfo": [
+              {
+                "requirement": "Ärztliche Verordnung",
+                "status": "Erforderlich"
+              },
+              {
+                "requirement": "Anzahl Sitzungen",
+                "status": "9 pro Verordnung"
+              },
+              {
+                "requirement": "Einlösefrist",
+                "status": "innerhalb 5 Wochen"
+              }
             ],
-            "buttonText": "Verstanden"
+            "tableTitle": "Übernahmebedingungen"
           }
-        },
-        "responseOptions": [
-          "Basierend auf Ihren Versicherungsdetails möchte ich Ihnen die genauen Kosten für Ihre Physiotherapie-Behandlungen erklären.",
-          "Lassen Sie mich erklären, wie die Kostenbeteiligung für Ihre Physiotherapie berechnet wird."
-        ]
+        }
       },
       "on": {
-        "Basierend auf Ihren Versicherungsdetails möchte ich Ihnen die genauen Kosten für Ihre Physiotherapie-Behandlungen erklären.": "cost_explanation",
-        "Lassen Sie mich erklären, wie die Kostenbeteiligung für Ihre Physiotherapie berechnet wird.": "cost_explanation",
-        "DEFAULT": "cost_explanation"
+        "Ja, eine ärztliche Verordnung ist notwendig.": "session_count",
+        "Üblicherweise werden 9 Sitzungen pro Verordnung bewilligt.": "session_count",
+        "Die Behandlung muss innerhalb von 5 Wochen nach Ausstellung beginnen.": "session_count",
+        "DEFAULT": "session_count"
       }
     },
-    "cost_explanation": {
+    "session_count": {
       "meta": {
-        "agentText": "Basierend auf Ihren Versicherungsdetails werden die Kosten wie folgt aufgeteilt: Von Ihrer Franchise müssen Sie noch CHF 450 bezahlen. Danach übernimmt Ihre Grundversicherung 90% der Kosten, während Sie 10% als Selbstbehalt tragen müssen - bis zur Jahresgrenze von CHF 700, von der Sie bereits CHF 350 erreicht haben. Konkret bedeutet das: Für 9 Physiotherapie-Sitzungen à ca. CHF 100 (insgesamt CHF 900) müssen Sie CHF 450 Franchise plus ca. CHF 45 Selbstbehalt (10% von den restlichen CHF 450) zahlen. Die 10. Sitzung müssten Sie komplett selbst bezahlen, da nur 9 Sitzungen genehmigt sind. Haben Sie dazu noch Fragen?",
-        "customerText": "Danke für die detaillierte Erklärung. Was passiert, wenn ich mehr als 9 Sitzungen benötige? Kann ich eine Verlängerung beantragen?",
+        "agentText": "In der Regel sind 9 Sitzungen pro Verordnung gedeckt. Danach ist eine neue Verordnung möglich.",
+        "customerText": "Alles klar, danke für die Info.",
         "responseOptions": [
-          "Ja, eine Verlängerung ist möglich. Wenn Ihr Arzt feststellt, dass Sie weitere Sitzungen benötigen, kann er eine zusätzliche Verordnung ausstellen. Diese muss dann bei uns eingereicht werden, und nach einer Überprüfung können weitere Sitzungen bewilligt werden.",
-          "Bei medizinischer Notwendigkeit kann Ihr Arzt eine Folgeverordnung ausstellen. Diese wird dann von unserem Vertrauensarzt geprüft, bevor weitere Sitzungen genehmigt werden."
+          "Gibt es sonst noch etwas, womit ich helfen kann?"
         ]
       },
       "on": {
-        "Ja, eine Verlängerung ist möglich. Wenn Ihr Arzt feststellt, dass Sie weitere Sitzungen benötigen, kann er eine zusätzliche Verordnung ausstellen. Diese muss dann bei uns eingereicht werden, und nach einer Überprüfung können weitere Sitzungen bewilligt werden.": "conclusion",
-        "Bei medizinischer Notwendigkeit kann Ihr Arzt eine Folgeverordnung ausstellen. Diese wird dann von unserem Vertrauensarzt geprüft, bevor weitere Sitzungen genehmigt werden.": "conclusion",
-        "DEFAULT": "conclusion"
-      }
-    },
-    "conclusion": {
-      "meta": {
-        "agentText": "Bei medizinischer Notwendigkeit kann Ihr Arzt eine Folgeverordnung ausstellen. Diese wird dann von unserem Vertrauensarzt geprüft, bevor weitere Sitzungen genehmigt werden. Die Folgeverordnung sollte etwa 1-2 Wochen vor Ablauf der aktuellen Verordnung eingereicht werden, damit keine Unterbrechung der Therapie entsteht. Gibt es noch etwas anderes, womit ich Ihnen helfen kann?",
-        "customerText": "Das war sehr hilfreich, vielen Dank! Das sind alle Fragen, die ich hatte.",
-        "responseOptions": [
-          "Ich freue mich, dass ich Ihnen helfen konnte! Falls Sie noch weitere Fragen haben sollten, zögern Sie nicht, uns erneut zu kontaktieren. Ich wünsche Ihnen eine gute Besserung und erfolgreiche Physiotherapie-Behandlungen.",
-          "Gerne geschehen! Möchten Sie, dass ich Ihnen eine Zusammenfassung dieser Informationen per E-Mail zusende?"
-        ]
-      },
-      "on": {
-        "Ich freue mich, dass ich Ihnen helfen konnte! Falls Sie noch weitere Fragen haben sollten, zögern Sie nicht, uns erneut zu kontaktieren. Ich wünsche Ihnen eine gute Besserung und erfolgreiche Physiotherapie-Behandlungen.": "end_call",
-        "Gerne geschehen! Möchten Sie, dass ich Ihnen eine Zusammenfassung dieser Informationen per E-Mail zusende?": "send_email",
-        "DEFAULT": "end_call"
-      }
-    },
-    "send_email": {
-      "meta": {
-        "agentText": "Gerne geschehen! Möchten Sie, dass ich Ihnen eine Zusammenfassung dieser Informationen per E-Mail zusende?",
-        "customerText": "Ja, das wäre sehr hilfreich. Bitte senden Sie die Zusammenfassung an meine E-Mail-Adresse.",
-        "responseOptions": [
-          "Ich habe soeben eine E-Mail mit der Zusammenfassung unseres Gesprächs an Sie gesendet. Sie sollte in Kürze bei Ihnen eingehen. Haben Sie einen schönen Tag und gute Besserung!"
-        ]
-      },
-      "on": {
-        "Ich habe soeben eine E-Mail mit der Zusammenfassung unseres Gesprächs an Sie gesendet. Sie sollte in Kürze bei Ihnen eingehen. Haben Sie einen schönen Tag und gute Besserung!": "end_call",
+        "Gibt es sonst noch etwas, womit ich helfen kann?": "end_call",
         "DEFAULT": "end_call"
       }
     },
     "end_call": {
       "meta": {
-        "agentText": "Ich freue mich, dass ich Ihnen helfen konnte! Falls Sie noch weitere Fragen haben sollten, zögern Sie nicht, uns erneut zu kontaktieren. Ich wünsche Ihnen eine gute Besserung und erfolgreiche Physiotherapie-Behandlungen. Haben Sie einen schönen Tag!",
+        "agentText": "Ich wünsche Ihnen gute Besserung. Auf Wiederhören!",
+        "customerText": "Danke, ebenfalls!",
         "module": {
           "id": "nachbearbeitung-physio",
           "title": "Nachbearbeitung",
@@ -147,16 +194,16 @@
           "data": {
             "isInline": true,
             "points": [
-              "Kundenidentität überprüft",
-              "Abdeckung von 9 Physiotherapie-Sitzungen erklärt",
-              "Franchise-Status überprüft: CHF 550 von CHF 1000 bereits bezahlt",
-              "Selbstbehalt-Status überprüft: CHF 350 bereits erreicht",
-              "Informationen zur Verlängerung der Verordnung gegeben"
+              "Kunde identifiziert",
+              "Therapeutin Jana Brunner (anerkannt) bestätigt",
+              "Erklärung zur Kostenübernahme bei ärztlicher Verordnung",
+              "Korrektur nach Verwechslung erfolgreich"
             ],
-            "summary": "Kunde wurde über die Leistungsabdeckung für 9 verordnete Physiotherapie-Sitzungen informiert. Die Kostenaufteilung (verbleibende Franchise: CHF 450, Selbstbehalt: 10%) wurde erklärt und der Prozess für eine eventuelle Folgeverordnung erläutert."
+            "summary": "Kunde wurde zur Physiotherapieabdeckung beraten. Ärztliche Verordnung notwendig, 9 Sitzungen pro Serie, Beginn innerhalb 5 Wochen. Falschauswahl wurde vom Kunden erkannt und korrigiert."
           }
         }
       }
     }
-  }
+  },
+  "status": "PRODUCTION"
 }
