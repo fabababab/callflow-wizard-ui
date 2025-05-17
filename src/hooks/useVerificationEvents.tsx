@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef } from 'react';
 
 interface VerificationEventsProps {
   messageHandling: {
-    addSystemMessage: (message: string) => void;
+    addSystemMessage: (message: string, options?: any) => void;
+    addAgentMessage: (message: string) => void;
   };
   handleSelectResponse: (response: string) => void;
   stateMachine: {
@@ -40,14 +41,36 @@ export function useVerificationEvents({
       
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
+        // Custom message from verification event if provided, otherwise use default
+        const customMessage = event.detail.message || "Kundenidentität wurde erfolgreich verifiziert.";
+        const customResponseOptions = event.detail.responseOptions || [];
+        const triggerNextState = event.detail.triggerNextState;
+        
         // System message about verification - only show once per state
         if (!verificationHandledRef.current[stateMachine.currentState]) {
           messageHandling.addSystemMessage("Kundenidentität wurde erfolgreich verifiziert.");
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
         
-        // If verification was successful, automatically transition to customer_issue state
-        if (event.detail.success === true && stateMachine.currentState === 'verify_identity') {
+        // Add agent message with custom text if provided
+        if (customMessage) {
+          messageHandling.addAgentMessage(customMessage);
+        }
+        
+        // If verification was successful and we have a specific state to trigger
+        if (event.detail.success === true && triggerNextState) {
+          if (customResponseOptions.length > 0) {
+            // Create a response option that links to the desired state
+            setTimeout(() => {
+              messageHandling.addSystemMessage("", {
+                responseOptions: customResponseOptions
+              });
+              verificationInProgressRef.current = false;
+            }, 500);
+          } else {
+            verificationInProgressRef.current = false;
+          }
+        } else if (event.detail.success === true && stateMachine.currentState === 'verify_identity') {
           // Get available responses for the current state
           const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
           
@@ -58,11 +81,14 @@ export function useVerificationEvents({
             // Add a longer delay to make the flow feel more natural and ensure verification UI is visible
             setTimeout(() => {
               handleSelectResponse(responseOptions[0]);
+              verificationInProgressRef.current = false;
             }, 1500); // Shorter delay to ensure verification success is visible but not too long
+          } else {
+            verificationInProgressRef.current = false;
           }
+        } else {
+          verificationInProgressRef.current = false;
         }
-        
-        verificationInProgressRef.current = false;
       }, 500);
     };
 

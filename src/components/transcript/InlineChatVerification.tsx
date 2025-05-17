@@ -82,7 +82,12 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       // Dispatch a custom event to trigger state transition after verification - only once
       if (!hasDispatchedEventRef.current) {
         const event = new CustomEvent('verification-complete', {
-          detail: { success: true }
+          detail: { 
+            success: true,
+            triggerNextState: 'customer_issue',
+            message: "Können sie mir bitte ihr Geburtsdatum und Postleitzahl nennen?",
+            responseOptions: ["Vielen Dank. Wie kann ich Ihnen weiterhelfen?"]
+          }
         });
         window.dispatchEvent(event);
         hasDispatchedEventRef.current = true;

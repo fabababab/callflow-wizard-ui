@@ -36,7 +36,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
       verified: undefined // Initially set to undefined (not verified)
     }))
   );
-  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
+  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('success');
   const isInlineDisplay = data?.isInline === true;
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const processingRef = useRef(false);
@@ -65,61 +65,53 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     );
   };
   
-  const handleValidate = (isValid: boolean) => {
-    if (processingRef.current) return;
-    processingRef.current = true;
-    
-    console.log(`Manual verification: ${isValid ? "Valid" : "Invalid"}`);
-    
-    // Set verification status based on validation
-    setVerificationStatus(isValid ? 'success' : 'failed');
-    
-    // Update all fields verification status
-    setVerificationFields(prev => 
-      prev.map(field => ({
-        ...field,
-        verified: isValid
-      }))
-    );
-    
-    // Show toast notification
-    toast({
-      title: isValid ? "Verifizierung erfolgreich" : "Verifizierung fehlgeschlagen",
-      description: isValid 
-        ? "Die Identität wurde erfolgreich verifiziert."
-        : "Die Identität konnte nicht verifiziert werden.",
-      variant: isValid ? "default" : "destructive"
-    });
-    
-    // Add a slight delay to show the success/failure state before completing
-    completeTimeoutRef.current = setTimeout(() => {
-      if (onComplete && !hasDispatchedEventRef.current) {
-        console.log(`VerificationModule ${id} completed with ${isValid ? "success" : "failure"}`);
-        onComplete({
-          verified: isValid,
-          fields: verificationFields.map(f => ({
-            id: f.id,
-            value: f.value,
-            verified: isValid
-          }))
-        });
-        
-        // Mark that we've dispatched the event to prevent duplicates
-        hasDispatchedEventRef.current = true;
-        
-        // Dispatch a single custom event to trigger state transition after verification
-        const event = new CustomEvent('verification-complete', {
-          detail: { success: isValid, moduleId: id }
-        });
-        window.dispatchEvent(event);
-        
-        // Reset processing state after a longer delay to prevent rapid re-renders
-        setTimeout(() => {
-          processingRef.current = false;
-        }, 1000);
-      }
-    }, 1500);
-  };
+  // Auto validate on mount
+  useEffect(() => {
+    if (!processingRef.current) {
+      processingRef.current = true;
+      
+      // Set verification status to success immediately
+      setVerificationStatus('success');
+      
+      // Update all fields verification status to true
+      setVerificationFields(prev => 
+        prev.map(field => ({
+          ...field,
+          verified: true
+        }))
+      );
+      
+      // Complete the verification after a short delay
+      completeTimeoutRef.current = setTimeout(() => {
+        if (onComplete && !hasDispatchedEventRef.current) {
+          console.log(`VerificationModule ${id} completed with automatic success`);
+          onComplete({
+            verified: true,
+            fields: verificationFields.map(f => ({
+              id: f.id,
+              value: f.value,
+              verified: true
+            }))
+          });
+          
+          // Mark that we've dispatched the event to prevent duplicates
+          hasDispatchedEventRef.current = true;
+          
+          // Dispatch a custom event to trigger state transition after verification
+          const event = new CustomEvent('verification-complete', {
+            detail: { 
+              success: true, 
+              moduleId: id,
+              triggerNextState: 'customer_issue',
+              message: "Können sie mir bitte ihr Geburtsdatum und Postleitzahl nennen?",
+              responseOptions: ["Vielen Dank. Wie kann ich Ihnen weiterhelfen?"]
+            }
+          });
+          window.dispatchEvent(event);
+        }
+      }, 1000);
+    }
+  }, []);
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
@@ -195,45 +187,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
       </CardContent>
       
       <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-gray-50 border-t py-2"}`}>
-        {!isInlineDisplay && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              if (!processingRef.current && onClose) onClose();
-            }}
-            className="text-xs"
-            disabled={processingRef.current}
-          >
-            Cancel
-          </Button>
-        )}
-        
-        {/* Only show validation buttons when status is pending */}
-        {verificationStatus === 'pending' && (
-          <div className={`flex gap-2 ${isInlineDisplay ? "ml-auto" : ""}`}>
-            <Button 
-              variant="destructive"
-              size="sm"
-              onClick={() => handleValidate(false)}
-              className="text-xs"
-              disabled={processingRef.current}
-            >
-              <X size={14} className="mr-1" />
-              Invalid
-            </Button>
-            <Button 
-              variant="default"
-              size="sm"
-              onClick={() => handleValidate(true)}
-              className="text-xs"
-              disabled={processingRef.current}
-            >
-              <CheckCircle size={14} className="mr-1" />
-              Valid
-            </Button>
-          </div>
-        )}
+        {/* Buttons have been removed as requested */}
       </CardFooter>
     </Card>
   );
