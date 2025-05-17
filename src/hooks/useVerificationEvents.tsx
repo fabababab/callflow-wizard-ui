@@ -46,21 +46,10 @@ export function useVerificationEvents({
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
         
-        // Get available responses for the current state
-        const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+        // For the leistungsabdeckungPhysio scenario, we want to require manual button click
+        // so we won't auto-select responses here
         
-        // If there are response options, automatically pick the first one after a delay
-        if (responseOptions.length > 0) {
-          console.log("Auto-selecting response after verification:", responseOptions[0]);
-          
-          // Add a longer delay to make the flow feel more natural and ensure verification UI is visible
-          setTimeout(() => {
-            verificationInProgressRef.current = false;
-            handleSelectResponse(responseOptions[0]);
-          }, 2500); // Extended delay to ensure verification success is visible
-        } else {
-          verificationInProgressRef.current = false;
-        }
+        verificationInProgressRef.current = false;
       }, 500);
     };
 

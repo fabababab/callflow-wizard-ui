@@ -1,4 +1,3 @@
-
 {
   "id": "leistungsabdeckung-physio",
   "initial": "start",
@@ -20,8 +19,6 @@
     },
     "verify_identity": {
       "meta": {
-        "agentText": "Darf ich Sie kurz identifizieren? Bitte nennen Sie mir Ihr Geburtsdatum und Ihre Postleitzahl.",
-        "customerText": "Geburtsdatum: 14.05.1985, PLZ: 8004 Zürich",
         "responseOptions": [
           "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?"
         ],
@@ -37,7 +34,7 @@
                 "id": "birthdate",
                 "type": "date_of_birth",
                 "label": "Geburtsdatum",
-                "value": "14.05.1985",
+                "value": "",
                 "systemValue": "14.05.1985",
                 "source": "CRM System - Kundendatenbank",
                 "status": "pending",
@@ -47,7 +44,7 @@
                 "id": "postalCode",
                 "type": "address",
                 "label": "Postleitzahl",
-                "value": "8004",
+                "value": "",
                 "systemValue": "8004",
                 "source": "CRM System - Kundendatenbank",
                 "status": "pending",
@@ -59,7 +56,7 @@
                 "id": "birthdate",
                 "label": "Geburtsdatum",
                 "type": "text",
-                "value": "14.05.1985",
+                "value": "",
                 "system": "14.05.1985",
                 "required": true
               },
@@ -67,7 +64,7 @@
                 "id": "postalCode",
                 "label": "Postleitzahl",
                 "type": "text",
-                "value": "8004",
+                "value": "",
                 "system": "8004",
                 "required": true
               }
