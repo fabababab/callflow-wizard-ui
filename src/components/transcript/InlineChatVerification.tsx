@@ -59,6 +59,30 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       }
     };
   }, []);
+
+  // Function to safely dispatch verification event
+  const dispatchVerificationEvent = (success: boolean) => {
+    console.log("Dispatching inline verification event:", success);
+    
+    // Create and dispatch multiple events for redundancy
+    try {
+      const verificationEvent = new CustomEvent('verification-complete', {
+        detail: { success: success }
+      });
+      window.dispatchEvent(verificationEvent);
+      
+      const backupEvent = new CustomEvent('verification-successful', {
+        detail: { success: success }
+      });
+      window.dispatchEvent(backupEvent);
+      
+      console.log("Inline verification events dispatched successfully");
+      return true;
+    } catch (error) {
+      console.error("Failed to dispatch verification event:", error);
+      return false;
+    }
+  };
   
   const handleVerifyClick = () => {
     // Prevent multiple clicks
@@ -79,12 +103,9 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       // Always succeed with verification
       onVerify(true, defaultValues);
       
-      // Dispatch a custom event to trigger state transition after verification - only once
+      // Dispatch verification events - only once
       if (!hasDispatchedEventRef.current) {
-        const event = new CustomEvent('verification-complete', {
-          detail: { success: true }
-        });
-        window.dispatchEvent(event);
+        dispatchVerificationEvent(true);
         hasDispatchedEventRef.current = true;
       }
       

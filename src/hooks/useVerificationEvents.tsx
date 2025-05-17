@@ -47,8 +47,8 @@ export function useVerificationEvents({
         }
         
         // If verification was successful and we're in the verify_identity state,
-        // automatically select the response to transition to customer_issue
-        if (event.detail.success === true && stateMachine.currentState === 'verify_identity') {
+        // ALWAYS select the response to transition to customer_issue
+        if (stateMachine.currentState === 'verify_identity') {
           // Get available responses for the current state
           const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
           
@@ -56,15 +56,20 @@ export function useVerificationEvents({
           if (responseOptions.length > 0) {
             console.log("Auto-selecting response after verification:", responseOptions[0]);
             
-            // Add a delay to make the flow feel more natural
+            // Add a short delay to make the flow feel more natural
             setTimeout(() => {
               handleSelectResponse(responseOptions[0]);
-            }, 1500);
+              console.log("State transition initiated to customer_issue");
+            }, 800);
+          } else {
+            console.warn("No response options available for state transition");
           }
+        } else {
+          console.log("Not in verify_identity state, skipping auto-response");
         }
         
         verificationInProgressRef.current = false;
-      }, 500);
+      }, 300);
     };
 
     // Add event listeners for all verification events

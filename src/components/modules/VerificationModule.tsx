@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,6 +65,31 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     );
   };
   
+  // Function to safely dispatch verification event
+  const dispatchVerificationEvent = (isValid: boolean) => {
+    console.log(`Dispatching verification event: ${isValid ? "success" : "failure"}`);
+    
+    try {
+      // Create and dispatch the verification-complete event
+      const event = new CustomEvent('verification-complete', {
+        detail: { success: isValid, moduleId: id }
+      });
+      window.dispatchEvent(event);
+      
+      // Also dispatch a backup event for redundancy
+      const backupEvent = new CustomEvent('verification-successful', {
+        detail: { success: isValid, moduleId: id }
+      });
+      window.dispatchEvent(backupEvent);
+      
+      console.log("Verification events dispatched successfully");
+      return true;
+    } catch (error) {
+      console.error("Failed to dispatch verification event:", error);
+      return false;
+    }
+  };
+  
   const handleValidate = (isValid: boolean) => {
     if (processingRef.current) return;
     processingRef.current = true;
@@ -106,18 +132,15 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
         // Mark that we've dispatched the event to prevent duplicates
         hasDispatchedEventRef.current = true;
         
-        // Dispatch a custom event to trigger state transition after verification
-        const event = new CustomEvent('verification-complete', {
-          detail: { success: isValid, moduleId: id }
-        });
-        window.dispatchEvent(event);
+        // Dispatch verification events
+        dispatchVerificationEvent(isValid);
         
         // Reset processing state after a longer delay to prevent rapid re-renders
         setTimeout(() => {
           processingRef.current = false;
         }, 1000);
       }
-    }, 1200);
+    }, 800);
   };
   
   // Use different styling for inline vs modal display
