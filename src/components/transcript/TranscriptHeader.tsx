@@ -9,27 +9,37 @@ import CallControl from '@/components/TestScenario/CallControl';
 interface TranscriptHeaderProps {
   activeScenario: ScenarioType;
   currentState?: string;
-  elapsedTime: string;
+  elapsedTime?: string;
   callActive: boolean;
-  handleCall: () => void;
-  handleHangUpCall: () => void;
+  handleCall?: () => void;
+  handleHangUpCall?: () => void;
   onSelectScenario?: (scenario: ScenarioType) => void;
   viewJson?: () => void;
   isLoadingJson?: boolean;
   resetConversation?: () => void;
+  onViewJsonClick?: any;
+  onSwitchView?: any;
+  onMakeMindMap?: () => void;
+  showJsonView?: any;
+  onValidateAll?: () => void;
 }
 
 const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
   activeScenario,
   currentState,
-  elapsedTime,
+  elapsedTime = '00:00',
   callActive,
   handleCall,
   handleHangUpCall,
   onSelectScenario,
   viewJson,
   isLoadingJson = false,
-  resetConversation
+  resetConversation,
+  onViewJsonClick,
+  onSwitchView,
+  onMakeMindMap,
+  showJsonView,
+  onValidateAll
 }) => {
   // Updated list of available scenarios for the dropdown
   const scenarios: ScenarioType[] = ['studiumabschlussCase', 'leistungsabdeckungPhysio', 'mahnungTrotzZahlung'];
@@ -42,20 +52,22 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-bold">Transcript</h2>
             {/* Scenario selector as a pill dropdown */}
-            <Select value={activeScenario} onValueChange={value => onSelectScenario && onSelectScenario(value as ScenarioType)}>
-              <SelectTrigger className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium flex items-center h-auto w-auto border-none">
-                <SelectValue placeholder="Select scenario">{activeScenario}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {scenarios.map(scenario => <SelectItem key={scenario} value={scenario}>
-                      {scenario === 'studiumabschlussCase' ? 'Studiumabschluss-Case' : 
-                       scenario === 'leistungsabdeckungPhysio' ? 'Leistungsabdeckung Physio' : 
-                       'Mahnung trotz Zahlung'}
-                    </SelectItem>)}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            {onSelectScenario && (
+              <Select value={activeScenario} onValueChange={value => onSelectScenario(value as ScenarioType)}>
+                <SelectTrigger className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-medium flex items-center h-auto w-auto border-none">
+                  <SelectValue placeholder="Select scenario">{activeScenario}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {scenarios.map(scenario => <SelectItem key={scenario} value={scenario}>
+                        {scenario === 'studiumabschlussCase' ? 'Studiumabschluss-Case' : 
+                         scenario === 'leistungsabdeckungPhysio' ? 'Leistungsabdeckung Physio' : 
+                         'Mahnung trotz Zahlung'}
+                      </SelectItem>)}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            )}
             
             {/* Current state pill */}
             {currentState && <div className="bg-gray-700 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
@@ -73,12 +85,31 @@ const TranscriptHeader: React.FC<TranscriptHeaderProps> = ({
           
           {/* Call control section with timer - Now aligned to the right */}
           <div className="flex items-center gap-4">
-            <CallControl callActive={callActive} elapsedTime={elapsedTime} onStartCall={handleCall} onEndCall={handleHangUpCall} onResetScenario={resetConversation} />
+            {handleCall && handleHangUpCall && (
+              <CallControl 
+                callActive={callActive} 
+                elapsedTime={elapsedTime} 
+                onStartCall={handleCall} 
+                onEndCall={handleHangUpCall} 
+                onResetScenario={resetConversation} 
+              />
+            )}
             
             {/* JSON Visualization button */}
             {viewJson && <Button variant="outline" size="icon" className="h-12 w-12 rounded-md border-2 bg-white shadow-sm" onClick={viewJson} disabled={isLoadingJson} title="View JSON">
                 <FileText size={20} />
               </Button>}
+            
+            {/* Additional buttons from new props */}
+            {onViewJsonClick && <Button variant="outline" size="icon" className="h-12 w-12 rounded-md border-2 bg-white shadow-sm" onClick={onViewJsonClick} disabled={isLoadingJson} title="View JSON">
+                <FileText size={20} />
+              </Button>}
+            
+            {onValidateAll && (
+              <Button variant="outline" size="sm" onClick={onValidateAll}>
+                Validate All
+              </Button>
+            )}
           </div>
         </div>
       </div>

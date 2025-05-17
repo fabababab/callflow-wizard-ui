@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useRef } from 'react';
 import { Message } from '@/components/transcript/MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
@@ -23,7 +24,7 @@ export function useMessageHandling() {
   // Create a wrapper around the message adders that includes deduplication logic
   const messageAdders = useMessageAdders(messages, (newMessages) => {
     // Check for duplicates before setting messages
-    const filteredMessages = newMessages.filter(message => {
+    const updatedMessages = newMessages.filter(message => {
       // Create a unique key for each message based on text and stateId
       const messageKey = `${message.stateId || ''}-${message.text.substring(0, 50)}`;
       
@@ -38,7 +39,7 @@ export function useMessageHandling() {
       return true;
     });
     
-    setMessages(filteredMessages);
+    setMessages(updatedMessages);
   }, sensitiveDataStats, setLastMessageUpdate);
   
   // Create enhanced versions of the message adder functions that include stateId
@@ -86,8 +87,8 @@ export function useMessageHandling() {
   const handleInlineModuleComplete = useCallback((messageId: string, moduleId: string, result: any) => {
     console.log(`Inline module ${moduleId} completed for message ${messageId} with result:`, result);
     
-    setMessages(prevMessages =>
-      prevMessages.map(message => {
+    setMessages(prevMessages => {
+      return prevMessages.map(message => {
         if (message.id !== messageId) return message;
         
         // Mark the module as completed in some way
@@ -107,8 +108,8 @@ export function useMessageHandling() {
         }
         
         return message;
-      })
-    );
+      });
+    });
     
     setLastMessageUpdate(new Date());
   }, []);

@@ -7,15 +7,14 @@ interface ResponseHandlerProps {
   stateMachine: any;
   messageHandling: any;
   conversationState: any;
-  toast: ReturnType<typeof useToast>;
 }
 
 export function useResponseHandler({
   stateMachine,
   messageHandling,
-  conversationState,
-  toast
+  conversationState
 }: ResponseHandlerProps) {
+  const { toast } = useToast();
 
   const handleSelectResponse = useCallback((response: string) => {
     console.log(`Selected response: "${response}"`);

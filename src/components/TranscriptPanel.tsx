@@ -9,7 +9,7 @@ import { useConversationState } from '@/hooks/useConversationState';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
-  jsonVisualization: any;
+  jsonVisualization?: any;
 }
 
 const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario, jsonVisualization }) => {
@@ -24,18 +24,21 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario, jsonV
       <TranscriptHeader 
         activeScenario={activeScenario}
         callActive={transcript.callActive}
-        onViewJsonClick={jsonVisualization.toggleJsonDialog}
-        onSwitchView={jsonVisualization.toggleJsonView}
-        onMakeMindMap={() => {}}
-        onEndCall={transcript.handleHangUpCall}
-        onStartCall={transcript.handleCall}
-        showJsonView={jsonVisualization.showJsonView}
+        handleCall={transcript.handleCall}
+        handleHangUpCall={transcript.handleHangUpCall}
         resetConversation={transcript.resetConversation}
+        currentState={transcript.currentState}
+        elapsedTime={transcript.elapsedTime}
+        // These optional props are passed only if jsonVisualization is available
+        onViewJsonClick={jsonVisualization?.toggleJsonDialog}
+        onSwitchView={jsonVisualization?.toggleJsonView}
+        showJsonView={jsonVisualization?.showJsonView}
+        onMakeMindMap={() => {}}
         onValidateAll={() => {}}
       />
       
       <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
-        {jsonVisualization.showJsonView ? (
+        {jsonVisualization?.showJsonView ? (
           jsonVisualization.jsonComponent
         ) : (
           <ChatMessages 
@@ -54,13 +57,16 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario, jsonV
       </div>
       
       <TranscriptFooter 
-        activeScenario={activeScenario} 
+        activeScenario={activeScenario}
+        callActive={transcript.callActive}
         awaitingUserResponse={transcript.awaitingUserResponse}
         onShowNachbearbeitung={transcript.showNachbearbeitungSummary}
-        callActive={transcript.callActive}
+        viewJson={jsonVisualization?.toggleJsonDialog}
+        isLoadingJson={jsonVisualization?.isLoadingJson}
+        resetConversation={transcript.resetConversation}
       />
       
-      {jsonVisualization.jsonDialog}
+      {jsonVisualization?.jsonDialog}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 // Define available module types
 export enum ModuleType {
   VERIFICATION = 'VERIFICATION',
@@ -20,6 +21,9 @@ export type MessageId = string;
 export interface Suggestion {
   id: string;
   text: string;
+  type?: 'info' | 'action' | 'response'; // Added type property to match AISuggestion
+  accepted?: boolean;
+  rejected?: boolean;
 }
 
 export interface Message {

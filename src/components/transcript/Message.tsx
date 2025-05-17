@@ -1,6 +1,6 @@
 
 import React, { useCallback, memo } from 'react';
-import type { MessageSender, Message as MessageInterface } from './MessageTypes';
+import type { MessageSender, Message as MessageInterface, Suggestion } from './MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
 import MessageHeader from './MessageHeader';
 import MessageContent from './MessageContent';
@@ -96,10 +96,13 @@ const Message: React.FC<MessageProps> = ({
           )}
           
           {/* Display AI suggestions */}
-          {hasSuggestions && isAgentMode && (
+          {hasSuggestions && isAgentMode && message.suggestions && (
             <div className="mt-3 pt-2 border-t border-gray-300/20">
               <AISuggestions 
-                suggestions={message.suggestions || []} 
+                suggestions={message.suggestions.map(s => ({
+                  ...s,
+                  type: s.type || 'info' // Ensure each suggestion has a type
+                }))} 
                 messageId={message.id}
                 onAccept={onAcceptSuggestion}
                 onReject={onRejectSuggestion}
