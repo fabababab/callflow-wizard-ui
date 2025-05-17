@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 interface VerificationEventsProps {
   messageHandling: {
     addSystemMessage: (message: string) => void;
+    addAgentMessage: (message: string) => void;
   };
   handleSelectResponse: (response: string) => void;
   stateMachine: {
@@ -43,6 +44,7 @@ export function useVerificationEvents({
         // System message about verification - only show once per state
         if (!verificationHandledRef.current[stateMachine.currentState]) {
           messageHandling.addSystemMessage("Kundenidentität wurde erfolgreich verifiziert.");
+          messageHandling.addAgentMessage("Vielen Dank. Wie kann ich Ihnen weiterhelfen?");
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
         
@@ -71,7 +73,7 @@ export function useVerificationEvents({
           } else {
             console.warn("No response options available for state transition");
           }
-        }
+        } 
         // Standard logic for verify_identity state when not direct transition
         else if (stateMachine.currentState === 'verify_identity') {
           console.log("In verify_identity state, will auto-select response");

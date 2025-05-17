@@ -1,3 +1,4 @@
+
 {
   "id": "leistungsabdeckung-physio",
   "initial": "start",
@@ -5,22 +6,21 @@
     "start": {
       "meta": {
         "systemMessage": "Call initiated with customer to clarify physiotherapy coverage.",
-        "agentText": "Grüezi, wie kann ich Ihnen helfen?",
+        "agentText": "Guten Tag wie kann ich Ihnen behilflich sein?",
         "responseOptions": [
-          "Ich möchte eine Leistung abklären",
-          "Kundenidentifikation starten"
+          "Gerne. Zuerst muss ich sie noch verifizieren"
         ]
       },
       "on": {
-        "Ich möchte eine Leistung abklären": "verify_identity",
-        "Kundenidentifikation starten": "verify_identity",
+        "Gerne. Zuerst muss ich sie noch verifizieren": "verify_identity",
         "DEFAULT": "verify_identity"
       }
     },
     "verify_identity": {
       "meta": {
+        "customerText": "Ich habe eine Frage zu der Deckung meiner Versicherung bzgl. Physio.",
         "responseOptions": [
-          "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?"
+          "Vielen Dank. Wie kann ich Ihnen weiterhelfen?"
         ],
         "module": {
           "id": "verification-module-physio",
@@ -73,7 +73,7 @@
         }
       },
       "on": {
-        "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?": "customer_issue",
+        "Vielen Dank. Wie kann ich Ihnen weiterhelfen?": "customer_issue",
         "DEFAULT": "customer_issue"
       }
     },
