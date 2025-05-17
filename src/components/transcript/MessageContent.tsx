@@ -100,7 +100,7 @@ const MessageContent: React.FC<MessageContentProps> = memo(({
         </div>
       )}
       
-      {/* Display sensitive data validation fields if present */}
+      {/* Display sensitive data verification if present */}
       {sensitiveData && sensitiveData.length > 0 && sender === 'customer' && (
         <SensitiveDataSection 
           sensitiveData={sensitiveData}

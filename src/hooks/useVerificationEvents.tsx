@@ -59,38 +59,22 @@ export function useVerificationEvents({
           setTimeout(() => {
             verificationInProgressRef.current = false;
             handleSelectResponse(responseOptions[0]);
-          }, 2000); // Slightly shorter delay since we're not showing module UI
+          }, 2000);
         } else {
           verificationInProgressRef.current = false;
         }
       }, 500);
     };
 
-    // Add manual verification handler for identity validation
-    const handleManualVerification = () => {
-      if (stateMachine.currentState === 'verify_identity' && 
-          !verificationHandledRef.current[stateMachine.currentState]) {
-        
-        // For verify_identity state without module, simulate verification
-        setTimeout(() => {
-          messageHandling.addSystemMessage("Kundenidentität wurde manuell verifiziert.");
-          verificationHandledRef.current[stateMachine.currentState] = true;
-          
-          // Get available responses for the current state
-          const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
-          
-          // If there are response options, automatically pick the first one after a delay
-          if (responseOptions.length > 0) {
-            handleSelectResponse(responseOptions[0]);
-          }
-        }, 1500);
-      }
-    };
-
     // Add event listeners for all verification events
     window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
     window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
-    window.addEventListener('manual-verification', handleManualVerification as EventListener);
+    window.addEventListener('module-complete', (e: Event) => {
+      const event = e as CustomEvent;
+      if (event.detail?.moduleType === 'VERIFICATION' && event.detail?.result?.verified) {
+        handleVerificationComplete(event as CustomEvent);
+      }
+    });
     
     // In verify_identity state without module, automatically progress after a short delay
     if (stateMachine.currentState === 'verify_identity' && 
@@ -98,7 +82,7 @@ export function useVerificationEvents({
         !verificationHandledRef.current[stateMachine.currentState]) {
       const timer = setTimeout(() => {
         // Simulate verification event for non-module verification state
-        const customEvent = new CustomEvent('manual-verification');
+        const customEvent = new CustomEvent('verification-complete');
         window.dispatchEvent(customEvent);
       }, 2000);
       
@@ -109,7 +93,12 @@ export function useVerificationEvents({
     return () => {
       window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
       window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
-      window.removeEventListener('manual-verification', handleManualVerification as EventListener);
+      window.removeEventListener('module-complete', (e: Event) => {
+        const event = e as CustomEvent;
+        if (event.detail?.moduleType === 'VERIFICATION' && event.detail?.result?.verified) {
+          handleVerificationComplete(event as CustomEvent);
+        }
+      });
     };
   }, [messageHandling, stateMachine.stateData, stateMachine.currentState, handleSelectResponse]);
 

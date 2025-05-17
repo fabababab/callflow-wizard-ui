@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Shield } from 'lucide-react';
-import ValidationField from './ValidationField';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
+import InlineChatVerification from './InlineChatVerification';
 
 interface SensitiveDataSectionProps {
   sensitiveData: SensitiveField[];
@@ -13,17 +14,6 @@ const SensitiveDataSection: React.FC<SensitiveDataSectionProps> = ({ sensitiveDa
     return null;
   }
 
-  // Group fields by type to avoid duplication in the UI
-  const groupedFields: { [key: string]: SensitiveField } = {};
-  sensitiveData.forEach(field => {
-    // Only keep the first occurrence of each field type to avoid duplication
-    if (!groupedFields[field.type]) {
-      groupedFields[field.type] = field;
-    }
-  });
-
-  const uniqueFields = Object.values(groupedFields);
-
   return (
     <div className="mt-3 pt-2 border-t border-gray-300/20">
       <div className="text-xs font-medium flex items-center gap-1 mb-2">
@@ -31,13 +21,18 @@ const SensitiveDataSection: React.FC<SensitiveDataSectionProps> = ({ sensitiveDa
         <span>Sensitive Data Detected</span>
       </div>
       <div className="space-y-2">
-        {uniqueFields.map((field) => (
-          <ValidationField 
-            key={field.id} 
-            field={field} 
-            onValidate={(status, notes) => onValidate(field.id, status, notes)} 
-          />
-        ))}
+        <InlineChatVerification 
+          onVerify={(verified) => {
+            // When verified, validate all fields as valid
+            if (verified) {
+              sensitiveData.forEach(field => {
+                onValidate(field.id, 'valid');
+              });
+            }
+          }}
+          isVerifying={false}
+          isVerified={sensitiveData.every(field => field.status === 'valid')}
+        />
       </div>
     </div>
   );
