@@ -22,7 +22,8 @@ import { useMessageUpdates } from '@/hooks/useMessageUpdates';
 import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
-  const { toast } = useToast();
+  // Use the toast hook - this returns an object with a toast function
+  const toastUtils = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the message handling functionality
@@ -52,12 +53,12 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     moduleManager.completeModule
   );
 
-  // Use response handler - fixed to pass toast as an object
+  // Use response handler - pass the whole toast object
   const responseHandler = useResponseHandler({
     stateMachine,
     messageHandling,
     conversationState,
-    toast
+    toast: toastUtils
   });
 
   // Use state change processor
@@ -67,7 +68,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     conversationState,
     transitionExtractor,
     callState,
-    toast
+    toast: toastUtils
   });
 
   // Use conversation initializer
@@ -78,7 +79,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling,
     callState,
     setHasInitializedConversation: () => {}, // Will be replaced by useScenarioChangeEffect
-    toast,
+    toast: toastUtils,
     showNachbearbeitungSummary
   });
 
