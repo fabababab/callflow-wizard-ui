@@ -17,6 +17,8 @@ interface MessageProps {
   onVerifySystemCheck?: (messageId: string) => void;
   isAgentMode?: boolean;
   onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
+  // New prop to track if a response has been selected
+  selectedResponse?: string | null;
 }
 
 const Message: React.FC<MessageProps> = ({ 
@@ -27,7 +29,8 @@ const Message: React.FC<MessageProps> = ({
   onValidateSensitiveData,
   onVerifySystemCheck,
   isAgentMode = true,
-  onModuleComplete
+  onModuleComplete,
+  selectedResponse
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
@@ -52,6 +55,18 @@ const Message: React.FC<MessageProps> = ({
       return 'border-l-4 border-amber-300/60';
     }
     return '';
+  };
+  
+  // Determine if we should show response options for this message
+  // For agent messages, we only show response options if customer has made a selection
+  const shouldShowResponseOptions = () => {
+    // For customer messages, always show response options
+    if (message.sender === 'customer') {
+      return hasResponseOptions;
+    }
+    
+    // For agent messages, only show if there's a selected response
+    return hasResponseOptions && selectedResponse !== null;
   };
 
   return (
@@ -81,8 +96,8 @@ const Message: React.FC<MessageProps> = ({
             onVerifySystemCheck={onVerifySystemCheck}
           />
           
-          {/* Display response options */}
-          {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
+          {/* Display response options - now conditionally based on shouldShowResponseOptions */}
+          {shouldShowResponseOptions() && isAgentMode && message.responseOptions && onSelectResponse && (
             <MessageResponseOptions 
               responseOptions={message.responseOptions} 
               onSelectResponse={onSelectResponse}

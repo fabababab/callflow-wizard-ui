@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Message from '../transcript/Message';
 import { Message as MessageType } from '../transcript/MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
@@ -23,6 +23,9 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   messagesEndRef,
   onModuleComplete
 }) => {
+  // Add state to track the most recently selected response
+  const [selectedResponse, setSelectedResponse] = useState<string | null>(null);
+
   // If there are no messages, show empty state
   if (!messages.length) {
     return (
@@ -37,9 +40,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     );
   }
 
-  // Handle response selection by calling the parent callback
+  // Handle response selection by calling the parent callback and updating our local state
   const handleResponseSelection = (response: string) => {
     console.log("ChatMessages: response selected", response);
+    setSelectedResponse(response);
     if (onSelectResponse) {
       onSelectResponse(response);
     }
@@ -58,6 +62,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           onValidateSensitiveData={onValidateSensitiveData}
           isAgentMode={isAgentMode}
           onModuleComplete={onModuleComplete}
+          selectedResponse={selectedResponse}
         />
       ))}
       <div ref={messagesEndRef} />
