@@ -5,11 +5,13 @@ import { ChevronRight } from 'lucide-react';
 interface MessageResponseOptionsProps {
   responseOptions: string[];
   onSelectResponse: (response: string) => void;
+  sender?: 'agent' | 'customer' | 'system';
 }
 
 const MessageResponseOptions: React.FC<MessageResponseOptionsProps> = ({ 
   responseOptions,
-  onSelectResponse
+  onSelectResponse,
+  sender = 'agent'
 }) => {
   if (!responseOptions || responseOptions.length === 0) return null;
 
@@ -18,9 +20,19 @@ const MessageResponseOptions: React.FC<MessageResponseOptionsProps> = ({
     onSelectResponse(response);
   };
 
+  // Determine label based on sender type
+  const getOptionsLabel = () => {
+    if (sender === 'customer') {
+      return "Kundeneingaben:";
+    } else if (sender === 'agent') {
+      return "Verfügbare Antworten:";
+    }
+    return "Optionen:";
+  };
+
   return (
     <div className="mt-3 pt-2 border-t border-gray-300/20">
-      <div className="text-xs font-medium mb-2">Verfügbare Antworten:</div>
+      <div className="text-xs font-medium mb-2">{getOptionsLabel()}</div>
       <div className="space-y-1.5">
         {responseOptions.map((option, idx) => (
           <button

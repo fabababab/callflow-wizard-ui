@@ -1,0 +1,214 @@
+
+{
+  "id": "customer-physio-coverage",
+  "initial": "start",
+  "states": {
+    "start": {
+      "meta": {
+        "systemMessage": "Call initiated with customer about physiotherapy coverage.",
+        "customerText": "Grüezi, ich habe eine Frage zur Deckung meiner Physiotherapie.",
+        "responseOptions": [
+          "Guten Tag, wie kann ich Ihnen helfen?"
+        ]
+      },
+      "on": {
+        "Guten Tag, wie kann ich Ihnen helfen?": "customer_inquiry",
+        "DEFAULT": "customer_inquiry"
+      }
+    },
+    "customer_inquiry": {
+      "meta": {
+        "customerText": "Ich möchte wissen, ob meine Physio-Behandlungen bei Jana Brunner abgedeckt sind.",
+        "responseOptions": [
+          "Ich benötige bitte Ihre persönlichen Daten zur Identifikation."
+        ]
+      },
+      "on": {
+        "Ich benötige bitte Ihre persönlichen Daten zur Identifikation.": "identity_verification",
+        "DEFAULT": "identity_verification"
+      }
+    },
+    "identity_verification": {
+      "meta": {
+        "agentText": "Darf ich Sie bitten, mir Ihr Geburtsdatum und Ihre Postleitzahl mitzuteilen?",
+        "customerText": "14. Mai 1985, PLZ 8004 Zürich",
+        "module": {
+          "id": "verification-module-physio-customer",
+          "title": "Identifikation",
+          "type": "VERIFICATION",
+          "data": {
+            "isInline": true,
+            "title": "Kundenidentifikation",
+            "sensitiveFields": [
+              {
+                "id": "birthdate",
+                "type": "date_of_birth",
+                "label": "Geburtsdatum",
+                "value": "14.05.1985",
+                "systemValue": "14.05.1985",
+                "source": "Kundendatenbank",
+                "status": "pending",
+                "requiresVerification": true
+              },
+              {
+                "id": "postalCode",
+                "type": "address",
+                "label": "PLZ",
+                "value": "8004",
+                "systemValue": "8004",
+                "source": "Kundendatenbank",
+                "status": "pending",
+                "requiresVerification": true
+              }
+            ]
+          }
+        },
+        "responseOptions": [
+          "Vielen Dank, ich habe Sie im System gefunden."
+        ]
+      },
+      "on": {
+        "Vielen Dank, ich habe Sie im System gefunden.": "therapist_query",
+        "DEFAULT": "therapist_query"
+      }
+    },
+    "therapist_query": {
+      "meta": {
+        "agentText": "Können Sie mir bitte den genauen Namen der Therapeutin und die Adresse der Praxis mitteilen?",
+        "customerText": "Jana Brunner in der Schmiedgasse in 8004 Zürich",
+        "responseOptions": [
+          "Einen Moment, ich suche nach der Therapeutin..."
+        ]
+      },
+      "on": {
+        "Einen Moment, ich suche nach der Therapeutin...": "therapist_search_results",
+        "DEFAULT": "therapist_search_results"
+      }
+    },
+    "therapist_search_results": {
+      "meta": {
+        "agentText": "Ich habe mehrere ähnliche Einträge gefunden. Welche Therapeutin meinen Sie?",
+        "module": {
+          "id": "therapist-selection-module",
+          "title": "Therapeutin auswählen",
+          "type": "CHOICE_LIST",
+          "data": {
+            "description": "Bitte wählen Sie die richtige Therapeutin aus:",
+            "isInline": true,
+            "options": [
+              {
+                "id": "jana_brunner",
+                "label": "Jana Brunner – Schmiedgasse 10, 8004 Zürich"
+              },
+              {
+                "id": "jana_brendel",
+                "label": "Jana Brendel – Schmiederstrasse 5, 8003 Zürich"
+              },
+              {
+                "id": "janna_brun",
+                "label": "Janna Brun – Schmiedgasse 12, 8004 Zürich"
+              }
+            ],
+            "buttonText": "Auswählen"
+          }
+        },
+        "customerText": "Die erste, Jana Brunner in der Schmiedgasse 10.",
+        "responseOptions": [
+          "Danke für die Bestätigung. Ich prüfe nun die Leistungsabdeckung."
+        ]
+      },
+      "on": {
+        "Danke für die Bestätigung. Ich prüfe nun die Leistungsabdeckung.": "coverage_information",
+        "DEFAULT": "coverage_information"
+      }
+    },
+    "coverage_information": {
+      "meta": {
+        "agentText": "Frau Jana Brunner ist eine anerkannte Therapeutin. Mit ärztlicher Verordnung übernimmt die Grundversicherung die Kosten für die Behandlung.",
+        "module": {
+          "id": "coverage-info-customer-module",
+          "title": "Leistungsabdeckung Physiotherapie",
+          "type": "INFORMATION_TABLE",
+          "data": {
+            "description": "Folgende Leistungen werden übernommen:",
+            "isInline": true,
+            "coverageInfo": [
+              {
+                "requirement": "Ärztliche Verordnung",
+                "status": "Erforderlich"
+              },
+              {
+                "requirement": "Anzahl Sitzungen",
+                "status": "9 pro Verordnung"
+              },
+              {
+                "requirement": "Gültigkeit",
+                "status": "5 Wochen ab Ausstellung"
+              },
+              {
+                "requirement": "Selbstbehalt",
+                "status": "Franchise + 10% Selbstbehalt"
+              }
+            ],
+            "tableTitle": "Leistungsübersicht"
+          }
+        },
+        "customerText": "Vielen Dank für die Information. Brauche ich jedes Mal eine neue Verordnung?",
+        "responseOptions": [
+          "Ja, für jede Serie von 9 Sitzungen benötigen Sie eine neue ärztliche Verordnung."
+        ]
+      },
+      "on": {
+        "Ja, für jede Serie von 9 Sitzungen benötigen Sie eine neue ärztliche Verordnung.": "additional_questions",
+        "DEFAULT": "additional_questions"
+      }
+    },
+    "additional_questions": {
+      "meta": {
+        "customerText": "Wie funktioniert die Abrechnung? Muss ich die Rechnung zuerst selbst bezahlen?",
+        "responseOptions": [
+          "In der Regel rechnet die Therapeutin direkt mit der Krankenkasse ab. Sie erhalten nur die Rechnung für Ihren Selbstbehalt."
+        ]
+      },
+      "on": {
+        "In der Regel rechnet die Therapeutin direkt mit der Krankenkasse ab. Sie erhalten nur die Rechnung für Ihren Selbstbehalt.": "conclusion",
+        "DEFAULT": "conclusion"
+      }
+    },
+    "conclusion": {
+      "meta": {
+        "agentText": "Gibt es noch etwas, wobei ich Ihnen helfen kann?",
+        "customerText": "Nein, das war alles. Vielen Dank für die Auskunft!",
+        "responseOptions": [
+          "Ich danke Ihnen für Ihren Anruf. Auf Wiederhören!"
+        ]
+      },
+      "on": {
+        "Ich danke Ihnen für Ihren Anruf. Auf Wiederhören!": "end_call",
+        "DEFAULT": "end_call"
+      }
+    },
+    "end_call": {
+      "meta": {
+        "systemMessage": "Der Anruf wurde beendet.",
+        "module": {
+          "id": "nachbearbeitung-physio-customer",
+          "title": "Zusammenfassung",
+          "type": "NACHBEARBEITUNG",
+          "data": {
+            "isInline": true,
+            "points": [
+              "Kunde wurde identifiziert",
+              "Therapeutin Jana Brunner wurde bestätigt",
+              "Leistungsabdeckung mit ärztlicher Verordnung erklärt",
+              "Information zu 9 Sitzungen pro Verordnung gegeben",
+              "Abrechnungsmodalitäten erklärt"
+            ],
+            "summary": "Kundin wurde über Leistungsabdeckung ihrer Physiotherapie bei Jana Brunner informiert. Ärztliche Verordnung notwendig für 9 Sitzungen, direkte Abrechnung mit der Krankenkasse möglich."
+          }
+        }
+      }
+    }
+  },
+  "status": "PRODUCTION"
+}

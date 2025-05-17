@@ -86,6 +86,7 @@ const Message: React.FC<MessageProps> = ({
             <MessageResponseOptions 
               responseOptions={message.responseOptions} 
               onSelectResponse={onSelectResponse}
+              sender={message.sender}
             />
           )}
           

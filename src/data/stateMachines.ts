@@ -23,7 +23,12 @@ export const stateMachines: Record<ScenarioType, StateMachineConfig> = {
   'leistungsabdeckungPhysio': {
     status: StateMachineStatus.PRODUCTION,
     available: true,
-    description: 'Szenario für Fragen zur Abdeckung von Physiotherapie-Behandlungen'
+    description: 'Szenario für Fragen zur Abdeckung von Physiotherapie-Behandlungen (Agenten-Sicht)'
+  },
+  'customerPhysioCoverage': {
+    status: StateMachineStatus.PRODUCTION,
+    available: true,
+    description: 'Szenario für Fragen zur Abdeckung von Physiotherapie-Behandlungen (Kunden-Sicht)'
   },
   'mahnungTrotzZahlung': {
     status: StateMachineStatus.PRODUCTION,

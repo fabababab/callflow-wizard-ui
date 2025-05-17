@@ -110,7 +110,7 @@ export function useResponseHandler({
       const moduleType = stateMachine.stateData?.meta?.module?.type;
       
       // For verification flows, ensure we continue automatically if needed
-      if (isVerifyIdentityOption || (hasInlineModule && moduleType === 'verification')) {
+      if (isVerifyIdentityOption || (hasInlineModule && moduleType === 'VERIFICATION')) {
         console.log("Identity verification was selected, setting up auto-continue...");
         
         if (!verificationInProgressRef.current) {
@@ -139,11 +139,6 @@ export function useResponseHandler({
             }, 1500);
           }, 1500);
         }
-      }
-      // For information or contract modules, we want to wait for user action
-      else if (hasInlineModule && (moduleType === 'information' || moduleType === 'contract')) {
-        console.log(`Inline ${moduleType} module detected:`, moduleId);
-        // These modules won't auto-continue, user will need to click buttons
       }
       
       console.log('===== RESPONSE SELECTION COMPLETE =====');
@@ -221,6 +216,29 @@ export function useResponseHandler({
       console.log(`Module ${moduleType} (${moduleId}) completion detected:`, event.detail);
       moduleCompletionTrackerRef.current[eventId] = true;
       
+      // Check if this module should prevent auto-continuation
+      // Leistungsabdeckung-physio modules should not auto-continue
+      const isPhysioScenario = stateMachine.stateMachine?.id === 'leistungsabdeckung-physio';
+      const preventAutoContinue = isPhysioScenario && (moduleType !== 'VERIFICATION');
+      
+      if (preventAutoContinue) {
+        console.log(`Auto-continuation disabled for ${moduleType} module in ${stateMachine.stateMachine?.id} scenario`);
+        
+        // Just add the system message without auto-continuing
+        const moduleTypeLabels: Record<string, string> = {
+          'information': 'Informations',
+          'nachbearbeitung': 'Nachbearbeitungs',
+          'verification': 'Verifizierungs',
+          'contract': 'Vertrags',
+          'choice_list': 'Auswahl',
+          'information_table': 'Informationstabellen'
+        };
+        
+        const moduleTypeLabel = moduleTypeLabels[moduleType.toLowerCase()] || moduleType.charAt(0).toUpperCase() + moduleType.slice(1);
+        messageHandling.addSystemMessage(`${moduleTypeLabel}modul abgeschlossen.`);
+        return;
+      }
+      
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
         // System message about completion
@@ -238,7 +256,8 @@ export function useResponseHandler({
         const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
         
         // If there are response options, automatically pick the first one after a delay
-        if (responseOptions.length > 0) {
+        // ONLY if NOT in leistungsabdeckung-physio scenario (which needs manual selection)
+        if (responseOptions.length > 0 && !isPhysioScenario) {
           console.log("Auto-selecting response after module completion:", responseOptions[0]);
           
           // Add a delay to make the flow feel more natural
@@ -260,7 +279,7 @@ export function useResponseHandler({
       window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
       window.removeEventListener('module-complete', handleModuleComplete as EventListener);
     };
-  }, [messageHandling, stateMachine.stateData, stateMachine.currentState, handleSelectResponse]);
+  }, [messageHandling, stateMachine.stateData, stateMachine.currentState, stateMachine.stateMachine, handleSelectResponse]);
 
   return {
     handleSelectResponse

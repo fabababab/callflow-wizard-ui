@@ -1,186 +1,91 @@
 
-// Hook for processing state changes
 import { useCallback } from 'react';
-import { detectSensitiveData } from '@/data/scenarioData';
-import { ModuleType } from '@/types/modules';
 import { useToast } from '@/hooks/use-toast';
+import { StateMachineState } from '@/utils/stateMachineLoader';
 
-interface StateChangeProcessorProps {
-  stateMachine: any;
-  messageHandling: any;
-  conversationState: any;
-  transitionExtractor: any;
-  callState: any;
-  toast: ReturnType<typeof useToast>;
-}
+export function useStateChangeProcessor(
+  messageHandling: any,
+  conversationState: any,
+  scenarioType: string
+) {
+  const { toast } = useToast();
 
-export function useStateChangeProcessor({
-  stateMachine,
-  messageHandling,
-  conversationState,
-  transitionExtractor,
-  callState,
-  toast
-}: StateChangeProcessorProps) {
-
-  const processStateChange = useCallback(() => {
-    // If not active or already processed, skip
-    if (!callState.callActive || !stateMachine.stateData) {
-      console.log('Skipping state change processing: call not active or no state data', {
-        callActive: callState.callActive,
-        hasStateData: !!stateMachine.stateData
+  /**
+   * Process a new state in the conversation
+   */
+  const processNewState = useCallback((
+    stateData: StateMachineState | null,
+    currentState: string,
+    scenario: string
+  ) => {
+    if (!stateData) {
+      console.warn(`No state data found for state: ${currentState}`);
+      toast({
+        title: "Fehlende Statusdaten",
+        description: `Keine Daten für Status '${currentState}' gefunden.`,
+        variant: "destructive",
       });
       return;
     }
 
-    // Prevent duplicate processing of the same state
-    if (conversationState.hasProcessedState(stateMachine.currentState)) {
-      console.log(`State ${stateMachine.currentState} already processed, skipping message updates`);
-      return;
+    console.log(`Processing new state: ${currentState}`, stateData);
+    
+    // Extract meta information
+    const agentText = stateData.meta?.agentText;
+    const systemMessage = stateData.meta?.systemMessage;
+    const customerText = stateData.meta?.customerText;
+    const responseOptions = stateData.meta?.responseOptions;
+    const suggestions = stateData.meta?.suggestions;
+    const sensitiveFields = stateData.meta?.sensitiveFields;
+    const moduleConfig = stateData.meta?.module;
+
+    // Determine special scenario handling
+    const isPhysioScenario = scenario === 'leistungsabdeckungPhysio';
+    
+    // Add system message if available
+    if (systemMessage) {
+      messageHandling.addSystemMessage(systemMessage);
     }
-    
-    console.log('===== PROCESSING STATE CHANGE =====');
-    console.log(`Processing state change for state: ${stateMachine.currentState}`);
-    console.log('State data:', stateMachine.stateData);
-    
-    // Clear any existing debounce timer
-    if (conversationState.debounceTimerRef.current) {
-      clearTimeout(conversationState.debounceTimerRef.current);
+
+    // Add agent message if available
+    if (agentText) {
+      // For physio scenario, don't include response options with agent messages
+      messageHandling.addAgentMessage(
+        agentText,
+        suggestions || [],
+        isPhysioScenario ? undefined : responseOptions
+      );
     }
-    
-    // Log the current state transitions for debugging
-    transitionExtractor.logStateTransitions(stateMachine.currentState);
-    
-    // Do immediate processing for initial state to avoid delays
-    if (stateMachine.currentState && 
-        (stateMachine.currentState === 'start' || 
-         stateMachine.currentState === 'initial' || 
-         stateMachine.currentState.includes('initial'))) {
-      console.log('Processing initial state immediately without debounce');
-      processStateChangeInternal();
-      return;
+
+    // Add customer message if available (only for specific states in special scenarios)
+    if (customerText) {
+      // When adding customer text in physio scenario, include response options there
+      messageHandling.addCustomerMessage(
+        customerText,
+        sensitiveFields,
+        isPhysioScenario ? responseOptions : undefined
+      );
     }
-    
-    // Debounce the state processing to prevent rapid fire updates
-    conversationState.debounceTimerRef.current = window.setTimeout(() => {
-      processStateChangeInternal();
-    }, 300); // 300ms debounce
-    
-    function processStateChangeInternal() {
-      console.log('Debounce complete, actually processing state change:', stateMachine.currentState);
-      console.log('State data for processing:', stateMachine.stateData);
+
+    // Add inline module if available
+    if (moduleConfig) {
+      const isInline = moduleConfig.data?.isInline === true;
       
-      // Mark this state as processed FIRST to prevent race conditions
-      // This prevents duplicate messages if processStateChange is called rapidly
-      conversationState.markStateAsProcessed(stateMachine.currentState);
-      
-      // When state changes, check for messages to display
-      if (stateMachine.stateData.meta?.systemMessage && !stateMachine.stateData.meta?.module) {
-        console.log(`Adding system message: ${stateMachine.stateData.meta.systemMessage}`);
-        messageHandling.addSystemMessage(stateMachine.stateData.meta.systemMessage);
-      }
-      
-      if (stateMachine.stateData.meta?.customerText) {
-        console.log(`Adding customer message: ${stateMachine.stateData.meta.customerText}`);
-        // Detect sensitive data in customer text
-        const sensitiveData = detectSensitiveData(stateMachine.stateData.meta.customerText);
-        
-        // Extract response options from transitions
-        const responseOptions = transitionExtractor.extractTransitionsAsResponseOptions(stateMachine.currentState);
-        console.log(`Extracted response options for state ${stateMachine.currentState}:`, responseOptions);
-        
-        // Add customer message with detected sensitive data and response options
-        messageHandling.addCustomerMessage(
-          stateMachine.stateData.meta.customerText, 
-          sensitiveData, 
-          responseOptions, 
-          stateMachine.stateData.requiresVerification // Pass verification flag
-        );
-        
-        // Set flag that we're waiting for user to respond
-        conversationState.setAwaitingUserResponse(true);
-        
-        // If requires verification, add to pending verifications
-        if (stateMachine.stateData.requiresVerification) {
-          conversationState.addPendingVerification(stateMachine.currentState);
-        }
-        
-        // If sensitive data was detected, show toast notification
-        if (sensitiveData && sensitiveData.length > 0) {
-          toast.toast({
-            title: "Sensitive Data Detected",
-            description: "Please verify the detected information before proceeding.",
-            duration: 3000
-          });
-        }
-      }
-      
-      if (stateMachine.stateData.meta?.agentText && !conversationState.isUserAction) {
-        console.log(`Adding agent message: ${stateMachine.stateData.meta.agentText}`);
-        
-        // Extract response options for next state if needed
-        const responseOptions = stateMachine.stateData.meta?.responseOptions || [];
-        
-        // If explicit responseOptions aren't provided, extract them from transitions
-        const effectiveResponseOptions = responseOptions.length > 0 
-          ? responseOptions
-          : transitionExtractor.extractTransitionsAsResponseOptions(stateMachine.currentState);
-        
-        console.log("Agent message response options:", effectiveResponseOptions);
-          
-        messageHandling.addAgentMessage(
-          stateMachine.stateData.meta.agentText, 
-          [], 
-          effectiveResponseOptions.length > 0 ? effectiveResponseOptions : undefined,
-          stateMachine.stateData.requiresVerification // Pass verification flag
-        );
-      }
-      
-      // Check if this state has a module trigger
-      if (stateMachine.stateData.meta?.module) {
-        console.log(`Module trigger found in state:`, stateMachine.stateData.meta.module);
-        
-        // Handle all modules as inline by default
-        const moduleConfig = stateMachine.stateData.meta.module;
-        
-        // Only add system message for module if we haven't already displayed it inline
-        if (stateMachine.stateData.meta?.systemMessage) {
-          console.log(`Adding system message for module: ${stateMachine.stateData.meta.systemMessage}`);
-          messageHandling.addSystemMessage(stateMachine.stateData.meta.systemMessage);
-        }
-        
-        // For all modules, display them inline in the chat
+      if (isInline) {
         messageHandling.addInlineModuleMessage(
-          moduleConfig.title || "Interactive Module", 
+          `Modul "${moduleConfig.title}" wird angezeigt...`,
           moduleConfig
         );
-        
-        // Show toast for module activation
-        toast.toast({
-          title: `${moduleConfig.title}`,
-          description: "Interactive module has been activated",
-          duration: 3000
-        });
       }
-      
-      conversationState.setLastTranscriptUpdate(new Date());
-      
-      // Reset user action flag
-      conversationState.setIsUserAction(false);
-      
-      console.log('===== STATE CHANGE PROCESSING COMPLETE =====');
     }
-  }, [
-    stateMachine.stateData, 
-    stateMachine.currentState, 
-    callState.callActive, 
-    messageHandling,
-    conversationState,
-    transitionExtractor,
-    toast
-  ]);
+
+    // Update conversation state
+    conversationState.setAwaitingUserResponse(true);
+    conversationState.setIsInitialStateProcessed(true);
+    
+  }, [messageHandling, toast, conversationState]);
 
   return {
-    processStateChange
+    processNewState
   };
 }
