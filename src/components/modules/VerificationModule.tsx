@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -107,7 +106,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
         // Mark that we've dispatched the event to prevent duplicates
         hasDispatchedEventRef.current = true;
         
-        // Dispatch a single custom event to trigger state transition after verification
+        // Dispatch a custom event to trigger state transition after verification
         const event = new CustomEvent('verification-complete', {
           detail: { success: isValid, moduleId: id }
         });
@@ -118,7 +117,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
           processingRef.current = false;
         }, 1000);
       }
-    }, 1500);
+    }, 1200);
   };
   
   // Use different styling for inline vs modal display
