@@ -1,4 +1,3 @@
-
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { stateMachines, StateMachineStatus } from '@/data/stateMachines';
 import { SensitiveField } from '@/data/scenarioData';
@@ -45,8 +44,7 @@ export interface StateMachine {
 const scenarioFileMap: Record<ScenarioType, string> = {
   'studiumabschlussCase': 'studiumabschluss-case',
   'leistungsabdeckungPhysio': 'leistungsabdeckung-physio',
-  'mahnungTrotzZahlung': 'mahnung-trotz-zahlung',
-  'customerPhysioCoverage': 'customerPhysioCoverage'
+  'mahnungTrotzZahlung': 'mahnung-trotz-zahlung'
 };
 
 // Get list of all available state machines

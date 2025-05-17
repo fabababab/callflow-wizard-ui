@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -6,8 +7,7 @@ import { Label } from '@/components/ui/label';
 export type ScenarioType = 
   'studiumabschlussCase' |
   'leistungsabdeckungPhysio' |
-  'mahnungTrotzZahlung' |
-  'customerPhysioCoverage';
+  'mahnungTrotzZahlung';
 
 // Define and export the scenarioCallData object that Dashboard.tsx is looking for
 export const scenarioCallData: Record<ScenarioType, {
@@ -96,28 +96,6 @@ export const scenarioCallData: Record<ScenarioType, {
       sentiment: 'Verärgert',
       keyPoints: ['Mahnung erhalten', 'Zahlung bereits getätigt', 'Hat Zahlungsbeleg']
     }
-  },
-  'customerPhysioCoverage': {
-    id: 14,
-    customerName: 'John Doe',
-    phoneNumber: '+41 70 555 6666',
-    waitTime: '0m 25s',
-    callType: 'Physiotherapie',
-    priority: 'low',
-    expertise: 'Physiotherapie',
-    matchScore: 98,
-    caseHistory: [
-      {
-        type: 'Physiotherapieanfrage',
-        date: 'Mai 16, 2025',
-        description: 'Kunde möchte Physiotherapie anfordern.'
-      }
-    ],
-    roboCallSummary: {
-      duration: '1m 20s',
-      sentiment: 'Neutral',
-      keyPoints: ['Physiotherapieanfrage', 'Kundenspezifische Anforderungen', 'Überprüfung der Anfrage']
-    }
   }
 };
 
@@ -132,12 +110,11 @@ const ScenarioSelector = ({
   onSelectScenario,
   disabled = false
 }: ScenarioSelectorProps) => {
-  // Update the scenarios array to include all four specified scenarios
+  // Update the scenarios array to include just the three specified scenarios
   const scenarios: ScenarioType[] = [
     'studiumabschlussCase',
     'leistungsabdeckungPhysio',
-    'mahnungTrotzZahlung',
-    'customerPhysioCoverage'
+    'mahnungTrotzZahlung'
   ];
 
   return (
@@ -157,7 +134,6 @@ const ScenarioSelector = ({
               <SelectItem key={scenario} value={scenario}>
                 {scenario === 'studiumabschlussCase' ? 'Studiumabschluss-Case' :
                  scenario === 'leistungsabdeckungPhysio' ? 'Leistungsabdeckung Physio' :
-                 scenario === 'customerPhysioCoverage' ? 'Physiotherapie (Kunden-Sicht)' :
                  'Mahnung trotz Zahlung'}
               </SelectItem>
             ))}

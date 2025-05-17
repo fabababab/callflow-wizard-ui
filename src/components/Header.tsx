@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
+import { Settings, User, CreditCard, Shield, FileText, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -35,8 +35,7 @@ const Header = () => {
     const scenarioNames: Record<ScenarioType, string> = {
       'studiumabschlussCase': 'Studiumabschluss-Case',
       'leistungsabdeckungPhysio': 'Leistungsabdeckung Physio',
-      'mahnungTrotzZahlung': 'Mahnung trotz Zahlung',
-      'customerPhysioCoverage': 'Physiotherapie (Kunden-Sicht)'
+      'mahnungTrotzZahlung': 'Mahnung trotz Zahlung'
     };
     
     toast({
