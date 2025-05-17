@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,16 +30,34 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(
     fields.map(field => ({
       ...field,
-      // Initially set value to expected value if provided
+      // Automatically set value to expected value if provided
       value: field.expectedValue || field.value,
-      verified: false
+      verified: true
     }))
   );
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
   const isInlineDisplay = data?.isInline === true;
   const completeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const processingRef = useRef(false);
+  const hasShownToastRef = useRef(false);
+  const hasDispatchedEventRef = useRef(false);
   const { toast } = useToast();
+  
+  // Auto-verify on mount after a small delay
+  useEffect(() => {
+    if (!processingRef.current) {
+      const timeout = setTimeout(() => {
+        handleVerify();
+      }, 800);
+      return () => clearTimeout(timeout);
+    }
+    
+    return () => {
+      if (completeTimeoutRef.current) {
+        clearTimeout(completeTimeoutRef.current);
+      }
+    };
+  }, []);
   
   const handleInputChange = (fieldId: string, value: string) => {
     if (processingRef.current) return;
@@ -47,28 +65,25 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     setVerificationFields(prev => 
       prev.map(field => 
         field.id === fieldId 
-          ? { ...field, value } 
+          ? { ...field, value, verified: true } 
           : field
       )
     );
   };
   
-  const handleValidVerification = () => {
+  const handleVerify = () => {
     if (processingRef.current) return;
     processingRef.current = true;
     
-    console.log("Processing valid verification");
-    setVerificationStatus('success');
+    console.log("Processing verification with auto-success");
     
-    // Mark all fields as verified
-    setVerificationFields(prev => 
-      prev.map(field => ({ ...field, verified: true }))
-    );
+    // Always succeed
+    setVerificationStatus('success');
     
     // Add a slight delay to show the success state before completing
     completeTimeoutRef.current = setTimeout(() => {
-      if (onComplete) {
-        console.log(`VerificationModule ${id} completed with success`);
+      if (onComplete && !hasDispatchedEventRef.current) {
+        console.log(`VerificationModule ${id} completed with automatic success`);
         onComplete({
           verified: true,
           fields: verificationFields.map(f => ({
@@ -78,67 +93,22 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
           }))
         });
         
-        // Dispatch event for state transition
+        // Mark that we've dispatched the event to prevent duplicates
+        hasDispatchedEventRef.current = true;
+        
+        // Dispatch a single custom event to trigger state transition after verification
         const event = new CustomEvent('verification-complete', {
           detail: { success: true, moduleId: id }
         });
         window.dispatchEvent(event);
-      }
-      
-      // Reset processing state
-      setTimeout(() => {
-        processingRef.current = false;
-      }, 500);
-    }, 1000);
-  };
-  
-  const handleInvalidVerification = () => {
-    if (processingRef.current) return;
-    processingRef.current = true;
-    
-    console.log("Processing invalid verification");
-    setVerificationStatus('failed');
-    
-    // Mark all fields as not verified
-    setVerificationFields(prev => 
-      prev.map(field => ({ ...field, verified: false }))
-    );
-    
-    // Add a slight delay to show the failed state before completing
-    completeTimeoutRef.current = setTimeout(() => {
-      if (onComplete) {
-        console.log(`VerificationModule ${id} completed with failure`);
-        onComplete({
-          verified: false,
-          fields: verificationFields.map(f => ({
-            id: f.id,
-            value: f.value,
-            verified: false
-          }))
-        });
         
-        // Dispatch event for state transition - still move forward
-        const event = new CustomEvent('verification-complete', {
-          detail: { success: false, moduleId: id }
-        });
-        window.dispatchEvent(event);
+        // Reset processing state after a longer delay to prevent rapid re-renders
+        setTimeout(() => {
+          processingRef.current = false;
+        }, 1000);
       }
-      
-      // Reset processing state
-      setTimeout(() => {
-        processingRef.current = false;
-      }, 500);
-    }, 1000);
+    }, 1500);
   };
-  
-  // Clean up timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (completeTimeoutRef.current) {
-        clearTimeout(completeTimeoutRef.current);
-      }
-    };
-  }, []);
   
   // Use different styling for inline vs modal display
   const cardClassName = isInlineDisplay
@@ -155,7 +125,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
           </CardTitle>
         </div>
         <CardDescription className={`text-xs ${isInlineDisplay ? "text-amber-600/70" : ""}`}>
-          Bitte überprüfen Sie die Kundeninformation
+          Please verify the following information to continue
         </CardDescription>
       </CardHeader>
       
@@ -170,17 +140,17 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
         {verificationStatus === 'failed' && (
           <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3 transition-opacity duration-300">
             <AlertCircle className="h-4 w-4" />
-            <span>Verification failed</span>
+            <span>Verification failed. Please check your information.</span>
           </div>
         )}
         
-        {/* Fields display */}
+        {/* For inline display, use a grid layout for fields */}
         <div className={isInlineDisplay ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
           {verificationFields.map(field => (
             <div key={field.id} className="space-y-1">
               <div className="flex justify-between">
                 <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
-                {field.verified !== undefined && verificationStatus === 'success' && (
+                {field.verified !== undefined && (
                   <Badge variant="default" className="text-xs py-0 h-5">
                     <CheckCircle size={12} className="mr-1" />
                     Verified
@@ -193,33 +163,39 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
                 value={field.value || ''}
                 onChange={(e) => handleInputChange(field.id, e.target.value)}
                 className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
+                readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
               />
             </div>
           ))}
         </div>
       </CardContent>
       
-      <CardFooter className={`flex justify-end gap-2 ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-gray-50 border-t py-2"}`}>
-        {/* Explicit Valid and Invalid buttons - both should activate the next state */}
-        <Button 
-          size="sm"
-          onClick={handleInvalidVerification}
-          className="text-xs bg-red-500 hover:bg-red-600 text-white"
-          disabled={processingRef.current}
-        >
-          <XCircle size={14} className="mr-1" />
-          Invalid
-        </Button>
+      <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-gray-50 border-t py-2"}`}>
+        {!isInlineDisplay && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              if (!processingRef.current && onClose) onClose();
+            }}
+            className="text-xs"
+            disabled={processingRef.current}
+          >
+            Cancel
+          </Button>
+        )}
         
-        <Button 
-          size="sm"
-          onClick={handleValidVerification}
-          className="text-xs bg-green-500 hover:bg-green-600 text-white"
-          disabled={processingRef.current}
-        >
-          <CheckCircle size={14} className="mr-1" />
-          Valid
-        </Button>
+        {/* Show verify button when status is pending */}
+        {verificationStatus === 'pending' && (
+          <Button 
+            size="sm"
+            onClick={handleVerify}
+            className={`text-xs ${isInlineDisplay ? "bg-amber-500 hover:bg-amber-600 text-white ml-auto" : ""}`}
+            disabled={processingRef.current}
+          >
+            Verify Identity
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
