@@ -35,7 +35,8 @@ const Header = () => {
     const scenarioNames: Record<ScenarioType, string> = {
       'studiumabschlussCase': 'Studiumabschluss-Case',
       'leistungsabdeckungPhysio': 'Leistungsabdeckung Physio',
-      'mahnungTrotzZahlung': 'Mahnung trotz Zahlung'
+      'mahnungTrotzZahlung': 'Mahnung trotz Zahlung',
+      'customerPhysioCoverage': 'Physiotherapie (Kunden-Sicht)'
     };
     
     toast({
