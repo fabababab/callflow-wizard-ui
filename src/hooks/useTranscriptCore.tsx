@@ -52,7 +52,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     moduleManager.completeModule
   );
 
-  // Use response handler
+  // Use response handler - fixed to pass toast as an object
   const responseHandler = useResponseHandler({
     stateMachine,
     messageHandling,
