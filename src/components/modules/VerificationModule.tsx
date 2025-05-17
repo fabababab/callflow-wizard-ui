@@ -2,22 +2,11 @@
 import React, { useState, useEffect, useRef, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Shield, CheckCircle, AlertCircle, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface VerificationField {
-  id: string;
-  label: string;
-  type: string;
-  value: string;
-  expectedValue?: string;
-  required: boolean;
-  verified?: boolean;
-}
+import VerificationStatus from './verification/VerificationStatus';
+import VerificationFields, { VerificationField } from './verification/VerificationFields';
+import VerificationActions from './verification/VerificationActions';
 
 const VerificationModule: React.FC<ModuleProps> = memo(({ 
   id, 
@@ -140,92 +129,27 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
       </CardHeader>
       
       <CardContent className={`${isInlineDisplay ? "pt-2" : "pt-4"} space-y-3`}>
-        {verificationStatus === 'success' && (
-          <div className="bg-green-50 p-2 rounded-md flex items-center gap-2 text-green-700 text-sm mb-3 transition-opacity duration-300">
-            <CheckCircle className="h-4 w-4" />
-            <span>Verification successful</span>
-          </div>
-        )}
+        <VerificationStatus 
+          status={verificationStatus} 
+          isInlineDisplay={isInlineDisplay}
+        />
         
-        {verificationStatus === 'failed' && (
-          <div className="bg-red-50 p-2 rounded-md flex items-center gap-2 text-red-700 text-sm mb-3 transition-opacity duration-300">
-            <AlertCircle className="h-4 w-4" />
-            <span>Verification failed. Please check your information.</span>
-          </div>
-        )}
-        
-        {/* For inline display, use a grid layout for fields */}
-        <div className={isInlineDisplay ? "grid grid-cols-1 md:grid-cols-2 gap-3" : "space-y-3"}>
-          {verificationFields.map(field => (
-            <div key={field.id} className="space-y-1">
-              <div className="flex justify-between">
-                <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
-                {field.verified === true && (
-                  <Badge variant="default" className="text-xs py-0 h-5">
-                    <CheckCircle size={12} className="mr-1" />
-                    Verified
-                  </Badge>
-                )}
-                {field.verified === false && (
-                  <Badge variant="destructive" className="text-xs py-0 h-5">
-                    <X size={12} className="mr-1" />
-                    Invalid
-                  </Badge>
-                )}
-              </div>
-              <Input
-                id={field.id}
-                type={field.type}
-                value={field.value || ''}
-                onChange={(e) => handleInputChange(field.id, e.target.value)}
-                className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
-                readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
-              />
-            </div>
-          ))}
-        </div>
+        <VerificationFields 
+          fields={verificationFields}
+          isInlineDisplay={isInlineDisplay}
+          isReadOnly={processingRef.current}
+          onInputChange={handleInputChange}
+        />
       </CardContent>
       
-      <CardFooter className={`flex justify-between ${isInlineDisplay ? "py-2 bg-transparent border-t border-amber-100/50" : "bg-gray-50 border-t py-2"}`}>
-        {!isInlineDisplay && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              if (!processingRef.current && onClose) onClose();
-            }}
-            className="text-xs"
-            disabled={processingRef.current}
-          >
-            Cancel
-          </Button>
-        )}
-        
-        {/* Only show validation buttons when status is pending */}
-        {verificationStatus === 'pending' && (
-          <div className={`flex gap-2 ${isInlineDisplay ? "ml-auto" : ""}`}>
-            <Button 
-              variant="destructive"
-              size="sm"
-              onClick={() => handleValidate(false)}
-              className="text-xs"
-              disabled={processingRef.current}
-            >
-              <X size={14} className="mr-1" />
-              Invalid
-            </Button>
-            <Button 
-              variant="default"
-              size="sm"
-              onClick={() => handleValidate(true)}
-              className="text-xs"
-              disabled={processingRef.current}
-            >
-              <CheckCircle size={14} className="mr-1" />
-              Valid
-            </Button>
-          </div>
-        )}
+      <CardFooter>
+        <VerificationActions 
+          verificationStatus={verificationStatus}
+          isInlineDisplay={isInlineDisplay}
+          isProcessing={processingRef.current}
+          onClose={onClose}
+          onValidate={handleValidate}
+        />
       </CardFooter>
     </Card>
   );
