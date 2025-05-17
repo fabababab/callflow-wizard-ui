@@ -18,6 +18,7 @@ export function useModuleEvents({
   stateMachine
 }: ModuleEventsProps) {
   const moduleCompletionTrackerRef = useRef<Record<string, boolean>>({});
+  const moduleEventInProgressRef = useRef(false);
   
   // Handle therapist selection events specifically
   useEffect(() => {
@@ -26,14 +27,15 @@ export function useModuleEvents({
       const currentState = stateMachine.currentState;
       const eventId = `therapist-selection-${moduleId}-${currentState}`;
       
-      // Skip if already processed
-      if (moduleCompletionTrackerRef.current[eventId]) {
+      // Skip if already processed or another event is in progress
+      if (moduleCompletionTrackerRef.current[eventId] || moduleEventInProgressRef.current) {
         console.log("Skipping duplicate therapist selection event:", eventId);
         return;
       }
       
       console.log(`Therapist selection detected: ${selectedOptionId}, target state: ${targetState}`);
       moduleCompletionTrackerRef.current[eventId] = true;
+      moduleEventInProgressRef.current = true;
       
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
@@ -52,9 +54,11 @@ export function useModuleEvents({
           if (targetResponse) {
             console.log("Selecting response for Jana Brunner:", targetResponse);
             setTimeout(() => {
+              moduleEventInProgressRef.current = false;
               handleSelectResponse(targetResponse);
             }, 500);
           } else {
+            moduleEventInProgressRef.current = false;
             console.warn("Could not find response option for Jana Brunner");
           }
         } else {
@@ -67,9 +71,11 @@ export function useModuleEvents({
           if (targetResponse) {
             console.log("Selecting response for other therapist:", targetResponse);
             setTimeout(() => {
+              moduleEventInProgressRef.current = false;
               handleSelectResponse(targetResponse);
             }, 500);
           } else {
+            moduleEventInProgressRef.current = false;
             console.warn("Could not find response option for other therapist");
           }
         }
@@ -93,17 +99,25 @@ export function useModuleEvents({
       const currentState = stateMachine.currentState;
       const eventId = `module-complete-${moduleId}-${currentState}`;
       
-      // Skip if already processed
-      if (moduleCompletionTrackerRef.current[eventId]) {
+      // Skip if already processed or another event is in progress
+      if (moduleCompletionTrackerRef.current[eventId] || moduleEventInProgressRef.current) {
         console.log("Skipping duplicate module completion event:", eventId);
+        return;
+      }
+      
+      // Skip verification modules as they are handled by useVerificationEvents
+      if (moduleType.toLowerCase() === 'verification') {
+        console.log("Skipping verification module handling in useModuleEvents");
         return;
       }
       
       console.log(`Module ${moduleType} (${moduleId}) completion detected:`, event.detail);
       moduleCompletionTrackerRef.current[eventId] = true;
+      moduleEventInProgressRef.current = true;
       
       // Skip therapist-suggestion-module as it's handled separately
       if (moduleId === 'therapist-suggestion-module') {
+        moduleEventInProgressRef.current = false;
         console.log("Skipping default handling for therapist-suggestion-module");
         return;
       }
@@ -130,8 +144,11 @@ export function useModuleEvents({
           
           // Add a delay to make the flow feel more natural
           setTimeout(() => {
+            moduleEventInProgressRef.current = false;
             handleSelectResponse(responseOptions[0]);
           }, 1500);
+        } else {
+          moduleEventInProgressRef.current = false;
         }
       }, 500);
     };

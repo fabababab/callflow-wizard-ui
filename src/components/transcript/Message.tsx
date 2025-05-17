@@ -58,15 +58,15 @@ const Message: React.FC<MessageProps> = ({
   };
   
   // Determine if we should show response options for this message
-  // For agent messages, we only show response options if customer has made a selection
+  // We only show response options for agent messages
   const shouldShowResponseOptions = () => {
-    // For customer messages, always show response options
+    // For customer messages, never show response options
     if (message.sender === 'customer') {
-      return hasResponseOptions;
+      return false;
     }
     
-    // For agent messages, only show if there's a selected response
-    return hasResponseOptions && selectedResponse !== null;
+    // For agent messages, always show response options if they exist
+    return hasResponseOptions && isAgentMode;
   };
 
   return (
@@ -96,8 +96,8 @@ const Message: React.FC<MessageProps> = ({
             onVerifySystemCheck={onVerifySystemCheck}
           />
           
-          {/* Display response options - now conditionally based on shouldShowResponseOptions */}
-          {shouldShowResponseOptions() && isAgentMode && message.responseOptions && onSelectResponse && (
+          {/* Display response options - only for agent messages */}
+          {shouldShowResponseOptions() && message.responseOptions && onSelectResponse && (
             <MessageResponseOptions 
               responseOptions={message.responseOptions} 
               onSelectResponse={onSelectResponse}

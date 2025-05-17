@@ -25,17 +25,20 @@ export function useVerificationEvents({
   // Add event listeners for verification completion events
   useEffect(() => {
     const handleVerificationComplete = (event: CustomEvent) => {
-      // Generate a unique ID for this verification event based on state
-      const eventId = `${event.type}-${event.detail?.moduleId || 'inline'}-${stateMachine.currentState}`;
+      // Generate a unique ID for this verification event based on state and timestamp
+      const timestamp = Date.now();
+      const eventId = `${event.type}-${event.detail?.moduleId || 'inline'}-${stateMachine.currentState}-${timestamp}`;
       
-      // Skip if we've already processed this verification event
-      if (processedVerificationEventsRef.current.has(eventId) || verificationInProgressRef.current) {
+      // Skip if we've already processed this verification event or any verification is in progress
+      if (processedVerificationEventsRef.current.has(`${event.type}-${event.detail?.moduleId || 'inline'}-${stateMachine.currentState}`) || 
+          verificationInProgressRef.current) {
         console.log("Skipping duplicate verification event:", eventId);
         return;
       }
       
       console.log("Verification complete event detected:", event.detail);
-      processedVerificationEventsRef.current.add(eventId);
+      // Track this event with the state but without timestamp to prevent future duplicates
+      processedVerificationEventsRef.current.add(`${event.type}-${event.detail?.moduleId || 'inline'}-${stateMachine.currentState}`);
       verificationInProgressRef.current = true;
       
       // Only proceed if verification was successful
@@ -73,15 +76,22 @@ export function useVerificationEvents({
       }, 500);
     };
 
-    // Add event listeners for all verification events
-    window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
-    window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
-    window.addEventListener('module-complete', (e: Event) => {
+    // Add event listeners for verification events - using a specific handler for each event type
+    const verificationCompleteHandler = (e: Event) => handleVerificationComplete(e as CustomEvent);
+    const verificationSuccessfulHandler = (e: Event) => handleVerificationComplete(e as CustomEvent);
+    
+    window.addEventListener('verification-complete', verificationCompleteHandler);
+    window.addEventListener('verification-successful', verificationSuccessfulHandler);
+    
+    // Handle module complete events that are verification types
+    const moduleCompleteHandler = (e: Event) => {
       const event = e as CustomEvent;
       if (event.detail?.moduleType === 'VERIFICATION' && event.detail?.result?.verified) {
-        handleVerificationComplete(event as CustomEvent);
+        handleVerificationComplete(event);
       }
-    });
+    };
+    
+    window.addEventListener('module-complete', moduleCompleteHandler);
     
     // In verify_identity state without module, automatically progress after a short delay
     if (stateMachine.currentState === 'verify_identity' && 
@@ -98,14 +108,9 @@ export function useVerificationEvents({
     
     // Cleanup
     return () => {
-      window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
-      window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
-      window.removeEventListener('module-complete', (e: Event) => {
-        const event = e as CustomEvent;
-        if (event.detail?.moduleType === 'VERIFICATION' && event.detail?.result?.verified) {
-          handleVerificationComplete(event as CustomEvent);
-        }
-      });
+      window.removeEventListener('verification-complete', verificationCompleteHandler);
+      window.removeEventListener('verification-successful', verificationSuccessfulHandler);
+      window.removeEventListener('module-complete', moduleCompleteHandler);
     };
   }, [messageHandling, stateMachine.stateData, stateMachine.currentState, handleSelectResponse]);
 
