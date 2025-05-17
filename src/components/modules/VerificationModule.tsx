@@ -72,17 +72,27 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     try {
       // Create and dispatch the verification-complete event
       const event = new CustomEvent('verification-complete', {
-        detail: { success: isValid, moduleId: id }
+        detail: { 
+          success: isValid, 
+          moduleId: id,
+          autoTransition: true, // Add flag to indicate this should auto-transition
+          triggerState: 'customer_issue' // Explicitly specify target state
+        }
       });
       window.dispatchEvent(event);
       
       // Also dispatch a backup event for redundancy
       const backupEvent = new CustomEvent('verification-successful', {
-        detail: { success: isValid, moduleId: id }
+        detail: { 
+          success: isValid, 
+          moduleId: id,
+          autoTransition: true, // Add flag to indicate this should auto-transition
+          triggerState: 'customer_issue' // Explicitly specify target state
+        }
       });
       window.dispatchEvent(backupEvent);
       
-      console.log("Verification events dispatched successfully");
+      console.log("Verification events dispatched successfully with autoTransition flag");
       return true;
     } catch (error) {
       console.error("Failed to dispatch verification event:", error);

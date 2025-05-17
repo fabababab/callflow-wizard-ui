@@ -46,8 +46,34 @@ export function useVerificationEvents({
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
         
-        // For any verification event on verify_identity state, auto-select response
-        if (stateMachine.currentState === 'verify_identity') {
+        // Check if this is a direct transition request (from Valid button click)
+        const shouldAutoTransition = event.detail?.autoTransition === true;
+        const targetState = event.detail?.triggerState;
+        
+        if (shouldAutoTransition && targetState === 'customer_issue') {
+          console.log("Direct transition to customer_issue state requested");
+          
+          // Get available responses for the current state
+          const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+          console.log("Available responses:", responseOptions);
+          
+          // If there are response options, automatically pick the first one
+          if (responseOptions.length > 0) {
+            const responseToSelect = responseOptions[0];
+            console.log("Auto-selecting response after verification:", responseToSelect);
+            
+            // Add a slightly longer delay to make the flow feel more natural
+            // and ensure the message is visible first
+            setTimeout(() => {
+              console.log("Executing direct state transition to customer_issue");
+              handleSelectResponse(responseToSelect);
+            }, 800); // Delay for UX flow
+          } else {
+            console.warn("No response options available for state transition");
+          }
+        }
+        // Standard logic for verify_identity state when not direct transition
+        else if (stateMachine.currentState === 'verify_identity') {
           console.log("In verify_identity state, will auto-select response");
           
           // Get available responses for the current state

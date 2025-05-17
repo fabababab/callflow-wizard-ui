@@ -67,17 +67,27 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     try {
       // Create and dispatch multiple events for redundancy
       const verificationEvent = new CustomEvent('verification-complete', {
-        detail: { success: success, moduleId: 'inline-chat-verification' }
+        detail: { 
+          success: success, 
+          moduleId: 'inline-chat-verification',
+          autoTransition: true,
+          triggerState: 'customer_issue'
+        }
       });
       window.dispatchEvent(verificationEvent);
       
       // Send a second event type for additional reliability
       const backupEvent = new CustomEvent('verification-successful', {
-        detail: { success: success, moduleId: 'inline-chat-verification' }
+        detail: { 
+          success: success, 
+          moduleId: 'inline-chat-verification',
+          autoTransition: true,
+          triggerState: 'customer_issue'
+        }
       });
       window.dispatchEvent(backupEvent);
       
-      console.log("Inline verification events dispatched successfully");
+      console.log("Inline verification events dispatched successfully with autoTransition flag");
       return true;
     } catch (error) {
       console.error("Failed to dispatch verification event:", error);
