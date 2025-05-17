@@ -38,6 +38,13 @@ export function useVerificationEvents({
       processedVerificationEventsRef.current.add(eventId);
       verificationInProgressRef.current = true;
       
+      // Only proceed if verification was successful
+      if (!event.detail?.success) {
+        console.log("Verification was not successful, not proceeding with state transition");
+        verificationInProgressRef.current = false;
+        return;
+      }
+      
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
         // System message about verification - only show once per state

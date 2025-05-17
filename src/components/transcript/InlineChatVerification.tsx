@@ -4,7 +4,7 @@ import { FormValues } from '../identity-validation/FormFields';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle, Loader, ShieldCheck, AlertCircle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface InlineChatVerificationProps {
   onVerify: (verified: boolean, data?: FormValues) => void;
@@ -40,17 +40,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     }
   }, [isVerified]);
   
-  // Auto-verify on mount
-  useEffect(() => {
-    if (!localVerified && !isVerifying && !isProcessingRef.current) {
-      // Add a slight delay to make the verification process visible
-      const timeout = setTimeout(() => {
-        handleVerifyClick();
-      }, 500);
-      return () => clearTimeout(timeout);
-    }
-  }, [localVerified, isVerifying]);
-
   // Clear timeout on unmount
   useEffect(() => {
     return () => {
@@ -65,7 +54,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     if (isProcessingRef.current || isValidating) return;
     
     isProcessingRef.current = true;
-    console.log("Verify button clicked or auto-triggered");
+    console.log("Verify button clicked");
     setIsValidating(true);
     
     // Use a delay to show the verification process
@@ -78,16 +67,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       
       // Always succeed with verification
       onVerify(true, defaultValues);
-      
-      // Toast notifications commented out for now - will be re-integrated later
-      // if (!hasShownToastRef.current) {
-      //   toast({
-      //     title: "Identity Verified",
-      //     description: "Customer identity has been automatically verified",
-      //     duration: 2000
-      //   });
-      //   hasShownToastRef.current = true;
-      // }
       
       // Dispatch a custom event to trigger state transition after verification - only once
       if (!hasDispatchedEventRef.current) {
@@ -103,6 +82,24 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
         isProcessingRef.current = false;
       }, 1000);
     }, 1500);
+  };
+  
+  const handleCancelClick = () => {
+    if (isProcessingRef.current) return;
+    
+    // If the verification process is canceled, notify with failure
+    console.log("Verification canceled");
+    setVerificationFailed(true);
+    onVerify(false);
+    
+    // Dispatch event with failed verification
+    if (!hasDispatchedEventRef.current) {
+      const event = new CustomEvent('verification-complete', {
+        detail: { success: false }
+      });
+      window.dispatchEvent(event);
+      hasDispatchedEventRef.current = true;
+    }
   };
   
   // If already verified, show success state
@@ -170,9 +167,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
               variant="outline" 
               size="sm"
               className="text-xs h-7 px-2 py-0 bg-white/80 hover:bg-white border-amber-200 text-amber-800"
-              onClick={() => {
-                if (!isProcessingRef.current) onVerify(false);
-              }}
+              onClick={handleCancelClick}
             >
               Cancel
             </Button>
@@ -183,7 +178,7 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
               onClick={handleVerifyClick}
               disabled={isProcessingRef.current || isValidating}
             >
-              Verify
+              Valid
             </Button>
           </div>
         </>

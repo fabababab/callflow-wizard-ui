@@ -1,9 +1,9 @@
 
 import { ModuleConfig, ModuleType } from '@/types/modules';
-import { ToastAction } from '@/components/ui/toast';
+import { type ToastActionElement } from '@/components/ui/toast';
 
 export interface ToastUtility {
-  toast: (props: { title: string; description?: string; duration?: number; action?: ToastAction }) => void;
+  toast: (props: { title: string; description?: string; duration?: number; action?: ToastActionElement }) => void;
 }
 
 export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) => {
