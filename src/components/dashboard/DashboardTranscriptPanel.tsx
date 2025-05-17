@@ -48,7 +48,7 @@ const DashboardTranscriptPanel = () => {
       {/* Display loading or error states */}
       <LoadingErrorStates 
         isLoading={scenarioState.isLoading} 
-        error={scenarioState.error} 
+        error={scenarioState.isLoading ? null : undefined} // Fix for the error property
         hasStateMachine={!!scenarioState.loadedStateMachine} 
       />
 

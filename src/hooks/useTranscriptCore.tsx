@@ -1,3 +1,4 @@
+
 // Core transcript hook functionality that composes other hooks
 import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -117,10 +118,16 @@ export function useTranscriptCore(activeScenario: ScenarioType, props?: Transcri
     debounceTimerRef: conversationState.debounceTimerRef
   });
   
-  // Use message updates hook - make sure we pass the correct type for lastMessageUpdate
+  // Fix type mismatch by creating a wrapper function
+  const setLastTranscriptUpdateWrapper = useCallback((date: string | Date) => {
+    const newDate = typeof date === 'string' ? new Date(date) : date;
+    conversationState.setLastTranscriptUpdate(newDate);
+  }, [conversationState]);
+  
+  // Use message updates hook with our wrapper function
   useMessageUpdates({
     lastMessageUpdate: messageHandling.lastMessageUpdate,
-    setLastTranscriptUpdate: conversationState.setLastTranscriptUpdate
+    setLastTranscriptUpdate: setLastTranscriptUpdateWrapper
   });
   
   // Use scenario change effect hook
