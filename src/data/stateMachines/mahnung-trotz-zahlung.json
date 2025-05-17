@@ -71,21 +71,45 @@
           "data": {
             "isInline": true,
             "fields": [
-              {"label": "Rechnungsnummer", "value": "RN-12345", "system": "RN-12345", "isRequired": true},
-              {"label": "Zahlungsdatum", "value": "10. Mai 2025", "system": "2025-05-10", "isRequired": true},
-              {"label": "Betrag", "value": "CHF 378,50", "system": "378.50", "isRequired": true},
-              {"label": "Zahlung im System", "value": "Ja, verbucht am 11. Mai", "system": "Verbucht", "isRequired": true}
+              {
+                "label": "Rechnungsnummer",
+                "value": "RN-12345",
+                "system": "RN-12345",
+                "isRequired": true
+              },
+              {
+                "label": "Zahlungsdatum",
+                "value": "10. Mai 2025",
+                "system": "2025-05-10",
+                "isRequired": true
+              },
+              {
+                "label": "Betrag",
+                "value": "CHF 378,50",
+                "system": "378.50",
+                "isRequired": true
+              },
+              {
+                "label": "Zahlung im System",
+                "value": "Ja, verbucht am 11. Mai",
+                "system": "Verbucht",
+                "isRequired": true
+              }
             ],
             "title": "Zahlungsdetails"
           }
         },
         "responseOptions": [
-          "Ich habe Ihre Zahlung in unserem System gefunden. Sie wurde tatsächlich am 11. Mai verbucht. Das Problem ist, dass die Zahlungserinnerung bereits am 9. Mai generiert wurde, bevor Ihre Zahlung eingegangen ist."
+          "Die Zahlung ist noch offen. Es besteht ein offener Betrag von CHF 378,50.",
+          "Ich habe Ihre Zahlung in unserem System gefunden. Sie wurde tatsächlich am 11. Mai verbucht. Das Problem ist, dass die Zahlungserinnerung bereits am 9. Mai generiert wurde, bevor Ihre Zahlung eingegangen ist.",
+          "Es scheint, dass Sie doppelt bezahlt haben. Wir werden eine Rückerstattung einleiten."
         ]
       },
       "on": {
+        "Die Zahlung ist noch offen. Es besteht ein offener Betrag von CHF 378,50.": "customer_confused",
         "Ich habe Ihre Zahlung in unserem System gefunden. Sie wurde tatsächlich am 11. Mai verbucht. Das Problem ist, dass die Zahlungserinnerung bereits am 9. Mai generiert wurde, bevor Ihre Zahlung eingegangen ist.": "payment_found",
-        "DEFAULT": "payment_found"
+        "Es scheint, dass Sie doppelt bezahlt haben. Wir werden eine Rückerstattung einleiten.": "customer_confused",
+        "DEFAULT": "customer_confused"
       }
     },
     "payment_found": {
@@ -151,6 +175,19 @@
           }
         }
       }
+    },
+    "customer_confused": {
+      "meta": {
+        "customerText": "Das kann nicht stimmen – ich habe die Zahlung doch genau einmal gemacht. Sind Sie sicher?",
+        "responseOptions": [
+          "Entschuldigen Sie bitte, ich prüfe das nochmals. Einen Moment."
+        ]
+      },
+      "on": {
+        "Entschuldigen Sie bitte, ich prüfe das nochmals. Einen Moment.": "system_check",
+        "DEFAULT": "system_check"
+      }
     }
-  }
+  },
+  "status": "PRODUCTION"
 }
