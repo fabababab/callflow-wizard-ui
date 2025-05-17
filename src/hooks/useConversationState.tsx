@@ -11,7 +11,6 @@ export function useConversationState() {
   const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date | string>(new Date());
   const [manualReset, setManualReset] = useState(false);
   const [pendingVerifications, setPendingVerifications] = useState<string[]>([]);
-  const [usedResponseOptions, setUsedResponseOptions] = useState<Set<string>>(new Set());
   
   // Ref for debouncing
   const debounceTimerRef = useRef<number | null>(null);
@@ -43,21 +42,6 @@ export function useConversationState() {
     setPendingVerifications(prev => prev.filter(id => id !== stateId));
   }, []);
 
-  // Track used response options to prevent duplicate clicks
-  const markResponseOptionAsUsed = useCallback((optionText: string) => {
-    console.log(`Marking response option as used: "${optionText}"`);
-    setUsedResponseOptions(prev => {
-      const newSet = new Set(prev);
-      newSet.add(optionText);
-      return newSet;
-    });
-  }, []);
-
-  // Check if a response option has been used
-  const isResponseOptionUsed = useCallback((optionText: string): boolean => {
-    return usedResponseOptions.has(optionText);
-  }, [usedResponseOptions]);
-
   // Reset conversation state - but only reset the tracking, not erase messages
   const resetConversationState = useCallback((shouldResetMessages = false) => {
     console.log("Resetting conversation state tracking. Reset messages:", shouldResetMessages);
@@ -69,7 +53,6 @@ export function useConversationState() {
     setLastTranscriptUpdate(new Date());
     setManualReset(shouldResetMessages);
     setPendingVerifications([]);
-    setUsedResponseOptions(new Set());
     
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -86,7 +69,6 @@ export function useConversationState() {
     lastTranscriptUpdate,
     manualReset,
     pendingVerifications: [], // Always return empty array to indicate no pending verifications
-    usedResponseOptions,
     debounceTimerRef,
     hasProcessedState,
     markStateAsProcessed,
@@ -98,8 +80,6 @@ export function useConversationState() {
     setManualReset,
     addPendingVerification,
     removePendingVerification,
-    markResponseOptionAsUsed,
-    isResponseOptionUsed,
     resetConversationState
   };
 }

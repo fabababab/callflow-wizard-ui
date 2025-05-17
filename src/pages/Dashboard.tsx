@@ -539,16 +539,6 @@ const Dashboard = () => {
     </Card>
   );
 
-  // Create mock jsonVisualization object for TranscriptPanel
-  const mockJsonVisualization = {
-    toggleJsonDialog: handleViewJson,
-    toggleJsonView: toggleComparisonView,
-    showJsonView: showComparisonView,
-    jsonComponent: null,
-    jsonDialog: null,
-    isLoadingJson: isLoadingJson
-  };
-
   return (
     <SidebarProvider>
       <div className="flex flex-col h-screen w-full">
@@ -763,10 +753,7 @@ const Dashboard = () => {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="p-0">
-                        <TranscriptPanel 
-                          activeScenario={activeScenario} 
-                          jsonVisualization={mockJsonVisualization} 
-                        />
+                        <TranscriptPanel activeScenario={activeScenario} />
                       </CardContent>
                     </Card>
                   </div>

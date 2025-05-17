@@ -36,16 +36,6 @@ const Index = () => {
   // State for right sidebar collapse
   const [rightSidebarOpen, setRightSidebarOpen] = React.useState(true);
   
-  // Mock jsonVisualization properties for TranscriptPanel
-  const mockJsonVisualization = {
-    toggleJsonDialog: () => {},
-    toggleJsonView: () => {},
-    showJsonView: false,
-    jsonComponent: null,
-    jsonDialog: null,
-    isLoadingJson: false
-  };
-  
   // Check for scenario in state from navigation
   React.useEffect(() => {
     if (location.state?.scenario) {
@@ -166,7 +156,7 @@ const Index = () => {
             <div className="grid grid-cols-12 gap-6 h-full">
               {/* Main content area - Call transcript */}
               <div className={`col-span-12 ${rightSidebarOpen ? 'lg:col-span-7' : 'lg:col-span-11'} h-full transition-all duration-300`}>
-                <TranscriptPanel activeScenario={activeScenario} jsonVisualization={mockJsonVisualization} />
+                <TranscriptPanel activeScenario={activeScenario} />
               </div>
               
               {/* Right sidebar with tools and info */}

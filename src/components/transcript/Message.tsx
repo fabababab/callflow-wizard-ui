@@ -1,6 +1,6 @@
 
 import React, { useCallback, memo } from 'react';
-import type { MessageSender, Message as MessageInterface, Suggestion } from './MessageTypes';
+import type { MessageSender, Message as MessageInterface } from './MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
 import MessageHeader from './MessageHeader';
 import MessageContent from './MessageContent';
@@ -17,8 +17,6 @@ interface MessageProps {
   onVerifySystemCheck?: (messageId: string) => void;
   isAgentMode?: boolean;
   onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
-  usedResponseOptions?: Set<string>;
-  isFromProcessedState?: boolean;
 }
 
 const Message: React.FC<MessageProps> = ({ 
@@ -29,9 +27,7 @@ const Message: React.FC<MessageProps> = ({
   onValidateSensitiveData,
   onVerifySystemCheck,
   isAgentMode = true,
-  onModuleComplete,
-  usedResponseOptions = new Set(),
-  isFromProcessedState = false
+  onModuleComplete
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
@@ -85,24 +81,19 @@ const Message: React.FC<MessageProps> = ({
             onVerifySystemCheck={onVerifySystemCheck}
           />
           
-          {/* Display response options with used options tracking */}
+          {/* Display response options */}
           {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
             <MessageResponseOptions 
               responseOptions={message.responseOptions} 
               onSelectResponse={onSelectResponse}
-              usedOptions={usedResponseOptions}
-              isFromProcessedState={isFromProcessedState}
             />
           )}
           
           {/* Display AI suggestions */}
-          {hasSuggestions && isAgentMode && message.suggestions && (
+          {hasSuggestions && isAgentMode && (
             <div className="mt-3 pt-2 border-t border-gray-300/20">
               <AISuggestions 
-                suggestions={message.suggestions.map(s => ({
-                  ...s,
-                  type: s.type || 'info' // Ensure each suggestion has a type
-                }))} 
+                suggestions={message.suggestions || []} 
                 messageId={message.id}
                 onAccept={onAcceptSuggestion}
                 onReject={onRejectSuggestion}
