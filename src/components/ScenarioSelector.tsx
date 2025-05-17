@@ -110,7 +110,7 @@ const ScenarioSelector = ({
   onSelectScenario,
   disabled = false
 }: ScenarioSelectorProps) => {
-  // Update the scenarios array to include just the three specified scenarios
+  // Update the scenarios array to include only the three specified scenarios
   const scenarios: ScenarioType[] = [
     'studiumabschlussCase',
     'leistungsabdeckungPhysio',

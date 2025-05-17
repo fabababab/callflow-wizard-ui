@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Settings, User, CreditCard, Shield, FileText, Phone, X } from 'lucide-react';
+import { Settings, User, CreditCard, Shield, FileText, Phone, X, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';

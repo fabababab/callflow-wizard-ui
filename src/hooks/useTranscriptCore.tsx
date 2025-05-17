@@ -1,3 +1,4 @@
+
 // Core transcript hook functionality that composes other hooks
 import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -21,7 +22,7 @@ import { useMessageUpdates } from '@/hooks/useMessageUpdates';
 import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
-  const toastHelper = useToast();
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the message handling functionality
@@ -56,15 +57,18 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     stateMachine,
     messageHandling,
     conversationState,
-    toast: toastHelper // Pass the entire toast helper object
+    toast
   });
 
   // Use state change processor
-  const stateChangeProcessor = useStateChangeProcessor(
+  const stateChangeProcessor = useStateChangeProcessor({
+    stateMachine,
     messageHandling,
     conversationState,
-    activeScenario
-  );
+    transitionExtractor,
+    callState,
+    toast
+  });
 
   // Use conversation initializer
   const conversationInitializer = useConversationInitializer({
@@ -74,7 +78,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     messageHandling,
     callState,
     setHasInitializedConversation: () => {}, // Will be replaced by useScenarioChangeEffect
-    toast: toastHelper, // Pass the entire toast helper object
+    toast,
     showNachbearbeitungSummary
   });
 

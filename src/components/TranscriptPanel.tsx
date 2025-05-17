@@ -54,24 +54,14 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
     generateSummary(activeScenario);
   }, [activeScenario, generateSummary]);
 
-  // Debug message count
-  useEffect(() => {
-    console.log(`Message count: ${transcript.messages.length}`);
-    
-    // Log the first few messages for debugging
-    if (transcript.messages.length > 0) {
-      console.log('First messages:', transcript.messages.slice(0, 3));
-    }
-  }, [transcript.messages]);
-
-  // Force immediate scroll to bottom when messages update
+  // Scroll to bottom whenever messages are updated
   useEffect(() => {
     if (transcript.messagesEndRef.current) {
       transcript.messagesEndRef.current.scrollIntoView({
         behavior: 'smooth'
       });
     }
-  }, [transcript.messages, transcript.lastTranscriptUpdate]);
+  }, [transcript.lastTranscriptUpdate]);
   
   // Handle module completion
   const handleModuleComplete = (result: Record<string, unknown>) => {
@@ -81,7 +71,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
 
   // Handle inline module completion
   const handleInlineModuleComplete = (messageId: string, moduleId: string, result: Record<string, unknown>) => {
-    console.log('Inline module completed:', { messageId, moduleId, result });
     transcript.handleInlineModuleComplete(messageId, moduleId, result);
   };
   
@@ -108,6 +97,7 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
       {/* Transcript Area */}
       <div 
         className="flex-1 overflow-y-auto p-4 bg-gray-50/50"
+        ref={transcript.messagesEndRef}
       >
         {/* Chat messages */}
         <ChatMessages
@@ -127,9 +117,6 @@ const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           onModuleComplete={handleModuleComplete}
           completeModule={transcript.completeModule}
         />
-        
-        {/* Invisible element for scroll reference */}
-        <div ref={transcript.messagesEndRef} />
       </div>
       
       {/* JSON Visualization Dialog with Jump to State functionality */}

@@ -29,16 +29,16 @@ export function useMessageHandling() {
   /**
    * Clear all messages from the transcript
    */
-  const clearMessages = useCallback(() => {
+  const clearMessages = () => {
     console.log("Clearing all messages");
     setMessages([]);
     setLastMessageUpdate(new Date());
-  }, []);
+  };
 
   /**
    * Handle inline module completion
    */
-  const handleInlineModuleComplete = useCallback((messageId: string, moduleId: string, result: any) => {
+  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: any) => {
     console.log(`Inline module ${moduleId} completed for message ${messageId} with result:`, result);
     
     setMessages(prevMessages => {
@@ -66,13 +66,13 @@ export function useMessageHandling() {
     });
     
     setLastMessageUpdate(new Date());
-  }, []);
+  };
 
   // Override the original handleVerifySystemCheck to ensure verificationBlocking is never true
-  const enhancedHandleVerifySystemCheck = useCallback((messageId: string) => {
+  const enhancedHandleVerifySystemCheck = (messageId: string) => {
     console.log(`Enhanced verification check for message ${messageId} - blocking disabled`);
     handleVerifySystemCheck(messageId);
-  }, [handleVerifySystemCheck]);
+  };
 
   return {
     messages,

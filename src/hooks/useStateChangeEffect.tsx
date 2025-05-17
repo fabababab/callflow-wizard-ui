@@ -1,14 +1,14 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, MutableRefObject } from 'react';
 import { StateMachineState } from '@/utils/stateMachineLoader';
 
 interface StateChangeEffectProps {
   stateData: StateMachineState | null;
   lastStateChange: Date | null;
   callActive: boolean;
-  currentState: string | null;
-  processStateChange: (stateData: StateMachineState | null, currentState: string) => void;
-  debounceTimerRef: React.MutableRefObject<number | null>;
+  currentState: string;
+  processStateChange: () => void;
+  debounceTimerRef: MutableRefObject<number | null>;
 }
 
 export function useStateChangeEffect({
@@ -21,50 +21,49 @@ export function useStateChangeEffect({
 }: StateChangeEffectProps) {
   const [debugLastStateChange, setDebugLastStateChange] = useState<string>('');
 
-  // Effect for processing state changes
+  // Effect to track the last state change for debugging
   useEffect(() => {
-    if (
-      lastStateChange && 
-      callActive && 
-      stateData && 
-      currentState
-    ) {
-      console.log(`State change effect triggered. Current state: ${currentState}`);
-      console.log(`Call active: ${callActive}`);
-      console.log(`State data exists: ${!!stateData}`);
+    if (lastStateChange) {
+      setDebugLastStateChange(`State changed to ${currentState} at ${lastStateChange.toISOString()}`);
+    }
+  }, [lastStateChange, currentState]);
 
-      if (debounceTimerRef.current) {
-        window.clearTimeout(debounceTimerRef.current);
-      }
-
-      // Use a small delay to prevent multiple updates in the same cycle
-      debounceTimerRef.current = window.setTimeout(() => {
-        console.log(`Processing state change for state: ${currentState}`);
-        processStateChange(stateData, currentState);
-        
-        // Set debug info
-        setDebugLastStateChange(`State changed to ${currentState} at ${lastStateChange.toISOString()}`);
-      }, 50);
+  // Effect that processes state changes
+  useEffect(() => {
+    console.log("State change effect triggered. Current state:", currentState);
+    console.log("Call active:", callActive);
+    console.log("State data exists:", !!stateData);
+    
+    if (callActive && currentState && stateData) {
+      // Process state change
+      console.log(`Processing state change for state: ${currentState}`);
       
-      return () => {
-        if (debounceTimerRef.current) {
-          window.clearTimeout(debounceTimerRef.current);
-          debounceTimerRef.current = null;
-        }
-      };
+      // Check if the state requires verification
+      const requiresVerification = stateData.requiresVerification === true;
+      if (requiresVerification) {
+        console.log(`State ${currentState} requires verification before proceeding`);
+      }
+      
+      processStateChange();
     }
-  }, [lastStateChange, callActive, stateData, currentState, processStateChange, debounceTimerRef]);
+    
+    return () => {
+      // Clear any pending timers when unmounting or when dependencies change
+      if (debounceTimerRef.current) {
+        console.log("Clearing debounce timer on cleanup");
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
+  }, [callActive, currentState, stateData, processStateChange, debounceTimerRef]);
 
-  // Force state change processing if needed (for debugging)
-  const forceProcessStateChange = () => {
-    console.log(`Forcing state change processing...`);
-    if (stateData && currentState) {
-      processStateChange(stateData, currentState);
+  // Also trigger state change when lastStateChange updates (e.g., after a transition)
+  useEffect(() => {
+    if (lastStateChange && callActive && currentState && stateData) {
+      console.log(`State change detected at ${lastStateChange.toISOString()}`);
+      processStateChange();
     }
-  };
+  }, [lastStateChange, callActive, currentState, stateData, processStateChange]);
 
-  return {
-    debugLastStateChange,
-    forceProcessStateChange
-  };
+  return { debugLastStateChange };
 }

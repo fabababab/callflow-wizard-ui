@@ -1,3 +1,4 @@
+
 import { ScenarioType } from '@/components/ScenarioSelector';
 import { stateMachines, StateMachineStatus } from '@/data/stateMachines';
 import { SensitiveField } from '@/data/scenarioData';
@@ -18,7 +19,6 @@ export interface StateMachineState {
     customerText?: string;
     sensitiveFields?: SensitiveField[]; 
     module?: ModuleConfig;
-    preventAutoContinue?: boolean; // New flag to control auto-continuation
   };
   on?: Record<string, string>;
   nextState?: string;
@@ -34,7 +34,6 @@ export interface StateMachine {
   initialState?: string;
   initial?: string;
   status?: StateMachineStatus;
-  preventAutoContinue?: boolean; // Global setting to prevent auto-continuation
   states: {
     [key: string]: StateMachineState;
   };
@@ -91,11 +90,6 @@ export async function loadStateMachine(scenario: ScenarioType): Promise<StateMac
     // Add status if not already present
     if (!machine.status) {
       machine.status = getStateMachineStatus(scenario);
-    }
-    
-    // Set preventAutoContinue flag for leistungsabdeckung-physio scenario
-    if (scenario === 'leistungsabdeckungPhysio' && !machine.hasOwnProperty('preventAutoContinue')) {
-      machine.preventAutoContinue = true;
     }
     
     return machine;
