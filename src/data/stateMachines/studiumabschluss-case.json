@@ -160,13 +160,13 @@
           }
         },
         "responseOptions": [
-          "Basierend auf Ihrer Auswahl des Telmed-Modells sehen Sie hier die möglichen Franchise-Optionen. Je höher die Franchise, desto niedriger die monatliche Prämie.",
+          "Ihre Franchise habe ich für das nächste Jahr auf 1000.- angepasst. Kann ich Ihnen mit etwas anderem behilflich sein?",
           "Hier sind die Franchise-Optionen für das Telmed-Modell. Mit einer höheren Franchise können Sie Ihre monatliche Prämie weiter reduzieren.",
           "Da Sie sich für das Telmed-Modell entschieden haben, zeige ich Ihnen nun die passenden Franchise-Optionen. Was würden Sie bevorzugen?"
         ]
       },
       "on": {
-        "Basierend auf Ihrer Auswahl des Telmed-Modells sehen Sie hier die möglichen Franchise-Optionen. Je höher die Franchise, desto niedriger die monatliche Prämie.": "conclusion",
+        "Ihre Franchise habe ich für das nächste Jahr auf 1000.- angepasst. Kann ich Ihnen mit etwas anderem behilflich sein?": "conclusion",
         "Hier sind die Franchise-Optionen für das Telmed-Modell. Mit einer höheren Franchise können Sie Ihre monatliche Prämie weiter reduzieren.": "conclusion",
         "Da Sie sich für das Telmed-Modell entschieden haben, zeige ich Ihnen nun die passenden Franchise-Optionen. Was würden Sie bevorzugen?": "conclusion",
         "DEFAULT": "conclusion"
