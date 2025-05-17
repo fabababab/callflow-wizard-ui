@@ -52,9 +52,18 @@ export function useModuleEvents({
             console.log("Selecting response for Jana Brunner:", targetResponse);
             setTimeout(() => {
               handleSelectResponse(targetResponse);
-            }, 1000);
+            }, 500);
           } else {
             console.warn("Could not find response option for Jana Brunner");
+            // Force transition to coverage_check if no matching response option found
+            setTimeout(() => {
+              console.log("Forcing transition to coverage_check");
+              // Create and dispatch a custom event to force state transition
+              const forceTransitionEvent = new CustomEvent('force-state-transition', {
+                detail: { targetState: 'coverage_check' }
+              });
+              window.dispatchEvent(forceTransitionEvent);
+            }, 800);
           }
         } else {
           // For other options, go to customer_confused
@@ -67,7 +76,7 @@ export function useModuleEvents({
             console.log("Selecting response for other therapist:", targetResponse);
             setTimeout(() => {
               handleSelectResponse(targetResponse);
-            }, 1000);
+            }, 500);
           } else {
             console.warn("Could not find response option for other therapist");
           }
@@ -130,7 +139,7 @@ export function useModuleEvents({
           // Add a delay to make the flow feel more natural
           setTimeout(() => {
             handleSelectResponse(responseOptions[0]);
-          }, 2000);
+          }, 1500);
         }
       }, 500);
     };

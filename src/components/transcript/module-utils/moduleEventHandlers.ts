@@ -28,6 +28,7 @@ export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) =>
     // If user selected Jana Brunner, go to coverage_check
     if (selectedOptionId === 'jana_brunner') {
       targetState = 'coverage_check';
+      console.log("Jana Brunner selected - should transition to coverage_check state");
     }
     
     console.log(`Therapist selection module completed with selection: ${selectedOptionId}, transitioning to: ${targetState}`);
@@ -37,7 +38,9 @@ export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) =>
       detail: { 
         moduleId: moduleConfig.id,
         selectedOptionId,
-        targetState
+        targetState,
+        // Include the selected option for debugging
+        selectedOption: result?.selectedOption
       }
     });
     window.dispatchEvent(therapistEvent);
@@ -74,6 +77,18 @@ export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) =>
       }
     });
     window.dispatchEvent(infoEvent);
+    
+    // For the coverage module specifically
+    if (moduleConfig.id === 'coverage-info-module') {
+      console.log("Coverage info module completed");
+      setTimeout(() => {
+        // Create and dispatch a event for the coverage info module completion
+        const coverageEvent = new CustomEvent('coverage-info-complete', {
+          detail: { moduleId: moduleConfig.id }
+        });
+        window.dispatchEvent(coverageEvent);
+      }, 500);
+    }
   }
   
   // For nachbearbeitung modules

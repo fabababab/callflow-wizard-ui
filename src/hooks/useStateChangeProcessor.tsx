@@ -1,3 +1,4 @@
+
 // Hook for processing state changes
 import { useCallback } from 'react';
 import { detectSensitiveData } from '@/data/scenarioData';
@@ -63,6 +64,13 @@ export function useStateChangeProcessor({
       return;
     }
     
+    // Process coverage_check state immediately without debounce
+    if (stateMachine.currentState === 'coverage_check') {
+      console.log(`[${source}] Processing coverage_check state immediately without debounce`);
+      processStateChangeInternal();
+      return;
+    }
+    
     // Debounce the state processing to prevent rapid fire updates
     conversationState.debounceTimerRef.current = window.setTimeout(() => {
       processStateChangeInternal();
@@ -117,7 +125,8 @@ export function useStateChangeProcessor({
         }
       }
       
-      if (stateMachine.stateData.meta?.agentText && !conversationState.isUserAction) {
+      // Always process agentText if it exists, regardless of user action flag
+      if (stateMachine.stateData.meta?.agentText) {
         console.log(`[${source}] Adding agent message: ${stateMachine.stateData.meta.agentText}`);
         
         // Extract response options for next state if needed

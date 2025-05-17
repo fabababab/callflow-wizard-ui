@@ -68,6 +68,13 @@ export function usePhysioCoverageStateMachine() {
         console.log('Customer confused state reached - customer wanted Jana Brunner');
       } else if (currentState === 'coverage_check') {
         console.log('Coverage check state reached - therapist is covered');
+        // Ensure the message appears for the coverage_check state
+        // This is a debugging check to verify the message should be displayed
+        if (stateData.meta?.agentText) {
+          console.log('Agent message for coverage_check:', stateData.meta.agentText);
+        } else {
+          console.warn('No agent message found for coverage_check state');
+        }
       } else if (currentState === 'end_call') {
         toast({
           title: "Gespräch abgeschlossen",
@@ -85,11 +92,18 @@ export function usePhysioCoverageStateMachine() {
       
       if (event.detail?.moduleId === 'therapist-suggestion-module') {
         const selectedOptionId = event.detail?.selectedOptionId;
+        const targetState = event.detail?.targetState;
+        
         toast({
           title: "Therapeutin ausgewählt",
           description: `Option ${selectedOptionId} wurde ausgewählt.`,
           duration: 2000
         });
+        
+        // For Jana Brunner, we should go to coverage_check state
+        if (selectedOptionId === 'jana_brunner' && targetState === 'coverage_check') {
+          console.log("Jana Brunner selected, should transition to coverage_check");
+        }
       }
     };
     
