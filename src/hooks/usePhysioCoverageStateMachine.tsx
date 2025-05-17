@@ -84,6 +84,56 @@ export function usePhysioCoverageStateMachine() {
     }
   }, [currentState, stateData, lastStateChange, toast]);
 
+  // Add specific event listener for direct state transition force
+  useEffect(() => {
+    const handleForceStateTransition = (e: Event) => {
+      const event = e as CustomEvent;
+      if (event.detail?.targetState === 'coverage_check') {
+        console.log("Forcing transition to coverage_check state");
+        
+        // Access the coverage_check state data directly from state machine
+        const coverageCheckStateData = stateMachine?.states?.['coverage_check'];
+        
+        if (coverageCheckStateData) {
+          console.log("Found coverage_check state data:", coverageCheckStateData);
+          toast({
+            title: "Zustand geändert",
+            description: "Wechsel zum Zustand: Kostenübernahme-Prüfung",
+          });
+          
+          // Instead of directly modifying the state, use the proper state machine transition
+          // Find an available path to the coverage_check state
+          setTimeout(() => {
+            // Try to process selection with the response "Jana Brunner"
+            const success = processSelection("Jana Brunner");
+            
+            if (!success) {
+              console.warn("Could not transition to coverage_check using standard path");
+              
+              // Try the DEFAULT transition
+              const defaultSuccess = processSelection("DEFAULT");
+              if (!defaultSuccess) {
+                console.error("Could not force transition to coverage_check");
+              } else {
+                console.log("Successfully transitioned to coverage_check using DEFAULT path");
+              }
+            } else {
+              console.log("Successfully transitioned to coverage_check using 'Jana Brunner' path");
+            }
+          }, 100);
+        } else {
+          console.error("Could not find coverage_check state data in state machine");
+        }
+      }
+    };
+
+    window.addEventListener('force-state-transition', handleForceStateTransition as EventListener);
+    
+    return () => {
+      window.removeEventListener('force-state-transition', handleForceStateTransition as EventListener);
+    };
+  }, [stateMachine, toast, processSelection]);
+
   // Add event listener for therapist selection module completion
   useEffect(() => {
     const handleTherapistSelection = (e: Event) => {

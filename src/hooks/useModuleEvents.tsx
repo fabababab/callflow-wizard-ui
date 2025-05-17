@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useRef } from 'react';
 
 interface ModuleEventsProps {
@@ -42,7 +41,8 @@ export function useModuleEvents({
         
         if (selectedOptionId === 'jana_brunner') {
           message = "Jana Brunner wurde ausgewählt.";
-          // Route to coverage_check
+          
+          // For Jana Brunner, find the "Jana Brunner" response option
           const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
           const targetResponse = responseOptions.find((option: string) => 
             option === "Jana Brunner"
@@ -55,18 +55,9 @@ export function useModuleEvents({
             }, 500);
           } else {
             console.warn("Could not find response option for Jana Brunner");
-            // Force transition to coverage_check if no matching response option found
-            setTimeout(() => {
-              console.log("Forcing transition to coverage_check");
-              // Create and dispatch a custom event to force state transition
-              const forceTransitionEvent = new CustomEvent('force-state-transition', {
-                detail: { targetState: 'coverage_check' }
-              });
-              window.dispatchEvent(forceTransitionEvent);
-            }, 800);
           }
         } else {
-          // For other options, go to customer_confused
+          // For other therapists, find a non-Jana Brunner option
           const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
           const targetResponse = responseOptions.find((option: string) => 
             option !== "Jana Brunner"

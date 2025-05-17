@@ -1,4 +1,3 @@
-
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import { type ToastActionElement } from '@/components/ui/toast';
 
