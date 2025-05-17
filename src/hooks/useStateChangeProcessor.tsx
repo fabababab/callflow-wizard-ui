@@ -94,7 +94,8 @@ export function useStateChangeProcessor({
           stateMachine.stateData.meta.customerText, 
           sensitiveData, 
           responseOptions, 
-          stateMachine.stateData.requiresVerification // Pass verification flag
+          stateMachine.stateData.requiresVerification, // Pass verification flag
+          stateMachine.currentState // Pass current state ID
         );
         
         // Set flag that we're waiting for user to respond
@@ -132,7 +133,8 @@ export function useStateChangeProcessor({
           stateMachine.stateData.meta.agentText, 
           [], 
           effectiveResponseOptions.length > 0 ? effectiveResponseOptions : undefined,
-          stateMachine.stateData.requiresVerification // Pass verification flag
+          stateMachine.stateData.requiresVerification, // Pass verification flag
+          stateMachine.currentState // Pass current state ID
         );
       }
       
@@ -152,7 +154,8 @@ export function useStateChangeProcessor({
         // For all modules, display them inline in the chat
         messageHandling.addInlineModuleMessage(
           moduleConfig.title || "Interactive Module", 
-          moduleConfig
+          moduleConfig,
+          stateMachine.currentState // Pass current state ID
         );
         
         // Show toast for module activation

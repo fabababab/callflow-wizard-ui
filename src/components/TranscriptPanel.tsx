@@ -1,141 +1,68 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import TranscriptHeader from './transcript/TranscriptHeader';
+import TranscriptFooter from './transcript/TranscriptFooter';
+import ChatMessages from './TestScenario/ChatMessages';
+import { ScenarioType } from './ScenarioSelector';
 import { useTranscript } from '@/hooks/useTranscript';
-import { ScenarioType } from '@/components/ScenarioSelector';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import ChatMessages from '@/components/TestScenario/ChatMessages';
-import { useConversationSummary } from '@/hooks/useConversationSummary';
-import { useTranscriptTimer } from '@/hooks/useTranscriptTimer';
-import { useScenarioManagement } from '@/hooks/useScenarioManagement';
-import TranscriptHeader from '@/components/transcript/TranscriptHeader';
-import JsonVisualizationDialog from '@/components/transcript/JsonVisualizationDialog';
-import ModuleDisplay from '@/components/transcript/ModuleDisplay';
-import { StateMachine } from '@/utils/stateMachineLoader';
-
-// Define type for selected state details
-interface SelectedStateDetails {
-  id: string;
-  data: Record<string, unknown>;
-}
-
-// Define type for JsonVisualization
-interface JsonVisualization {
-  handleViewJson: () => void;
-  isLoadingJson: boolean;
-  jsonDialogOpen: boolean;
-  setJsonDialogOpen: (open: boolean) => void;
-  dialogViewMode: "json" | "visualization" | "modules";
-  handleViewModeToggle: (mode: "json" | "visualization" | "modules") => void;
-  jsonContent: string;
-  loadedStateMachine: StateMachine | null;
-  selectedState: SelectedStateDetails | null;
-  handleStateSelection: (state: string) => void;
-  handleJumpToState: (stateId: string) => void;
-  handleSensitiveFieldClick: (field: any) => void;
-}
+import { useConversationState } from '@/hooks/useConversationState';
 
 interface TranscriptPanelProps {
   activeScenario: ScenarioType;
-  jsonVisualization?: JsonVisualization;
+  jsonVisualization: any;
 }
 
-const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
-  activeScenario,
-  jsonVisualization
-}) => {
-  // Use the transcript hook with the active scenario
+const TranscriptPanel: React.FC<TranscriptPanelProps> = ({ activeScenario, jsonVisualization }) => {
+  // Get conversation state for used responses
+  const conversationState = useConversationState();
+
+  // Get transcript functionality
   const transcript = useTranscript(activeScenario);
-  const { generateSummary } = useConversationSummary();
-  const elapsedTime = useTranscriptTimer(transcript.callActive);
-  const scenarioManagement = useScenarioManagement(activeScenario);
-  
-  // Update summary when scenario changes
-  useEffect(() => {
-    generateSummary(activeScenario);
-  }, [activeScenario, generateSummary]);
-
-  // Scroll to bottom whenever messages are updated
-  useEffect(() => {
-    if (transcript.messagesEndRef.current) {
-      transcript.messagesEndRef.current.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
-  }, [transcript.lastTranscriptUpdate]);
-  
-  // Handle module completion
-  const handleModuleComplete = (result: Record<string, unknown>) => {
-    console.log('Module completed with result:', result);
-    transcript.handleModuleComplete(result);
-  };
-
-  // Handle inline module completion
-  const handleInlineModuleComplete = (messageId: string, moduleId: string, result: Record<string, unknown>) => {
-    transcript.handleInlineModuleComplete(messageId, moduleId, result);
-  };
-  
-  if (!jsonVisualization) {
-    return null;
-  }
   
   return (
-    <div className="h-full flex flex-col bg-white relative">
-      {/* Header with call control */}
+    <div className="flex flex-col h-full bg-background border rounded-lg overflow-hidden">
       <TranscriptHeader 
         activeScenario={activeScenario}
-        currentState={transcript.currentState}
-        elapsedTime={elapsedTime}
         callActive={transcript.callActive}
-        handleCall={transcript.handleCall}
-        handleHangUpCall={transcript.handleHangUpCall}
-        onSelectScenario={scenarioManagement.handleScenarioChange}
-        viewJson={jsonVisualization.handleViewJson}
-        isLoadingJson={jsonVisualization.isLoadingJson}
+        onViewJsonClick={jsonVisualization.toggleJsonDialog}
+        onSwitchView={jsonVisualization.toggleJsonView}
+        onMakeMindMap={() => {}}
+        onEndCall={transcript.handleHangUpCall}
+        onStartCall={transcript.handleCall}
+        showJsonView={jsonVisualization.showJsonView}
         resetConversation={transcript.resetConversation}
+        onValidateAll={() => {}}
       />
       
-      {/* Transcript Area */}
-      <div 
-        className="flex-1 overflow-y-auto p-4 bg-gray-50/50"
-        ref={transcript.messagesEndRef}
-      >
-        {/* Chat messages */}
-        <ChatMessages
-          messages={transcript.messages}
-          onSelectResponse={transcript.handleSelectResponse}
-          onVerifySystemCheck={transcript.handleVerifySystemCheck}
-          onValidateSensitiveData={transcript.handleValidateSensitiveData}
-          messagesEndRef={transcript.messagesEndRef}
-          onModuleComplete={handleInlineModuleComplete}
-        />
-        
-        {/* Active module display */}
-        <ModuleDisplay 
-          activeModule={transcript.activeModule}
-          currentState={transcript.currentState}
-          stateData={transcript.stateData}
-          onModuleComplete={handleModuleComplete}
-          completeModule={transcript.completeModule}
-        />
+      <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900">
+        {jsonVisualization.showJsonView ? (
+          jsonVisualization.jsonComponent
+        ) : (
+          <ChatMessages 
+            messages={transcript.messages}
+            isAgentMode={true}
+            onSelectResponse={transcript.handleSelectResponse}
+            onValidateSensitiveData={transcript.handleValidateSensitiveData}
+            onVerifySystemCheck={transcript.handleVerifySystemCheck}
+            messagesEndRef={transcript.messagesEndRef}
+            onModuleComplete={transcript.handleInlineModuleComplete}
+            usedResponseOptions={conversationState.usedResponseOptions}
+            processedStates={conversationState.processedStates}
+            currentState={transcript.currentState}
+          />
+        )}
       </div>
       
-      {/* JSON Visualization Dialog with Jump to State functionality */}
-      <JsonVisualizationDialog
-        open={jsonVisualization.jsonDialogOpen}
-        onOpenChange={jsonVisualization.setJsonDialogOpen}
-        dialogViewMode={jsonVisualization.dialogViewMode}
-        handleViewModeToggle={jsonVisualization.handleViewModeToggle}
-        jsonContent={jsonVisualization.jsonContent}
-        loadedStateMachine={jsonVisualization.loadedStateMachine}
-        currentState={transcript.currentState || ""}
-        activeScenario={activeScenario}
-        selectedState={jsonVisualization.selectedState}
-        onStateClick={jsonVisualization.handleStateSelection}
-        onJumpToState={jsonVisualization.handleJumpToState}
-        onSensitiveFieldClick={jsonVisualization.handleSensitiveFieldClick}
+      <TranscriptFooter 
+        activeScenario={activeScenario} 
+        awaitingUserResponse={transcript.awaitingUserResponse}
+        onShowNachbearbeitung={transcript.showNachbearbeitungSummary}
+        callActive={transcript.callActive}
       />
+      
+      {jsonVisualization.jsonDialog}
     </div>
   );
-}
+};
 
 export default TranscriptPanel;

@@ -17,6 +17,8 @@ interface MessageProps {
   onVerifySystemCheck?: (messageId: string) => void;
   isAgentMode?: boolean;
   onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
+  usedResponseOptions?: Set<string>;
+  isFromProcessedState?: boolean;
 }
 
 const Message: React.FC<MessageProps> = ({ 
@@ -27,7 +29,9 @@ const Message: React.FC<MessageProps> = ({
   onValidateSensitiveData,
   onVerifySystemCheck,
   isAgentMode = true,
-  onModuleComplete
+  onModuleComplete,
+  usedResponseOptions = new Set(),
+  isFromProcessedState = false
 }) => {
   const hasSuggestions = message.suggestions && message.suggestions.length > 0;
   const hasResponseOptions = message.responseOptions && message.responseOptions.length > 0;
@@ -81,11 +85,13 @@ const Message: React.FC<MessageProps> = ({
             onVerifySystemCheck={onVerifySystemCheck}
           />
           
-          {/* Display response options */}
+          {/* Display response options with used options tracking */}
           {hasResponseOptions && isAgentMode && message.responseOptions && onSelectResponse && (
             <MessageResponseOptions 
               responseOptions={message.responseOptions} 
               onSelectResponse={onSelectResponse}
+              usedOptions={usedResponseOptions}
+              isFromProcessedState={isFromProcessedState}
             />
           )}
           

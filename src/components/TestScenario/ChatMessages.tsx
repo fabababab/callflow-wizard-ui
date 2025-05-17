@@ -12,6 +12,9 @@ interface ChatMessagesProps {
   onValidateSensitiveData?: (messageId: string, fieldId: string, status: ValidationStatus, notes?: string) => void; 
   messagesEndRef?: React.RefObject<HTMLDivElement>;
   onModuleComplete?: (messageId: string, moduleId: string, result: any) => void;
+  usedResponseOptions?: Set<string>;
+  processedStates?: Set<string>;
+  currentState?: string;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({
@@ -21,7 +24,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   onVerifySystemCheck,
   onValidateSensitiveData,
   messagesEndRef,
-  onModuleComplete
+  onModuleComplete,
+  usedResponseOptions = new Set(),
+  processedStates = new Set(),
+  currentState = ''
 }) => {
   // If there are no messages, show empty state
   if (!messages.length) {
@@ -39,19 +45,26 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   return (
     <div className="space-y-4 pb-4">
-      {messages.map((message) => (
-        <Message
-          key={message.id}
-          message={message}
-          onAcceptSuggestion={(suggestionId, messageId) => {}}
-          onRejectSuggestion={(suggestionId, messageId) => {}}
-          onSelectResponse={onSelectResponse}
-          onVerifySystemCheck={onVerifySystemCheck}
-          onValidateSensitiveData={onValidateSensitiveData}
-          isAgentMode={isAgentMode}
-          onModuleComplete={onModuleComplete}
-        />
-      ))}
+      {messages.map((message) => {
+        // Determine if this message is from a state that has already been processed
+        const isFromProcessedState = message.stateId ? processedStates.has(message.stateId) && message.stateId !== currentState : false;
+        
+        return (
+          <Message
+            key={message.id}
+            message={message}
+            onAcceptSuggestion={(suggestionId, messageId) => {}}
+            onRejectSuggestion={(suggestionId, messageId) => {}}
+            onSelectResponse={onSelectResponse}
+            onVerifySystemCheck={onVerifySystemCheck}
+            onValidateSensitiveData={onValidateSensitiveData}
+            isAgentMode={isAgentMode}
+            onModuleComplete={onModuleComplete}
+            usedResponseOptions={usedResponseOptions}
+            isFromProcessedState={isFromProcessedState}
+          />
+        );
+      })}
       <div ref={messagesEndRef} />
     </div>
   );

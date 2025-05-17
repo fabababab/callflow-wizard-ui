@@ -19,14 +19,15 @@ export function useMessageAdders(
   /**
    * Add a system message to the transcript
    */
-  const addSystemMessage = useCallback((text: string, options?: { responseOptions?: string[] }) => {
+  const addSystemMessage = useCallback((text: string, options?: { responseOptions?: string[] }, stateId?: string) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       text,
       sender: 'system',
       timestamp: new Date(),
       systemType: 'info',
-      responseOptions: options?.responseOptions
+      responseOptions: options?.responseOptions,
+      stateId
     };
 
     setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -39,7 +40,9 @@ export function useMessageAdders(
   const addAgentMessage = useCallback((
     text: string, 
     suggestions: any[] = [], 
-    responseOptions?: string[]
+    responseOptions?: string[],
+    requiresVerification?: boolean,
+    stateId?: string
   ) => {
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -47,7 +50,9 @@ export function useMessageAdders(
       sender: 'agent',
       timestamp: new Date(),
       suggestions: suggestions.length > 0 ? suggestions : undefined,
-      responseOptions
+      responseOptions,
+      requiresVerification,
+      stateId
     };
 
     setMessages(prevMessages => [...prevMessages, newMessage]);
@@ -60,7 +65,9 @@ export function useMessageAdders(
   const addCustomerMessage = useCallback((
     text: string, 
     sensitiveData?: SensitiveField[], 
-    responseOptions?: string[]
+    responseOptions?: string[],
+    requiresVerification?: boolean,
+    stateId?: string
   ) => {
     const newMessage: Message = {
       id: Date.now().toString(),
@@ -68,7 +75,9 @@ export function useMessageAdders(
       sender: 'customer',
       timestamp: new Date(),
       sensitiveData,
-      responseOptions
+      responseOptions,
+      requiresVerification,
+      stateId
     };
 
     // Update aggregate stats for sensitive data
@@ -86,14 +95,15 @@ export function useMessageAdders(
   /**
    * Add an inline module message
    */
-  const addInlineModuleMessage = useCallback((text: string, moduleConfig: ModuleConfig) => {
+  const addInlineModuleMessage = useCallback((text: string, moduleConfig: ModuleConfig, stateId?: string) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       text,
       sender: 'system',
       timestamp: new Date(),
       systemType: 'info',
-      inlineModule: moduleConfig
+      inlineModule: moduleConfig,
+      stateId
     };
 
     setMessages(prevMessages => [...prevMessages, newMessage]);
