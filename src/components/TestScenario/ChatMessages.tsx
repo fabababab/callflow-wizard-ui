@@ -37,6 +37,14 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
     );
   }
 
+  // Handle response selection by calling the parent callback
+  const handleResponseSelection = (response: string) => {
+    console.log("ChatMessages: response selected", response);
+    if (onSelectResponse) {
+      onSelectResponse(response);
+    }
+  };
+
   return (
     <div className="space-y-4 pb-4">
       {messages.map((message) => (
@@ -45,7 +53,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
           message={message}
           onAcceptSuggestion={(suggestionId, messageId) => {}}
           onRejectSuggestion={(suggestionId, messageId) => {}}
-          onSelectResponse={onSelectResponse}
+          onSelectResponse={handleResponseSelection}
           onVerifySystemCheck={onVerifySystemCheck}
           onValidateSensitiveData={onValidateSensitiveData}
           isAgentMode={isAgentMode}
