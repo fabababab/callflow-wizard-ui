@@ -11,7 +11,7 @@ export function useCustomerScenario() {
   const [error, setError] = useState<string | null>(null);
 
   // Use the scenario state machine from the useStateMachine hook
-  // Using 'studiumabschlussCase' as the default scenario
+  // Using 'mahnungTrotzZahlung' as the default scenario
   const {
     currentState,
     stateData,
@@ -21,7 +21,7 @@ export function useCustomerScenario() {
     processSelection,
     processStartCall,
     resetStateMachine
-  } = useStateMachine('studiumabschlussCase');
+  } = useStateMachine('mahnungTrotzZahlung');
 
   // Set the loading and error states based on the state machine loading/error
   useEffect(() => {

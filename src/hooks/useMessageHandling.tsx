@@ -41,8 +41,8 @@ export function useMessageHandling() {
   const handleInlineModuleComplete = (messageId: string, moduleId: string, result: any) => {
     console.log(`Inline module ${moduleId} completed for message ${messageId} with result:`, result);
     
-    setMessages(prevMessages =>
-      prevMessages.map(message => {
+    setMessages(prevMessages => {
+      return prevMessages.map(message => {
         if (message.id !== messageId) return message;
         
         // Mark the module as completed in some way
@@ -62,8 +62,8 @@ export function useMessageHandling() {
         }
         
         return message;
-      })
-    );
+      });
+    });
     
     setLastMessageUpdate(new Date());
   };

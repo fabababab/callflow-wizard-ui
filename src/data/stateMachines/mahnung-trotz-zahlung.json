@@ -94,6 +94,12 @@
                 "value": "Ja, verbucht am 11. Mai",
                 "system": "Verbucht",
                 "isRequired": true
+              },
+              {
+                "label": "Mahnung",
+                "value": "Versendet am 9. Mai",
+                "system": "2025-05-09",
+                "isRequired": true
               }
             ],
             "title": "Zahlungsdetails"
