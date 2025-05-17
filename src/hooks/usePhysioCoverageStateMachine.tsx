@@ -64,6 +64,10 @@ export function usePhysioCoverageStateMachine() {
         console.log('Customer verification state reached');
       } else if (currentState === 'fuzzy_matches') {
         console.log('Fuzzy matches state reached - showing therapist options');
+      } else if (currentState === 'customer_confused') {
+        console.log('Customer confused state reached - customer wanted Jana Brunner');
+      } else if (currentState === 'coverage_check') {
+        console.log('Coverage check state reached - therapist is covered');
       } else if (currentState === 'end_call') {
         toast({
           title: "Gespräch abgeschlossen",
@@ -72,6 +76,29 @@ export function usePhysioCoverageStateMachine() {
       }
     }
   }, [currentState, stateData, lastStateChange, toast]);
+
+  // Add event listener for therapist selection module completion
+  useEffect(() => {
+    const handleTherapistSelection = (e: Event) => {
+      const event = e as CustomEvent;
+      console.log("Therapist selection event detected:", event.detail);
+      
+      if (event.detail?.moduleId === 'therapist-suggestion-module') {
+        const selectedOptionId = event.detail?.selectedOptionId;
+        toast({
+          title: "Therapeutin ausgewählt",
+          description: `Option ${selectedOptionId} wurde ausgewählt.`,
+          duration: 2000
+        });
+      }
+    };
+    
+    window.addEventListener('therapist-selection-complete', handleTherapistSelection as EventListener);
+    
+    return () => {
+      window.removeEventListener('therapist-selection-complete', handleTherapistSelection as EventListener);
+    };
+  }, [toast]);
 
   return {
     currentState,

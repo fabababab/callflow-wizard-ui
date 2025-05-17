@@ -17,6 +17,32 @@ export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) =>
   });
   window.dispatchEvent(event);
   
+  // Special handling for therapist selection module
+  if (moduleConfig.id === 'therapist-suggestion-module') {
+    // Extract the selected option ID
+    const selectedOptionId = result?.selectedOptionId;
+    
+    // Determine which state to transition to
+    let targetState = 'customer_confused'; // Default fallback
+    
+    // If user selected Jana Brunner, go to coverage_check
+    if (selectedOptionId === 'jana_brunner') {
+      targetState = 'coverage_check';
+    }
+    
+    console.log(`Therapist selection module completed with selection: ${selectedOptionId}, transitioning to: ${targetState}`);
+    
+    // Dispatch custom event for the therapist selection with target state
+    const therapistEvent = new CustomEvent('therapist-selection-complete', {
+      detail: { 
+        moduleId: moduleConfig.id,
+        selectedOptionId,
+        targetState
+      }
+    });
+    window.dispatchEvent(therapistEvent);
+  }
+  
   // For verification modules
   if (moduleConfig.type === ModuleType.VERIFICATION && result.verified === true) {
     const verificationEvent = new CustomEvent('verification-successful', {
@@ -96,6 +122,9 @@ export const getCompletionToastMessage = (moduleConfig: ModuleType, result: any)
   } else if (moduleConfig === ModuleType.INSURANCE_MODEL && result.modelTitle) {
     title = "Versicherungsmodell ausgewählt";
     description = `Sie haben ${result.modelTitle} ausgewählt.`;
+  } else if (moduleConfig === ModuleType.CHOICE_LIST && result.selectedOption) {
+    title = "Option ausgewählt";
+    description = `Sie haben die Option "${result.selectedOption.label}" gewählt.`;
   }
   
   return { title, description };
@@ -120,6 +149,9 @@ export const getModuleInitialToast = (moduleConfig: ModuleConfig) => {
   } else if (moduleConfig.type === ModuleType.INSURANCE_MODEL) {
     description = "Bitte wählen Sie das gewünschte Versicherungsmodell";
     title = "Versicherungsmodelle";
+  } else if (moduleConfig.type === ModuleType.CHOICE_LIST) {
+    description = "Bitte treffen Sie eine Auswahl";
+    title = moduleConfig.title || "Auswahloptionen";
   }
   
   return { title, description };

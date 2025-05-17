@@ -46,6 +46,8 @@ const ChoiceListModule: React.FC<ModuleProps> = ({
     // Find the selected option object
     const selectedOptionObject = options.find((option: Option) => option.id === selectedOption);
     
+    console.log(`ChoiceListModule: selected option ${selectedOption}`, selectedOptionObject);
+    
     // Complete with the selected option
     setTimeout(() => {
       onComplete({

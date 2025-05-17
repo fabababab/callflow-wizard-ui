@@ -19,6 +19,71 @@ export function useModuleEvents({
 }: ModuleEventsProps) {
   const moduleCompletionTrackerRef = useRef<Record<string, boolean>>({});
   
+  // Handle therapist selection events specifically
+  useEffect(() => {
+    const handleTherapistSelection = (event: CustomEvent) => {
+      const { moduleId, selectedOptionId, targetState } = event.detail;
+      const currentState = stateMachine.currentState;
+      const eventId = `therapist-selection-${moduleId}-${currentState}`;
+      
+      // Skip if already processed
+      if (moduleCompletionTrackerRef.current[eventId]) {
+        console.log("Skipping duplicate therapist selection event:", eventId);
+        return;
+      }
+      
+      console.log(`Therapist selection detected: ${selectedOptionId}, target state: ${targetState}`);
+      moduleCompletionTrackerRef.current[eventId] = true;
+      
+      // Add a short delay to ensure UI is updated
+      setTimeout(() => {
+        // System message about the selection
+        let message = "Therapeutin ausgewählt.";
+        
+        if (selectedOptionId === 'jana_brunner') {
+          message = "Jana Brunner wurde ausgewählt.";
+          // Route to coverage_check
+          const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+          const targetResponse = responseOptions.find((option: string) => 
+            option === "Jana Brunner"
+          );
+          
+          if (targetResponse) {
+            console.log("Selecting response for Jana Brunner:", targetResponse);
+            setTimeout(() => {
+              handleSelectResponse(targetResponse);
+            }, 1000);
+          } else {
+            console.warn("Could not find response option for Jana Brunner");
+          }
+        } else {
+          // For other options, go to customer_confused
+          const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+          const targetResponse = responseOptions.find((option: string) => 
+            option !== "Jana Brunner"
+          );
+          
+          if (targetResponse) {
+            console.log("Selecting response for other therapist:", targetResponse);
+            setTimeout(() => {
+              handleSelectResponse(targetResponse);
+            }, 1000);
+          } else {
+            console.warn("Could not find response option for other therapist");
+          }
+        }
+        
+        messageHandling.addSystemMessage(message);
+      }, 500);
+    };
+    
+    window.addEventListener('therapist-selection-complete', handleTherapistSelection as EventListener);
+    
+    return () => {
+      window.removeEventListener('therapist-selection-complete', handleTherapistSelection as EventListener);
+    };
+  }, [messageHandling, stateMachine.currentState, stateMachine.stateData, handleSelectResponse]);
+  
   // Handle non-verification module completions (information, contracts)
   useEffect(() => {
     const handleModuleComplete = (event: CustomEvent) => {
@@ -35,6 +100,12 @@ export function useModuleEvents({
       
       console.log(`Module ${moduleType} (${moduleId}) completion detected:`, event.detail);
       moduleCompletionTrackerRef.current[eventId] = true;
+      
+      // Skip therapist-suggestion-module as it's handled separately
+      if (moduleId === 'therapist-suggestion-module') {
+        console.log("Skipping default handling for therapist-suggestion-module");
+        return;
+      }
       
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
