@@ -46,38 +46,50 @@ export function useVerificationEvents({
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
         
-        // If verification was successful and we're in the verify_identity state,
-        // ALWAYS select the response to transition to customer_issue
+        // For any verification event on verify_identity state, auto-select response
         if (stateMachine.currentState === 'verify_identity') {
+          console.log("In verify_identity state, will auto-select response");
+          
           // Get available responses for the current state
           const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+          console.log("Available responses:", responseOptions);
           
-          // If there are response options, automatically pick the first one (Vielen Dank...)
+          // If there are response options, automatically pick the first one
           if (responseOptions.length > 0) {
-            console.log("Auto-selecting response after verification:", responseOptions[0]);
+            const responseToSelect = responseOptions[0];
+            console.log("Auto-selecting response after verification:", responseToSelect);
             
-            // Add a short delay to make the flow feel more natural
+            // Add a slightly longer delay to make the flow feel more natural
+            // and ensure the message is visible first
             setTimeout(() => {
-              handleSelectResponse(responseOptions[0]);
+              console.log("Executing auto-selection now");
+              handleSelectResponse(responseToSelect);
               console.log("State transition initiated to customer_issue");
-            }, 800);
+            }, 1000); // Increased delay for better UX flow
           } else {
             console.warn("No response options available for state transition");
           }
         } else {
-          console.log("Not in verify_identity state, skipping auto-response");
+          console.log("Not in verify_identity state, current state:", stateMachine.currentState);
         }
         
-        verificationInProgressRef.current = false;
-      }, 300);
+        // Reset verification in progress after a delay
+        setTimeout(() => {
+          verificationInProgressRef.current = false;
+          console.log("Verification processing completed, ready for next event");
+        }, 1500);
+      }, 500); // Increased initial delay for UI update
     };
 
+    console.log("Setting up verification event listeners");
+    
     // Add event listeners for all verification events
     window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
     window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
     
     // Cleanup
     return () => {
+      console.log("Removing verification event listeners");
       window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
       window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
     };

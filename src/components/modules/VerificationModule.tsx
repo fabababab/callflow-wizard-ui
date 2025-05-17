@@ -67,7 +67,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   
   // Function to safely dispatch verification event
   const dispatchVerificationEvent = (isValid: boolean) => {
-    console.log(`Dispatching verification event: ${isValid ? "success" : "failure"}`);
+    console.log(`Dispatching verification event: ${isValid ? "success" : "failure"} for module ${id}`);
     
     try {
       // Create and dispatch the verification-complete event
@@ -94,7 +94,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     if (processingRef.current) return;
     processingRef.current = true;
     
-    console.log(`Manual verification: ${isValid ? "Valid" : "Invalid"}`);
+    console.log(`Manual verification button clicked: ${isValid ? "Valid" : "Invalid"}`);
     
     // Set verification status based on validation
     setVerificationStatus(isValid ? 'success' : 'failed');
@@ -118,7 +118,15 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     
     // Add a slight delay to show the success/failure state before completing
     completeTimeoutRef.current = setTimeout(() => {
-      if (onComplete && !hasDispatchedEventRef.current) {
+      // First dispatch the verification events to trigger the automatic continuation
+      if (!hasDispatchedEventRef.current) {
+        console.log("Dispatching verification events first");
+        dispatchVerificationEvent(isValid);
+        hasDispatchedEventRef.current = true;
+      }
+      
+      // Then complete the module
+      if (onComplete) {
         console.log(`VerificationModule ${id} completed with ${isValid ? "success" : "failure"}`);
         onComplete({
           verified: isValid,
@@ -128,18 +136,12 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
             verified: isValid
           }))
         });
-        
-        // Mark that we've dispatched the event to prevent duplicates
-        hasDispatchedEventRef.current = true;
-        
-        // Dispatch verification events
-        dispatchVerificationEvent(isValid);
-        
-        // Reset processing state after a longer delay to prevent rapid re-renders
-        setTimeout(() => {
-          processingRef.current = false;
-        }, 1000);
       }
+      
+      // Reset processing state after a longer delay to prevent rapid re-renders
+      setTimeout(() => {
+        processingRef.current = false;
+      }, 1000);
     }, 800);
   };
   

@@ -64,15 +64,16 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
   const dispatchVerificationEvent = (success: boolean) => {
     console.log("Dispatching inline verification event:", success);
     
-    // Create and dispatch multiple events for redundancy
     try {
+      // Create and dispatch multiple events for redundancy
       const verificationEvent = new CustomEvent('verification-complete', {
-        detail: { success: success }
+        detail: { success: success, moduleId: 'inline-chat-verification' }
       });
       window.dispatchEvent(verificationEvent);
       
+      // Send a second event type for additional reliability
       const backupEvent = new CustomEvent('verification-successful', {
-        detail: { success: success }
+        detail: { success: success, moduleId: 'inline-chat-verification' }
       });
       window.dispatchEvent(backupEvent);
       
@@ -95,19 +96,19 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     // Use a delay to show the verification process
     verificationTimeoutRef.current = setTimeout(() => {
       setIsValidating(false);
-      console.log("Manual verification complete, calling onVerify(true)");
+      console.log("Inline verification complete, calling onVerify(true)");
       
       // Set local verified state
       setLocalVerified(true);
       
-      // Always succeed with verification
-      onVerify(true, defaultValues);
-      
-      // Dispatch verification events - only once
+      // First dispatch verification events - should happen before onVerify
       if (!hasDispatchedEventRef.current) {
         dispatchVerificationEvent(true);
         hasDispatchedEventRef.current = true;
       }
+      
+      // Then call onVerify callback
+      onVerify(true, defaultValues);
       
       // Reset processing state after a delay
       setTimeout(() => {

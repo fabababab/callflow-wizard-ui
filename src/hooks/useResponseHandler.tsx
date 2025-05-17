@@ -37,8 +37,10 @@ export function useResponseHandler({
     stateMachine
   });
 
-  // Return the main handler function
+  // Return the main handler function and references to enable state debugging
   return {
-    handleSelectResponse: responseSelection.handleSelectResponse
+    handleSelectResponse: responseSelection.handleSelectResponse,
+    verificationInProgressRef: verificationEvents.verificationInProgressRef,
+    verificationHandledRef: verificationEvents.verificationHandledRef
   };
 }
