@@ -6,21 +6,24 @@
     "start": {
       "meta": {
         "systemMessage": "Call initiated with customer to clarify physiotherapy coverage.",
-        "agentText": "Guten Tag wie kann ich Ihnen behilflich sein?",
+        "agentText": "Grüezi, wie kann ich Ihnen helfen?",
         "responseOptions": [
-          "Gerne. Zuerst muss ich sie noch verifizieren"
+          "Ich möchte eine Leistung abklären",
+          "Kundenidentifikation starten"
         ]
       },
       "on": {
-        "Gerne. Zuerst muss ich sie noch verifizieren": "verify_identity",
+        "Ich möchte eine Leistung abklären": "verify_identity",
+        "Kundenidentifikation starten": "verify_identity",
         "DEFAULT": "verify_identity"
       }
     },
     "verify_identity": {
       "meta": {
-        "customerText": "Ich habe eine Frage zu der Deckung meiner Versicherung bzgl. Physio.",
+        "agentText": "Darf ich Sie kurz identifizieren? Bitte nennen Sie mir Ihr Geburtsdatum und Ihre Postleitzahl.",
+        "customerText": "Geburtsdatum: 14.05.1985, PLZ: 8004 Zürich",
         "responseOptions": [
-          "Vielen Dank. Wie kann ich Ihnen weiterhelfen?"
+          "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?"
         ],
         "module": {
           "id": "verification-module-physio",
@@ -34,7 +37,7 @@
                 "id": "birthdate",
                 "type": "date_of_birth",
                 "label": "Geburtsdatum",
-                "value": "",
+                "value": "14.05.1985",
                 "systemValue": "14.05.1985",
                 "source": "CRM System - Kundendatenbank",
                 "status": "pending",
@@ -44,7 +47,7 @@
                 "id": "postalCode",
                 "type": "address",
                 "label": "Postleitzahl",
-                "value": "",
+                "value": "8004",
                 "systemValue": "8004",
                 "source": "CRM System - Kundendatenbank",
                 "status": "pending",
@@ -56,7 +59,7 @@
                 "id": "birthdate",
                 "label": "Geburtsdatum",
                 "type": "text",
-                "value": "",
+                "value": "14.05.1985",
                 "system": "14.05.1985",
                 "required": true
               },
@@ -64,7 +67,7 @@
                 "id": "postalCode",
                 "label": "Postleitzahl",
                 "type": "text",
-                "value": "",
+                "value": "8004",
                 "system": "8004",
                 "required": true
               }
@@ -73,7 +76,7 @@
         }
       },
       "on": {
-        "Vielen Dank. Wie kann ich Ihnen weiterhelfen?": "customer_issue",
+        "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?": "customer_issue",
         "DEFAULT": "customer_issue"
       }
     },

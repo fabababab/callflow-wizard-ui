@@ -87,7 +87,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
             <span>Customer Provided:</span>
           </div>
           <div className="bg-white/50 p-2 rounded border border-gray-200">
-            <code className="text-sm font-mono">{field.value || '(Not provided)'}</code>
+            <code className="text-sm font-mono">{field.value}</code>
           </div>
         </div>
         

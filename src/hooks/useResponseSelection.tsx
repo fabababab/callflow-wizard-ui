@@ -18,14 +18,12 @@ interface ResponseSelectionProps {
     stateData: any;
     processSelection: (selection: string) => boolean;
   };
-  directVerificationTransitionRef?: React.MutableRefObject<boolean>;
 }
 
 export function useResponseSelection({
   conversationState,
   messageHandling,
-  stateMachine,
-  directVerificationTransitionRef
+  stateMachine
 }: ResponseSelectionProps) {
   const { toast } = useToast();
   const responseToastShownRef = useRef<Record<string, boolean>>({});
@@ -41,11 +39,8 @@ export function useResponseSelection({
       isInitialStateProcessed: conversationState.isInitialStateProcessed
     });
     
-    // If this is a direct transition from Valid button click, bypass checks
-    const isDirectVerificationTransition = directVerificationTransitionRef?.current === true;
-    
-    // Only process if we're awaiting user response or at initial state or direct transition
-    if (!isDirectVerificationTransition && !conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
+    // Only process if we're awaiting user response or at initial state
+    if (!conversationState.awaitingUserResponse && !conversationState.isInitialStateProcessed) {
       console.warn('Not awaiting user response yet, skipping');
       
       // Show toast notification for better user feedback
@@ -114,11 +109,6 @@ export function useResponseSelection({
         console.log("New state data:", stateMachine.stateData);
       }
       
-      // If directVerificationTransitionRef was used, reset it
-      if (directVerificationTransitionRef && directVerificationTransitionRef.current) {
-        directVerificationTransitionRef.current = false;
-      }
-      
       // Check if this state has an inline module that needs auto-completion
       const hasInlineModule = stateMachine.stateData?.meta?.module?.data?.isInline === true;
       const moduleId = stateMachine.stateData?.meta?.module?.id;
@@ -166,8 +156,7 @@ export function useResponseSelection({
     stateMachine.processSelection, 
     stateMachine.currentState,
     stateMachine.stateData,
-    toast,
-    directVerificationTransitionRef
+    toast
   ]);
 
   return {

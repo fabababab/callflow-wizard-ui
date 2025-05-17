@@ -14,7 +14,6 @@ interface VerificationField {
   label: string;
   type: string;
   value: string;
-  system?: string;
   expectedValue?: string;
   required: boolean;
   verified?: boolean;
@@ -31,8 +30,8 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(
     fields.map(field => ({
       ...field,
-      // Pre-populate with system value if available
-      value: field.system || field.expectedValue || field.value,
+      // Automatically set value to expected value if provided
+      value: field.expectedValue || field.value,
       verified: undefined // Initially set to undefined (not verified)
     }))
   );
@@ -65,46 +64,11 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     );
   };
   
-  // Function to safely dispatch verification event
-  const dispatchVerificationEvent = (isValid: boolean) => {
-    console.log(`Dispatching verification event: ${isValid ? "success" : "failure"} for module ${id}`);
-    
-    try {
-      // Create and dispatch the verification-complete event
-      const event = new CustomEvent('verification-complete', {
-        detail: { 
-          success: isValid, 
-          moduleId: id,
-          autoTransition: true, // Add flag to indicate this should auto-transition
-          triggerState: 'customer_issue' // Explicitly specify target state
-        }
-      });
-      window.dispatchEvent(event);
-      
-      // Also dispatch a backup event for redundancy
-      const backupEvent = new CustomEvent('verification-successful', {
-        detail: { 
-          success: isValid, 
-          moduleId: id,
-          autoTransition: true, // Add flag to indicate this should auto-transition
-          triggerState: 'customer_issue' // Explicitly specify target state
-        }
-      });
-      window.dispatchEvent(backupEvent);
-      
-      console.log("Verification events dispatched successfully with autoTransition flag");
-      return true;
-    } catch (error) {
-      console.error("Failed to dispatch verification event:", error);
-      return false;
-    }
-  };
-  
   const handleValidate = (isValid: boolean) => {
     if (processingRef.current) return;
     processingRef.current = true;
     
-    console.log(`Manual verification button clicked: ${isValid ? "Valid" : "Invalid"}`);
+    console.log(`Manual verification: ${isValid ? "Valid" : "Invalid"}`);
     
     // Set verification status based on validation
     setVerificationStatus(isValid ? 'success' : 'failed');
@@ -128,15 +92,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     
     // Add a slight delay to show the success/failure state before completing
     completeTimeoutRef.current = setTimeout(() => {
-      // First dispatch the verification events to trigger the automatic continuation
-      if (!hasDispatchedEventRef.current) {
-        console.log("Dispatching verification events first");
-        dispatchVerificationEvent(isValid);
-        hasDispatchedEventRef.current = true;
-      }
-      
-      // Then complete the module
-      if (onComplete) {
+      if (onComplete && !hasDispatchedEventRef.current) {
         console.log(`VerificationModule ${id} completed with ${isValid ? "success" : "failure"}`);
         onComplete({
           verified: isValid,
@@ -146,13 +102,22 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
             verified: isValid
           }))
         });
+        
+        // Mark that we've dispatched the event to prevent duplicates
+        hasDispatchedEventRef.current = true;
+        
+        // Dispatch a single custom event to trigger state transition after verification
+        const event = new CustomEvent('verification-complete', {
+          detail: { success: isValid, moduleId: id }
+        });
+        window.dispatchEvent(event);
+        
+        // Reset processing state after a longer delay to prevent rapid re-renders
+        setTimeout(() => {
+          processingRef.current = false;
+        }, 1000);
       }
-      
-      // Reset processing state after a longer delay to prevent rapid re-renders
-      setTimeout(() => {
-        processingRef.current = false;
-      }, 1000);
-    }, 800);
+    }, 1500);
   };
   
   // Use different styling for inline vs modal display
@@ -208,21 +173,14 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
                   </Badge>
                 )}
               </div>
-              <div className="relative">
-                <Input
-                  id={field.id}
-                  type={field.type}
-                  value={field.value || ''}
-                  onChange={(e) => handleInputChange(field.id, e.target.value)}
-                  className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
-                  readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
-                />
-                {field.system && (
-                  <div className="mt-1 text-xs text-blue-600">
-                    System value: {field.system}
-                  </div>
-                )}
-              </div>
+              <Input
+                id={field.id}
+                type={field.type}
+                value={field.value || ''}
+                onChange={(e) => handleInputChange(field.id, e.target.value)}
+                className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
+                readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
+              />
             </div>
           ))}
         </div>
