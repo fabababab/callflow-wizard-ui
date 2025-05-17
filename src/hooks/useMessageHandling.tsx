@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef } from 'react';
 import { Message } from '@/components/transcript/MessageTypes';
 import { SensitiveField, ValidationStatus } from '@/data/scenarioData';
@@ -39,7 +38,10 @@ export function useMessageHandling() {
       return true;
     });
     
-    setMessages(updatedMessages);
+    // Make sure we're using a function to update state properly
+    setMessages(prevMessages => {
+      return [...prevMessages, ...updatedMessages];
+    });
   }, sensitiveDataStats, setLastMessageUpdate);
   
   // Create enhanced versions of the message adder functions that include stateId

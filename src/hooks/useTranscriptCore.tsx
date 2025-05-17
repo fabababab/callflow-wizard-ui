@@ -22,7 +22,7 @@ import { useMessageUpdates } from '@/hooks/useMessageUpdates';
 import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
 export function useTranscriptCore(activeScenario: ScenarioType) {
-  const toast = useToast();
+  const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Get the message handling functionality
@@ -56,8 +56,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   const responseHandler = useResponseHandler({
     stateMachine,
     messageHandling,
-    conversationState,
-    toast
+    conversationState
   });
 
   // Use state change processor

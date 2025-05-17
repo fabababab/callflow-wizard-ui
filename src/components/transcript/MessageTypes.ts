@@ -21,7 +21,7 @@ export type MessageId = string;
 export interface Suggestion {
   id: string;
   text: string;
-  type?: 'info' | 'action' | 'response'; // Added type property to match AISuggestion
+  type?: 'info' | 'action' | 'response'; // Type property for AISuggestion compatibility
   accepted?: boolean;
   rejected?: boolean;
 }
