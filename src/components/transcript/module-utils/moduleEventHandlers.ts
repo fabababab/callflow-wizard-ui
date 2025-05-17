@@ -1,15 +1,15 @@
 
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import { type ToastActionElement } from '@/components/ui/toast';
-import { dispatchModuleEvents } from '@/utils/moduleEvents';
+import { dispatchModuleEvents as dispatchModuleEventsUtil } from '@/utils/moduleEvents';
 
 export interface ToastUtility {
   toast: (props: { title: string; description?: string; duration?: number; action?: ToastActionElement }) => void;
 }
 
-export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) => {
+export const handleModuleEvents = (moduleConfig: ModuleConfig, result: any) => {
   // Convert the moduleConfig to appropriate parameters for the utility function
-  dispatchModuleEvents(moduleConfig.id, moduleConfig.type, result);
+  dispatchModuleEventsUtil(moduleConfig.id, moduleConfig.type, result);
   
   // Special handling for therapist selection module
   if (moduleConfig.id === 'therapist-suggestion-module') {
