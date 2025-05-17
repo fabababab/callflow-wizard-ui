@@ -59,6 +59,41 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       }
     };
   }, []);
+
+  // Function to safely dispatch verification event
+  const dispatchVerificationEvent = (success: boolean) => {
+    console.log("Dispatching inline verification event:", success);
+    
+    try {
+      // Create and dispatch multiple events for redundancy
+      const verificationEvent = new CustomEvent('verification-complete', {
+        detail: { 
+          success: success, 
+          moduleId: 'inline-chat-verification',
+          autoTransition: true,
+          triggerState: 'customer_issue'
+        }
+      });
+      window.dispatchEvent(verificationEvent);
+      
+      // Send a second event type for additional reliability
+      const backupEvent = new CustomEvent('verification-successful', {
+        detail: { 
+          success: success, 
+          moduleId: 'inline-chat-verification',
+          autoTransition: true,
+          triggerState: 'customer_issue'
+        }
+      });
+      window.dispatchEvent(backupEvent);
+      
+      console.log("Inline verification events dispatched successfully with autoTransition flag");
+      return true;
+    } catch (error) {
+      console.error("Failed to dispatch verification event:", error);
+      return false;
+    }
+  };
   
   const handleVerifyClick = () => {
     // Prevent multiple clicks
@@ -71,27 +106,19 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
     // Use a delay to show the verification process
     verificationTimeoutRef.current = setTimeout(() => {
       setIsValidating(false);
-      console.log("Manual verification complete, calling onVerify(true)");
+      console.log("Inline verification complete, calling onVerify(true)");
       
       // Set local verified state
       setLocalVerified(true);
       
-      // Always succeed with verification
-      onVerify(true, defaultValues);
-      
-      // Dispatch a custom event to trigger state transition after verification - only once
+      // First dispatch verification events - should happen before onVerify
       if (!hasDispatchedEventRef.current) {
-        const event = new CustomEvent('verification-complete', {
-          detail: { 
-            success: true,
-            triggerNextState: 'customer_issue',
-            message: "Können sie mir bitte ihr Geburtsdatum und Postleitzahl nennen?",
-            responseOptions: ["Vielen Dank. Wie kann ich Ihnen weiterhelfen?"]
-          }
-        });
-        window.dispatchEvent(event);
+        dispatchVerificationEvent(true);
         hasDispatchedEventRef.current = true;
       }
+      
+      // Then call onVerify callback
+      onVerify(true, defaultValues);
       
       // Reset processing state after a delay
       setTimeout(() => {

@@ -3,8 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 
 interface VerificationEventsProps {
   messageHandling: {
-    addSystemMessage: (message: string, options?: any) => void;
-    addAgentMessage: (message: string) => void;
+    addSystemMessage: (message: string) => void;
   };
   handleSelectResponse: (response: string) => void;
   stateMachine: {
@@ -41,63 +40,82 @@ export function useVerificationEvents({
       
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
-        // Custom message from verification event if provided, otherwise use default
-        const customMessage = event.detail.message || "Kundenidentität wurde erfolgreich verifiziert.";
-        const customResponseOptions = event.detail.responseOptions || [];
-        const triggerNextState = event.detail.triggerNextState;
-        
         // System message about verification - only show once per state
         if (!verificationHandledRef.current[stateMachine.currentState]) {
           messageHandling.addSystemMessage("Kundenidentität wurde erfolgreich verifiziert.");
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
         
-        // Add agent message with custom text if provided
-        if (customMessage) {
-          messageHandling.addAgentMessage(customMessage);
-        }
+        // Check if this is a direct transition request (from Valid button click)
+        const shouldAutoTransition = event.detail?.autoTransition === true;
+        const targetState = event.detail?.triggerState;
         
-        // If verification was successful and we have a specific state to trigger
-        if (event.detail.success === true && triggerNextState) {
-          if (customResponseOptions.length > 0) {
-            // Create a response option that links to the desired state
-            setTimeout(() => {
-              messageHandling.addSystemMessage("", {
-                responseOptions: customResponseOptions
-              });
-              verificationInProgressRef.current = false;
-            }, 500);
-          } else {
-            verificationInProgressRef.current = false;
-          }
-        } else if (event.detail.success === true && stateMachine.currentState === 'verify_identity') {
+        if (shouldAutoTransition && targetState === 'customer_issue') {
+          console.log("Direct transition to customer_issue state requested");
+          
           // Get available responses for the current state
           const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+          console.log("Available responses:", responseOptions);
           
-          // If there are response options, automatically pick the first one after a delay
+          // If there are response options, automatically pick the first one
           if (responseOptions.length > 0) {
-            console.log("Auto-selecting response after verification:", responseOptions[0]);
+            const responseToSelect = responseOptions[0];
+            console.log("Auto-selecting response after verification:", responseToSelect);
             
-            // Add a longer delay to make the flow feel more natural and ensure verification UI is visible
+            // Add a slightly longer delay to make the flow feel more natural
+            // and ensure the message is visible first
             setTimeout(() => {
-              handleSelectResponse(responseOptions[0]);
-              verificationInProgressRef.current = false;
-            }, 1500); // Shorter delay to ensure verification success is visible but not too long
+              console.log("Executing direct state transition to customer_issue");
+              handleSelectResponse(responseToSelect);
+            }, 800); // Delay for UX flow
           } else {
-            verificationInProgressRef.current = false;
+            console.warn("No response options available for state transition");
+          }
+        }
+        // Standard logic for verify_identity state when not direct transition
+        else if (stateMachine.currentState === 'verify_identity') {
+          console.log("In verify_identity state, will auto-select response");
+          
+          // Get available responses for the current state
+          const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+          console.log("Available responses:", responseOptions);
+          
+          // If there are response options, automatically pick the first one
+          if (responseOptions.length > 0) {
+            const responseToSelect = responseOptions[0];
+            console.log("Auto-selecting response after verification:", responseToSelect);
+            
+            // Add a slightly longer delay to make the flow feel more natural
+            // and ensure the message is visible first
+            setTimeout(() => {
+              console.log("Executing auto-selection now");
+              handleSelectResponse(responseToSelect);
+              console.log("State transition initiated to customer_issue");
+            }, 1000); // Increased delay for better UX flow
+          } else {
+            console.warn("No response options available for state transition");
           }
         } else {
-          verificationInProgressRef.current = false;
+          console.log("Not in verify_identity state, current state:", stateMachine.currentState);
         }
-      }, 500);
+        
+        // Reset verification in progress after a delay
+        setTimeout(() => {
+          verificationInProgressRef.current = false;
+          console.log("Verification processing completed, ready for next event");
+        }, 1500);
+      }, 500); // Increased initial delay for UI update
     };
 
+    console.log("Setting up verification event listeners");
+    
     // Add event listeners for all verification events
     window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
     window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
     
     // Cleanup
     return () => {
+      console.log("Removing verification event listeners");
       window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
       window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
     };
