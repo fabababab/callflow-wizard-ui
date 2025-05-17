@@ -63,7 +63,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
   const isMatch = field.value === field.systemValue;
   
   return (
-    <div className={`validation-field p-3 rounded-lg border ${getStatusColor(field.status)} mb-2`} data-testid="validation-field">
+    <div className={`p-3 rounded-lg border ${getStatusColor(field.status)} mb-2`}>
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           <Shield size={16} />
@@ -122,7 +122,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
       </div>
       
       {field.status === 'pending' && (
-        <div className="validation-actions flex gap-2 mt-3">
+        <div className="flex gap-2 mt-3">
           <Button 
             size="sm" 
             variant="outline" 
@@ -152,7 +152,7 @@ const ValidationField: React.FC<ValidationFieldProps> = ({ field, onValidate }) 
       )}
       
       {(showNotes || notes) && (
-        <div className="validation-notes mt-2">
+        <div className="mt-2">
           <Textarea
             placeholder="Add validation notes here..."
             className="text-xs"
