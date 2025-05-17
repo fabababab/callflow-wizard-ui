@@ -125,15 +125,15 @@
         "agentText": "Das Telmed-Modell ist eine beliebte Option für viele unserer Kunden. Ich werde diese Änderung für Sie vornehmen.",
         "customerText": "Ausgezeichnet. Wann wird diese Änderung wirksam?",
         "responseOptions": [
-          "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Sie werden die angepasste Prämie auf Ihrer nächsten Rechnung sehen.",
-          "Diese Änderung wird ab dem ersten Tag des kommenden Monats wirksam sein. Ich werde Ihnen eine Bestätigungs-E-Mail mit allen Details senden.",
-          "Ihr neues Versicherungsmodell wird ab nächstem Monat angewendet. Möchten Sie, dass ich Ihnen eine schriftliche Bestätigung dieser Änderung zusende?"
+          "Die Änderung Ihres Versicherungsmodells wird ab nächstem Jahr wirksam. Möchten Sie auch Ihre Franchise anpassen?",
+          "Diese Änderung gilt ab dem ersten Tag des neuen Jahres. Wollen Sie nun Ihre Franchise prüfen?",
+          "Ihr neues Versicherungsmodell gilt ab nächstem Jahr. Möchten Sie auch die Franchiseoptionen anschauen?"
         ]
       },
       "on": {
-        "Die Änderung Ihres Versicherungsmodells wird ab Anfang nächsten Monats wirksam. Sie werden die angepasste Prämie auf Ihrer nächsten Rechnung sehen.": "franchise_options",
-        "Diese Änderung wird ab dem ersten Tag des kommenden Monats wirksam sein. Ich werde Ihnen eine Bestätigungs-E-Mail mit allen Details senden.": "franchise_options",
-        "Ihr neues Versicherungsmodell wird ab nächstem Monat angewendet. Möchten Sie, dass ich Ihnen eine schriftliche Bestätigung dieser Änderung zusende?": "franchise_options",
+        "Die Änderung Ihres Versicherungsmodells wird ab nächstem Jahr wirksam. Möchten Sie auch Ihre Franchise anpassen?": "franchise_options",
+        "Diese Änderung gilt ab dem ersten Tag des neuen Jahres. Wollen Sie nun Ihre Franchise prüfen?": "franchise_options",
+        "Ihr neues Versicherungsmodell gilt ab nächstem Jahr. Möchten Sie auch die Franchiseoptionen anschauen?": "franchise_options",
         "DEFAULT": "franchise_options"
       }
     },
