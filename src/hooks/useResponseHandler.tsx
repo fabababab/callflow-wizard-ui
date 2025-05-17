@@ -37,6 +37,25 @@ export function useResponseHandler({
     stateMachine
   });
 
+  // Handle field validation events
+  const handleFieldValidation = (e: Event) => {
+    const event = e as CustomEvent;
+    if (event.detail && event.detail.fieldId && event.detail.status) {
+      console.log("Field validation event detected:", event.detail);
+      
+      // If all fields are valid and we're in verify_identity state, trigger manual verification
+      if (event.detail.status === 'valid' && stateMachine.currentState === 'verify_identity') {
+        setTimeout(() => {
+          const verificationEvent = new CustomEvent('manual-verification');
+          window.dispatchEvent(verificationEvent);
+        }, 1000);
+      }
+    }
+  };
+
+  // Add event listener for field validation
+  window.addEventListener('field-validation', handleFieldValidation);
+
   // Return the main handler function
   return {
     handleSelectResponse: responseSelection.handleSelectResponse

@@ -41,7 +41,9 @@ export function useVerificationEvents({
       // Add a short delay to ensure UI is updated
       setTimeout(() => {
         // System message about verification - only show once per state
-        if (!verificationHandledRef.current[stateMachine.currentState]) {
+        if (!verificationHandledRef.current[stateMachine.currentState] && 
+            (stateMachine.currentState === 'verify_identity' || 
+             stateMachine.currentState?.includes('verification'))) {
           messageHandling.addSystemMessage("Kundenidentität wurde erfolgreich verifiziert.");
           verificationHandledRef.current[stateMachine.currentState] = true;
         }
@@ -57,21 +59,57 @@ export function useVerificationEvents({
           setTimeout(() => {
             verificationInProgressRef.current = false;
             handleSelectResponse(responseOptions[0]);
-          }, 2500); // Extended delay to ensure verification success is visible
+          }, 2000); // Slightly shorter delay since we're not showing module UI
         } else {
           verificationInProgressRef.current = false;
         }
       }, 500);
     };
 
+    // Add manual verification handler for identity validation
+    const handleManualVerification = () => {
+      if (stateMachine.currentState === 'verify_identity' && 
+          !verificationHandledRef.current[stateMachine.currentState]) {
+        
+        // For verify_identity state without module, simulate verification
+        setTimeout(() => {
+          messageHandling.addSystemMessage("Kundenidentität wurde manuell verifiziert.");
+          verificationHandledRef.current[stateMachine.currentState] = true;
+          
+          // Get available responses for the current state
+          const responseOptions = stateMachine.stateData?.meta?.responseOptions || [];
+          
+          // If there are response options, automatically pick the first one after a delay
+          if (responseOptions.length > 0) {
+            handleSelectResponse(responseOptions[0]);
+          }
+        }, 1500);
+      }
+    };
+
     // Add event listeners for all verification events
     window.addEventListener('verification-complete', handleVerificationComplete as EventListener);
     window.addEventListener('verification-successful', handleVerificationComplete as EventListener);
+    window.addEventListener('manual-verification', handleManualVerification as EventListener);
+    
+    // In verify_identity state without module, automatically progress after a short delay
+    if (stateMachine.currentState === 'verify_identity' && 
+        !stateMachine.stateData?.meta?.module &&
+        !verificationHandledRef.current[stateMachine.currentState]) {
+      const timer = setTimeout(() => {
+        // Simulate verification event for non-module verification state
+        const customEvent = new CustomEvent('manual-verification');
+        window.dispatchEvent(customEvent);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
     
     // Cleanup
     return () => {
       window.removeEventListener('verification-complete', handleVerificationComplete as EventListener);
       window.removeEventListener('verification-successful', handleVerificationComplete as EventListener);
+      window.removeEventListener('manual-verification', handleManualVerification as EventListener);
     };
   }, [messageHandling, stateMachine.stateData, stateMachine.currentState, handleSelectResponse]);
 

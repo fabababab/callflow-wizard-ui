@@ -24,56 +24,7 @@
         "customerText": "Geburtsdatum: 14.05.1985, PLZ: 8004 Zürich",
         "responseOptions": [
           "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?"
-        ],
-        "module": {
-          "id": "verification-module-physio",
-          "title": "Identitätsprüfung",
-          "type": "VERIFICATION",
-          "data": {
-            "isInline": true,
-            "title": "Verifizierung",
-            "sensitiveFields": [
-              {
-                "id": "birthdate",
-                "type": "date_of_birth",
-                "label": "Geburtsdatum",
-                "value": "14.05.1985",
-                "systemValue": "14.05.1985",
-                "source": "CRM System - Kundendatenbank",
-                "status": "pending",
-                "requiresVerification": true
-              },
-              {
-                "id": "postalCode",
-                "type": "address",
-                "label": "Postleitzahl",
-                "value": "8004",
-                "systemValue": "8004",
-                "source": "CRM System - Kundendatenbank",
-                "status": "pending",
-                "requiresVerification": true
-              }
-            ],
-            "fields": [
-              {
-                "id": "birthdate",
-                "label": "Geburtsdatum",
-                "type": "text",
-                "value": "14.05.1985",
-                "system": "14.05.1985",
-                "required": true
-              },
-              {
-                "id": "postalCode",
-                "label": "Postleitzahl",
-                "type": "text",
-                "value": "8004",
-                "system": "8004",
-                "required": true
-              }
-            ]
-          }
-        }
+        ]
       },
       "on": {
         "Vielen Dank. Ich habe Sie gefunden. Wie kann ich Ihnen weiterhelfen?": "customer_issue",
