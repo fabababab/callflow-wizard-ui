@@ -14,6 +14,7 @@ interface VerificationField {
   label: string;
   type: string;
   value: string;
+  system?: string;
   expectedValue?: string;
   required: boolean;
   verified?: boolean;
@@ -30,8 +31,8 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const [verificationFields, setVerificationFields] = useState<VerificationField[]>(
     fields.map(field => ({
       ...field,
-      // Automatically set value to expected value if provided
-      value: field.expectedValue || field.value,
+      // Pre-populate with system value if available
+      value: field.system || field.expectedValue || field.value,
       verified: undefined // Initially set to undefined (not verified)
     }))
   );
@@ -173,14 +174,21 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
                   </Badge>
                 )}
               </div>
-              <Input
-                id={field.id}
-                type={field.type}
-                value={field.value || ''}
-                onChange={(e) => handleInputChange(field.id, e.target.value)}
-                className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
-                readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
-              />
+              <div className="relative">
+                <Input
+                  id={field.id}
+                  type={field.type}
+                  value={field.value || ''}
+                  onChange={(e) => handleInputChange(field.id, e.target.value)}
+                  className={`text-xs h-7 ${isInlineDisplay ? "border-amber-200 bg-amber-50/30" : ""}`}
+                  readOnly={isInlineDisplay || processingRef.current} // Make fields readonly for inline display
+                />
+                {field.system && (
+                  <div className="mt-1 text-xs text-blue-600">
+                    System value: {field.system}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

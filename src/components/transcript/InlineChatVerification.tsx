@@ -79,16 +79,6 @@ const InlineChatVerification: React.FC<InlineChatVerificationProps> = ({
       // Always succeed with verification
       onVerify(true, defaultValues);
       
-      // Toast notifications commented out for now - will be re-integrated later
-      // if (!hasShownToastRef.current) {
-      //   toast({
-      //     title: "Identity Verified",
-      //     description: "Customer identity has been automatically verified",
-      //     duration: 2000
-      //   });
-      //   hasShownToastRef.current = true;
-      // }
-      
       // Dispatch a custom event to trigger state transition after verification - only once
       if (!hasDispatchedEventRef.current) {
         const event = new CustomEvent('verification-complete', {
