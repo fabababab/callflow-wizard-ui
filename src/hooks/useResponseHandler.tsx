@@ -8,7 +8,7 @@ interface ResponseHandlerProps {
   stateMachine: any;
   messageHandling: any;
   conversationState: any;
-  toast?: any;
+  toast: any;
 }
 
 export function useResponseHandler({
@@ -16,15 +16,11 @@ export function useResponseHandler({
   messageHandling,
   conversationState
 }: ResponseHandlerProps) {
-  // Add a direct transition flag for verification triggers
-  const directVerificationTransitionRef = useRef<boolean>(false);
-  
   // Create response selection hook
   const responseSelection = useResponseSelection({
     conversationState,
     messageHandling,
-    stateMachine,
-    directVerificationTransitionRef
+    stateMachine
   });
 
   // Set up verification events hook - pass the handleSelectResponse from responseSelection
@@ -41,11 +37,8 @@ export function useResponseHandler({
     stateMachine
   });
 
-  // Return the main handler function and references to enable state debugging
+  // Return the main handler function
   return {
-    handleSelectResponse: responseSelection.handleSelectResponse,
-    verificationInProgressRef: verificationEvents.verificationInProgressRef,
-    verificationHandledRef: verificationEvents.verificationHandledRef,
-    directVerificationTransitionRef
+    handleSelectResponse: responseSelection.handleSelectResponse
   };
 }
