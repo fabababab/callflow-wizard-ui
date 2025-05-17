@@ -179,7 +179,14 @@
             ],
             "summary": "Kunde erhielt eine Zahlungserinnerung, obwohl die Zahlung bereits erfolgt war. Die Zahlung wurde im System gefunden (verbucht am 11. Mai), während die Mahnung bereits am 9. Mai generiert wurde. Eine Bestätigungsmail wurde an den Kunden gesendet und ein Vermerk im System gesetzt, dass die Mahnung hinfällig ist."
           }
-        }
+        },
+        "responseOptions": [
+          "Gespräch beenden und Nachbearbeitung abschließen"
+        ]
+      },
+      "on": {
+        "Gespräch beenden und Nachbearbeitung abschließen": "start",
+        "DEFAULT": "start"
       }
     },
     "customer_confused": {

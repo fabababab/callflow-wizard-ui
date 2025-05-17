@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import { ModuleConfig } from '@/types/modules';
 import ModuleContainer from '../modules/ModuleContainer';
+import { handleModuleEvents } from './module-utils/moduleEventHandlers';
 
 interface InlineModuleDisplayProps {
   moduleConfig: ModuleConfig;
@@ -17,6 +18,16 @@ const InlineModuleDisplay: React.FC<InlineModuleDisplayProps> = ({
     console.log(`InlineModuleDisplay rendering for module: ${moduleConfig.id} (${moduleConfig.type})`, moduleConfig);
   }, [moduleConfig]);
 
+  const handleModuleComplete = (result: any) => {
+    console.log(`Module ${moduleConfig.id} completed with result:`, result);
+    
+    // Dispatch module events
+    handleModuleEvents(moduleConfig, result);
+    
+    // Call the onComplete callback
+    onComplete(result);
+  };
+
   return (
     <div className="w-full">
       <ModuleContainer
@@ -31,10 +42,7 @@ const InlineModuleDisplay: React.FC<InlineModuleDisplayProps> = ({
           console.log(`Module ${moduleConfig.id} closed without completion`);
           onComplete({ completed: false });
         }}
-        onComplete={(result) => {
-          console.log(`Module ${moduleConfig.id} completed with result:`, result);
-          onComplete(result);
-        }}
+        onComplete={handleModuleComplete}
         isInline={true} // Explicitly set inline mode
       />
     </div>
