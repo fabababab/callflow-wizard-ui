@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, memo } from 'react';
 import { ModuleProps } from '@/types/modules';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { Shield, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
       ...field,
       // Automatically set value to expected value if provided
       value: field.expectedValue || field.value,
-      verified: true
+      verified: undefined // Initially set to undefined (not verified)
     }))
   );
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'failed'>('pending');
@@ -43,15 +43,8 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
   const hasDispatchedEventRef = useRef(false);
   const { toast } = useToast();
   
-  // Auto-verify on mount after a small delay
+  // Clear timeouts on unmount
   useEffect(() => {
-    if (!processingRef.current) {
-      const timeout = setTimeout(() => {
-        handleVerify();
-      }, 800);
-      return () => clearTimeout(timeout);
-    }
-    
     return () => {
       if (completeTimeoutRef.current) {
         clearTimeout(completeTimeoutRef.current);
@@ -65,31 +58,48 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
     setVerificationFields(prev => 
       prev.map(field => 
         field.id === fieldId 
-          ? { ...field, value, verified: true } 
+          ? { ...field, value, verified: undefined } 
           : field
       )
     );
   };
   
-  const handleVerify = () => {
+  const handleValidate = (isValid: boolean) => {
     if (processingRef.current) return;
     processingRef.current = true;
     
-    console.log("Processing verification with auto-success");
+    console.log(`Manual verification: ${isValid ? "Valid" : "Invalid"}`);
     
-    // Always succeed
-    setVerificationStatus('success');
+    // Set verification status based on validation
+    setVerificationStatus(isValid ? 'success' : 'failed');
     
-    // Add a slight delay to show the success state before completing
+    // Update all fields verification status
+    setVerificationFields(prev => 
+      prev.map(field => ({
+        ...field,
+        verified: isValid
+      }))
+    );
+    
+    // Show toast notification
+    toast({
+      title: isValid ? "Verifizierung erfolgreich" : "Verifizierung fehlgeschlagen",
+      description: isValid 
+        ? "Die Identität wurde erfolgreich verifiziert."
+        : "Die Identität konnte nicht verifiziert werden.",
+      variant: isValid ? "default" : "destructive"
+    });
+    
+    // Add a slight delay to show the success/failure state before completing
     completeTimeoutRef.current = setTimeout(() => {
       if (onComplete && !hasDispatchedEventRef.current) {
-        console.log(`VerificationModule ${id} completed with automatic success`);
+        console.log(`VerificationModule ${id} completed with ${isValid ? "success" : "failure"}`);
         onComplete({
-          verified: true,
+          verified: isValid,
           fields: verificationFields.map(f => ({
             id: f.id,
             value: f.value,
-            verified: true
+            verified: isValid
           }))
         });
         
@@ -98,7 +108,7 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
         
         // Dispatch a single custom event to trigger state transition after verification
         const event = new CustomEvent('verification-complete', {
-          detail: { success: true, moduleId: id }
+          detail: { success: isValid, moduleId: id }
         });
         window.dispatchEvent(event);
         
@@ -150,10 +160,16 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
             <div key={field.id} className="space-y-1">
               <div className="flex justify-between">
                 <Label htmlFor={field.id} className="text-xs">{field.label}</Label>
-                {field.verified !== undefined && (
+                {field.verified === true && (
                   <Badge variant="default" className="text-xs py-0 h-5">
                     <CheckCircle size={12} className="mr-1" />
                     Verified
+                  </Badge>
+                )}
+                {field.verified === false && (
+                  <Badge variant="destructive" className="text-xs py-0 h-5">
+                    <X size={12} className="mr-1" />
+                    Invalid
                   </Badge>
                 )}
               </div>
@@ -185,16 +201,30 @@ const VerificationModule: React.FC<ModuleProps> = memo(({
           </Button>
         )}
         
-        {/* Show verify button when status is pending */}
+        {/* Only show validation buttons when status is pending */}
         {verificationStatus === 'pending' && (
-          <Button 
-            size="sm"
-            onClick={handleVerify}
-            className={`text-xs ${isInlineDisplay ? "bg-amber-500 hover:bg-amber-600 text-white ml-auto" : ""}`}
-            disabled={processingRef.current}
-          >
-            Verify Identity
-          </Button>
+          <div className={`flex gap-2 ${isInlineDisplay ? "ml-auto" : ""}`}>
+            <Button 
+              variant="destructive"
+              size="sm"
+              onClick={() => handleValidate(false)}
+              className="text-xs"
+              disabled={processingRef.current}
+            >
+              <X size={14} className="mr-1" />
+              Invalid
+            </Button>
+            <Button 
+              variant="default"
+              size="sm"
+              onClick={() => handleValidate(true)}
+              className="text-xs"
+              disabled={processingRef.current}
+            >
+              <CheckCircle size={14} className="mr-1" />
+              Valid
+            </Button>
+          </div>
         )}
       </CardFooter>
     </Card>
