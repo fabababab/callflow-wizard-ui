@@ -23,6 +23,7 @@ const ResponseOptions: React.FC<ResponseOptionsProps> = ({ options, onSelectResp
             onClick={() => onSelectResponse(option)}
             className="w-full px-3 py-2 text-left text-sm bg-primary/10 hover:bg-primary/20 rounded-md transition-colors duration-200 flex items-center gap-2 group"
             type="button"
+            aria-label={`Select response: ${option}`}
           >
             <span className="flex-1 whitespace-normal break-words">{option}</span>
             <ChevronRight className="h-3 w-3 ml-auto opacity-70 group-hover:opacity-90" />

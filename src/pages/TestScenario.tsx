@@ -35,26 +35,55 @@ const TestScenario = () => {
   const activeScenario = physioCoverage;
   const { currentState, error, stateData } = activeScenario;
 
-  // Add notification when scenario is loaded
+  // Add notification when scenario is loaded and monitor state changes
   useEffect(() => {
     if (scenarioState.loadedStateMachine) {
+      console.log("Leistungsabdeckung Physio scenario loaded");
       toast({
         title: "Leistungsabdeckung Physio geladen",
         description: "Szenario zum Thema Physiotherapie-Leistungsabdeckung",
         duration: 3000
       });
       
-      // Log current state for debugging
+      // Log initial state information
       if (currentState) {
         console.log(`Current state on load: ${currentState}`);
+      }
+      
+      // Check for modules in the state
+      if (stateData?.meta?.module) {
+        console.log('Module found in initial state:', stateData.meta.module);
       }
       
       // Check for sensitive data
       if (stateData?.meta?.module?.data?.sensitiveFields) {
         console.log('Sensitive fields detected:', stateData.meta.module.data.sensitiveFields);
       }
+      
+      // Log response options if available
+      const responseOptions = stateData?.meta?.responseOptions || [];
+      if (responseOptions.length > 0) {
+        console.log('Response options in initial state:', responseOptions);
+      }
     }
   }, [scenarioState.loadedStateMachine, toast, currentState, stateData]);
+
+  // Monitor state changes for debugging
+  useEffect(() => {
+    if (currentState) {
+      console.log(`State changed to: ${currentState}`);
+      
+      // Check for inline modules
+      if (stateData?.meta?.module) {
+        const moduleConfig = stateData.meta.module;
+        console.log(`Module in state ${currentState}:`, moduleConfig);
+        
+        // Log whether the module should be inline
+        console.log(`Module ${moduleConfig.id} isInline:`, 
+          moduleConfig.data?.isInline !== false ? "true" : "false");
+      }
+    }
+  }, [currentState, stateData]);
 
   return (
     <div className="flex h-screen bg-background">

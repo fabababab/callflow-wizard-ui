@@ -6,11 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import ModuleHeader from './ModuleHeader';
 import ModuleConfigDetails from './ModuleConfigDetails';
 import CollapsibleDetails from './CollapsibleDetails';
-import { 
-  dispatchModuleEvents, 
-  getCompletionToastMessage, 
-  getModuleInitialToast 
-} from './module-utils/moduleEventHandlers';
+import { dispatchModuleEvents } from '@/utils/moduleEvents';
+import { getCompletionToastMessage, getModuleInitialToast } from './module-utils/moduleEventHandlers';
 
 interface MessageInlineModuleProps {
   moduleConfig: ModuleConfig;
@@ -35,18 +32,25 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       description,
       duration: 3000
     });
+    
+    // Log that the module was displayed for debugging
+    console.log(`Inline module ${moduleConfig.id} (${moduleConfig.type}) displayed in transcript`);
   }, [moduleConfig, toast]);
   
   const handleModuleComplete = (result: any) => {
     // Prevent duplicate completions
-    if (completedRef.current) return;
+    if (completedRef.current) {
+      console.log(`Module ${moduleConfig.id} already completed, skipping duplicate completion`);
+      return;
+    }
+    
     completedRef.current = true;
     setCompleted(true);
     
     console.log(`Module ${moduleConfig.id} completed with result:`, result);
     
-    // Dispatch events based on module type
-    dispatchModuleEvents(moduleConfig, result);
+    // Dispatch events based on module type with the module ID and type
+    dispatchModuleEvents(moduleConfig.id, moduleConfig.type, result);
     
     // Show completion toast with appropriate message
     const { title, description } = getCompletionToastMessage(moduleConfig.type, result);
@@ -57,10 +61,11 @@ const MessageInlineModule: React.FC<MessageInlineModuleProps> = ({
       duration: 2000
     });
     
+    // Notify parent component
     onModuleComplete(result);
   };
 
-  // Module header color based on type - make everything amber/yellow for consistency
+  // Module header color based on type
   const getHeaderClass = () => {
     if (moduleConfig.type === "INFORMATION_TABLE") {
       return "bg-amber-50 border-amber-200";

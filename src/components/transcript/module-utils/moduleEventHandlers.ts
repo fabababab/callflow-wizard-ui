@@ -1,20 +1,15 @@
+
 import { ModuleConfig, ModuleType } from '@/types/modules';
 import { type ToastActionElement } from '@/components/ui/toast';
+import { dispatchModuleEvents } from '@/utils/moduleEvents';
 
 export interface ToastUtility {
   toast: (props: { title: string; description?: string; duration?: number; action?: ToastActionElement }) => void;
 }
 
 export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) => {
-  // Dispatch a generic module completion event
-  const event = new CustomEvent('module-complete', {
-    detail: { 
-      moduleId: moduleConfig.id,
-      moduleType: moduleConfig.type,
-      result
-    }
-  });
-  window.dispatchEvent(event);
+  // Convert the moduleConfig to appropriate parameters for the utility function
+  dispatchModuleEvents(moduleConfig.id, moduleConfig.type, result);
   
   // Special handling for therapist selection module
   if (moduleConfig.id === 'therapist-suggestion-module') {
@@ -38,124 +33,53 @@ export const dispatchModuleEvents = (moduleConfig: ModuleConfig, result: any) =>
         moduleId: moduleConfig.id,
         selectedOptionId,
         targetState,
+        timestamp: Date.now(),
         // Include the selected option for debugging
         selectedOption: result?.selectedOption
       }
     });
     window.dispatchEvent(therapistEvent);
   }
-  
-  // For verification modules
-  if (moduleConfig.type === ModuleType.VERIFICATION && result.verified === true) {
-    const verificationEvent = new CustomEvent('verification-successful', {
-      detail: { 
-        moduleId: moduleConfig.id,
-        success: true
-      }
-    });
-    window.dispatchEvent(verificationEvent);
-  }
-  
-  // For contract modules
-  if (moduleConfig.type === ModuleType.CONTRACT) {
-    const contractEvent = new CustomEvent('contract-module-complete', {
-      detail: { 
-        moduleId: moduleConfig.id,
-        result
-      }
-    });
-    window.dispatchEvent(contractEvent);
-  }
-  
-  // For information modules
-  if (moduleConfig.type === ModuleType.INFORMATION || moduleConfig.type === ModuleType.INFORMATION_TABLE) {
-    const infoEvent = new CustomEvent('information-module-complete', {
-      detail: { 
-        moduleId: moduleConfig.id,
-        result
-      }
-    });
-    window.dispatchEvent(infoEvent);
-    
-    // For the coverage module specifically
-    if (moduleConfig.id === 'coverage-info-module') {
-      console.log("Coverage info module completed");
-      setTimeout(() => {
-        // Create and dispatch a event for the coverage info module completion
-        const coverageEvent = new CustomEvent('coverage-info-complete', {
-          detail: { moduleId: moduleConfig.id }
-        });
-        window.dispatchEvent(coverageEvent);
-      }, 500);
-    }
-  }
-  
-  // For nachbearbeitung modules
-  if (moduleConfig.type === ModuleType.NACHBEARBEITUNG) {
-    const nachbearbeitungEvent = new CustomEvent('nachbearbeitung-complete', {
-      detail: { 
-        moduleId: moduleConfig.id,
-        result
-      }
-    });
-    window.dispatchEvent(nachbearbeitungEvent);
-  }
-
-  // For franchise modules
-  if (moduleConfig.type === ModuleType.FRANCHISE || 
-      (moduleConfig.type === ModuleType.INFORMATION_TABLE && 
-       moduleConfig.data?.franchiseOptions)) {
-    const franchiseEvent = new CustomEvent('franchise-complete', {
-      detail: { 
-        moduleId: moduleConfig.id,
-        result
-      }
-    });
-    window.dispatchEvent(franchiseEvent);
-  }
-  
-  // For insurance model modules
-  if (moduleConfig.type === ModuleType.INSURANCE_MODEL) {
-    const insuranceModelEvent = new CustomEvent('insurance-model-complete', {
-      detail: { 
-        moduleId: moduleConfig.id,
-        result
-      }
-    });
-    window.dispatchEvent(insuranceModelEvent);
-  }
 };
 
-export const getCompletionToastMessage = (moduleConfig: ModuleType, result: any) => {
-  let title = "Module Completed";
-  let description = `${moduleConfig} has been completed successfully`;
+export const getCompletionToastMessage = (moduleType: ModuleType, result: any) => {
+  let title = "Modul abgeschlossen";
+  let description = `${moduleType} wurde erfolgreich abgeschlossen`;
   
-  if (moduleConfig === ModuleType.INFORMATION_TABLE && result.selectedOption) {
-    title = "Franchise-Option ausgewählt";
-    description = `Sie haben die Option CHF ${result.selectedOption} gewählt.`;
-  } else if (moduleConfig === ModuleType.INSURANCE_MODEL && result.modelTitle) {
+  if (moduleType === ModuleType.INFORMATION_TABLE) {
+    if (result.selectedOption) {
+      title = "Franchise-Option ausgewählt";
+      description = `Sie haben die Option CHF ${result.selectedOption} gewählt.`;
+    } else {
+      title = "Informationstabelle angezeigt";
+      description = "Die Informationen wurden erfolgreich angezeigt.";
+    }
+  } else if (moduleType === ModuleType.INSURANCE_MODEL && result.modelTitle) {
     title = "Versicherungsmodell ausgewählt";
     description = `Sie haben ${result.modelTitle} ausgewählt.`;
-  } else if (moduleConfig === ModuleType.CHOICE_LIST && result.selectedOption) {
+  } else if (moduleType === ModuleType.CHOICE_LIST && result.selectedOption) {
     title = "Option ausgewählt";
     description = `Sie haben die Option "${result.selectedOption.label}" gewählt.`;
+  } else if (moduleType === ModuleType.VERIFICATION && result.verified) {
+    title = "Verifizierung erfolgreich";
+    description = "Identitätsverifizierung wurde erfolgreich abgeschlossen.";
   }
   
   return { title, description };
 };
 
 export const getModuleInitialToast = (moduleConfig: ModuleConfig) => {
-  let description = "Please complete this interactive module";
-  let title = moduleConfig.title || "Interactive Module";
+  let description = "Bitte füllen Sie das interaktive Modul aus";
+  let title = moduleConfig.title || "Interaktives Modul";
   
   if (moduleConfig.type === ModuleType.VERIFICATION) {
-    description = "Please verify the customer information";
+    description = "Bitte verifizieren Sie die Kundeninformationen";
   } else if (moduleConfig.type === ModuleType.CONTRACT) {
-    description = "View and manage contract details";
+    description = "Vertragsdetails anzeigen und verwalten";
   } else if (moduleConfig.type === ModuleType.INFORMATION) {
-    description = "Important customer information available";
+    description = "Wichtige Kundeninformationen verfügbar";
   } else if (moduleConfig.type === ModuleType.FRANCHISE) {
-    description = "Franchise options and premium information";
+    description = "Franchise-Optionen und Prämieninformationen";
     title = "Franchise-Optionen";
   } else if (moduleConfig.type === ModuleType.INFORMATION_TABLE) {
     description = "Bitte wählen Sie die gewünschte Franchise-Option";

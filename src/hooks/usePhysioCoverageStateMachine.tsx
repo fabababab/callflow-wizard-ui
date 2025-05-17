@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStateMachine } from '@/hooks/useStateMachine';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,78 +52,148 @@ export function usePhysioCoverageStateMachine() {
         // Handle specific module types
         if (stateData.meta.module.type === 'VERIFICATION') {
           console.log('Verification module detected in state:', currentState);
+          // Ensure verification module has all required fields
+          if (stateData.meta.module.data?.fields) {
+            console.log('Verification fields:', stateData.meta.module.data.fields);
+          }
         } else if (stateData.meta.module.type === 'CHOICE_LIST') {
           console.log('Choice list module detected in state:', currentState);
+          // Ensure choice list has options
+          if (stateData.meta.module.data?.options) {
+            console.log('Choice list options:', stateData.meta.module.data.options);
+          }
         } else if (stateData.meta.module.type === 'INFORMATION_TABLE') {
           console.log('Information table module detected in state:', currentState);
+          // Ensure information table has content
+          if (stateData.meta.module.data?.coverageInfo) {
+            console.log('Coverage info:', stateData.meta.module.data.coverageInfo);
+          }
         }
       }
 
       // Handle specific states
       if (currentState === 'verify_identity') {
         console.log('Customer verification state reached');
+        // Ensure response options exist
+        checkAndLogResponseOptions(currentState, stateData);
       } else if (currentState === 'fuzzy_matches') {
         console.log('Fuzzy matches state reached - showing therapist options');
+        // Ensure module exists and response options exist
+        checkAndLogResponseOptions(currentState, stateData);
       } else if (currentState === 'customer_confused') {
         console.log('Customer confused state reached - customer wanted Jana Brunner');
+        // Ensure response options exist
+        checkAndLogResponseOptions(currentState, stateData);
       } else if (currentState === 'coverage_check') {
         console.log('Coverage check state reached - therapist is covered');
         // Ensure the message appears for the coverage_check state
-        // This is a debugging check to verify the message should be displayed
         if (stateData.meta?.agentText) {
           console.log('Agent message for coverage_check:', stateData.meta.agentText);
         } else {
           console.warn('No agent message found for coverage_check state');
         }
+        // Ensure module exists and response options exist
+        checkAndLogResponseOptions(currentState, stateData);
+      } else if (currentState === 'session_count') {
+        console.log('Session count state reached');
+        // Ensure response options exist
+        checkAndLogResponseOptions(currentState, stateData);
       } else if (currentState === 'end_call') {
         toast({
           title: "Gespräch abgeschlossen",
           description: "Das Gespräch wurde erfolgreich beendet.",
         });
+        // Check for Nachbearbeitung module
+        if (stateData.meta?.module?.type === 'NACHBEARBEITUNG') {
+          console.log('Nachbearbeitung module found in end_call state');
+        }
       }
     }
   }, [currentState, stateData, lastStateChange, toast]);
+
+  // Helper function to check for response options
+  const checkAndLogResponseOptions = useCallback((state: string, stateData: any) => {
+    const responseOptions = stateData.meta?.responseOptions || [];
+    if (responseOptions.length > 0) {
+      console.log(`Response options for state ${state}:`, responseOptions);
+    } else {
+      console.warn(`No response options found for state ${state}`);
+    }
+  }, []);
 
   // Add specific event listener for direct state transition force
   useEffect(() => {
     const handleForceStateTransition = (e: Event) => {
       const event = e as CustomEvent;
-      if (event.detail?.targetState === 'coverage_check') {
-        console.log("Forcing transition to coverage_check state");
+      if (event.detail?.targetState) {
+        const targetState = event.detail.targetState;
+        console.log(`Forcing transition to ${targetState} state`);
         
-        // Access the coverage_check state data directly from state machine
-        const coverageCheckStateData = stateMachine?.states?.['coverage_check'];
+        // Access the target state data directly from state machine
+        const targetStateData = stateMachine?.states?.[targetState];
         
-        if (coverageCheckStateData) {
-          console.log("Found coverage_check state data:", coverageCheckStateData);
+        if (targetStateData) {
+          console.log(`Found ${targetState} state data:`, targetStateData);
           toast({
             title: "Zustand geändert",
-            description: "Wechsel zum Zustand: Kostenübernahme-Prüfung",
+            description: `Wechsel zum Zustand: ${targetState}`,
           });
           
-          // Instead of directly modifying the state, use the proper state machine transition
-          // Find an available path to the coverage_check state
-          setTimeout(() => {
-            // Try to process selection with the response "Jana Brunner"
-            const success = processSelection("Jana Brunner");
+          // Try to find an appropriate response that leads to the target state
+          const transitions = Object.entries(stateMachine?.states?.[currentState]?.on || {});
+          console.log(`Available transitions from ${currentState}:`, transitions);
+          
+          // Find transition that leads to target state
+          const transition = transitions.find(([_, nextState]) => nextState === targetState);
+          if (transition) {
+            const [responseOption] = transition;
+            console.log(`Found transition to ${targetState} via response: ${responseOption}`);
             
-            if (!success) {
-              console.warn("Could not transition to coverage_check using standard path");
-              
-              // Try the DEFAULT transition
-              const defaultSuccess = processSelection("DEFAULT");
-              if (!defaultSuccess) {
-                console.error("Could not force transition to coverage_check");
+            setTimeout(() => {
+              const success = processSelection(responseOption);
+              if (success) {
+                console.log(`Successfully transitioned to ${targetState} using response: ${responseOption}`);
               } else {
-                console.log("Successfully transitioned to coverage_check using DEFAULT path");
+                console.warn(`Failed to transition to ${targetState} using response: ${responseOption}`);
+                tryDefaultTransition(targetState);
               }
-            } else {
-              console.log("Successfully transitioned to coverage_check using 'Jana Brunner' path");
-            }
-          }, 100);
+            }, 100);
+          } else {
+            // No direct transition found, try using DEFAULT
+            tryDefaultTransition(targetState);
+          }
         } else {
-          console.error("Could not find coverage_check state data in state machine");
+          console.error(`Could not find ${targetState} state data in state machine`);
+          toast({
+            title: "Fehler",
+            description: `Konnte Zielzustand ${targetState} nicht finden.`,
+            variant: "destructive"
+          });
         }
+      }
+    };
+
+    // Helper function to try DEFAULT transition
+    const tryDefaultTransition = (targetState: string) => {
+      console.log(`Trying DEFAULT transition to reach ${targetState}`);
+      const success = processSelection("DEFAULT");
+      
+      if (success) {
+        console.log(`Successfully transitioned using DEFAULT`);
+        // Check if we reached our target
+        if (currentState === targetState) {
+          console.log(`Reached target state ${targetState}`);
+        } else {
+          console.log(`DEFAULT transition went to ${currentState}, not ${targetState}`);
+          // Force a direct state change in complex cases
+          if (targetState === 'coverage_check' && currentState === 'fuzzy_matches') {
+            setTimeout(() => {
+              processSelection("Jana Brunner");
+            }, 100);
+          }
+        }
+      } else {
+        console.error(`Failed to transition using DEFAULT, current state remains ${currentState}`);
       }
     };
 
@@ -132,7 +202,7 @@ export function usePhysioCoverageStateMachine() {
     return () => {
       window.removeEventListener('force-state-transition', handleForceStateTransition as EventListener);
     };
-  }, [stateMachine, toast, processSelection]);
+  }, [stateMachine, toast, processSelection, currentState]);
 
   // Add event listener for therapist selection module completion
   useEffect(() => {
@@ -153,6 +223,21 @@ export function usePhysioCoverageStateMachine() {
         // For Jana Brunner, we should go to coverage_check state
         if (selectedOptionId === 'jana_brunner' && targetState === 'coverage_check') {
           console.log("Jana Brunner selected, should transition to coverage_check");
+          
+          // If not already in coverage_check, try to trigger the transition
+          if (currentState !== 'coverage_check') {
+            setTimeout(() => {
+              // Try direct selection first
+              const success = processSelection("Jana Brunner");
+              if (!success) {
+                console.log("Direct selection failed, trying to force state transition");
+                const forceEvent = new CustomEvent('force-state-transition', {
+                  detail: { targetState: 'coverage_check' }
+                });
+                window.dispatchEvent(forceEvent);
+              }
+            }, 500);
+          }
         }
       }
     };
@@ -162,7 +247,7 @@ export function usePhysioCoverageStateMachine() {
     return () => {
       window.removeEventListener('therapist-selection-complete', handleTherapistSelection as EventListener);
     };
-  }, [toast]);
+  }, [toast, currentState, processSelection]);
 
   return {
     currentState,
