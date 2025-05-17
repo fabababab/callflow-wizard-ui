@@ -33,7 +33,7 @@ const TestScenario = () => {
 
   // Use physioCoverage for this component
   const activeScenario = physioCoverage;
-  const { currentState, error } = activeScenario;
+  const { currentState, error, stateData } = activeScenario;
 
   // Add notification when scenario is loaded
   useEffect(() => {
@@ -43,8 +43,18 @@ const TestScenario = () => {
         description: "Szenario zum Thema Physiotherapie-Leistungsabdeckung",
         duration: 3000
       });
+      
+      // Log current state for debugging
+      if (currentState) {
+        console.log(`Current state on load: ${currentState}`);
+      }
+      
+      // Check for sensitive data
+      if (stateData?.meta?.module?.data?.sensitiveFields) {
+        console.log('Sensitive fields detected:', stateData.meta.module.data.sensitiveFields);
+      }
     }
-  }, [scenarioState.loadedStateMachine, toast]);
+  }, [scenarioState.loadedStateMachine, toast, currentState, stateData]);
 
   return (
     <div className="flex h-screen bg-background">

@@ -43,6 +43,16 @@ const Message: React.FC<MessageProps> = ({
 
   // Determine if message has verification features
   const hasVerificationFeatures = message.requiresVerification || message.isVerified || (message.sensitiveData && message.sensitiveData.length > 0);
+  
+  // Handle border styling based on message type
+  const getBorderStyle = () => {
+    if (message.sender === 'customer' && hasVerificationFeatures) {
+      return 'border-l-4 border-amber-300/60';
+    } else if (message.inlineModule?.type === 'VERIFICATION') {
+      return 'border-l-4 border-amber-300/60';
+    }
+    return '';
+  };
 
   return (
     <>
@@ -54,7 +64,7 @@ const Message: React.FC<MessageProps> = ({
           className={`rounded-lg max-w-[85%] p-3 shadow-sm transition-all duration-300 ${message.sender === 'agent'
               ? 'bg-primary text-primary-foreground ml-auto'
               : message.sender === 'customer' 
-              ? `bg-secondary text-secondary-foreground mr-auto ${hasVerificationFeatures ? 'border-l-4 border-amber-300/60' : ''}` 
+              ? `bg-secondary text-secondary-foreground mr-auto ${getBorderStyle()}` 
               : 'bg-muted text-center italic text-sm w-full'}`}
         >
           <MessageHeader sender={message.sender} timestamp={message.timestamp} />

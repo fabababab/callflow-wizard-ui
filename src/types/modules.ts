@@ -11,6 +11,7 @@ export enum ModuleType {
   INSURANCE_MODEL = 'INSURANCE_MODEL',
   INFORMATION_TABLE = 'INFORMATION_TABLE',
   CHOICE_LIST = 'CHOICE_LIST',
+  SENSITIVE_DATA_VERIFICATION = 'SENSITIVE_DATA_VERIFICATION',
 }
 
 // Interface for module configuration
@@ -32,4 +33,20 @@ export interface ModuleProps {
   currentState?: string;
   stateData?: any;
   isInline?: boolean; // Added to support inline display mode
+}
+
+// Interface specifically for sensitive data verification
+export interface SensitiveDataVerificationProps extends ModuleProps {
+  data: {
+    fields: Array<{
+      id: string;
+      label: string;
+      type: string;
+      value: string;
+      system: string;
+      required: boolean;
+      source?: string;
+    }>;
+    isInline?: boolean;
+  };
 }

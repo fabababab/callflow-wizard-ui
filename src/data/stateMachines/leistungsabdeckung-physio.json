@@ -32,6 +32,28 @@
           "data": {
             "isInline": true,
             "title": "Verifizierung",
+            "sensitiveFields": [
+              {
+                "id": "birthdate",
+                "type": "date_of_birth",
+                "label": "Geburtsdatum",
+                "value": "14.05.1985",
+                "systemValue": "14.05.1985",
+                "source": "CRM System - Kundendatenbank",
+                "status": "pending",
+                "requiresVerification": true
+              },
+              {
+                "id": "postalCode",
+                "type": "address",
+                "label": "Postleitzahl",
+                "value": "8004",
+                "systemValue": "8004",
+                "source": "CRM System - Kundendatenbank",
+                "status": "pending",
+                "requiresVerification": true
+              }
+            ],
             "fields": [
               {
                 "id": "birthdate",
@@ -97,6 +119,7 @@
           "type": "CHOICE_LIST",
           "data": {
             "description": "Bitte bestätigen Sie, welche Therapeutin gemeint ist.",
+            "isInline": true,
             "options": [
               {
                 "id": "jana_brunner",
@@ -111,8 +134,7 @@
                 "label": "Janna Brun – 8004 Zürich (nicht anerkannt)"
               }
             ],
-            "buttonText": "Auswählen",
-            "isInline": true
+            "buttonText": "Auswählen"
           }
         }
       },

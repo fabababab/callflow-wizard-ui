@@ -23,6 +23,7 @@ const ModuleRegistry = {
   [ModuleType.INSURANCE_MODEL]: InsuranceModelModule,
   [ModuleType.INFORMATION_TABLE]: InformationTableModule,
   [ModuleType.CHOICE_LIST]: ChoiceListModule,
+  [ModuleType.SENSITIVE_DATA_VERIFICATION]: VerificationModule, // Reuse VerificationModule for now
 };
 
 export default ModuleRegistry;

@@ -1,6 +1,6 @@
 
 import React, { memo } from 'react';
-import { ModuleConfig } from '@/types/modules';
+import { ModuleConfig, ModuleType } from '@/types/modules';
 import moduleRegistry from './ModuleRegistry';
 
 interface ModuleContainerProps {
@@ -35,6 +35,12 @@ const ModuleContainer: React.FC<ModuleContainerProps> = memo(({
   
   console.log(`Rendering module ${moduleConfig.id} - isInline: ${shouldDisplayInline}`);
   
+  // Handle sensitive data fields if present
+  const moduleData = moduleConfig.data || {};
+  if (moduleConfig.type === ModuleType.VERIFICATION && moduleData.sensitiveFields) {
+    console.log('Sensitive fields detected in module:', moduleData.sensitiveFields);
+  }
+  
   // If it's inline, just render the component without modal wrapper
   if (shouldDisplayInline) {
     return (
@@ -43,7 +49,7 @@ const ModuleContainer: React.FC<ModuleContainerProps> = memo(({
           id={moduleConfig.id}
           title={moduleConfig.title}
           data={{
-            ...moduleConfig.data,
+            ...moduleData,
             isInline: true // Force inline mode in the component
           }}
           onClose={onClose}
@@ -62,7 +68,7 @@ const ModuleContainer: React.FC<ModuleContainerProps> = memo(({
         <ModuleComponent
           id={moduleConfig.id}
           title={moduleConfig.title}
-          data={moduleConfig.data}
+          data={moduleData}
           onClose={onClose}
           onComplete={onComplete}
           currentState={currentState}
