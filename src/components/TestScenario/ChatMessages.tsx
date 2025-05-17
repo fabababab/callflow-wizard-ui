@@ -3,6 +3,7 @@ import React from 'react';
 import Message from '../transcript/Message';
 import { Message as MessageType } from '../transcript/MessageTypes';
 import { ValidationStatus } from '@/data/scenarioData';
+import SystemMessageGroup from '../transcript/SystemMessageGroup';
 
 interface ChatMessagesProps {
   messages: MessageType[];
@@ -23,6 +24,10 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
   messagesEndRef,
   onModuleComplete
 }) => {
+  // Filter messages by type for better organization
+  const systemMessages = messages.filter(msg => msg.sender === 'system');
+  const conversationMessages = messages.filter(msg => msg.sender !== 'system');
+
   // If there are no messages, show empty state
   if (!messages.length) {
     return (
@@ -39,7 +44,13 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   return (
     <div className="space-y-4 pb-4">
-      {messages.map((message) => (
+      {/* Group system messages */}
+      {systemMessages.length > 0 && (
+        <SystemMessageGroup messages={systemMessages} />
+      )}
+
+      {/* Display conversation messages */}
+      {conversationMessages.map((message) => (
         <Message
           key={message.id}
           message={message}

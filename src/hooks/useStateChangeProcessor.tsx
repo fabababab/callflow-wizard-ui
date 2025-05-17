@@ -85,12 +85,17 @@ export function useStateChangeProcessor(
     
   }, [messageHandling, toast, conversationState]);
 
-  // Add a function that can be called from useStateChangeEffect
-  const processStateChange = useCallback(() => {
-    console.log("Processing state change from useStateChangeProcessor");
-    // This function would typically call processNewState with the correct parameters
-    // For now, it's just a placeholder that can be called without parameters
-  }, []);
+  // Function to be called from useStateChangeEffect
+  const processStateChange = useCallback((
+    stateData: StateMachineState | null,
+    currentState: string
+  ) => {
+    console.log(`Processing state change for state: ${currentState}`);
+    // Call processNewState with the current data
+    if (stateData && currentState) {
+      processNewState(stateData, currentState, scenarioType);
+    }
+  }, [processNewState, scenarioType]);
 
   return {
     processNewState,
