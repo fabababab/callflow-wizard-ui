@@ -7,7 +7,7 @@ interface StateChangeEffectProps {
   lastStateChange: Date | null;
   callActive: boolean;
   currentState: string;
-  processStateChange: () => void;
+  processStateChange: () => void; // This should be a function with no parameters
   debounceTimerRef: MutableRefObject<number | null>;
 }
 
@@ -44,7 +44,7 @@ export function useStateChangeEffect({
         console.log(`State ${currentState} requires verification before proceeding`);
       }
       
-      processStateChange();
+      processStateChange(); // Call the function as passed
     }
     
     return () => {
@@ -61,7 +61,7 @@ export function useStateChangeEffect({
   useEffect(() => {
     if (lastStateChange && callActive && currentState && stateData) {
       console.log(`State change detected at ${lastStateChange.toISOString()}`);
-      processStateChange();
+      processStateChange(); // Call the function as passed
     }
   }, [lastStateChange, callActive, currentState, stateData, processStateChange]);
 

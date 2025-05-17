@@ -1,4 +1,3 @@
-
 // Core transcript hook functionality that composes other hooks
 import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -61,14 +60,11 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   });
 
   // Use state change processor
-  const stateChangeProcessor = useStateChangeProcessor({
-    stateMachine,
+  const stateChangeProcessor = useStateChangeProcessor(
     messageHandling,
     conversationState,
-    transitionExtractor,
-    callState,
-    toast: toastHelper // Pass the entire toast helper object
-  });
+    activeScenario
+  );
 
   // Use conversation initializer
   const conversationInitializer = useConversationInitializer({
