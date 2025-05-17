@@ -1,4 +1,3 @@
-
 // Core transcript hook functionality that composes other hooks
 import { useRef, useCallback } from 'react';
 import { ScenarioType } from '@/components/ScenarioSelector';
@@ -21,7 +20,12 @@ import { useStateChangeEffect } from '@/hooks/useStateChangeEffect';
 import { useMessageUpdates } from '@/hooks/useMessageUpdates';
 import { useScenarioChangeEffect } from '@/hooks/useScenarioChangeEffect';
 
-export function useTranscriptCore(activeScenario: ScenarioType) {
+interface TranscriptCoreProps {
+  source?: 'dashboard' | 'testscenario';
+}
+
+export function useTranscriptCore(activeScenario: ScenarioType, props?: TranscriptCoreProps) {
+  const source = props?.source || 'testscenario';
   // Use the toast hook - this returns an object with a toast function
   const toastUtils = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,8 +39,8 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   // Get call state - use the consolidated hook
   const callState = useCallState();
   
-  // Get conversation state
-  const conversationState = useConversationState();
+  // Get conversation state with source identifier to prevent conflicts
+  const conversationState = useConversationState(`${source}-${activeScenario}`);
   
   // Get transition extractor
   const transitionExtractor = useTransitionExtractor(stateMachine.stateMachine);
@@ -61,14 +65,15 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     toast: toastUtils
   });
 
-  // Use state change processor
+  // Use state change processor with source identifier
   const stateChangeProcessor = useStateChangeProcessor({
     stateMachine,
     messageHandling,
     conversationState,
     transitionExtractor,
     callState,
-    toast: toastUtils
+    toast: toastUtils,
+    source
   });
 
   // Use conversation initializer
@@ -127,7 +132,7 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
   
   // Handle module completion
   const handleModuleComplete = useCallback((result: any) => {
-    console.log('Module completed with result:', result);
+    console.log(`[${source}] Module completed with result:`, result);
     moduleManager.completeModule(result);
     
     if (moduleManager.activeModule) {
@@ -142,15 +147,15 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
         conversationState.setShowNachbearbeitungModule(false);
       }
     }
-  }, [moduleManager, messageHandling, conversationState]);
+  }, [moduleManager, messageHandling, conversationState, source]);
   
   // Combine state from scenario change effect with conversation initializer
   const enhancedConversationInitializer = {
     ...conversationInitializer,
     handleCall: useCallback(() => {
-      console.log('Enhanced handleCall triggered');
+      console.log(`[${source}] Enhanced handleCall triggered`);
       conversationInitializer.handleCall();
-    }, [conversationInitializer]),
+    }, [conversationInitializer, source]),
     resetConversation: useCallback(() => {
       conversationInitializer.resetConversation();
       scenarioChangeState.setHasInitializedConversation(false);
@@ -178,5 +183,6 @@ export function useTranscriptCore(activeScenario: ScenarioType) {
     getStateJson: transitionExtractor.getStateJson,
     debugLastStateChange: stateChangeDebug.debugLastStateChange || debugLastStateChange,
     hasInitializedConversation: scenarioChangeState.hasInitializedConversation,
+    source
   };
 }

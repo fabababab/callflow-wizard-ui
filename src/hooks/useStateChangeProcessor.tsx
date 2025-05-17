@@ -1,4 +1,3 @@
-
 // Hook for processing state changes
 import { useCallback } from 'react';
 import { detectSensitiveData } from '@/data/scenarioData';
@@ -12,6 +11,7 @@ interface StateChangeProcessorProps {
   transitionExtractor: any;
   callState: any;
   toast: ReturnType<typeof useToast>;
+  source?: 'dashboard' | 'testscenario';
 }
 
 export function useStateChangeProcessor({
@@ -20,13 +20,14 @@ export function useStateChangeProcessor({
   conversationState,
   transitionExtractor,
   callState,
-  toast
+  toast,
+  source = 'testscenario'
 }: StateChangeProcessorProps) {
 
   const processStateChange = useCallback(() => {
     // If not active or already processed, skip
     if (!callState.callActive || !stateMachine.stateData) {
-      console.log('Skipping state change processing: call not active or no state data', {
+      console.log(`[${source}] Skipping state change processing: call not active or no state data`, {
         callActive: callState.callActive,
         hasStateData: !!stateMachine.stateData
       });
@@ -34,14 +35,15 @@ export function useStateChangeProcessor({
     }
 
     // Prevent duplicate processing of the same state
-    if (conversationState.hasProcessedState(stateMachine.currentState)) {
-      console.log(`State ${stateMachine.currentState} already processed, skipping message updates`);
+    const stateKey = `${source}:${stateMachine.currentState}`;
+    if (conversationState.hasProcessedState(stateKey)) {
+      console.log(`[${source}] State ${stateMachine.currentState} already processed, skipping message updates`);
       return;
     }
     
-    console.log('===== PROCESSING STATE CHANGE =====');
-    console.log(`Processing state change for state: ${stateMachine.currentState}`);
-    console.log('State data:', stateMachine.stateData);
+    console.log(`[${source}] ===== PROCESSING STATE CHANGE =====`);
+    console.log(`[${source}] Processing state change for state: ${stateMachine.currentState}`);
+    console.log(`[${source}] State data:`, stateMachine.stateData);
     
     // Clear any existing debounce timer
     if (conversationState.debounceTimerRef.current) {
@@ -56,7 +58,7 @@ export function useStateChangeProcessor({
         (stateMachine.currentState === 'start' || 
          stateMachine.currentState === 'initial' || 
          stateMachine.currentState.includes('initial'))) {
-      console.log('Processing initial state immediately without debounce');
+      console.log(`[${source}] Processing initial state immediately without debounce`);
       processStateChangeInternal();
       return;
     }
@@ -67,27 +69,27 @@ export function useStateChangeProcessor({
     }, 300); // 300ms debounce
     
     function processStateChangeInternal() {
-      console.log('Debounce complete, actually processing state change:', stateMachine.currentState);
-      console.log('State data for processing:', stateMachine.stateData);
+      console.log(`[${source}] Debounce complete, actually processing state change:`, stateMachine.currentState);
+      console.log(`[${source}] State data for processing:`, stateMachine.stateData);
       
       // Mark this state as processed FIRST to prevent race conditions
-      // This prevents duplicate messages if processStateChange is called rapidly
-      conversationState.markStateAsProcessed(stateMachine.currentState);
+      // Using source-prefixed key to prevent conflicts between dashboard and test scenario
+      conversationState.markStateAsProcessed(stateKey);
       
       // When state changes, check for messages to display
       if (stateMachine.stateData.meta?.systemMessage && !stateMachine.stateData.meta?.module) {
-        console.log(`Adding system message: ${stateMachine.stateData.meta.systemMessage}`);
+        console.log(`[${source}] Adding system message: ${stateMachine.stateData.meta.systemMessage}`);
         messageHandling.addSystemMessage(stateMachine.stateData.meta.systemMessage);
       }
       
       if (stateMachine.stateData.meta?.customerText) {
-        console.log(`Adding customer message: ${stateMachine.stateData.meta.customerText}`);
+        console.log(`[${source}] Adding customer message: ${stateMachine.stateData.meta.customerText}`);
         // Detect sensitive data in customer text
         const sensitiveData = detectSensitiveData(stateMachine.stateData.meta.customerText);
         
         // Extract response options from transitions
         const responseOptions = transitionExtractor.extractTransitionsAsResponseOptions(stateMachine.currentState);
-        console.log(`Extracted response options for state ${stateMachine.currentState}:`, responseOptions);
+        console.log(`[${source}] Extracted response options for state ${stateMachine.currentState}:`, responseOptions);
         
         // Add customer message with detected sensitive data and response options
         messageHandling.addCustomerMessage(
@@ -116,7 +118,7 @@ export function useStateChangeProcessor({
       }
       
       if (stateMachine.stateData.meta?.agentText && !conversationState.isUserAction) {
-        console.log(`Adding agent message: ${stateMachine.stateData.meta.agentText}`);
+        console.log(`[${source}] Adding agent message: ${stateMachine.stateData.meta.agentText}`);
         
         // Extract response options for next state if needed
         const responseOptions = stateMachine.stateData.meta?.responseOptions || [];
@@ -126,7 +128,7 @@ export function useStateChangeProcessor({
           ? responseOptions
           : transitionExtractor.extractTransitionsAsResponseOptions(stateMachine.currentState);
         
-        console.log("Agent message response options:", effectiveResponseOptions);
+        console.log(`[${source}] Agent message response options:`, effectiveResponseOptions);
           
         messageHandling.addAgentMessage(
           stateMachine.stateData.meta.agentText, 
@@ -138,14 +140,14 @@ export function useStateChangeProcessor({
       
       // Check if this state has a module trigger
       if (stateMachine.stateData.meta?.module) {
-        console.log(`Module trigger found in state:`, stateMachine.stateData.meta.module);
+        console.log(`[${source}] Module trigger found in state:`, stateMachine.stateData.meta.module);
         
         // Handle all modules as inline by default
         const moduleConfig = stateMachine.stateData.meta.module;
         
         // Only add system message for module if we haven't already displayed it inline
         if (stateMachine.stateData.meta?.systemMessage) {
-          console.log(`Adding system message for module: ${stateMachine.stateData.meta.systemMessage}`);
+          console.log(`[${source}] Adding system message for module: ${stateMachine.stateData.meta.systemMessage}`);
           messageHandling.addSystemMessage(stateMachine.stateData.meta.systemMessage);
         }
         
@@ -168,7 +170,7 @@ export function useStateChangeProcessor({
       // Reset user action flag
       conversationState.setIsUserAction(false);
       
-      console.log('===== STATE CHANGE PROCESSING COMPLETE =====');
+      console.log(`[${source}] ===== STATE CHANGE PROCESSING COMPLETE =====`);
     }
   }, [
     stateMachine.stateData, 
@@ -177,7 +179,8 @@ export function useStateChangeProcessor({
     messageHandling,
     conversationState,
     transitionExtractor,
-    toast
+    toast,
+    source
   ]);
 
   return {

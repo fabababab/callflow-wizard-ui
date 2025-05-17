@@ -1,85 +1,114 @@
+import { useState, useCallback, useRef } from 'react';
 
-import { useState, useRef, useCallback } from 'react';
-
-export function useConversationState() {
-  // State to track conversation flow
-  const [processedStates, setProcessedStates] = useState<Set<string>>(new Set());
-  const [isInitialStateProcessed, setIsInitialStateProcessed] = useState(false);
-  const [isUserAction, setIsUserAction] = useState(false);
-  const [awaitingUserResponse, setAwaitingUserResponse] = useState(false);
-  const [showNachbearbeitungModule, setShowNachbearbeitungModule] = useState(false);
-  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date | string>(new Date());
-  const [manualReset, setManualReset] = useState(false);
-  const [pendingVerifications, setPendingVerifications] = useState<string[]>([]);
+/**
+ * Custom hook for managing conversation state
+ */
+export function useConversationState(instanceId = 'default') {
+  // Keep track of the last conversation update timestamp
+  const [lastTranscriptUpdate, setLastTranscriptUpdate] = useState<Date>(new Date());
   
-  // Ref for debouncing
+  // Keep track of whether we're waiting for the user to respond
+  const [awaitingUserResponse, setAwaitingUserResponse] = useState<boolean>(false);
+  
+  // Flag for if the current action is user-initiated
+  const [isUserAction, setIsUserAction] = useState<boolean>(false);
+  
+  // Track processed states to avoid duplicate messages
+  const [processedStates, setProcessedStates] = useState<Set<string>>(new Set());
+  
+  // Reference to the debounce timer
   const debounceTimerRef = useRef<number | null>(null);
   
-  // Function to check if we've already processed this state to avoid duplicate messages
-  const hasProcessedState = useCallback((state: string): boolean => {
-    return processedStates.has(state);
+  // Track pending verification states
+  const [pendingVerifications, setPendingVerifications] = useState<Set<string>>(new Set());
+  
+  // Track if the Nachbearbeitung module should be shown
+  const [showNachbearbeitungModule, setShowNachbearbeitungModule] = useState<boolean>(false);
+  
+  // Initialize conversation
+  const [hasInitializedConversation, setHasInitializedConversation] = useState<boolean>(false);
+
+  /**
+   * Check if a state has been processed
+   */
+  const hasProcessedState = useCallback((stateId: string) => {
+    return processedStates.has(stateId);
   }, [processedStates]);
   
-  // Mark a state as processed
-  const markStateAsProcessed = useCallback((state: string) => {
-    console.log(`Marking state as processed: ${state}`);
+  /**
+   * Mark a state as processed
+   */
+  const markStateAsProcessed = useCallback((stateId: string) => {
     setProcessedStates(prev => {
-      const newSet = new Set(prev);
-      newSet.add(state);
-      return newSet;
+      const updated = new Set(prev);
+      updated.add(stateId);
+      return updated;
     });
-  }, []);
-
-  // Add a state that requires verification - completely disabled
+    console.log(`[${instanceId}] Marked state ${stateId} as processed`);
+  }, [instanceId]);
+  
+  /**
+   * Add a state to pending verifications
+   */
   const addPendingVerification = useCallback((stateId: string) => {
-    console.log(`State ${stateId} requires verification but verification blocking is disabled. Auto-verifying.`);
-    // We don't add to pending verifications - effectively auto-verifies
-  }, []);
-
-  // Remove a state from pending verifications
+    setPendingVerifications(prev => {
+      const updated = new Set(prev);
+      updated.add(stateId);
+      return updated;
+    });
+    console.log(`[${instanceId}] Added pending verification for state ${stateId}`);
+  }, [instanceId]);
+  
+  /**
+   * Remove a state from pending verifications
+   */
   const removePendingVerification = useCallback((stateId: string) => {
-    console.log(`Removing verification for state ${stateId}`);
-    setPendingVerifications(prev => prev.filter(id => id !== stateId));
-  }, []);
-
-  // Reset conversation state - but only reset the tracking, not erase messages
-  const resetConversationState = useCallback((shouldResetMessages = false) => {
-    console.log("Resetting conversation state tracking. Reset messages:", shouldResetMessages);
+    setPendingVerifications(prev => {
+      const updated = new Set(prev);
+      updated.delete(stateId);
+      return updated;
+    });
+    console.log(`[${instanceId}] Removed pending verification for state ${stateId}`);
+  }, [instanceId]);
+  
+  /**
+   * Reset the conversation state
+   */
+  const resetConversationState = useCallback(() => {
+    console.log(`[${instanceId}] Resetting conversation state`);
     setProcessedStates(new Set());
-    setIsInitialStateProcessed(false);
-    setIsUserAction(false);
+    setPendingVerifications(new Set());
     setAwaitingUserResponse(false);
+    setIsUserAction(false);
     setShowNachbearbeitungModule(false);
-    setLastTranscriptUpdate(new Date());
-    setManualReset(shouldResetMessages);
-    setPendingVerifications([]);
+    setHasInitializedConversation(false);
     
+    // Clear any debounce timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = null;
     }
-  }, []);
+  }, [instanceId]);
 
   return {
-    processedStates,
-    isInitialStateProcessed,
-    isUserAction,
-    awaitingUserResponse,
-    showNachbearbeitungModule,
     lastTranscriptUpdate,
-    manualReset,
-    pendingVerifications: [], // Always return empty array to indicate no pending verifications
+    setLastTranscriptUpdate,
+    awaitingUserResponse,
+    setAwaitingUserResponse,
+    isUserAction,
+    setIsUserAction,
+    processedStates,
     debounceTimerRef,
+    pendingVerifications,
+    showNachbearbeitungModule,
+    setShowNachbearbeitungModule,
     hasProcessedState,
     markStateAsProcessed,
-    setIsInitialStateProcessed,
-    setIsUserAction,
-    setAwaitingUserResponse,
-    setShowNachbearbeitungModule,
-    setLastTranscriptUpdate,
-    setManualReset,
     addPendingVerification,
     removePendingVerification,
-    resetConversationState
+    resetConversationState,
+    hasInitializedConversation,
+    setHasInitializedConversation,
+    instanceId
   };
 }

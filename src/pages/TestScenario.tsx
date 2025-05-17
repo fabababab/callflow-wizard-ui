@@ -24,8 +24,8 @@ const TestScenario = () => {
   // Use the useJsonVisualization hook for JSON view functionality
   const jsonVisualization = useJsonVisualization(scenarioState.selectedStateMachine);
 
-  // Use the useTranscript hook for the active scenario
-  const transcript = useTranscript(scenarioState.selectedStateMachine);
+  // Use the useTranscript hook for the active scenario with testscenario source
+  const transcript = useTranscript(scenarioState.selectedStateMachine, { source: 'testscenario' });
 
   // Choose the appropriate state machine
   const customerScenario = useCustomerScenario();
